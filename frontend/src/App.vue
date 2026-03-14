@@ -1,37 +1,18 @@
-<script setup lang="ts">
-import Button_mods from "./Button_mods.vue";
+<script setup>
+import ListMods from './components/ListMods.vue'
 </script>
 
 <template>
-  <div class="main-container">
-    <div class="content">
-      <h1 class="hero-title">The place for Minecraft mods</h1>
-      <Button_mods />
-    </div>
+  <div class="app-container">
+    <h3>Omega Launcher</h3>
+    <ListMods />
   </div>
 </template>
 
 <style scoped>
-.main-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  width: 98vw;
-}
-
-.content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-}
-
-.hero-title {
-  font-size: 4rem; 
-  color: #bfc0d1;
-  text-align: center;
-  font-family: sans-serif;
-  font-weight: bold;
+h3 {
+  font-weight: lighter;
+  color: rgba(243, 62, 92, 0.763);
+  font-size: 2.5rem;
 }
 </style>
