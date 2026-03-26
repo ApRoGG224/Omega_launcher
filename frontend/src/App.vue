@@ -64,7 +64,7 @@ h3 {
 body {
   margin: 0;
   padding: 0;
-  background-color: #050505; /* Глубокий черный фон */
+  background-color: #050505;
   font-family: 'Inter', sans-serif;
   color: white;
   overflow-x: hidden;
@@ -74,9 +74,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 100px; /* Чтобы контент не прятался под челкой */
+  padding-top: 100px; 
 }
-/* Стили заголовка */
+
 h3 {
   font-weight: 800;
   background: linear-gradient(135deg, #a855f7, #ec4899);
