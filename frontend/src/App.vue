@@ -1,14 +1,18 @@
 <script setup>
+import Navbar from './components/Navbar.vue' 
 import ListMods from './components/ListMods.vue'
 </script>
-
 <template>
   <div class="app-container">
-    <h3>Omega Launcher</h3>
+    <Navbar /> 
+    
+    <div class="hero-section">
+      <h3>Omega Launcher</h3>
+      <button class="discover-btn" id="discover-mods-btn">
+        Discover mods
+      </button>
+    </div>
     <ListMods />
-    <button class="discover-btn" id="discover-mods-btn">
-      Discover mods
-    </button>
   </div>
 </template>
 
@@ -57,5 +61,30 @@ h3 {
   transform: translateY(0);
   box-shadow: 0 0 10px rgba(243, 62, 92, 0.3);
 }
-
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #050505; /* Глубокий черный фон */
+  font-family: 'Inter', sans-serif;
+  color: white;
+  overflow-x: hidden;
+}
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 100px; /* Чтобы контент не прятался под челкой */
+}
+/* Стили заголовка */
+h3 {
+  font-weight: 800;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 5rem;
+  margin-bottom: 2rem;
+  letter-spacing: -2px;
+}
 </style>
