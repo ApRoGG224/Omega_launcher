@@ -10,5 +10,5 @@
     "name": "ApRoGG",
     "email": "bogdankobzak89@gmail.com"
   },
-  "main": "./backend"
+  "main": "."
 }

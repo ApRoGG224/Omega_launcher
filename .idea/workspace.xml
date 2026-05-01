@@ -4,10 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d62d7e82-ea97-4ea1-bc2d-a7be443ac43b" name="Changes" comment="fix backend">
-      <change afterPath="$PROJECT_DIR$/backend/go.mod" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/go.sum" afterDir="false" />
+    <list default="true" id="d62d7e82-ea97-4ea1-bc2d-a7be443ac43b" name="Changes" comment="fix backend 2">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wails.json" beforeDir="false" afterPath="$PROJECT_DIR$/wails.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -82,7 +83,9 @@
       <workItem from="1776955493117" duration="1687000" />
       <workItem from="1777223250174" duration="844000" />
       <workItem from="1777401414311" duration="658000" />
-      <workItem from="1777666468550" duration="1069000" />
+      <workItem from="1777666468550" duration="2286000" />
+      <workItem from="1777668781514" duration="31000" />
+      <workItem from="1777668834824" duration="569000" />
     </task>
     <task id="LOCAL-00001" summary="start Omega_launcher">
       <option name="closed" value="true" />
@@ -108,7 +111,15 @@
       <option name="project" value="LOCAL" />
       <updated>1777667193378</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="fix backend 2">
+      <option name="closed" value="true" />
+      <created>1777667848902</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1777667848902</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -135,6 +146,7 @@
     <MESSAGE value="start Omega_launcher" />
     <MESSAGE value="go Omega_launcher" />
     <MESSAGE value="fix backend" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix backend" />
+    <MESSAGE value="fix backend 2" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix backend 2" />
   </component>
 </project>

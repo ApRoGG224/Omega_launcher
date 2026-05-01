@@ -2,6 +2,8 @@ module Omega_launcher
 
 go 1.23.0
 
+// replace github.com/wailsapp/wails/v2 v2.12.0 => /home/bogdan/go/pkg/mod
+
 require github.com/wailsapp/wails/v2 v2.12.0
 
 require (
@@ -34,5 +36,3 @@ require (
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 )
-
-// replace github.com/wailsapp/wails/v2 v2.12.0 => /home/bogdan/go/pkg/mod
