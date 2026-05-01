@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d62d7e82-ea97-4ea1-bc2d-a7be443ac43b" name="Changes" comment="start Omega_launcher" />
+    <list default="true" id="d62d7e82-ea97-4ea1-bc2d-a7be443ac43b" name="Changes" comment="go Omega_launcher">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/wailsjs/go/main/App.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -21,7 +25,7 @@
 }</component>
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/ApRoGG224/Omega_launcher1.git&quot;,
+    &quot;url&quot;: &quot;https://github.com/ApRoGG224/Omega_launcher.git&quot;,
     &quot;accountId&quot;: &quot;51e79658-f402-4d2d-b155-24ef39515b6b&quot;
   }
 }</component>
@@ -46,7 +50,7 @@
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/bogdan/code/Omega_launcher&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/bogdan/Завантажене/Pulse-main&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -74,7 +78,10 @@
       <workItem from="1776502598039" duration="823000" />
       <workItem from="1776503928184" duration="1472000" />
       <workItem from="1776794035545" duration="2017000" />
-      <workItem from="1776955493117" duration="309000" />
+      <workItem from="1776955493117" duration="1687000" />
+      <workItem from="1777223250174" duration="844000" />
+      <workItem from="1777401414311" duration="658000" />
+      <workItem from="1777666468550" duration="439000" />
     </task>
     <task id="LOCAL-00001" summary="start Omega_launcher">
       <option name="closed" value="true" />
@@ -84,14 +91,40 @@
       <option name="project" value="LOCAL" />
       <updated>1776504493921</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="go Omega_launcher">
+      <option name="closed" value="true" />
+      <created>1776955871669</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1776955871669</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="CUSTOM_BOOLEAN_PROPERTIES">
+                <map>
+                  <entry key="Show.Git.Branches" value="true" />
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="start Omega_launcher" />
-    <option name="LAST_COMMIT_MESSAGE" value="start Omega_launcher" />
+    <MESSAGE value="go Omega_launcher" />
+    <option name="LAST_COMMIT_MESSAGE" value="go Omega_launcher" />
   </component>
 </project>
