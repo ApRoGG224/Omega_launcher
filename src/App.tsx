@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { translations, Language } from './i18n';
 import "./App.css";
 
 // ---------------------------------
@@ -37,6 +38,7 @@ interface ModpackInstance {
   loader: string;
   x: number;
   y: number;
+  icon?: string;
 }
 
 const VERSIONS_LIST = ["1.21.4", "1.21.1", "1.20.4", "1.19.4", "1.18.2", "1.16.5", "1.12.2", "1.8", "1.7.10"];
@@ -76,7 +78,7 @@ const ConsolePanel = React.memo(({ logs }: { logs: string[] }) => {
   );
 });
 
-const ModsPanel = React.memo(({ instances }: { instances: ModpackInstance[] }) => {
+const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackInstance[], t: any, language: Language }) => {
   const [query, setQuery] = useState("");
   const [mods, setMods] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -88,27 +90,64 @@ const ModsPanel = React.memo(({ instances }: { instances: ModpackInstance[] }) =
   
   const [versionMenuOpen, setVersionMenuOpen] = useState(false);
   const [loaderMenuOpen, setLoaderMenuOpen] = useState(false);
+  
+  const [sortBy, setSortBy] = useState("downloads");
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
 
   const [installModalOpen, setInstallModalOpen] = useState<string | null>(null);
 
-  const searchMods = useCallback(async (q: string, ver: string, loader: string, isLoadMore = false) => {
+  const searchMods = useCallback(async (q: string, ver: string, loader: string, sortOpt: string, isLoadMore = false) => {
     setLoading(true);
     try {
        const facets: any[] = [["project_type:mod"]];
-       if (ver !== "Любая") facets.push([`versions:${ver}`]);
-       if (loader !== "Любой") facets.push([`categories:${loader.toLowerCase()}`]);
+       if (ver && ver !== "Любая") {
+         facets.push([`versions:${ver}`]);
+       }
+       if (loader && loader !== "Любой") {
+         facets.push([`categories:${loader.toLowerCase()}`]);
+       }
+       
+       let indexSort = sortOpt;
+       if (sortOpt === "optimization") {
+         facets.push(["categories:optimization"]);
+         indexSort = "downloads"; // when looking for optimization, sort by popularity
+       }
        
        const currentOffset = isLoadMore ? offset + LIMIT : 0;
        const facetsStr = JSON.stringify(facets);
-       const res = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(q)}&facets=${encodeURIComponent(facetsStr)}&limit=${LIMIT}&offset=${currentOffset}`);
+       const res = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(q)}&facets=${encodeURIComponent(facetsStr)}&index=${indexSort}&limit=${LIMIT}&offset=${currentOffset}`);
        const data = await res.json();
+       
+       let finalHits = data.hits || [];
+       if (finalHits.length > 0 && language === 'ru') {
+         try {
+           const combinedDesc = finalHits.map((h: any) => h.description || " ").join(" \n\n###\n\n ");
+           const trRes = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ru&dt=t", {
+             method: "POST",
+             headers: { "Content-Type": "application/x-www-form-urlencoded" },
+             body: "q=" + encodeURIComponent(combinedDesc)
+           });
+           const trData = await trRes.json();
+           let fullTranslation = "";
+           if (trData && trData[0]) {
+             trData[0].forEach((item: any) => { if (item[0]) fullTranslation += item[0]; });
+           }
+           const splitTranslations = fullTranslation.split("###").map(s => s.trim());
+           finalHits = finalHits.map((h: any, idx: number) => ({
+             ...h,
+             description: splitTranslations[idx] || h.description
+           }));
+         } catch(e) {
+           console.error("Translation failed", e);
+         }
+       }
        
        if (data.hits) {
          if (isLoadMore) {
-           setMods(prev => [...prev, ...data.hits]);
+           setMods(prev => [...prev, ...finalHits]);
            setOffset(currentOffset);
          } else {
-           setMods(data.hits);
+           setMods(finalHits);
            setOffset(0);
          }
        }
@@ -119,14 +158,15 @@ const ModsPanel = React.memo(({ instances }: { instances: ModpackInstance[] }) =
   }, [offset]);
 
   useEffect(() => {
-    searchMods(query, mcVersion, modLoader, false);
+    searchMods(query, mcVersion, modLoader, sortBy, false);
     // eslint-disable-next-line
-  }, [mcVersion, modLoader]);
+  }, [mcVersion, modLoader, sortBy]);
 
   useEffect(() => {
     const handleClick = () => {
       setVersionMenuOpen(false);
       setLoaderMenuOpen(false);
+      setSortMenuOpen(false);
     };
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
@@ -134,6 +174,20 @@ const ModsPanel = React.memo(({ instances }: { instances: ModpackInstance[] }) =
 
   const handleInstallClick = (modId: string) => {
     setInstallModalOpen(modId);
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const bottom = e.currentTarget.scrollHeight - e.currentTarget.scrollTop <= e.currentTarget.clientHeight + 50;
+    if (bottom && !loading && mods.length >= LIMIT) {
+      searchMods(query, mcVersion, modLoader, sortBy, true);
+    }
+  };
+
+  const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+
+  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
   };
 
   const confirmInstall = async (instanceId: string) => {
@@ -152,20 +206,19 @@ const ModsPanel = React.memo(({ instances }: { instances: ModpackInstance[] }) =
             loader: inst.loader === "Vanilla" ? "fabric" : inst.loader,
             instanceId: instanceId 
         });
-        alert("Мод успешно скачан и установлен в сборку!");
-    } catch (e) {
-        alert("Ошибка при скачивании мода: " + e);
+        showNotification("Мод успешно скачан и установлен в сборку!", 'success');
+    } catch (e: any) {
+        if (typeof e === 'string' && e.includes("ALREADY_EXISTS")) {
+            showNotification(t.modAlreadyInstalled, 'error');
+        } else {
+            showNotification(t.modInstallError + e, 'error');
+        }
     }
     setLoading(false);
   };
 
   return (
-      <div className="settings-panel" style={{ marginTop: 0, height: "100%", display: "flex", flexDirection: "column", position: "relative" }}>
-         <div className="settings-header">
-           <h2>Менеджер модов</h2>
-           <p>Поиск и установка из базы Modrinth</p>
-         </div>
-         
+      <div className="settings-panel" style={{ marginTop: 0, height: "100%", display: "flex", flexDirection: "column", position: "relative", padding: "10px 0 0 0", background: "transparent", border: "none", boxShadow: "none" }}>
          <div className="mods-search-bar" style={{ flexShrink: 0 }}>
            <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setVersionMenuOpen(prev => !prev); setLoaderMenuOpen(false); }} style={{ minWidth: "120px" }}>
              <div className="custom-dropdown-btn" style={{ height: "46px" }}>
@@ -180,7 +233,7 @@ const ModsPanel = React.memo(({ instances }: { instances: ModpackInstance[] }) =
              )}
            </div>
 
-           <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setLoaderMenuOpen(prev => !prev); setVersionMenuOpen(false); }} style={{ minWidth: "140px" }}>
+           <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setLoaderMenuOpen(prev => !prev); setVersionMenuOpen(false); setSortMenuOpen(false); }} style={{ minWidth: "110px" }}>
              <div className="custom-dropdown-btn" style={{ height: "46px" }}>
                {modLoader} <IconChevronDown />
              </div>
@@ -193,26 +246,41 @@ const ModsPanel = React.memo(({ instances }: { instances: ModpackInstance[] }) =
              )}
            </div>
 
+           <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setSortMenuOpen(prev => !prev); setVersionMenuOpen(false); setLoaderMenuOpen(false); }} style={{ minWidth: "160px" }}>
+             <div className="custom-dropdown-btn" style={{ height: "46px" }}>
+               {sortBy === "downloads" ? "Популярные" : sortBy === "follows" ? "Лучшие моды" : sortBy === "optimization" ? "Для оптимизации" : sortBy === "newest" ? "Новые" : "Обновлённые"} <IconChevronDown />
+             </div>
+             {sortMenuOpen && (
+               <div className="custom-dropdown-menu">
+                 <div className="custom-dropdown-item" onClick={() => setSortBy("downloads")}>Популярные</div>
+                 <div className="custom-dropdown-item" onClick={() => setSortBy("follows")}>Лучшие моды</div>
+                 <div className="custom-dropdown-item" onClick={() => setSortBy("optimization")}>Для оптимизации</div>
+                 <div className="custom-dropdown-item" onClick={() => setSortBy("newest")}>Новые</div>
+                 <div className="custom-dropdown-item" onClick={() => setSortBy("updated")}>Обновлённые</div>
+               </div>
+             )}
+           </div>
+
            <input 
              type="text" 
              placeholder={`Найти мод для ${mcVersion}...`} 
              value={query} 
              onChange={(e) => setQuery(e.target.value)}
-             onKeyDown={(e) => e.key === 'Enter' && searchMods(query, mcVersion, modLoader, false)}
+             onKeyDown={(e) => e.key === 'Enter' && searchMods(query, mcVersion, modLoader, sortBy, false)}
            />
-           <button onClick={() => searchMods(query, mcVersion, modLoader, false)} disabled={loading}>
+           <button onClick={() => searchMods(query, mcVersion, modLoader, sortBy, false)} disabled={loading}>
              {loading ? "..." : <IconSearch />}
            </button>
          </div>
 
-         <div className="mods-grid" style={{ flex: 1 }}>
+         <div className="mods-grid" style={{ flex: 1, overflowY: "auto" }} onScroll={handleScroll}>
            {mods.map((mod, idx) => (
              <div key={`${mod.project_id}-${idx}`} className="mod-card">
                <div className="mod-header">
                  <img src={mod.icon_url || "https://cdn.modrinth.com/favicon.ico"} alt={mod.title} className="mod-icon" />
                  <div className="mod-info">
                    <div className="mod-title">{mod.title}</div>
-                   <div className="mod-author">by {mod.author}</div>
+                   <div className="mod-author">{t.byAuthor} {mod.author}</div>
                  </div>
                </div>
                <div className="mod-desc">{mod.description}</div>
@@ -220,20 +288,15 @@ const ModsPanel = React.memo(({ instances }: { instances: ModpackInstance[] }) =
                  <div className="mod-downloads">
                    <IconDownload /> {mod.downloads >= 1000000 ? (mod.downloads / 1000000).toFixed(1) + 'M' : mod.downloads >= 1000 ? (mod.downloads / 1000).toFixed(1) + 'K' : mod.downloads}
                  </div>
-                 <button className="mod-install-btn" onClick={() => handleInstallClick(mod.project_id)}>Скачать</button>
+                 <button className="mod-install-btn" onClick={() => handleInstallClick(mod.project_id)}>{t.downloadBtn}</button>
                </div>
              </div>
            ))}
            
-           {mods.length >= LIMIT && (
-             <button 
-               className="play-btn" 
-               style={{ width: "100%", gridColumn: "1 / -1", height: "40px", marginTop: "10px", fontSize: "0.9rem" }}
-               onClick={() => searchMods(query, mcVersion, modLoader, true)}
-               disabled={loading}
-             >
-               {loading ? "Загрузка..." : "Загрузить ещё"}
-             </button>
+           {loading && (
+             <div style={{ width: "100%", gridColumn: "1 / -1", textAlign: "center", padding: "20px" }}>
+               <div className="spinner" />
+             </div>
            )}
          </div>
 
@@ -241,50 +304,131 @@ const ModsPanel = React.memo(({ instances }: { instances: ModpackInstance[] }) =
             <>
               <style>{`
                 @keyframes slideDownModal {
-                  from { top: -100px; opacity: 0; transform: translateX(-50%) scale(0.95); }
-                  to { top: 20px; opacity: 1; transform: translateX(-50%) scale(1); }
+                  0% { top: -100px; opacity: 0; transform: translateX(-50%) scale(0.9); }
+                  60% { top: 30px; opacity: 1; transform: translateX(-50%) scale(1.02); }
+                  100% { top: 20px; opacity: 1; transform: translateX(-50%) scale(1); }
+                }
+                @keyframes slideInItem {
+                  from { opacity: 0; transform: translateX(-20px); }
+                  to { opacity: 1; transform: translateX(0); }
                 }
               `}</style>
               <div className="global-modal-content" style={{
                 position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
-                background: 'rgba(20, 20, 30, 0.85)', border: '1px solid rgba(168, 85, 247, 0.3)',
-                borderRadius: '16px', padding: '20px', width: '500px', maxWidth: '90%',
+                background: 'linear-gradient(145deg, rgba(30,30,45,0.95), rgba(15,15,20,0.98))',
+                border: '1px solid rgba(255,255,255,0.05)',
+                borderTop: '2px solid #a855f7',
+                borderRadius: '20px', padding: '24px', width: '480px', maxWidth: '90%',
                 display: 'flex', flexDirection: 'column', 
-                boxShadow: '0 20px 40px -10px rgba(0,0,0,0.7), 0 0 30px rgba(168, 85, 247, 0.15)',
-                backdropFilter: 'blur(16px)', zIndex: 9999,
-                animation: 'slideDownModal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+                boxShadow: '0 30px 60px -15px rgba(0,0,0,0.8), 0 0 40px rgba(168, 85, 247, 0.2) inset',
+                backdropFilter: 'blur(20px)', zIndex: 9999,
+                animation: 'slideDownModal 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                  <h3 style={{ fontSize: "1.1rem", margin: 0 }}>Выберите сборку для установки</h3>
-                  <button onClick={() => setInstallModalOpen(null)} style={{ background: 'transparent', border: 'none', color: '#8b8b9c', cursor: 'pointer', padding: '5px', display: 'flex' }} onMouseEnter={e => e.currentTarget.style.color="white"} onMouseLeave={e => e.currentTarget.style.color="#8b8b9c"}><IconX size={20} /></button>
-                </div>
-                <div style={{ maxHeight: "300px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px", paddingRight: "5px" }}>
-                  {instances.length === 0 ? (
-                    <div style={{ color: "#8b8b9c", fontSize: "0.95rem", textAlign: "center", padding: "20px" }}>
-                      Нет созданных сборок. Сначала создайте сборку на главном экране!
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ background: 'rgba(168, 85, 247, 0.2)', padding: '8px', borderRadius: '12px', display: 'flex' }}>
+                       <IconDownload />
                     </div>
-                  ) : instances.map(inst => (
+                    <h3 style={{ 
+                      fontSize: "1.2rem", margin: 0, fontWeight: "700",
+                      background: 'linear-gradient(90deg, #fff, #c084fc)',
+                      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+                    }}>
+                      {t.installTo}
+                    </h3>
+                  </div>
+                  <button onClick={() => setInstallModalOpen(null)} style={{ 
+                    background: 'rgba(255,255,255,0.05)', border: 'none', color: '#8b8b9c', 
+                    cursor: 'pointer', padding: '8px', borderRadius: '50%', display: 'flex',
+                    transition: 'all 0.3s ease'
+                  }} onMouseEnter={e => { e.currentTarget.style.color="white"; e.currentTarget.style.background="rgba(239, 68, 68, 0.2)"; e.currentTarget.style.transform="rotate(90deg)"; }} 
+                     onMouseLeave={e => { e.currentTarget.style.color="#8b8b9c"; e.currentTarget.style.background="rgba(255,255,255,0.05)"; e.currentTarget.style.transform="rotate(0deg)"; }}>
+                     <IconX />
+                  </button>
+                </div>
+
+                <div style={{ maxHeight: "320px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "8px" }}>
+                  {instances.length === 0 ? (
+                    <div style={{ color: "#8b8b9c", fontSize: "0.95rem", textAlign: "center", padding: "30px 20px", background: "rgba(255,255,255,0.02)", borderRadius: "12px" }}>
+                      {t.noInstances}
+                    </div>
+                  ) : instances.map((inst, idx) => (
                     <button key={inst.id} onClick={() => confirmInstall(inst.id)} style={{
                       background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", color: "white",
-                      padding: "12px 16px", borderRadius: "10px", cursor: "pointer", textAlign: "left", transition: "all 0.2s ease",
-                      display: "flex", justifyContent: "space-between", alignItems: "center"
-                    }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(168, 85, 247, 0.15)"; e.currentTarget.style.borderColor = "rgba(168, 85, 247, 0.4)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                       onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = "translateY(0)"; }}>
-                      <span style={{ fontSize: "1rem", fontWeight: "600" }}>{inst.name}</span>
-                      <span style={{ color: "#c084fc", fontSize: "0.8rem", background: "rgba(168, 85, 247, 0.1)", border: "1px solid rgba(168, 85, 247, 0.2)", padding: "4px 8px", borderRadius: "8px" }}>
-                        {inst.mcVersion} ({inst.loader})
-                      </span>
+                      padding: "16px", borderRadius: "14px", cursor: "pointer", textAlign: "left", transition: "all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)",
+                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      animation: `slideInItem 0.4s ease forwards`,
+                      animationDelay: `${idx * 0.05}s`, opacity: 0
+                    }} onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(90deg, rgba(168, 85, 247, 0.15), rgba(168, 85, 247, 0.05))"; e.currentTarget.style.borderColor = "rgba(168, 85, 247, 0.5)"; e.currentTarget.style.transform = "translateX(5px)"; e.currentTarget.style.boxShadow = "0 10px 20px -10px rgba(168, 85, 247, 0.3)"; }}
+                       onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = "translateX(0)"; e.currentTarget.style.boxShadow = "none"; }}>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        <div style={{ background: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "#a855f7" }}>
+                          <IconBox />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <span style={{ fontSize: "1.05rem", fontWeight: "600", letterSpacing: "0.3px" }}>{inst.name}</span>
+                          <span style={{ color: "#8b8b9c", fontSize: "0.85rem" }}>{t.version}: {inst.mcVersion}</span>
+                        </div>
+                      </div>
+
+                      <div style={{ 
+                        color: "#e9d5ff", fontSize: "0.8rem", fontWeight: "600",
+                        background: "rgba(168, 85, 247, 0.2)", border: "1px solid rgba(168, 85, 247, 0.3)", 
+                        padding: "6px 12px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.5px" 
+                      }}>
+                        {inst.loader}
+                      </div>
                     </button>
                   ))}
                 </div>
               </div>
             </>
           )}
+
+          {/* Toast Notification */}
+          {notification && (
+            <div style={{
+              position: 'fixed', bottom: '30px', right: '30px', zIndex: 10000,
+              background: notification.type === 'success' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              border: `1px solid ${notification.type === 'success' ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`,
+              backdropFilter: 'blur(12px)',
+              color: notification.type === 'success' ? '#4ade80' : '#f87171',
+              padding: '16px 24px', borderRadius: '12px',
+              display: 'flex', alignItems: 'center', gap: '12px',
+              boxShadow: `0 10px 30px -10px ${notification.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+              animation: 'toastSlideIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'
+            }}>
+              <style>{`
+                @keyframes toastSlideIn {
+                  from { transform: translateX(100%) scale(0.9); opacity: 0; }
+                  to { transform: translateX(0) scale(1); opacity: 1; }
+                }
+              `}</style>
+              <div style={{
+                background: notification.type === 'success' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                padding: '6px', borderRadius: '50%', display: 'flex'
+              }}>
+                {notification.type === 'success' ? <IconBox /> : <IconX />}
+              </div>
+              <span style={{ fontSize: '1.05rem', fontWeight: '500' }}>{notification.message}</span>
+            </div>
+          )}
+
       </div>
   );
 });
 
 function App() {
+  const [language, setLanguage] = useState<Language>(() => {
+    return (localStorage.getItem("launcherLang") as Language) || 'ru';
+  });
+  const changeLanguage = (lang: Language) => {
+    setLanguage(lang);
+    localStorage.setItem("launcherLang", lang);
+  };
+  const t = translations[language];
+
   const [activeTab, setActiveTab] = useState("home");
   
   // Accounts
@@ -306,6 +450,64 @@ function App() {
   const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; instanceId: string } | null>(null);
+  const [renameModalOpen, setRenameModalOpen] = useState<string | null>(null);
+  const [renameInput, setRenameInput] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleClick = () => {
+      if (contextMenu) setContextMenu(null);
+    };
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [contextMenu]);
+
+  const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && selectedInstanceId) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_SIZE = 128;
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > height && width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          } else if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          const resizedBase64 = canvas.toDataURL('image/png');
+
+          setInstances(prev => {
+            const next = prev.map(i => i.id === selectedInstanceId ? { ...i, icon: resizedBase64 } : i);
+            try {
+              localStorage.setItem("desktopInstances", JSON.stringify(next));
+            } catch(e) {
+              console.error("Storage full:", e);
+            }
+            return next;
+          });
+        };
+        img.src = base64;
+      };
+      reader.readAsDataURL(file);
+    }
+    // reset input so the same file can be selected again
+    if (e.target) e.target.value = '';
+  };
 
   // Creation Modal State
   const [isCreating, setIsCreating] = useState(false);
@@ -501,18 +703,19 @@ function App() {
   return (
     <div className="app-container">
       <aside className="sidebar">
-        <div className="sidebar-icon brand"><IconOmega /></div>
-        <div className={`sidebar-icon ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab("home")}><IconHome /></div>
-        <div className={`sidebar-icon ${activeTab === 'mods' ? 'active' : ''}`} onClick={() => setActiveTab("mods")}><IconBox /></div>
-        <div className={`sidebar-icon ${activeTab === 'friends' ? 'active' : ''}`}><IconUsers /></div>
-        <div className={`sidebar-icon ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab("settings")}><IconSettings /></div>
+        <div className="sidebar-icon brand"><IconBox /></div>
+        <div className={`sidebar-icon ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab("home")} title={t.sidebarHome}><IconHome /></div>
+        <div className={`sidebar-icon ${activeTab === 'mods' ? 'active' : ''}`} onClick={() => setActiveTab("mods")} title={t.sidebarMods}><IconBox /></div>
+        <div className={`sidebar-icon ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab("settings")} title={t.sidebarSettings}><IconSettings /></div>
       </aside>
 
       <main className="main-content">
-        <header className="top-bar">
-          <div className="title-area">
-            <h1>Omega Launcher</h1>
-          </div>
+        <header className="top-bar" style={activeTab === 'mods' ? { justifyContent: 'flex-end', paddingBottom: '10px' } : {}}>
+          {activeTab !== 'mods' && (
+            <div className="title-area">
+              <h1>Omega Launcher</h1>
+            </div>
+          )}
           
           <div className="user-profile" ref={profileMenuRef} onClick={(e) => { e.stopPropagation(); setProfileMenuOpen(prev => !prev); }}>
             <div className="avatar">
@@ -565,11 +768,18 @@ function App() {
               onMouseUp={handleDesktopMouseUp}
               onMouseLeave={handleDesktopMouseUp}
             >
+              <input type="file" ref={fileInputRef} onChange={handleIconChange} style={{ display: 'none' }} accept="image/*" />
               {instances.map(inst => (
                  <div 
                    key={inst.id}
                    className={`desktop-icon ${selectedInstanceId === inst.id ? 'selected' : ''}`}
                    style={{ left: inst.x, top: inst.y }}
+                   onContextMenu={(e) => {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     setSelectedInstanceId(inst.id);
+                     setContextMenu({ visible: true, x: e.clientX, y: e.clientY, instanceId: inst.id });
+                   }}
                    onMouseDown={(e) => {
                      setSelectedInstanceId(inst.id);
                      setIsDragging(inst.id);
@@ -577,13 +787,59 @@ function App() {
                      setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
                    }}
                  >
-                   <div className="desktop-icon-img"><IconBox /></div>
+                   {inst.icon ? (
+                     <img src={inst.icon} alt="icon" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', marginBottom: 8 }} />
+                   ) : (
+                     <div className="desktop-icon-img"><IconBox /></div>
+                   )}
                    <div className="desktop-icon-name">{inst.name}</div>
                    <div className="desktop-icon-version">{inst.mcVersion} {inst.loader !== "Vanilla" ? inst.loader : ""}</div>
                  </div>
               ))}
-
-
+              {contextMenu && (
+                <div className="context-menu" style={{ 
+                  position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 1000,
+                  background: 'rgba(20, 20, 30, 0.95)', backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px',
+                  padding: '5px', display: 'flex', flexDirection: 'column', gap: '2px',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)', minWidth: '180px'
+                }}>
+                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setContextMenu(null); handlePlay(); }}>Запустить</button>
+                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setRenameModalOpen(contextMenu.instanceId); setRenameInput(instances.find(i=>i.id===contextMenu.instanceId)?.name || ""); setContextMenu(null); }}>Переименовать</button>
+                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); setContextMenu(null); }}>Выбрать свой значок</button>
+                  <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+                  <button className="ctx-item" style={{color: '#ef4444'}} onClick={(e) => {
+                    e.stopPropagation();
+                    setInstances(prev => {
+                      const next = prev.filter(i => i.id !== contextMenu.instanceId);
+                      localStorage.setItem("desktopInstances", JSON.stringify(next));
+                      return next;
+                    });
+                    if (selectedInstanceId === contextMenu.instanceId) setSelectedInstanceId(null);
+                    setContextMenu(null);
+                  }}>Удалить</button>
+                </div>
+              )}
+              
+              {renameModalOpen && (
+                <div className="modal-overlay" onClick={() => setRenameModalOpen(null)}>
+                  <div className="create-modal" onClick={e => e.stopPropagation()}>
+                    <h3>Переименовать сборку</h3>
+                    <input type="text" value={renameInput} onChange={e => setRenameInput(e.target.value)} placeholder="Новое название" />
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                      <button className="play-btn" style={{ flex: 1 }} onClick={() => {
+                        setInstances(prev => {
+                          const next = prev.map(i => i.id === renameModalOpen ? { ...i, name: renameInput } : i);
+                          localStorage.setItem("desktopInstances", JSON.stringify(next));
+                          return next;
+                        });
+                        setRenameModalOpen(null);
+                      }}>Сохранить</button>
+                      <button className="play-btn" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setRenameModalOpen(null)}>Отмена</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bottom-area">
@@ -593,8 +849,8 @@ function App() {
                 <div className="primary-controls">
                   <div className="selected-instance-display">
                     {selectedInstanceId 
-                      ? instances.find(i => i.id === selectedInstanceId)?.name || "Неизвестно"
-                      : "Сборка не выбрана"}
+                      ? instances.find(i => i.id === selectedInstanceId)?.name || t.unknown
+                      : t.noInstanceSelected}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
                     {isCreating && (
@@ -622,18 +878,18 @@ function App() {
                         </div>
 
                         <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                          <button className="play-btn" style={{ flex: 1, height: "40px", fontSize: "0.9rem", padding: 0, justifyContent: "center" }} onClick={handleCreateInstance}>Создать</button>
-                          <button className="play-btn" style={{ flex: 1, height: "40px", fontSize: "0.9rem", padding: 0, justifyContent: "center", background: "rgba(255,255,255,0.1)", boxShadow: "none" }} onClick={() => setIsCreating(false)}>Отмена</button>
+                          <button className="play-btn" style={{ flex: 1, height: "40px", fontSize: "0.9rem", padding: 0, justifyContent: "center" }} onClick={handleCreateInstance}>{t.createBtn}</button>
+                          <button className="play-btn" style={{ flex: 1, height: "40px", fontSize: "0.9rem", padding: 0, justifyContent: "center", background: "rgba(255,255,255,0.1)", boxShadow: "none" }} onClick={() => setIsCreating(false)}>{t.cancel}</button>
                         </div>
                       </div>
                     )}
                     <button className="play-btn" style={{ background: "rgba(168, 85, 247, 0.2)", border: "1px solid rgba(168, 85, 247, 0.4)", color: "#fff", height: "40px", fontSize: "0.9rem" }} onClick={() => setIsCreating(true)}>
-                      <IconPlus /> Создать сборку
+                      <IconPlus /> {t.createInstance}
                     </button>
                     {isRunning ? (
-                        <button className="play-btn" style={{ background: "rgba(239, 68, 68, 0.2)", border: "1px solid rgba(239, 68, 68, 0.4)", color: "#ef4444" }} onClick={handleStop}><IconX /> STOP</button>
+                        <button className="play-btn" style={{ background: "rgba(239, 68, 68, 0.2)", border: "1px solid rgba(239, 68, 68, 0.4)", color: "#ef4444" }} onClick={handleStop}><IconX /> {t.stopBtn}</button>
                     ) : (
-                        <button className="play-btn" onClick={handlePlay}><IconPlay /> PLAY</button>
+                        <button className="play-btn" onClick={handlePlay}><IconPlay /> {t.playBtn}</button>
                     )}
                   </div>
                 </div>
@@ -643,7 +899,7 @@ function App() {
                     <span className="stat-val">
                       {selectedInstanceId && instances.find(i => i.id === selectedInstanceId)?.loader !== "Vanilla" ? "12" : "0"}
                     </span>
-                    <span className="stat-lbl">Модов</span>
+                    <span className="stat-lbl">{t.modsCount}</span>
                   </div>
                   <div 
                     className="stat-card" 
@@ -651,10 +907,10 @@ function App() {
                     style={{ cursor: "pointer", transition: "0.2s" }}
                     onMouseEnter={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.2)"}
                     onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"}
-                    title="Открыть папку сборки"
+                    title={t.folderBtn}
                   >
-                    <span className="stat-val" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconFolder size={24} /></span>
-                    <span className="stat-lbl">Папка</span>
+                    <span className="stat-val" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconFolder /></span>
+                    <span className="stat-lbl">{t.folderBtn}</span>
                   </div>
                   <div className="stat-card">
                     <span className="stat-val">{ram} GB</span>
@@ -666,7 +922,7 @@ function App() {
           </>
         )}
 
-        {activeTab === "mods" && <ModsPanel instances={instances} />}
+        {activeTab === "mods" && <ModsPanel instances={instances} t={t} language={language} />}
 
         {activeTab === "settings" && (
           <div className="settings-panel">
@@ -744,6 +1000,32 @@ function App() {
                   <input type="text" value={gamePath} onChange={(e) => setGamePath(e.target.value)} />
                   <button className="folder-btn"><IconFolder /></button>
                 </div>
+              </div>
+            </div>
+            <div className="settings-section">
+              <div className="section-title">
+                <div className="section-icon" style={{color: '#10b981'}}><IconSettings /></div>
+                {t.languageTitle}
+              </div>
+              <div className="input-group" style={{ flexDirection: "row", gap: "10px", marginTop: "10px" }}>
+                <button 
+                  onClick={() => changeLanguage('ru')}
+                  style={{
+                    flex: 1, padding: "12px", borderRadius: "10px", border: language === 'ru' ? "1px solid rgba(168, 85, 247, 0.5)" : "1px solid rgba(255, 255, 255, 0.1)",
+                    background: language === 'ru' ? "rgba(168, 85, 247, 0.2)" : "rgba(255, 255, 255, 0.05)", 
+                    color: language === 'ru' ? "white" : "#8b8b9c", cursor: "pointer", fontSize: "1rem", fontWeight: language === 'ru' ? "bold" : "normal"
+                  }}>
+                  🇷🇺 Русский
+                </button>
+                <button 
+                  onClick={() => changeLanguage('en')}
+                  style={{
+                    flex: 1, padding: "12px", borderRadius: "10px", border: language === 'en' ? "1px solid rgba(168, 85, 247, 0.5)" : "1px solid rgba(255, 255, 255, 0.1)",
+                    background: language === 'en' ? "rgba(168, 85, 247, 0.2)" : "rgba(255, 255, 255, 0.05)", 
+                    color: language === 'en' ? "white" : "#8b8b9c", cursor: "pointer", fontSize: "1rem", fontWeight: language === 'en' ? "bold" : "normal"
+                  }}>
+                  🇬🇧 English
+                </button>
               </div>
             </div>
           </div>

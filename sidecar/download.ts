@@ -79,6 +79,12 @@ async function main() {
         }
 
         const destFile = path.join(modsDir, filename);
+
+        if (fs.existsSync(destFile)) {
+            console.error(`[ERROR] ALREADY_EXISTS`);
+            process.exit(1);
+        }
+
         console.log(`[DOWNLOADER] Downloading ${filename}...`);
         await downloadFile(downloadUrl, destFile);
         console.log(`[SUCCESS] Mod saved to ${destFile}`);
