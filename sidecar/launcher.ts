@@ -34,6 +34,9 @@ async function startMinecraft() {
 
     const vanillaVersion = targetVersion.split('-')[0];
     
+    // Check if an instance ID was passed as the 5th argument
+    const targetInstanceId = process.argv[6];
+
     // Automatically download and select the correct Java version!
     const javaPath = await ensureJava(vanillaVersion, "./minecraft_data");
 
@@ -51,6 +54,13 @@ async function startMinecraft() {
             min: "1G"
         }
     };
+
+    if (targetInstanceId && targetInstanceId.trim() !== "") {
+        opts.overrides = {
+            gameDirectory: `./minecraft_data/instances/${targetInstanceId}`
+        };
+        console.log(`[LAUNCHER] Using instance isolation: ${targetInstanceId}`);
+    }
 
     if (targetVersion.includes('-')) {
         opts.version.custom = targetVersion;

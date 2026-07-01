@@ -42,3 +42,6 @@ When working on tasks for this repository, the agent MUST follow this strict seq
 
 ## Coding Standards
 - **Comments:** NEVER write comments in the code unless absolutely necessary for highly complex logic. If a comment is required, it MUST be written in English. Never write comments in Russian.
+
+## User Environment
+- **Editor:** The user is using the **Zed** code editor. Keep this in mind when providing instructions for shortcuts, terminal access, or IDE features.

@@ -136,9 +136,27 @@ const ModsPanel = React.memo(({ instances }: { instances: ModpackInstance[] }) =
     setInstallModalOpen(modId);
   };
 
-  const confirmInstall = (instanceId: string) => {
-    alert(`Мод успешно добавлен в очередь скачивания для сборки! (будет реализовано в след. версии)`);
+  const confirmInstall = async (instanceId: string) => {
+    const inst = instances.find(i => i.id === instanceId);
+    if (!inst) return;
+    
+    const modIdToDownload = installModalOpen;
+    if (!modIdToDownload) return;
+
     setInstallModalOpen(null);
+    setLoading(true);
+    try {
+        await invoke("download_mod", { 
+            modId: modIdToDownload, 
+            mcVersion: inst.mcVersion, 
+            loader: inst.loader === "Vanilla" ? "fabric" : inst.loader,
+            instanceId: instanceId 
+        });
+        alert("Мод успешно скачан и установлен в сборку!");
+    } catch (e) {
+        alert("Ошибка при скачивании мода: " + e);
+    }
+    setLoading(false);
   };
 
   return (
@@ -204,30 +222,6 @@ const ModsPanel = React.memo(({ instances }: { instances: ModpackInstance[] }) =
                  </div>
                  <button className="mod-install-btn" onClick={() => handleInstallClick(mod.project_id)}>Скачать</button>
                </div>
-               
-               {installModalOpen === mod.project_id && (
-                 <div className="install-modal" style={{
-                   position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', 
-                   background: 'rgba(20,20,30,0.95)', backdropFilter: 'blur(10px)',
-                   display: 'flex', flexDirection: 'column', padding: '15px', borderRadius: '12px', zIndex: 10
-                 }}>
-                   <h3 style={{ marginBottom: "15px", fontSize: "1rem" }}>Установить в:</h3>
-                   <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
-                     {instances.length === 0 ? (
-                       <div style={{ color: "#8b8b9c", fontSize: "0.9rem" }}>Нет созданных сборок. Сначала создайте иконку на главном экране!</div>
-                     ) : instances.map(inst => (
-                       <button key={inst.id} onClick={() => confirmInstall(inst.id)} style={{
-                         background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white",
-                         padding: "10px", borderRadius: "8px", cursor: "pointer", textAlign: "left", transition: "0.2s"
-                       }} onMouseEnter={e => e.currentTarget.style.background = "rgba(168, 85, 247, 0.4)"}
-                          onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}>
-                         {inst.name} <span style={{ color: "#8b8b9c", fontSize: "0.8rem", marginLeft: "10px" }}>{inst.mcVersion} ({inst.loader})</span>
-                       </button>
-                     ))}
-                   </div>
-                   <button onClick={() => setInstallModalOpen(null)} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#8b8b9c", padding: "10px", borderRadius: "8px", marginTop: "10px", cursor: "pointer" }}>Отмена</button>
-                 </div>
-               )}
              </div>
            ))}
            
@@ -242,6 +236,50 @@ const ModsPanel = React.memo(({ instances }: { instances: ModpackInstance[] }) =
              </button>
            )}
          </div>
+
+         {installModalOpen && (
+            <>
+              <style>{`
+                @keyframes slideDownModal {
+                  from { top: -100px; opacity: 0; transform: translateX(-50%) scale(0.95); }
+                  to { top: 20px; opacity: 1; transform: translateX(-50%) scale(1); }
+                }
+              `}</style>
+              <div className="global-modal-content" style={{
+                position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
+                background: 'rgba(20, 20, 30, 0.85)', border: '1px solid rgba(168, 85, 247, 0.3)',
+                borderRadius: '16px', padding: '20px', width: '500px', maxWidth: '90%',
+                display: 'flex', flexDirection: 'column', 
+                boxShadow: '0 20px 40px -10px rgba(0,0,0,0.7), 0 0 30px rgba(168, 85, 247, 0.15)',
+                backdropFilter: 'blur(16px)', zIndex: 9999,
+                animation: 'slideDownModal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                  <h3 style={{ fontSize: "1.1rem", margin: 0 }}>Выберите сборку для установки</h3>
+                  <button onClick={() => setInstallModalOpen(null)} style={{ background: 'transparent', border: 'none', color: '#8b8b9c', cursor: 'pointer', padding: '5px', display: 'flex' }} onMouseEnter={e => e.currentTarget.style.color="white"} onMouseLeave={e => e.currentTarget.style.color="#8b8b9c"}><IconX size={20} /></button>
+                </div>
+                <div style={{ maxHeight: "300px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px", paddingRight: "5px" }}>
+                  {instances.length === 0 ? (
+                    <div style={{ color: "#8b8b9c", fontSize: "0.95rem", textAlign: "center", padding: "20px" }}>
+                      Нет созданных сборок. Сначала создайте сборку на главном экране!
+                    </div>
+                  ) : instances.map(inst => (
+                    <button key={inst.id} onClick={() => confirmInstall(inst.id)} style={{
+                      background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", color: "white",
+                      padding: "12px 16px", borderRadius: "10px", cursor: "pointer", textAlign: "left", transition: "all 0.2s ease",
+                      display: "flex", justifyContent: "space-between", alignItems: "center"
+                    }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(168, 85, 247, 0.15)"; e.currentTarget.style.borderColor = "rgba(168, 85, 247, 0.4)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                       onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = "translateY(0)"; }}>
+                      <span style={{ fontSize: "1rem", fontWeight: "600" }}>{inst.name}</span>
+                      <span style={{ color: "#c084fc", fontSize: "0.8rem", background: "rgba(168, 85, 247, 0.1)", border: "1px solid rgba(168, 85, 247, 0.2)", padding: "4px 8px", borderRadius: "8px" }}>
+                        {inst.mcVersion} ({inst.loader})
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
       </div>
   );
 });
@@ -324,14 +362,17 @@ function App() {
     };
   }, []);
 
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const handleClick = () => {
-      setProfileMenuOpen(false);
+    const handleClick = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
       setVerMenuOpen(false);
       setLoaderMenuOpen(false);
     };
-    document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
   const handleAddUsername = useCallback(() => {
@@ -374,8 +415,13 @@ function App() {
         setAccount(newAcc);
         setLogs(prev => [...prev, "[MS_AUTH]: Успешный вход как " + msName]);
         setProfileMenuOpen(false);
+      } else {
+        const errMatch = output.toString().match(/ERROR:(.+)/);
+        setLogs(prev => [...prev, "[MS_AUTH]: Ошибка входа: " + (errMatch ? errMatch[1].trim() : "Неизвестная ошибка")]);
       }
-    } catch(e) {}
+    } catch(e: any) {
+      setLogs(prev => [...prev, "[MS_AUTH_ERR]: " + e]);
+    }
   }, []);
 
   const handlePlay = useCallback(async () => {
@@ -394,7 +440,13 @@ function App() {
       "[00:00:02] [main/INFO]: Loading version manifest from Mojang..."
     ]);
     try {
-        await invoke("launch_minecraft", { version: fullVersionName, server: serverIp, username: account.name, ram });
+        await invoke("launch_minecraft", { 
+          version: fullVersionName, 
+          server: serverIp, 
+          username: account.name, 
+          ram,
+          instanceId: inst.id 
+        });
     } catch(e) {
         setIsRunning(false);
     }
@@ -462,7 +514,7 @@ function App() {
             <h1>Omega Launcher</h1>
           </div>
           
-          <div className="user-profile" onClick={(e) => { e.stopPropagation(); setProfileMenuOpen(prev => !prev); }}>
+          <div className="user-profile" ref={profileMenuRef} onClick={(e) => { e.stopPropagation(); setProfileMenuOpen(prev => !prev); }}>
             <div className="avatar">
                 {account.type === "microsoft" ? <IconMicrosoft /> : (account.name ? account.name.substring(0, 2).toUpperCase() : "??")}
             </div>
@@ -472,7 +524,7 @@ function App() {
             </div>
             
             {profileMenuOpen && (
-              <div className="profile-menu" onClick={(e) => e.stopPropagation()}>
+              <div className="profile-menu">
                 <span style={{ fontSize: "0.8rem", color: "#8b8b9c", marginBottom: "5px" }}>АККАУНТЫ</span>
                 <div className="saved-nicks-list">
                   {savedAccounts.map(acc => (
@@ -593,9 +645,16 @@ function App() {
                     </span>
                     <span className="stat-lbl">Модов</span>
                   </div>
-                  <div className="stat-card">
-                    <span className="stat-val">4</span>
-                    <span className="stat-lbl">Онлайн</span>
+                  <div 
+                    className="stat-card" 
+                    onClick={() => selectedInstanceId && invoke("open_folder", { instanceId: selectedInstanceId })}
+                    style={{ cursor: "pointer", transition: "0.2s" }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.2)"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"}
+                    title="Открыть папку сборки"
+                  >
+                    <span className="stat-val" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconFolder size={24} /></span>
+                    <span className="stat-lbl">Папка</span>
                   </div>
                   <div className="stat-card">
                     <span className="stat-val">{ram} GB</span>
