@@ -40,11 +40,46 @@ export const translations = {
     settingsSubtitle: "Конфигурация лаунчера",
     autoConnect: "Автоподключение",
     serverIpLabel: "IP СЕРВЕРА (Оставьте пустым для обычного запуска)",
+    themeTitle: "Тема лаунчера",
+    customThemeTitle: "Свой цвет (Hex)",
     ramSettingsTitle: "Оперативная память",
     ramSettingsDesc: "Выделено для Java heap",
     filePathsTitle: "Пути к файлам",
     gameFolder: "ПАПКА ИГРЫ (.MINECRAFT)",
-    languageTitle: "Язык интерфейса"
+    languageTitle: "Язык интерфейса",
+    
+    // Новые строки
+    anyVersion: "Любая",
+    anyLoader: "Любой",
+    sortDownloads: "Популярные",
+    sortFollows: "Лучшие моды",
+    sortOptimization: "Для оптимизации",
+    sortNewest: "Новые",
+    sortUpdated: "Обновлённые",
+    javaLabel: "JAVA (JDK)",
+    
+    // Новые элементы UI
+    accountsSection: "АККАУНТЫ",
+    loginMicrosoftBtn: "Войти через Microsoft",
+    nicknamePlaceholder: "Никнейм...",
+    ctxPlay: "Запустить",
+    ctxRename: "Переименовать",
+    ctxIcon: "Выбрать свой значок",
+    ctxDelete: "Удалить",
+    newInstTitle: "Новая сборка",
+    newInstNamePlaceholder: "Название (напр. My Modpack)",
+    renameInstTitle: "Переименовать сборку",
+    renameInstPlaceholder: "Новое название",
+    saveBtn: "Сохранить",
+    
+    // Логи
+    logWaitingBrowser: "[MS_AUTH]: Ожидание входа в браузере...",
+    logSuccessLogin: "[MS_AUTH]: Успешный вход как ",
+    logLoginError: "[MS_AUTH]: Ошибка входа: ",
+    logUnknownError: "Неизвестная ошибка",
+    logStartingMc: "Запуск Minecraft...",
+    logKillingMc: "[main/INFO]: Убиваем процесс Minecraft...",
+    alertNoInstance: "Сначала выберите сборку!"
   },
   en: {
     sidebarHome: "Home",
@@ -87,11 +122,46 @@ export const translations = {
     settingsSubtitle: "Launcher configuration",
     autoConnect: "Auto Connect",
     serverIpLabel: "SERVER IP (Leave empty for normal launch)",
+    themeTitle: "Theme",
+    customThemeTitle: "Custom Color (Hex)",
     ramSettingsTitle: "Memory Allocation",
     ramSettingsDesc: "Allocated for Java heap",
     filePathsTitle: "File Paths",
     gameFolder: "GAME FOLDER (.MINECRAFT)",
-    languageTitle: "Interface Language"
+    languageTitle: "Interface Language",
+    
+    // New strings
+    anyVersion: "Any",
+    anyLoader: "Any",
+    sortDownloads: "Popular",
+    sortFollows: "Best (Follows)",
+    sortOptimization: "Optimization",
+    sortNewest: "Newest",
+    sortUpdated: "Recently Updated",
+    javaLabel: "JAVA (JDK)",
+    
+    // New UI elements
+    accountsSection: "ACCOUNTS",
+    loginMicrosoftBtn: "Login with Microsoft",
+    nicknamePlaceholder: "Nickname...",
+    ctxPlay: "Play",
+    ctxRename: "Rename",
+    ctxIcon: "Choose custom icon",
+    ctxDelete: "Delete",
+    newInstTitle: "New Instance",
+    newInstNamePlaceholder: "Name (e.g., My Modpack)",
+    renameInstTitle: "Rename Instance",
+    renameInstPlaceholder: "New name",
+    saveBtn: "Save",
+    
+    // Logs
+    logWaitingBrowser: "[MS_AUTH]: Waiting for browser login...",
+    logSuccessLogin: "[MS_AUTH]: Logged in successfully as ",
+    logLoginError: "[MS_AUTH]: Login error: ",
+    logUnknownError: "Unknown error",
+    logStartingMc: "Starting Minecraft...",
+    logKillingMc: "[main/INFO]: Killing Minecraft process...",
+    alertNoInstance: "Please select or create an instance on the desktop first!"
   }
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { HexColorPicker } from "react-colorful";
 import { translations, Language } from './i18n';
 import "./App.css";
 
@@ -17,6 +18,7 @@ const IconCpu = React.memo(() => <svg width="18" height="18" viewBox="0 0 24 24"
 const IconFolder = React.memo(() => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>);
 const IconShield = React.memo(() => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>);
 const IconRefresh = React.memo(() => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>);
+const IconCheck = React.memo(() => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>);
 const IconChevronDown = React.memo(() => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>);
 const IconPlus = React.memo(() => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>);
 const IconUser = React.memo(() => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>);
@@ -78,11 +80,12 @@ const ConsolePanel = React.memo(({ logs }: { logs: string[] }) => {
   );
 });
 
-const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackInstance[], t: any, language: Language }) => {
+const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackInstance[], t: any, language: string }) => {
   const [query, setQuery] = useState("");
   const [mods, setMods] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [offset, setOffset] = useState(0);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const LIMIT = 24;
 
   const [mcVersion, setMcVersion] = useState("1.21.4");
@@ -100,10 +103,10 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
     setLoading(true);
     try {
        const facets: any[] = [["project_type:mod"]];
-       if (ver && ver !== "Любая") {
+       if (ver && ver !== "") {
          facets.push([`versions:${ver}`]);
        }
-       if (loader && loader !== "Любой") {
+       if (loader && loader !== "") {
          facets.push([`categories:${loader.toLowerCase()}`]);
        }
        
@@ -116,31 +119,24 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
        const currentOffset = isLoadMore ? offset + LIMIT : 0;
        const facetsStr = JSON.stringify(facets);
        const res = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(q)}&facets=${encodeURIComponent(facetsStr)}&index=${indexSort}&limit=${LIMIT}&offset=${currentOffset}`);
+       if (!res.ok) throw new Error("Failed to fetch mods from Modrinth API");
        const data = await res.json();
        
        let finalHits = data.hits || [];
-       if (finalHits.length > 0 && language === 'ru') {
-         try {
-           const combinedDesc = finalHits.map((h: any) => h.description || " ").join(" \n\n###\n\n ");
-           const trRes = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ru&dt=t", {
-             method: "POST",
-             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-             body: "q=" + encodeURIComponent(combinedDesc)
-           });
-           const trData = await trRes.json();
-           let fullTranslation = "";
-           if (trData && trData[0]) {
-             trData[0].forEach((item: any) => { if (item[0]) fullTranslation += item[0]; });
+       
+       // Translate descriptions if language is 'ru'
+       if (finalHits.length > 0 && language === "ru") {
+         finalHits = await Promise.all(finalHits.map(async (hit: any) => {
+           try {
+             const translatedDesc = await invoke("translate_text", { text: hit.description, targetLang: "ru" });
+             return { ...hit, description: translatedDesc as string };
+           } catch {
+             return hit;
            }
-           const splitTranslations = fullTranslation.split("###").map(s => s.trim());
-           finalHits = finalHits.map((h: any, idx: number) => ({
-             ...h,
-             description: splitTranslations[idx] || h.description
-           }));
-         } catch(e) {
-           console.error("Translation failed", e);
-         }
+         }));
        }
+       
+       setFetchError(null);
        
        if (data.hits) {
          if (isLoadMore) {
@@ -153,14 +149,15 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
        }
     } catch(e) {
        console.error("Failed to fetch mods", e);
+       setFetchError(t.downloadError || "Failed to load mods");
     }
     setLoading(false);
-  }, [offset]);
+  }, [offset, t]);
 
   useEffect(() => {
     searchMods(query, mcVersion, modLoader, sortBy, false);
     // eslint-disable-next-line
-  }, [mcVersion, modLoader, sortBy]);
+  }, [mcVersion, modLoader, sortBy, language]);
 
   useEffect(() => {
     const handleClick = () => {
@@ -220,14 +217,14 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
   return (
       <div className="settings-panel" style={{ marginTop: 0, height: "100%", display: "flex", flexDirection: "column", position: "relative", padding: "10px 0 0 0", background: "transparent", border: "none", boxShadow: "none" }}>
          <div className="mods-search-bar" style={{ flexShrink: 0 }}>
-           <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setVersionMenuOpen(prev => !prev); setLoaderMenuOpen(false); }} style={{ minWidth: "120px" }}>
+           <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setVersionMenuOpen(prev => !prev); setLoaderMenuOpen(false); setSortMenuOpen(false); }} style={{ minWidth: "100px" }}>
              <div className="custom-dropdown-btn" style={{ height: "46px" }}>
-               {mcVersion} <IconChevronDown />
+               {mcVersion === "" ? t.anyVersion : mcVersion} <IconChevronDown />
              </div>
              {versionMenuOpen && (
                <div className="custom-dropdown-menu">
-                 {["Любая", ...VERSIONS_LIST].map(v => (
-                   <div key={v} className="custom-dropdown-item" onClick={() => setMcVersion(v)}>{v}</div>
+                 {["", ...VERSIONS_LIST].map(v => (
+                   <div key={v} className="custom-dropdown-item" onClick={() => setMcVersion(v)}>{v === "" ? t.anyVersion : v}</div>
                  ))}
                </div>
              )}
@@ -235,12 +232,12 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
 
            <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setLoaderMenuOpen(prev => !prev); setVersionMenuOpen(false); setSortMenuOpen(false); }} style={{ minWidth: "110px" }}>
              <div className="custom-dropdown-btn" style={{ height: "46px" }}>
-               {modLoader} <IconChevronDown />
+               {modLoader === "" ? t.anyLoader : modLoader} <IconChevronDown />
              </div>
              {loaderMenuOpen && (
                <div className="custom-dropdown-menu">
-                 {["Любой", "fabric", "forge", "quilt", "neoforge"].map(l => (
-                   <div key={l} className="custom-dropdown-item" onClick={() => setModLoader(l)}>{l}</div>
+                 {["", "fabric", "forge", "quilt", "neoforge"].map(l => (
+                   <div key={l} className="custom-dropdown-item" onClick={() => setModLoader(l)}>{l === "" ? t.anyLoader : l}</div>
                  ))}
                </div>
              )}
@@ -248,22 +245,22 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
 
            <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setSortMenuOpen(prev => !prev); setVersionMenuOpen(false); setLoaderMenuOpen(false); }} style={{ minWidth: "160px" }}>
              <div className="custom-dropdown-btn" style={{ height: "46px" }}>
-               {sortBy === "downloads" ? "Популярные" : sortBy === "follows" ? "Лучшие моды" : sortBy === "optimization" ? "Для оптимизации" : sortBy === "newest" ? "Новые" : "Обновлённые"} <IconChevronDown />
+               {sortBy === "downloads" ? t.sortDownloads : sortBy === "follows" ? t.sortFollows : sortBy === "optimization" ? t.sortOptimization : sortBy === "newest" ? t.sortNewest : t.sortUpdated} <IconChevronDown />
              </div>
              {sortMenuOpen && (
                <div className="custom-dropdown-menu">
-                 <div className="custom-dropdown-item" onClick={() => setSortBy("downloads")}>Популярные</div>
-                 <div className="custom-dropdown-item" onClick={() => setSortBy("follows")}>Лучшие моды</div>
-                 <div className="custom-dropdown-item" onClick={() => setSortBy("optimization")}>Для оптимизации</div>
-                 <div className="custom-dropdown-item" onClick={() => setSortBy("newest")}>Новые</div>
-                 <div className="custom-dropdown-item" onClick={() => setSortBy("updated")}>Обновлённые</div>
+                 <div className="custom-dropdown-item" onClick={() => setSortBy("downloads")}>{t.sortDownloads}</div>
+                 <div className="custom-dropdown-item" onClick={() => setSortBy("follows")}>{t.sortFollows}</div>
+                 <div className="custom-dropdown-item" onClick={() => setSortBy("optimization")}>{t.sortOptimization}</div>
+                 <div className="custom-dropdown-item" onClick={() => setSortBy("newest")}>{t.sortNewest}</div>
+                 <div className="custom-dropdown-item" onClick={() => setSortBy("updated")}>{t.sortUpdated}</div>
                </div>
              )}
            </div>
 
            <input 
              type="text" 
-             placeholder={`Найти мод для ${mcVersion}...`} 
+             placeholder={`${t.searchModPlaceholder} ${mcVersion === "" ? t.anyVersion : mcVersion}...`} 
              value={query} 
              onChange={(e) => setQuery(e.target.value)}
              onKeyDown={(e) => e.key === 'Enter' && searchMods(query, mcVersion, modLoader, sortBy, false)}
@@ -273,8 +270,14 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
            </button>
          </div>
 
-         <div className="mods-grid" style={{ flex: 1, overflowY: "auto" }} onScroll={handleScroll}>
-           {mods.map((mod, idx) => (
+         {fetchError && (
+           <div style={{ color: "#ef4444", textAlign: "center", padding: "20px" }}>
+             {fetchError}
+           </div>
+         )}
+         {!fetchError && (
+           <div className="mods-grid" style={{ flex: 1, overflowY: "auto" }} onScroll={handleScroll}>
+             {mods.map((mod, idx) => (
              <div key={`${mod.project_id}-${idx}`} className="mod-card">
                <div className="mod-header">
                  <img src={mod.icon_url || "https://cdn.modrinth.com/favicon.ico"} alt={mod.title} className="mod-icon" />
@@ -297,73 +300,37 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
              <div style={{ width: "100%", gridColumn: "1 / -1", textAlign: "center", padding: "20px" }}>
                <div className="spinner" />
              </div>
-           )}
-         </div>
+             )}
+           </div>
+         )}
 
-         {installModalOpen && (
+          {installModalOpen && (
             <>
-              <style>{`
-                @keyframes slideDownModal {
-                  0% { top: -100px; opacity: 0; transform: translateX(-50%) scale(0.9); }
-                  60% { top: 30px; opacity: 1; transform: translateX(-50%) scale(1.02); }
-                  100% { top: 20px; opacity: 1; transform: translateX(-50%) scale(1); }
-                }
-                @keyframes slideInItem {
-                  from { opacity: 0; transform: translateX(-20px); }
-                  to { opacity: 1; transform: translateX(0); }
-                }
-              `}</style>
-              <div className="global-modal-content" style={{
-                position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
-                background: 'linear-gradient(145deg, rgba(30,30,45,0.95), rgba(15,15,20,0.98))',
-                border: '1px solid rgba(255,255,255,0.05)',
-                borderTop: '2px solid #a855f7',
-                borderRadius: '20px', padding: '24px', width: '480px', maxWidth: '90%',
-                display: 'flex', flexDirection: 'column', 
-                boxShadow: '0 30px 60px -15px rgba(0,0,0,0.8), 0 0 40px rgba(168, 85, 247, 0.2) inset',
-                backdropFilter: 'blur(20px)', zIndex: 9999,
-                animation: 'slideDownModal 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div className="global-modal-content">
+                <div className="global-modal-header">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ background: 'rgba(168, 85, 247, 0.2)', padding: '8px', borderRadius: '12px', display: 'flex' }}>
+                    <div style={{ background: 'rgba(var(--accent-color-rgb), 0.2)', padding: '8px', borderRadius: '12px', display: 'flex' }}>
                        <IconDownload />
                     </div>
-                    <h3 style={{ 
-                      fontSize: "1.2rem", margin: 0, fontWeight: "700",
-                      background: 'linear-gradient(90deg, #fff, #c084fc)',
-                      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-                    }}>
+                    <h3 className="global-modal-title">
                       {t.installTo}
                     </h3>
                   </div>
-                  <button onClick={() => setInstallModalOpen(null)} style={{ 
-                    background: 'rgba(255,255,255,0.05)', border: 'none', color: '#8b8b9c', 
-                    cursor: 'pointer', padding: '8px', borderRadius: '50%', display: 'flex',
-                    transition: 'all 0.3s ease'
-                  }} onMouseEnter={e => { e.currentTarget.style.color="white"; e.currentTarget.style.background="rgba(239, 68, 68, 0.2)"; e.currentTarget.style.transform="rotate(90deg)"; }} 
-                     onMouseLeave={e => { e.currentTarget.style.color="#8b8b9c"; e.currentTarget.style.background="rgba(255,255,255,0.05)"; e.currentTarget.style.transform="rotate(0deg)"; }}>
+                  <button onClick={() => setInstallModalOpen(null)} className="global-modal-close">
                      <IconX />
                   </button>
                 </div>
 
-                <div style={{ maxHeight: "320px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "8px" }}>
+                <div className="global-modal-body">
                   {instances.length === 0 ? (
-                    <div style={{ color: "#8b8b9c", fontSize: "0.95rem", textAlign: "center", padding: "30px 20px", background: "rgba(255,255,255,0.02)", borderRadius: "12px" }}>
+                    <div className="modal-empty-state">
                       {t.noInstances}
                     </div>
                   ) : instances.map((inst, idx) => (
-                    <button key={inst.id} onClick={() => confirmInstall(inst.id)} style={{
-                      background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", color: "white",
-                      padding: "16px", borderRadius: "14px", cursor: "pointer", textAlign: "left", transition: "all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)",
-                      display: "flex", justifyContent: "space-between", alignItems: "center",
-                      animation: `slideInItem 0.4s ease forwards`,
-                      animationDelay: `${idx * 0.05}s`, opacity: 0
-                    }} onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(90deg, rgba(168, 85, 247, 0.15), rgba(168, 85, 247, 0.05))"; e.currentTarget.style.borderColor = "rgba(168, 85, 247, 0.5)"; e.currentTarget.style.transform = "translateX(5px)"; e.currentTarget.style.boxShadow = "0 10px 20px -10px rgba(168, 85, 247, 0.3)"; }}
-                       onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = "translateX(0)"; e.currentTarget.style.boxShadow = "none"; }}>
+                    <button key={inst.id} onClick={() => confirmInstall(inst.id)} className="modal-item-btn" style={{ animationDelay: `${idx * 0.05}s` }}>
                       
                       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                        <div style={{ background: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "#a855f7" }}>
+                        <div style={{ background: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "var(--accent-color)" }}>
                           <IconBox />
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -372,11 +339,7 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
                         </div>
                       </div>
 
-                      <div style={{ 
-                        color: "#e9d5ff", fontSize: "0.8rem", fontWeight: "600",
-                        background: "rgba(168, 85, 247, 0.2)", border: "1px solid rgba(168, 85, 247, 0.3)", 
-                        padding: "6px 12px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.5px" 
-                      }}>
+                      <div className="modal-item-tag">
                         {inst.loader}
                       </div>
                     </button>
@@ -386,32 +349,10 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
             </>
           )}
 
-          {/* Toast Notification */}
           {notification && (
-            <div style={{
-              position: 'fixed', bottom: '30px', right: '30px', zIndex: 10000,
-              background: notification.type === 'success' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-              border: `1px solid ${notification.type === 'success' ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`,
-              backdropFilter: 'blur(12px)',
-              color: notification.type === 'success' ? '#4ade80' : '#f87171',
-              padding: '16px 24px', borderRadius: '12px',
-              display: 'flex', alignItems: 'center', gap: '12px',
-              boxShadow: `0 10px 30px -10px ${notification.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-              animation: 'toastSlideIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'
-            }}>
-              <style>{`
-                @keyframes toastSlideIn {
-                  from { transform: translateX(100%) scale(0.9); opacity: 0; }
-                  to { transform: translateX(0) scale(1); opacity: 1; }
-                }
-              `}</style>
-              <div style={{
-                background: notification.type === 'success' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                padding: '6px', borderRadius: '50%', display: 'flex'
-              }}>
-                {notification.type === 'success' ? <IconBox /> : <IconX />}
-              </div>
-              <span style={{ fontSize: '1.05rem', fontWeight: '500' }}>{notification.message}</span>
+            <div className={`toast-notification ${notification.type === 'success' ? 'toast-success' : 'toast-error'}`}>
+              {notification.type === 'success' ? <IconCheck /> : <IconX />}
+              {notification.message}
             </div>
           )}
 
@@ -444,6 +385,35 @@ function App() {
   const [serverIp, setServerIp] = useState("");
   const [logs, setLogs] = useState<string[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  
+  const [themeHex, setThemeHex] = useState(() => {
+    return localStorage.getItem("omegaTheme") || "#a855f7";
+  });
+  const [customThemeInput, setCustomThemeInput] = useState("");
+  const [showColorPicker, setShowColorPicker] = useState(false);
+
+  const applyTheme = (hex: string) => {
+    setThemeHex(hex);
+    localStorage.setItem("omegaTheme", hex);
+    document.documentElement.style.setProperty('--accent-color', hex);
+    
+    // Convert hex to rgb
+    let r = 0, g = 0, b = 0;
+    if (hex.length === 4) {
+      r = parseInt(hex[1] + hex[1], 16);
+      g = parseInt(hex[2] + hex[2], 16);
+      b = parseInt(hex[3] + hex[3], 16);
+    } else if (hex.length === 7) {
+      r = parseInt(hex[1] + hex[2], 16);
+      g = parseInt(hex[3] + hex[4], 16);
+      b = parseInt(hex[5] + hex[6], 16);
+    }
+    document.documentElement.style.setProperty('--accent-color-rgb', `${r}, ${g}, ${b}`);
+  };
+
+  useEffect(() => {
+    applyTheme(themeHex);
+  }, []);
 
   // Desktop Instances State
   const [instances, setInstances] = useState<ModpackInstance[]>([]);
@@ -533,7 +503,9 @@ function App() {
             setAccount(accounts[0]);
           }
         }
-      } catch(e) {}
+      } catch (e) {
+        console.error("Failed to parse savedNicknames, data might be corrupted", e);
+      }
     }
 
     const savedInst = localStorage.getItem("desktopInstances");
@@ -577,9 +549,9 @@ function App() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const handleAddUsername = useCallback(() => {
+  const handleAddOffline = useCallback(() => {
     const newName = newUsernameInput.trim();
-    if (newName !== "") {
+    if (newName !== "" && /^[a-zA-Z0-9_]{3,16}$/.test(newName)) {
       const newAcc: Account = { name: newName, type: "offline" };
       setSavedAccounts(prev => {
         const updated = [newAcc, ...prev.filter(a => a.name !== newName)];
@@ -603,8 +575,8 @@ function App() {
 
   const handleAddMicrosoft = useCallback(async () => {
     try {
-      setLogs(prev => [...prev, "[MS_AUTH]: Ожидание входа в браузере..."]);
-      const output = await invoke("login_microsoft");
+      setLogs(prev => [...prev, t.logWaitingBrowser]);
+      const output = (await invoke("login_microsoft")) as string;
       const match = output.toString().match(/SUCCESS:(.+)/);
       if (match && match[1]) {
         const msName = match[1].trim();
@@ -615,11 +587,11 @@ function App() {
            return updated;
         });
         setAccount(newAcc);
-        setLogs(prev => [...prev, "[MS_AUTH]: Успешный вход как " + msName]);
+        setLogs(prev => [...prev, t.logSuccessLogin + msName]);
         setProfileMenuOpen(false);
       } else {
         const errMatch = output.toString().match(/ERROR:(.+)/);
-        setLogs(prev => [...prev, "[MS_AUTH]: Ошибка входа: " + (errMatch ? errMatch[1].trim() : "Неизвестная ошибка")]);
+        setLogs(prev => [...prev, t.logLoginError + (errMatch ? errMatch[1].trim() : t.logUnknownError)]);
       }
     } catch(e: any) {
       setLogs(prev => [...prev, "[MS_AUTH_ERR]: " + e]);
@@ -627,41 +599,38 @@ function App() {
   }, []);
 
   const handlePlay = useCallback(async () => {
-    if (!selectedInstanceId) return alert("Сначала выберите или создайте сборку на рабочем столе!");
+    if (!selectedInstanceId) return alert(t.alertNoInstance);
     const inst = instances.find(i => i.id === selectedInstanceId);
     if (!inst) return;
 
-    setIsRunning(true);
-    const fullVersionName = inst.loader === "Vanilla" ? inst.mcVersion : `${inst.mcVersion}-${inst.loader}`;
-    setLogs([
-      "[00:00:01] [main/INFO]: Omega Launcher initialized", 
-      `[00:00:01] [main/INFO]: Authenticating using ${account.name}...`,
-      `[00:00:01] [main/INFO]: Profile: ${inst.name} (${fullVersionName})`, 
-      `[00:00:01] [main/INFO]: Using RAM: ${ram}GB`, 
-      serverIp ? `[00:00:01] [main/INFO]: Auto-connect set to ${serverIp}` : "[00:00:01] [main/INFO]: Launching in singleplayer mode",
-      "[00:00:02] [main/INFO]: Loading version manifest from Mojang..."
-    ]);
-    try {
-        await invoke("launch_minecraft", { 
+    if (account) {
+      setLogs([t.logStartingMc]);
+      try {
+        const fullVersionName = inst.loader === "Vanilla" ? inst.mcVersion : `${inst.mcVersion}-${inst.loader.toLowerCase()}`;
+        const output = (await invoke("launch_minecraft", { 
           version: fullVersionName, 
           server: serverIp, 
           username: account.name, 
           ram,
           instanceId: inst.id 
-        });
-    } catch(e) {
+        })) as string;
+        const errMatch = output.toString().match(/ERROR:(.+)/);
+        if (errMatch) throw new Error(errMatch[1]);
+      } catch(e) {
         setIsRunning(false);
+        setLogs(prev => [...prev, `[ERROR]: ${e}`]);
+      }
     }
-  }, [account.name, ram, serverIp, instances, selectedInstanceId]);
+  }, [account, ram, serverIp, instances, selectedInstanceId]);
 
   const handleStop = useCallback(async () => {
       await invoke("kill_minecraft");
       setIsRunning(false);
-      setLogs(prev => [...prev, "[main/INFO]: Убиваем процесс Minecraft..."]);
-  }, []);
+      setLogs(prev => [...prev, t.logKillingMc]);
+  }, [t.logKillingMc]);
 
   const sliderStyle = useMemo(() => ({
-    background: `linear-gradient(to right, #a855f7 ${(ram - 1) / 15 * 100}%, rgba(255,255,255,0.1) ${(ram - 1) / 15 * 100}%)`
+    background: `linear-gradient(to right, var(--accent-color) ${(ram - 1) / 15 * 100}%, rgba(255,255,255,0.1) ${(ram - 1) / 15 * 100}%)`
   }), [ram]);
 
   const handleCreateInstance = () => {
@@ -728,7 +697,7 @@ function App() {
             
             {profileMenuOpen && (
               <div className="profile-menu">
-                <span style={{ fontSize: "0.8rem", color: "#8b8b9c", marginBottom: "5px" }}>АККАУНТЫ</span>
+                <span style={{ fontSize: "0.8rem", color: "#8b8b9c", marginBottom: "5px" }}>{t.accountsSection}</span>
                 <div className="saved-nicks-list">
                   {savedAccounts.map(acc => (
                     <div key={acc.name} className="saved-nick-item" onClick={() => handleSelectAccount(acc)}>
@@ -741,18 +710,18 @@ function App() {
                 </div>
                 <div className="profile-input-wrapper" style={{ marginTop: "10px", marginBottom: "5px" }}>
                    <button style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", gap: "10px" }} onClick={handleAddMicrosoft}>
-                      <IconMicrosoft /> Войти через Microsoft
+                      <IconMicrosoft /> {t.loginMicrosoftBtn}
                    </button>
                 </div>
                 <div className="profile-input-wrapper">
                   <input 
                     type="text" 
-                    placeholder="Оффлайн никнейм..." 
+                    placeholder={t.nicknamePlaceholder} 
                     value={newUsernameInput}
                     onChange={(e) => setNewUsernameInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddUsername()}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddOffline()}
                   />
-                  <button onClick={handleAddUsername}><IconPlus /></button>
+                  <button onClick={handleAddOffline}><IconPlus /></button>
                 </div>
               </div>
             )}
@@ -804,9 +773,9 @@ function App() {
                   padding: '5px', display: 'flex', flexDirection: 'column', gap: '2px',
                   boxShadow: '0 10px 30px rgba(0,0,0,0.5)', minWidth: '180px'
                 }}>
-                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setContextMenu(null); handlePlay(); }}>Запустить</button>
-                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setRenameModalOpen(contextMenu.instanceId); setRenameInput(instances.find(i=>i.id===contextMenu.instanceId)?.name || ""); setContextMenu(null); }}>Переименовать</button>
-                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); setContextMenu(null); }}>Выбрать свой значок</button>
+                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setContextMenu(null); handlePlay(); }}>{t.ctxPlay}</button>
+                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setRenameModalOpen(contextMenu.instanceId); setRenameInput(instances.find(i=>i.id===contextMenu.instanceId)?.name || ""); setContextMenu(null); }}>{t.ctxRename}</button>
+                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); setContextMenu(null); }}>{t.ctxIcon}</button>
                   <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
                   <button className="ctx-item" style={{color: '#ef4444'}} onClick={(e) => {
                     e.stopPropagation();
@@ -817,15 +786,15 @@ function App() {
                     });
                     if (selectedInstanceId === contextMenu.instanceId) setSelectedInstanceId(null);
                     setContextMenu(null);
-                  }}>Удалить</button>
+                  }}>{t.ctxDelete}</button>
                 </div>
               )}
               
               {renameModalOpen && (
                 <div className="modal-overlay" onClick={() => setRenameModalOpen(null)}>
                   <div className="create-modal" onClick={e => e.stopPropagation()}>
-                    <h3>Переименовать сборку</h3>
-                    <input type="text" value={renameInput} onChange={e => setRenameInput(e.target.value)} placeholder="Новое название" />
+                    <h3>{t.renameInstTitle}</h3>
+                    <input type="text" value={renameInput} onChange={e => setRenameInput(e.target.value)} placeholder={t.renameInstPlaceholder} />
                     <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                       <button className="play-btn" style={{ flex: 1 }} onClick={() => {
                         setInstances(prev => {
@@ -834,8 +803,8 @@ function App() {
                           return next;
                         });
                         setRenameModalOpen(null);
-                      }}>Сохранить</button>
-                      <button className="play-btn" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setRenameModalOpen(null)}>Отмена</button>
+                      }}>{t.saveBtn}</button>
+                      <button className="play-btn" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setRenameModalOpen(null)}>{t.cancel}</button>
                     </div>
                   </div>
                 </div>
@@ -855,8 +824,8 @@ function App() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
                     {isCreating && (
                       <div className="create-modal" onClick={e => e.stopPropagation()}>
-                        <h3>Новая сборка</h3>
-                        <input type="text" placeholder="Название (напр. My Modpack)" value={newName} onChange={e => setNewName(e.target.value)} />
+                        <h3>{t.newInstTitle}</h3>
+                        <input type="text" placeholder={t.newInstNamePlaceholder} value={newName} onChange={e => setNewName(e.target.value)} />
                         
                         <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                           <div className="custom-dropdown-container" onClick={() => { setVerMenuOpen(!verMenuOpen); setLoaderMenuOpen(false); }} style={{ flex: 1 }}>
@@ -883,7 +852,7 @@ function App() {
                         </div>
                       </div>
                     )}
-                    <button className="play-btn" style={{ background: "rgba(168, 85, 247, 0.2)", border: "1px solid rgba(168, 85, 247, 0.4)", color: "#fff", height: "40px", fontSize: "0.9rem" }} onClick={() => setIsCreating(true)}>
+                    <button className="play-btn" style={{ background: "rgba(var(--accent-color-rgb), 0.2)", border: "1px solid rgba(var(--accent-color-rgb), 0.4)", color: "#fff", height: "40px", fontSize: "0.9rem" }} onClick={() => setIsCreating(true)}>
                       <IconPlus /> {t.createInstance}
                     </button>
                     {isRunning ? (
@@ -905,7 +874,7 @@ function App() {
                     className="stat-card" 
                     onClick={() => selectedInstanceId && invoke("open_folder", { instanceId: selectedInstanceId })}
                     style={{ cursor: "pointer", transition: "0.2s" }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.2)"}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "rgba(var(--accent-color-rgb), 0.2)"}
                     onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"}
                     title={t.folderBtn}
                   >
@@ -927,18 +896,18 @@ function App() {
         {activeTab === "settings" && (
           <div className="settings-panel">
             <div className="settings-header">
-              <h2>Настройки</h2>
-              <p>Конфигурация лаунчера</p>
+              <h2>{t.settingsTitle}</h2>
+              <p>{t.settingsSubtitle}</p>
             </div>
 
             <div className="settings-section">
               <div className="section-title">
-                <div className="section-icon" style={{color: '#a855f7'}}><IconUsers /></div>
-                Автоподключение
+                <div className="section-icon" style={{color: 'var(--accent-color)'}}><IconUsers /></div>
+                {t.autoConnect}
               </div>
 
               <div className="input-group">
-                <label>IP СЕРВЕРА (Оставьте пустым для обычного запуска)</label>
+                <label>{t.serverIpLabel}</label>
                 <div className="input-wrapper">
                   <input type="text" placeholder="mc.hypixel.net" value={serverIp} onChange={(e) => setServerIp(e.target.value)} />
                 </div>
@@ -950,8 +919,8 @@ function App() {
                 <div className="section-title">
                   <div className="section-icon"><IconCpu /></div>
                   <div>
-                    <div>Оперативная память</div>
-                    <div style={{fontSize: "0.8rem", color: "#8b8b9c", fontWeight: "normal"}}>Выделено для Java heap</div>
+                    <div>{t.ramSettingsTitle}</div>
+                    <div style={{fontSize: "0.8rem", color: "#8b8b9c", fontWeight: "normal"}}>{t.ramSettingsDesc}</div>
                   </div>
                 </div>
                 <div className="section-value">{ram} <span>GB</span></div>
@@ -970,7 +939,7 @@ function App() {
                 <div className="slider-marks">
                   <span>1G</span>
                   <span>2G</span>
-                  <span style={ram === 4 ? {color: '#a855f7'} : {}}>4G</span>
+                  <span style={ram === 4 ? {color: 'var(--accent-color)'} : {}}>4G</span>
                   <span>6G</span>
                   <span>8G</span>
                   <span>10G</span>
@@ -983,22 +952,22 @@ function App() {
             <div className="settings-section">
               <div className="section-title">
                 <div className="section-icon" style={{color: '#3b82f6'}}><IconFolder /></div>
-                Пути к файлам
+                {t.filePathsTitle}
               </div>
 
               <div className="input-group">
-                <label>JAVA (JDK)</label>
+                <label>{t.javaLabel}</label>
                 <div className="input-wrapper">
                   <input type="text" value={javaPath} onChange={(e) => setJavaPath(e.target.value)} />
-                  <button className="folder-btn"><IconFolder /></button>
+                  <button className="folder-btn" onClick={() => invoke("open_path", { path: javaPath })}><IconFolder /></button>
                 </div>
               </div>
 
               <div className="input-group">
-                <label>ПАПКА ИГРЫ (.MINECRAFT)</label>
+                <label>{t.gameFolder}</label>
                 <div className="input-wrapper">
                   <input type="text" value={gamePath} onChange={(e) => setGamePath(e.target.value)} />
-                  <button className="folder-btn"><IconFolder /></button>
+                  <button className="folder-btn" onClick={() => invoke("open_path", { path: gamePath })}><IconFolder /></button>
                 </div>
               </div>
             </div>
@@ -1011,8 +980,8 @@ function App() {
                 <button 
                   onClick={() => changeLanguage('ru')}
                   style={{
-                    flex: 1, padding: "12px", borderRadius: "10px", border: language === 'ru' ? "1px solid rgba(168, 85, 247, 0.5)" : "1px solid rgba(255, 255, 255, 0.1)",
-                    background: language === 'ru' ? "rgba(168, 85, 247, 0.2)" : "rgba(255, 255, 255, 0.05)", 
+                    flex: 1, padding: "12px", borderRadius: "10px", border: language === 'ru' ? "1px solid rgba(var(--accent-color-rgb), 0.5)" : "1px solid rgba(255, 255, 255, 0.1)",
+                    background: language === 'ru' ? "rgba(var(--accent-color-rgb), 0.2)" : "rgba(255, 255, 255, 0.05)", 
                     color: language === 'ru' ? "white" : "#8b8b9c", cursor: "pointer", fontSize: "1rem", fontWeight: language === 'ru' ? "bold" : "normal"
                   }}>
                   🇷🇺 Русский
@@ -1020,14 +989,79 @@ function App() {
                 <button 
                   onClick={() => changeLanguage('en')}
                   style={{
-                    flex: 1, padding: "12px", borderRadius: "10px", border: language === 'en' ? "1px solid rgba(168, 85, 247, 0.5)" : "1px solid rgba(255, 255, 255, 0.1)",
-                    background: language === 'en' ? "rgba(168, 85, 247, 0.2)" : "rgba(255, 255, 255, 0.05)", 
+                    flex: 1, padding: "12px", borderRadius: "10px", border: language === 'en' ? "1px solid rgba(var(--accent-color-rgb), 0.5)" : "1px solid rgba(255, 255, 255, 0.1)",
+                    background: language === 'en' ? "rgba(var(--accent-color-rgb), 0.2)" : "rgba(255, 255, 255, 0.05)", 
                     color: language === 'en' ? "white" : "#8b8b9c", cursor: "pointer", fontSize: "1rem", fontWeight: language === 'en' ? "bold" : "normal"
                   }}>
                   🇬🇧 English
                 </button>
               </div>
             </div>
+
+            <div className="settings-section">
+              <div className="section-title">
+                <div className="section-icon" style={{color: 'var(--accent-color)'}}><IconBox /></div>
+                {t.themeTitle || "Тема лаунчера"}
+              </div>
+              <div className="input-group" style={{ flexDirection: "row", gap: "10px", marginTop: "10px", flexWrap: "wrap" }}>
+                {[
+                  { name: "Omega Purple", hex: "#a855f7" },
+                  { name: "Neon Green", hex: "#10b981" },
+                  { name: "Cyber Blue", hex: "#3b82f6" },
+                  { name: "Crimson Red", hex: "#ef4444" },
+                  { name: "Sunset Orange", hex: "#f97316" },
+                  { name: "Hot Pink", hex: "#ec4899" }
+                ].map(theme => (
+                  <button 
+                    key={theme.name}
+                    onClick={() => applyTheme(theme.hex)}
+                    style={{
+                      flex: "1 1 30%", padding: "10px", borderRadius: "10px", 
+                      border: themeHex === theme.hex ? `1px solid ${theme.hex}` : "1px solid rgba(255, 255, 255, 0.1)",
+                      background: themeHex === theme.hex ? `${theme.hex}20` : "rgba(255, 255, 255, 0.05)", 
+                      color: "white", cursor: "pointer", fontSize: "0.9rem",
+                      display: "flex", alignItems: "center", gap: "8px", justifyContent: "center"
+                    }}>
+                    <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: theme.hex, boxShadow: `0 0 10px ${theme.hex}` }}></div>
+                    {theme.name}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="input-group" style={{ marginTop: "15px" }}>
+                <label>{t.customThemeTitle || "Свой цвет (Hex)"}</label>
+                <div className="input-wrapper" style={{ display: 'flex', gap: '15px', alignItems: 'center', position: 'relative' }}>
+                  <div 
+                    onClick={() => setShowColorPicker(!showColorPicker)}
+                    style={{ 
+                      width: "40px", 
+                      height: "40px", 
+                      borderRadius: "10px", 
+                      cursor: "pointer",
+                      background: customThemeInput || themeHex,
+                      border: "2px solid rgba(255,255,255,0.2)"
+                    }} 
+                  />
+                  <span style={{ color: "#8b8b9c", fontSize: "1rem" }}>{customThemeInput || themeHex}</span>
+                  
+                  {showColorPicker && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 100, marginTop: '10px' }}>
+                      <div style={{ position: 'fixed', inset: 0 }} onClick={() => setShowColorPicker(false)} />
+                      <div style={{ position: 'relative' }}>
+                        <HexColorPicker 
+                          color={customThemeInput || themeHex} 
+                          onChange={(newColor) => {
+                            setCustomThemeInput(newColor);
+                            applyTheme(newColor);
+                          }} 
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
       </main>

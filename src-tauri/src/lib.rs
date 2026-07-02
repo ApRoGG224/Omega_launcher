@@ -1,5 +1,12 @@
 use std::io::{BufRead, BufReader};
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
+
+fn get_data_dir(app: &AppHandle) -> String {
+    let mut path = app.path().app_data_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    path.push("minecraft_data");
+    let _ = std::fs::create_dir_all(&path);
+    path.to_string_lossy().to_string()
+}
 
 #[tauri::command]
 async fn login_microsoft(app: AppHandle) -> Result<String, String> {
@@ -33,7 +40,8 @@ async fn login_microsoft(app: AppHandle) -> Result<String, String> {
 
 #[tauri::command]
 fn launch_minecraft(app: AppHandle, version: String, server: String, username: String, ram: u32, instance_id: String) {
-    println!("Launching Minecraft version {} on server {} with username {} via TS Sidecar...", version, server, username);
+    let data_dir = get_data_dir(&app);
+    println!("Launching Minecraft version {} on server {} with username {} via TS Sidecar in {}...", version, server, username, data_dir);
 
     let mut child = std::process::Command::new("npx")
         .arg("tsx")
@@ -43,6 +51,7 @@ fn launch_minecraft(app: AppHandle, version: String, server: String, username: S
         .arg(&username)
         .arg(ram.to_string())
         .arg(&instance_id)
+        .arg(&data_dir)
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
@@ -75,7 +84,6 @@ fn launch_minecraft(app: AppHandle, version: String, server: String, username: S
 fn kill_minecraft() {
     println!("Attempting to kill Minecraft and launcher tasks...");
     
-    // Helper function to kill a process by reading its PID file
     let kill_from_file = |filepath: &str| {
         if let Ok(pid_str) = std::fs::read_to_string(filepath) {
             let pid = pid_str.trim();
@@ -99,8 +107,9 @@ fn kill_minecraft() {
 }
 
 #[tauri::command]
-async fn download_mod(mod_id: String, mc_version: String, loader: String, instance_id: String) -> Result<String, String> {
+async fn download_mod(app: tauri::AppHandle, mod_id: String, mc_version: String, loader: String, instance_id: String) -> Result<String, String> {
     use std::process::Stdio;
+    let data_dir = get_data_dir(&app);
     let output = std::process::Command::new("npx")
         .arg("tsx")
         .arg("../sidecar/download.ts")
@@ -108,6 +117,7 @@ async fn download_mod(mod_id: String, mc_version: String, loader: String, instan
         .arg(&mc_version)
         .arg(&loader)
         .arg(&instance_id)
+        .arg(&data_dir)
         .output()
         .map_err(|e| e.to_string())?;
 
@@ -120,7 +130,9 @@ async fn download_mod(mod_id: String, mc_version: String, loader: String, instan
 
 #[tauri::command]
 fn open_folder(app: tauri::AppHandle, instance_id: String) {
-    let path = format!("./minecraft_data/instances/{}", instance_id);
+    let mut path = std::path::PathBuf::from(get_data_dir(&app));
+    path.push("instances");
+    path.push(&instance_id);
     let _ = std::fs::create_dir_all(&path);
     
     if let Ok(abs_path) = std::fs::canonicalize(&path) {
@@ -130,11 +142,64 @@ fn open_folder(app: tauri::AppHandle, instance_id: String) {
     }
 }
 
+#[tauri::command]
+fn open_path(app: tauri::AppHandle, path: String) {
+    let mut expanded_path = path.clone();
+    
+    // expand tilde
+    if path.starts_with("~/") || path == "~" {
+        if let Some(home) = dirs::home_dir() {
+            if path == "~" {
+                expanded_path = home.to_string_lossy().to_string();
+            } else {
+                expanded_path = format!("{}/{}", home.to_string_lossy(), &path[2..]);
+            }
+        }
+    }
+
+    use tauri_plugin_opener::OpenerExt;
+    let _ = app.opener().open_path(expanded_path, None::<&str>);
+}
+
+#[tauri::command]
+async fn translate_text(text: String, target_lang: String) -> Result<String, String> {
+    if text.is_empty() {
+        return Ok(String::new());
+    }
+    
+    // Using MyMemory API instead of Google APIs
+    let url = format!(
+        "https://api.mymemory.translated.net/get?q={}&langpair=en|{}",
+        urlencoding::encode(&text),
+        target_lang
+    );
+    
+    let client = reqwest::Client::new();
+    let res = client.get(&url).send().await.map_err(|e| e.to_string())?;
+    
+    if res.status().is_success() {
+        let json: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
+        
+        if let Some(response_data) = json.get("responseData") {
+            if let Some(translated_text) = response_data.get("translatedText").and_then(|v| v.as_str()) {
+                // MyMemory sometimes returns "MYMEMORY WARNING:" when limits are hit
+                if !translated_text.contains("MYMEMORY WARNING:") {
+                    return Ok(translated_text.to_string());
+                }
+            }
+        }
+    }
+    
+    Ok(text) // return original text if translation failed
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder])
+        .invoke_handler(tauri::generate_handler![
+            launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder, open_path, translate_text
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

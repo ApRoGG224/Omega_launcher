@@ -71,8 +71,10 @@ async function main() {
         const downloadUrl = fileInfo.url;
         const filename = fileInfo.filename;
 
+        const targetDataDir = process.argv[6] || path.join(process.cwd(), "minecraft_data");
+
         // Path where mods should go for this instance
-        const modsDir = path.join(process.cwd(), "minecraft_data", "instances", instanceId, "mods");
+        const modsDir = path.join(targetDataDir, "instances", instanceId, "mods");
         
         if (!fs.existsSync(modsDir)) {
             fs.mkdirSync(modsDir, { recursive: true });

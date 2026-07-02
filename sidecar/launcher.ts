@@ -36,14 +36,17 @@ async function startMinecraft() {
     
     // Check if an instance ID was passed as the 5th argument
     const targetInstanceId = process.argv[6];
+    
+    // The data directory path passed from Rust
+    const targetDataDir = process.argv[7] || "./minecraft_data";
 
     // Automatically download and select the correct Java version!
-    const javaPath = await ensureJava(vanillaVersion, "./minecraft_data");
+    const javaPath = await ensureJava(vanillaVersion, targetDataDir);
 
     let opts: any = {
         clientPackage: null,
         authorization: authOpts,
-        root: "./minecraft_data",
+        root: targetDataDir,
         javaPath: javaPath,
         version: {
             number: vanillaVersion,
@@ -57,9 +60,9 @@ async function startMinecraft() {
 
     if (targetInstanceId && targetInstanceId.trim() !== "") {
         opts.overrides = {
-            gameDirectory: `./minecraft_data/instances/${targetInstanceId}`
+            gameDirectory: `${targetDataDir}/instances/${targetInstanceId}`
         };
-        console.log(`[LAUNCHER] Using instance isolation: ${targetInstanceId}`);
+        console.log(`[LAUNCHER] Using instance isolation: ${targetInstanceId} in ${targetDataDir}`);
     }
 
     if (targetVersion.includes('-')) {
@@ -84,18 +87,18 @@ async function startMinecraft() {
             const parts = targetVersion.split('-');
             const vVersion = parts[0];
             const lType = parts[1];
-            const installedVersion = await installLoader(vVersion, lType, "./minecraft_data", javaPath);
+            const installedVersion = await installLoader(vVersion, lType, targetDataDir, javaPath);
             opts.version.custom = installedVersion; // Tell MCLC exactly where to look!
             
             // FIX for MCLC ignoring JVM arguments in modern Forge/NeoForge JSONs
             const path = await import('path');
             const os = await import('os');
-            const jsonPath = path.join("./minecraft_data", "versions", installedVersion, `${installedVersion}.json`);
+            const jsonPath = path.join(targetDataDir, "versions", installedVersion, `${installedVersion}.json`);
             if (fs.existsSync(jsonPath)) {
                 const profile = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
                 if (profile.arguments && Array.isArray(profile.arguments.jvm)) {
                     const sep = os.platform() === "win32" ? ";" : ":";
-                    const libDir = path.resolve("./minecraft_data/libraries");
+                    const libDir = path.resolve(targetDataDir, "libraries");
                     let extraArgs = [];
                     for (const arg of profile.arguments.jvm) {
                         if (typeof arg === "string") {
