@@ -1,7 +1,9 @@
 import { getFabricLoaders, installFabric, getQuiltLoaders, installQuiltVersion } from '@xmcl/installer';
 
 export async function installLoader(mcVersion: string, loaderType: string, root: string, javaPath?: string): Promise<string> {
-    if (loaderType === "Fabric") {
+    const lowerLoader = loaderType.toLowerCase();
+    
+    if (lowerLoader === "fabric") {
         console.log(`[installer/INFO] Fetching latest Fabric loader for ${mcVersion}...`);
         const loaders = await getFabricLoaders();
         if (!loaders || loaders.length === 0) throw new Error("No Fabric loaders found");
@@ -28,7 +30,7 @@ export async function installLoader(mcVersion: string, loaderType: string, root:
         console.log(`[installer/INFO] Fabric installed successfully as ${versionName}!`);
         return versionName;
     } 
-    else if (loaderType === "Quilt") {
+    else if (lowerLoader === "quilt") {
         console.log(`[installer/INFO] Fetching latest Quilt loader for ${mcVersion}...`);
         const loaders = await getQuiltLoaders();
         if (!loaders || loaders.length === 0) throw new Error("No Quilt loaders found");
@@ -44,7 +46,7 @@ export async function installLoader(mcVersion: string, loaderType: string, root:
         console.log(`[installer/INFO] Quilt installed successfully as ${installedVersion}!`);
         return installedVersion;
     }
-    else if (loaderType === "Forge") {
+    else if (lowerLoader === "forge") {
         console.log(`[installer/INFO] Fetching latest Forge loader for ${mcVersion}...`);
         const { getForgeVersionList, installForge, getVersionList, installVersion } = await import('@xmcl/installer');
         
@@ -65,7 +67,7 @@ export async function installLoader(mcVersion: string, loaderType: string, root:
         console.log(`[installer/INFO] Forge installed successfully as ${installedVersion}!`);
         return installedVersion;
     }
-    else if (loaderType === "NeoForge") {
+    else if (lowerLoader === "neoforge") {
         console.log(`[installer/INFO] Fetching NeoForge via XMCL...`);
         const { installNeoForged, getVersionList, installVersion } = await import('@xmcl/installer');
         
