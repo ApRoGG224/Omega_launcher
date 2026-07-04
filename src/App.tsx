@@ -848,19 +848,19 @@ function App() {
                         <input type="text" placeholder={t.newInstNamePlaceholder} value={newName} onChange={e => setNewName(e.target.value)} />
                         
                         <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                          <div className="custom-dropdown-container" onClick={() => { setVerMenuOpen(!verMenuOpen); setLoaderMenuOpen(false); }} style={{ flex: 1 }}>
+                          <div className="custom-dropdown-container" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setVerMenuOpen(!verMenuOpen); setLoaderMenuOpen(false); }} style={{ flex: 1 }}>
                             <div className="custom-dropdown-btn" style={{ height: "40px", fontSize: "0.9rem" }}>{newVer} <IconChevronDown /></div>
                             {verMenuOpen && (
                               <div className="custom-dropdown-menu upwards">
-                                {VERSIONS_LIST.map(v => <div key={v} className="custom-dropdown-item" onClick={() => setNewVer(v)}>{v}</div>)}
+                                {VERSIONS_LIST.map(v => <div key={v} className="custom-dropdown-item" onClick={(e) => { e.stopPropagation(); setNewVer(v); setVerMenuOpen(false); }}>{v}</div>)}
                               </div>
                             )}
                           </div>
-                          <div className="custom-dropdown-container" onClick={() => { setLoaderMenuOpen(!loaderMenuOpen); setVerMenuOpen(false); }} style={{ flex: 1 }}>
+                          <div className="custom-dropdown-container" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setLoaderMenuOpen(!loaderMenuOpen); setVerMenuOpen(false); }} style={{ flex: 1 }}>
                             <div className="custom-dropdown-btn" style={{ height: "40px", fontSize: "0.9rem" }}>{newLoader} <IconChevronDown /></div>
                             {loaderMenuOpen && (
                               <div className="custom-dropdown-menu upwards">
-                                {LOADERS_LIST.map(l => <div key={l} className="custom-dropdown-item" onClick={() => setNewLoader(l)}>{l}</div>)}
+                                {LOADERS_LIST.map(l => <div key={l} className="custom-dropdown-item" onClick={(e) => { e.stopPropagation(); setNewLoader(l); setLoaderMenuOpen(false); }}>{l}</div>)}
                               </div>
                             )}
                           </div>
