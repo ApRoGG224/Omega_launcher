@@ -108,7 +108,6 @@ fn kill_minecraft() {
 
 #[tauri::command]
 async fn download_mod(app: tauri::AppHandle, mod_id: String, mc_version: String, loader: String, instance_id: String) -> Result<String, String> {
-    use std::process::Stdio;
     let data_dir = get_data_dir(&app);
     let output = std::process::Command::new("npx")
         .arg("tsx")
