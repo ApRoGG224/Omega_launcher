@@ -716,7 +716,7 @@ function App() {
             </div>
             
             {profileMenuOpen && (
-              <div className="profile-menu">
+              <div className="profile-menu" onClick={(e) => e.stopPropagation()}>
                 <span style={{ fontSize: "0.8rem", color: "#8b8b9c", marginBottom: "5px" }}>{t.accountsSection}</span>
                 <div className="saved-nicks-list">
                   {savedAccounts.map(acc => (
@@ -729,7 +729,7 @@ function App() {
                   ))}
                 </div>
                 <div className="profile-input-wrapper" style={{ marginTop: "10px", marginBottom: "5px" }}>
-                   <button style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", gap: "10px" }} onClick={(e) => { e.stopPropagation(); handleAddMicrosoft(); }}>
+                   <button style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", gap: "10px" }} onClick={handleAddMicrosoft}>
                       <IconMicrosoft /> {t.loginMicrosoftBtn}
                    </button>
                 </div>
