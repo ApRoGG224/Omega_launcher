@@ -1,0 +1,31 @@
+version: '3'
+
+tasks:
+  default:
+    desc: "Show available tasks"
+    cmds:
+      - task --list
+
+  install:
+    desc: "Install NPM dependencies"
+    cmds:
+      - npm install
+
+  dev:
+    desc: "Run the launcher in development mode"
+    env:
+      WEBKIT_DISABLE_DMABUF_RENDERER: 1
+    cmds:
+      - npm run tauri dev
+
+  build:
+    desc: "Build the launcher for production"
+    env:
+      WEBKIT_DISABLE_DMABUF_RENDERER: 1
+    cmds:
+      - npm run tauri build
+
+  format:
+    desc: "Format code using Prettier (Prettier Validation Skill)"
+    cmds:
+      - npx prettier --write .
