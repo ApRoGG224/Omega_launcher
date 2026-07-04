@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { listen, emit } from "@tauri-apps/api/event";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { HexColorPicker } from "react-colorful";
 import { translations, Language } from './i18n';
 import "./App.css";
@@ -635,6 +636,21 @@ function App() {
 
   const handleCreateInstance = () => {
     if (!newName) return;
+    
+    // Open Debug Window
+    const debugWin = new WebviewWindow('debug_window', {
+      title: 'Создание сборки - Дебаг',
+      width: 600,
+      height: 400,
+    });
+    
+    setTimeout(() => {
+      emit('debug-log', `[CREATE] Начинаю создание сборки...`);
+      emit('debug-log', `[CREATE] Название: ${newName}`);
+      emit('debug-log', `[CREATE] Версия Minecraft: ${newVer}`);
+      emit('debug-log', `[CREATE] Тип лоадера: ${newLoader}`);
+    }, 500); // Give the window a moment to open and attach listeners
+    
     const newInst: ModpackInstance = {
       id: Date.now().toString(),
       name: newName,
@@ -649,6 +665,10 @@ function App() {
     localStorage.setItem("desktopInstances", JSON.stringify(updated));
     setIsCreating(false);
     setNewName("");
+    
+    setTimeout(() => {
+       emit('debug-log', `[CREATE] Сборка ${newInst.id} успешно сохранена в localStorage!`);
+    }, 600);
   };
 
   const handleDesktopMouseMove = (e: React.MouseEvent) => {
