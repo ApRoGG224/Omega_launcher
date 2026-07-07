@@ -637,7 +637,9 @@ function App() {
     if (account) {
       setLogs([t.logStartingMc]);
       try {
-        const fullVersionName = inst.loader === "Vanilla" ? inst.mcVersion : `${inst.mcVersion}-${inst.loader.toLowerCase()}`;
+        const safeMcVersion = inst.mcVersion === "Prism" ? "1.20.1" : inst.mcVersion;
+        const safeLoader = inst.loader === "Import" ? "Vanilla" : inst.loader;
+        const fullVersionName = safeLoader === "Vanilla" ? safeMcVersion : `${safeMcVersion}-${safeLoader.toLowerCase()}`;
         const output = (await invoke("launch_minecraft", { 
           version: fullVersionName, 
           server: serverIp, 
