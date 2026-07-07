@@ -444,8 +444,6 @@ function App() {
   const [renameInput, setRenameInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [exportPath, setExportPath] = useState(() => localStorage.getItem("exportPath") || "~/Downloads");
-  const [isExporting, setIsExporting] = useState(false);
-
   useEffect(() => {
     const handleClick = () => {
       if (contextMenu) setContextMenu(null);
@@ -837,14 +835,12 @@ function App() {
                     const inst = instances.find(i=>i.id===contextMenu?.instanceId);
                     setContextMenu(null);
                     if (inst) {
-                      setIsExporting(true);
                       try {
                         await invoke("export_modpack", { instanceId: inst.id, instanceName: inst.name, exportPath: exportPath });
                         showNotification("Сборка успешно скачана в папку экспорта!", "success");
                       } catch (err: any) {
                         showNotification("Ошибка экспорта: " + err, "error");
                       }
-                      setIsExporting(false);
                     }
                   }}>Скачать сборку</button>
                   <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
@@ -1310,18 +1306,6 @@ function App() {
         </div>
       )}
     </main>
-      {isExporting && (
-        <div className="modal-overlay" style={{ zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px', background: 'rgba(20,20,30,0.9)', padding: '30px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(255,255,255,0.1)', borderTop: '4px solid var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-            <h3 style={{ margin: 0 }}>Подготовка архива...</h3>
-            <p style={{ color: '#8b8b9c', margin: 0, fontSize: '0.9rem' }}>Пожалуйста, подождите, сборка экспортируется</p>
-          </div>
-          <style>{`
-            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-          `}</style>
-        </div>
-      )}
     </div>
   );
 }
