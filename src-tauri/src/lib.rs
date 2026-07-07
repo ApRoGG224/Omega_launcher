@@ -312,12 +312,58 @@ async fn install_modpack(app: tauri::AppHandle, mod_id: String, mc_version: Stri
     }
 }
 
+#[tauri::command]
+async fn export_modpack(app: tauri::AppHandle, instance_id: String, instance_name: String) -> Result<String, String> {
+    let data_dir = get_data_dir(&app);
+    let mut child = std::process::Command::new("npx")
+        .arg("tsx")
+        .arg("../sidecar/export_modpack.ts")
+        .arg(&instance_id)
+        .arg(&data_dir)
+        .arg(&instance_name)
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    let stdout = child.stdout.take().unwrap();
+    let stderr = child.stderr.take().unwrap();
+    
+    let app_clone = app.clone();
+    std::thread::spawn(move || {
+        use std::io::BufRead;
+        let reader = std::io::BufReader::new(stdout);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                let _ = app_clone.emit("download-progress", line);
+            }
+        }
+    });
+
+    std::thread::spawn(move || {
+        use std::io::BufRead;
+        let reader = std::io::BufReader::new(stderr);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                let _ = app.emit("download-progress", format!("[ERROR] {}", line));
+            }
+        }
+    });
+
+    let status = child.wait().map_err(|e| e.to_string())?;
+    if status.success() {
+        Ok("Success".to_string())
+    } else {
+        Err("Failed to export modpack".to_string())
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder, open_path, translate_text, install_modpack
+            launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder, open_path, translate_text, install_modpack, export_modpack
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

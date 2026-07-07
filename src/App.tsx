@@ -830,6 +830,20 @@ function App() {
                   <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setContextMenu(null); handlePlay(); }}>{t.ctxPlay}</button>
                   <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setRenameModalOpen(contextMenu.instanceId); setRenameInput(instances.find(i=>i.id===contextMenu.instanceId)?.name || ""); setContextMenu(null); }}>{t.ctxRename}</button>
                   <button className="ctx-item" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); setContextMenu(null); }}>{t.ctxIcon}</button>
+                  <button className="ctx-item" onClick={async (e) => { 
+                    e.stopPropagation(); 
+                    const inst = instances.find(i=>i.id===contextMenu.instanceId);
+                    setContextMenu(null);
+                    if (inst) {
+                      showNotification("Начинаю экспорт сборки...", "info");
+                      try {
+                        await invoke("export_modpack", { instanceId: inst.id, instanceName: inst.name });
+                        showNotification("Сборка успешно скачана в папку Загрузки!", "success");
+                      } catch (err: any) {
+                        showNotification("Ошибка экспорта: " + err, "error");
+                      }
+                    }
+                  }}>Скачать сборку</button>
                   <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
                   <button className="ctx-item" style={{color: '#ef4444'}} onClick={(e) => {
                     e.stopPropagation();
