@@ -83,7 +83,7 @@ const ConsolePanel = React.memo(({ logs }: { logs: string[] }) => {
   );
 });
 
-const ModsPanel = React.memo(({ instances, t, language, projectType = "mod" }: { instances: ModpackInstance[], t: any, language: string, projectType?: "mod" | "resourcepack" }) => {
+const ModsPanel = React.memo(({ instances, t, language, projectType = "mod" }: { instances: ModpackInstance[], t: any, language: string, projectType?: "mod" | "resourcepack" | "modpack" }) => {
   const [query, setQuery] = useState("");
   const [mods, setMods] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -172,8 +172,12 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod" }: {
     return () => document.removeEventListener("click", handleClick);
   }, []);
 
-  const handleInstallClick = (modId: string) => {
-    setInstallModalOpen(modId);
+  const handleInstallClick = (projectId: string) => {
+    if (projectType === "modpack") {
+      showNotification("Установка сборок (.mrpack) пока в разработке!", "error");
+      return;
+    }
+    setInstallModalOpen(projectId);
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -234,7 +238,7 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod" }: {
              )}
            </div>
 
-           {projectType === "mod" && (
+           {projectType !== "resourcepack" && (
              <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setLoaderMenuOpen(prev => !prev); setVersionMenuOpen(false); setSortMenuOpen(false); }} style={{ minWidth: "110px" }}>
                <div className="custom-dropdown-btn" style={{ height: "46px" }}>
                  {modLoader === "" ? t.anyLoader : modLoader} <IconChevronDown />
@@ -249,7 +253,7 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod" }: {
              </div>
            )}
 
-           {projectType === "mod" && (
+           {projectType !== "resourcepack" && (
              <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setSortMenuOpen(prev => !prev); setVersionMenuOpen(false); setLoaderMenuOpen(false); }} style={{ minWidth: "160px" }}>
                <div className="custom-dropdown-btn" style={{ height: "46px" }}>
                  {sortBy === "downloads" ? t.sortDownloads : sortBy === "follows" ? t.sortFollows : sortBy === "optimization" ? t.sortOptimization : sortBy === "newest" ? t.sortNewest : t.sortUpdated} <IconChevronDown />
@@ -268,7 +272,7 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod" }: {
 
            <input 
              type="text" 
-             placeholder={`${projectType === 'mod' ? t.searchModPlaceholder : "Поиск ресурспаков для"} ${mcVersion === "" ? t.anyVersion : mcVersion}...`} 
+             placeholder={`${projectType === 'mod' ? t.searchModPlaceholder : projectType === 'modpack' ? "Поиск готовых сборок для" : "Поиск ресурспаков для"} ${mcVersion === "" ? t.anyVersion : mcVersion}...`} 
              value={query} 
              onChange={(e) => setQuery(e.target.value)}
              onKeyDown={(e) => e.key === 'Enter' && searchMods(query, mcVersion, modLoader, sortBy, false)}
@@ -712,12 +716,13 @@ function App() {
         <div className={`sidebar-icon ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab("home")} title={t.sidebarHome}><IconHome /></div>
         <div className={`sidebar-icon ${activeTab === 'mods' ? 'active' : ''}`} onClick={() => setActiveTab("mods")} title={t.sidebarMods}><IconBox /></div>
         <div className={`sidebar-icon ${activeTab === 'resourcepacks' ? 'active' : ''}`} onClick={() => setActiveTab("resourcepacks")} title="Ресурспаки"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="M2 15h10"/><path d="M9 18l3-3-3-3"/></svg></div>
+        <div className={`sidebar-icon ${activeTab === 'modpacks' ? 'active' : ''}`} onClick={() => setActiveTab("modpacks")} title="Сборки"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
         <div className={`sidebar-icon ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab("settings")} title={t.sidebarSettings}><IconSettings /></div>
       </aside>
 
       <main className="main-content">
-        <header className="top-bar" style={activeTab === 'mods' || activeTab === 'resourcepacks' ? { justifyContent: 'flex-end', paddingBottom: '10px' } : {}}>
-          {activeTab !== 'mods' && activeTab !== 'resourcepacks' && (
+        <header className="top-bar" style={activeTab === 'mods' || activeTab === 'resourcepacks' || activeTab === 'modpacks' ? { justifyContent: 'flex-end', paddingBottom: '10px' } : {}}>
+          {activeTab !== 'mods' && activeTab !== 'resourcepacks' && activeTab !== 'modpacks' && (
             <div className="title-area">
               <h1>Omega Launcher</h1>
             </div>
@@ -899,6 +904,7 @@ function App() {
 
         {activeTab === "mods" && <ModsPanel instances={instances} t={t} language={language} projectType="mod" />}
         {activeTab === "resourcepacks" && <ModsPanel instances={instances} t={t} language={language} projectType="resourcepack" />}
+        {activeTab === "modpacks" && <ModsPanel instances={instances} t={t} language={language} projectType="modpack" />}
 
         {activeTab === "settings" && (
           <div className="settings-panel">
