@@ -60,9 +60,9 @@ async function startMinecraft() {
 
     if (targetInstanceId && targetInstanceId.trim() !== "") {
         opts.overrides = {
-            gameDirectory: `${targetDataDir}/instances/${targetInstanceId}`
+            gameDirectory: `${targetDataDir}/instances/${targetInstanceId}/minecraft`
         };
-        console.log(`[LAUNCHER] Using instance isolation: ${targetInstanceId} in ${targetDataDir}`);
+        console.log(`[LAUNCHER] Using instance isolation: ${targetInstanceId} in ${targetDataDir}/minecraft`);
     }
 
     if (targetVersion.includes('-')) {

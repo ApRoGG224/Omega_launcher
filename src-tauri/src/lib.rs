@@ -197,7 +197,11 @@ fn open_folder(app: tauri::AppHandle, instance_id: String) {
     let mut path = std::path::PathBuf::from(get_data_dir(&app));
     path.push("instances");
     path.push(&instance_id);
-    let _ = std::fs::create_dir_all(&path);
+    
+    // Create the 'minecraft' subfolder so it exists when the user opens the folder
+    let mut mc_path = path.clone();
+    mc_path.push("minecraft");
+    let _ = std::fs::create_dir_all(&mc_path);
     
     if let Ok(abs_path) = std::fs::canonicalize(&path) {
         let path_str = abs_path.to_string_lossy().to_string();
