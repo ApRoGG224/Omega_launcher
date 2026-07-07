@@ -256,12 +256,12 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod" }: {
            {projectType !== "resourcepack" && (
              <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setSortMenuOpen(prev => !prev); setVersionMenuOpen(false); setLoaderMenuOpen(false); }} style={{ minWidth: "160px" }}>
                <div className="custom-dropdown-btn" style={{ height: "46px" }}>
-                 {sortBy === "downloads" ? t.sortDownloads : sortBy === "follows" ? t.sortFollows : sortBy === "optimization" ? t.sortOptimization : sortBy === "newest" ? t.sortNewest : t.sortUpdated} <IconChevronDown />
+                 {sortBy === "downloads" ? t.sortDownloads : sortBy === "follows" ? (projectType === 'modpack' ? "Лучшие сборки" : t.sortFollows) : sortBy === "optimization" ? t.sortOptimization : sortBy === "newest" ? t.sortNewest : t.sortUpdated} <IconChevronDown />
                </div>
                {sortMenuOpen && (
                  <div className="custom-dropdown-menu">
                    <div className="custom-dropdown-item" onClick={() => setSortBy("downloads")}>{t.sortDownloads}</div>
-                   <div className="custom-dropdown-item" onClick={() => setSortBy("follows")}>{t.sortFollows}</div>
+                   <div className="custom-dropdown-item" onClick={() => setSortBy("follows")}>{projectType === 'modpack' ? "Лучшие сборки" : t.sortFollows}</div>
                    <div className="custom-dropdown-item" onClick={() => setSortBy("optimization")}>{t.sortOptimization}</div>
                    <div className="custom-dropdown-item" onClick={() => setSortBy("newest")}>{t.sortNewest}</div>
                    <div className="custom-dropdown-item" onClick={() => setSortBy("updated")}>{t.sortUpdated}</div>
