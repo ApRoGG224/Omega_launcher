@@ -446,7 +446,7 @@ function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [exportPath, setExportPath] = useState(() => localStorage.getItem("exportPath") || "~/Downloads");
   const [importModalOpen, setImportModalOpen] = useState(false);
-  const [importStep, setImportStep] = useState<"menu" | "prism" | "curseforge">("menu");
+  const [importStep, setImportStep] = useState<"menu" | "prism" | "curseforge" | "mrpack">("menu");
 
   const handlePrismImport = async (zipPath: string) => {
     setImportModalOpen(false);
@@ -500,6 +500,35 @@ function App() {
       });
       showNotification("Импорт завершён!", "success");
       setLogs(prev => [...prev, `[IMPORT] Сборка "${newInst.name}" (${newInst.mcVersion} ${newInst.loader}) импортирована (без авто-загрузки .jar модов)!`]);
+    } catch(e) {
+      showNotification("Ошибка импорта: " + e, "error");
+      setLogs(prev => [...prev, `[IMPORT ERROR]: ${e}`]);
+    }
+  };
+
+  const handleMrPackImport = async (mrpackPath: string) => {
+    setImportModalOpen(false);
+    const tempId = Date.now().toString();
+    setLogs(prev => [...prev, `[IMPORT] Запуск импорта .mrpack (Modrinth/Omega) из архива...`]);
+    try {
+      const result = await invoke("import_mrpack", { instanceId: tempId, zipPath: mrpackPath });
+      const data = JSON.parse(result as string);
+      const newInst: ModpackInstance = {
+        id: tempId,
+        name: data.name || "Modrinth Import",
+        mcVersion: data.mcVersion || "1.20.1",
+        loader: data.loader || "Vanilla",
+        icon: undefined,
+        x: window.innerWidth / 2 - 80,
+        y: window.innerHeight / 2 - 80
+      };
+      setInstances(prev => {
+        const next = [...prev, newInst];
+        localStorage.setItem("desktopInstances", JSON.stringify(next));
+        return next;
+      });
+      showNotification("Импорт завершён!", "success");
+      setLogs(prev => [...prev, `[IMPORT] Сборка "${newInst.name}" (${newInst.mcVersion} ${newInst.loader}) импортирована!`]);
     } catch(e) {
       showNotification("Ошибка импорта: " + e, "error");
       setLogs(prev => [...prev, `[IMPORT ERROR]: ${e}`]);
@@ -1376,9 +1405,9 @@ function App() {
             <div className="account-modal-header">
               <div className="account-modal-header-info">
                 <h3 style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
-                  {importStep === "menu" ? "Импорт сборки" : importStep === "prism" ? "Импорт из Prism Launcher" : "Импорт из CurseForge"}
+                  {importStep === "menu" ? "Импорт сборки" : importStep === "prism" ? "Импорт из Prism Launcher" : importStep === "curseforge" ? "Импорт из CurseForge" : "Импорт .mrpack"}
                 </h3>
-                <p>{importStep === "menu" ? "Выберите лаунчер, из которого нужно перенести сборку" : "Выберите или перетащите .zip архив сборки"}</p>
+                <p>{importStep === "menu" ? "Выберите лаунчер, из которого нужно перенести сборку" : `Выберите или перетащите архив сборки`}</p>
               </div>
               <button className="account-modal-close" onClick={() => {
                 if (importStep !== "menu") setImportStep("menu");
@@ -1392,7 +1421,7 @@ function App() {
             <div className="account-modal-body" style={{ marginTop: '10px' }}>
               {importStep === "menu" ? (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div className="account-method-card" onClick={() => { showNotification("Пока не готово", "info"); setImportModalOpen(false); }}>
+                  <div className="account-method-card" onClick={() => setImportStep("mrpack")}>
                     <div className="account-method-icon" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff' }}>
                       <IconBox />
                     </div>
@@ -1412,7 +1441,7 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="account-method-card" onClick={() => { showNotification("Пока не готово", "info"); setImportModalOpen(false); }}>
+                  <div className="account-method-card" onClick={() => setImportStep("mrpack")}>
                     <div className="account-method-icon" style={{ background: 'rgba(0,175,92,0.1)', color: '#00AF5C' }}>
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16v16H4z"/><path d="M8 12l4-4 4 4"/></svg>
                     </div>
@@ -1443,6 +1472,7 @@ function App() {
                     if (path) {
                       if (importStep === "prism") handlePrismImport(path);
                       else if (importStep === "curseforge") handleCurseForgeImport(path);
+                      else if (importStep === "mrpack") handleMrPackImport(path);
                     } else {
                       showNotification("Не удалось получить путь файла. Используйте кнопку 'Выбрать файл'.", "error");
                     }
@@ -1453,13 +1483,13 @@ function App() {
                     <polyline points="17 8 12 3 7 8"/>
                     <line x1="12" y1="3" x2="12" y2="15"/>
                   </svg>
-                  <p style={{ color: '#8b8b9c', textAlign: 'center', marginBottom: '20px' }}>Перетащите сюда .zip архив от {importStep === "prism" ? "Prism Launcher" : "CurseForge"}<br/>или нажмите кнопку ниже</p>
+                  <p style={{ color: '#8b8b9c', textAlign: 'center', marginBottom: '20px' }}>Перетащите сюда архив от {importStep === "prism" ? "Prism Launcher" : importStep === "curseforge" ? "CurseForge" : "Omega/Modrinth"}<br/>или нажмите кнопку ниже</p>
                   
                   <button className="play-btn" onClick={async () => {
                     try {
                       const selected = await open({
                         multiple: false,
-                        filters: [{ name: 'Zip Archives', extensions: ['zip'] }]
+                        filters: [{ name: 'Archives', extensions: importStep === "mrpack" ? ['mrpack', 'zip'] : ['zip'] }]
                       });
                       let resolvedPath = null;
                       if (typeof selected === 'string') {
@@ -1471,6 +1501,7 @@ function App() {
                       if (resolvedPath) {
                         if (importStep === "prism") handlePrismImport(resolvedPath);
                         else if (importStep === "curseforge") handleCurseForgeImport(resolvedPath);
+                        else if (importStep === "mrpack") handleMrPackImport(resolvedPath);
                       }
                     } catch (e) {
                       showNotification("Ошибка выбора файла", "error");
