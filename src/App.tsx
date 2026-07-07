@@ -27,6 +27,8 @@ const IconMicrosoft = React.memo(() => <svg width="16" height="16" viewBox="0 0 
 const IconSearch = React.memo(() => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>);
 const IconDownload = React.memo(() => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>);
 const IconX = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>);
+const IconTrash = React.memo(() => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>);
+const IconArrowLeft = React.memo(() => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>);
 
 type AccountType = "microsoft" | "offline";
 interface Account {
@@ -378,6 +380,7 @@ function App() {
   const [savedAccounts, setSavedAccounts] = useState<Account[]>([{ name: "NightWolf", type: "offline" }]);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [newUsernameInput, setNewUsernameInput] = useState("");
+  const [accountModalView, setAccountModalView] = useState<"list" | "method" | "offline">("list");
 
   // Settings
   const [ram, setRam] = useState(4);
@@ -537,12 +540,8 @@ function App() {
     };
   }, []);
 
-  const profileMenuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
-        setProfileMenuOpen(false);
-      }
+    const handleClick = () => {
       setVerMenuOpen(false);
       setLoaderMenuOpen(false);
     };
@@ -551,16 +550,17 @@ function App() {
   }, []);
 
   const handleAddOffline = useCallback(() => {
-    const newName = newUsernameInput.trim();
-    if (newName !== "" && /^[a-zA-Z0-9_]{3,16}$/.test(newName)) {
-      const newAcc: Account = { name: newName, type: "offline" };
+    const trimmed = newUsernameInput.trim();
+    if (trimmed !== "" && /^[a-zA-Z0-9_]{3,16}$/.test(trimmed)) {
+      const newAcc: Account = { name: trimmed, type: "offline" };
       setSavedAccounts(prev => {
-        const updated = [newAcc, ...prev.filter(a => a.name !== newName)];
+        const updated = [newAcc, ...prev.filter(a => a.name !== trimmed)];
         localStorage.setItem("savedNicknames", JSON.stringify(updated));
         return updated;
       });
       setAccount(newAcc);
       setNewUsernameInput("");
+      setAccountModalView("list");
     }
   }, [newUsernameInput]);
 
@@ -576,6 +576,7 @@ function App() {
 
   const handleAddMicrosoft = useCallback(async () => {
     try {
+      setProfileMenuOpen(false);
       setLogs(prev => [...prev, t.logWaitingBrowser]);
       const output = (await invoke("login_microsoft")) as string;
       const match = output.toString().match(/SUCCESS:(.+)/);
@@ -589,7 +590,6 @@ function App() {
         });
         setAccount(newAcc);
         setLogs(prev => [...prev, t.logSuccessLogin + msName]);
-        setProfileMenuOpen(false);
       } else {
         const errMatch = output.toString().match(/ERROR:(.+)/);
         setLogs(prev => [...prev, t.logLoginError + (errMatch ? errMatch[1].trim() : t.logUnknownError)]);
@@ -598,6 +598,17 @@ function App() {
       setLogs(prev => [...prev, "[MS_AUTH_ERR]: " + e]);
     }
   }, []);
+
+  const handleDeleteAccount = useCallback((accName: string) => {
+    setSavedAccounts(prev => {
+      const updated = prev.filter(a => a.name !== accName);
+      localStorage.setItem("savedNicknames", JSON.stringify(updated));
+      if (account.name === accName && updated.length > 0) {
+        setAccount(updated[0]);
+      }
+      return updated;
+    });
+  }, [account.name]);
 
   const handlePlay = useCallback(async () => {
     if (!selectedInstanceId) return alert(t.alertNoInstance);
@@ -706,7 +717,7 @@ function App() {
             </div>
           )}
           
-          <div className="user-profile" ref={profileMenuRef} onClick={(e) => { e.stopPropagation(); setProfileMenuOpen(prev => !prev); }}>
+          <div className="user-profile" onClick={() => { setProfileMenuOpen(true); setAccountModalView("list"); }}>
             <div className="avatar">
                 {account.type === "microsoft" ? <IconMicrosoft /> : (account.name ? account.name.substring(0, 2).toUpperCase() : "??")}
             </div>
@@ -714,37 +725,6 @@ function App() {
               <span className="user-name">{account.name}</span>
               <span className="user-status"><span className="status-dot" /> Онлайн</span>
             </div>
-            
-            {profileMenuOpen && (
-              <div className="profile-menu" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
-                <span style={{ fontSize: "0.8rem", color: "#8b8b9c", marginBottom: "5px" }}>{t.accountsSection}</span>
-                <div className="saved-nicks-list">
-                  {savedAccounts.map(acc => (
-                    <div key={acc.name} className="saved-nick-item" onClick={() => handleSelectAccount(acc)}>
-                      {acc.type === "microsoft" ? <IconMicrosoft /> : <IconUser />}
-                      <span style={{ fontWeight: acc.name === account.name ? "bold" : "normal" }}>
-                          {acc.name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="profile-input-wrapper" style={{ marginTop: "10px", marginBottom: "5px" }}>
-                   <button style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", gap: "10px" }} onClick={handleAddMicrosoft}>
-                      <IconMicrosoft /> {t.loginMicrosoftBtn}
-                   </button>
-                </div>
-                <div className="profile-input-wrapper">
-                  <input 
-                    type="text" 
-                    placeholder={t.nicknamePlaceholder} 
-                    value={newUsernameInput}
-                    onChange={(e) => setNewUsernameInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddOffline()}
-                  />
-                  <button onClick={handleAddOffline}><IconPlus /></button>
-                </div>
-              </div>
-            )}
           </div>
         </header>
 
@@ -1084,7 +1064,143 @@ function App() {
 
           </div>
         )}
-      </main>
+        {profileMenuOpen && (
+        <div className="account-modal-overlay" onClick={() => setProfileMenuOpen(false)}>
+          <div className="account-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="account-modal-header">
+              <div className="account-modal-header-info">
+                <h3>
+                  {accountModalView === "list" && t.accountsSection}
+                  {accountModalView === "method" && (t as any).addAccountTitle}
+                  {accountModalView === "offline" && (t as any).addOfflineTitle}
+                </h3>
+                <p>
+                  {accountModalView === "list" && t.accountsSubtitle}
+                  {accountModalView === "method" && (t as any).addAccountSubtitle}
+                  {accountModalView === "offline" && (t as any).addOfflineSubtitle}
+                </p>
+              </div>
+              <button className="account-modal-close" onClick={() => setProfileMenuOpen(false)}>
+                <IconX />
+              </button>
+            </div>
+
+            <div className="account-modal-body">
+              {accountModalView === "list" && (
+                <>
+                  {savedAccounts.length > 0 && (
+                    <div className="account-list-section">
+                      <span className="account-list-label">{t.accountsSection}</span>
+                      {savedAccounts.map(acc => (
+                        <div
+                          key={acc.name}
+                          className={`account-item ${acc.name === account.name ? 'active' : ''}`}
+                          onClick={() => handleSelectAccount(acc)}
+                        >
+                          <div className={`account-item-avatar ${acc.type}`}>
+                            {acc.type === "microsoft" ? <IconMicrosoft /> : acc.name.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div className="account-item-info">
+                            <div className="account-item-name">{acc.name}</div>
+                            <div className="account-item-type">
+                              {acc.type === "microsoft" ? "Microsoft" : (t as any).offlineAccountTitle}
+                              {acc.name === account.name && (
+                                <span className="account-item-active-badge">{(t as any).activeLabel}</span>
+                              )}
+                            </div>
+                          </div>
+                          {savedAccounts.length > 1 && (
+                            <button
+                              className="account-item-delete"
+                              onClick={(e) => { e.stopPropagation(); handleDeleteAccount(acc.name); }}
+                              title={(t as any).deleteAccountBtn}
+                            >
+                              <IconTrash />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="account-modal-divider" />
+
+                  <div
+                    className="account-method-card"
+                    onClick={() => setAccountModalView("method")}
+                  >
+                    <div className="account-method-icon" style={{ background: 'rgba(var(--accent-color-rgb), 0.15)', color: 'var(--accent-color)' }}>
+                      <IconPlus />
+                    </div>
+                    <div className="account-method-info">
+                      <h4>{(t as any).addAccountTitle}</h4>
+                      <p>{(t as any).addAccountSubtitle}</p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {accountModalView === "method" && (
+                <>
+                  <button className="account-back-btn" onClick={() => setAccountModalView("list")}>
+                    <IconArrowLeft /> {(t as any).backBtn}
+                  </button>
+
+                  <div className="account-method-card" onClick={() => { handleAddMicrosoft(); }}>
+                    <div className="account-method-icon microsoft">
+                      <IconMicrosoft />
+                    </div>
+                    <div className="account-method-info">
+                      <h4>Microsoft</h4>
+                      <p>{(t as any).microsoftAccountDesc}</p>
+                    </div>
+                  </div>
+
+                  <div className="account-method-card" onClick={() => setAccountModalView("offline")}>
+                    <div className="account-method-icon offline">
+                      <IconUser />
+                    </div>
+                    <div className="account-method-info">
+                      <h4>{(t as any).offlineAccountTitle}</h4>
+                      <p>{(t as any).offlineAccountDesc}</p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {accountModalView === "offline" && (
+                <div className="account-offline-form">
+                  <button className="account-back-btn" onClick={() => setAccountModalView("method")}>
+                    <IconArrowLeft /> {(t as any).backBtn}
+                  </button>
+
+                  <div className="account-input-group">
+                    <input
+                      type="text"
+                      placeholder={t.nicknamePlaceholder}
+                      value={newUsernameInput}
+                      onChange={(e) => setNewUsernameInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddOffline()}
+                      className={newUsernameInput.length > 0 && !/^[a-zA-Z0-9_]{3,16}$/.test(newUsernameInput) ? 'invalid' : ''}
+                      autoFocus
+                    />
+                    <span className="account-input-hint">{(t as any).nicknameRules}</span>
+                  </div>
+
+                  <button
+                    className="account-add-btn"
+                    onClick={handleAddOffline}
+                    disabled={!newUsernameInput.trim() || !/^[a-zA-Z0-9_]{3,16}$/.test(newUsernameInput.trim())}
+                  >
+                    <IconPlus /> {(t as any).addBtn}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
     </div>
   );
 }

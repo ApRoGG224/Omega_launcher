@@ -313,71 +313,343 @@ input[type="color"]::-webkit-color-swatch {
   border-radius: 50%;
 }
 
-/* Profile Dropdown */
-.profile-menu {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  width: 280px;
-  background: rgba(20, 20, 30, 0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  z-index: 100;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-  padding: 15px;
-  gap: 15px;
-}
-.profile-input-wrapper {
-  display: flex;
-  gap: 8px;
-}
-.profile-input-wrapper input {
-  flex: 1;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: white;
-  padding: 10px;
-  border-radius: 8px;
-  outline: none;
-  font-family: 'Inter', sans-serif;
-}
-.profile-input-wrapper button {
-  background: var(--accent-color);
-  color: white;
-  border: none;
-  padding: 0 12px;
-  border-radius: 8px;
-  cursor: pointer;
+/* Account Modal Overlay */
+.account-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 999;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  animation: fadeIn 0.2s ease;
 }
-.profile-input-wrapper button:hover {
-  background: #b975f8;
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-.saved-nicks-list {
+
+/* Account Modal */
+.account-modal {
+  background: linear-gradient(145deg, rgba(30, 30, 45, 0.97), rgba(15, 15, 20, 0.99));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  width: 420px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 80px rgba(var(--accent-color-rgb), 0.1);
+  animation: modalSlideIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: scale(0.92) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.account-modal-header {
+  padding: 24px 24px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.account-modal-header-info h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  background: linear-gradient(90deg, #fff, var(--accent-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.account-modal-header-info p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6b6b7c;
+}
+
+.account-modal-close {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: #6b6b7c;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.account-modal-close:hover {
+  color: white;
+  background: rgba(239, 68, 68, 0.2);
+  transform: rotate(90deg);
+}
+
+.account-modal-body {
+  padding: 20px 24px 24px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  max-height: 150px;
-  overflow-y: auto;
+  gap: 10px;
 }
-.saved-nick-item {
+
+/* Saved accounts list */
+.account-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.account-list-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #5b5b6c;
+  padding: 0 4px;
+}
+
+.account-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  position: relative;
 }
-.saved-nick-item:hover {
-  background: rgba(255,255,255,0.05);
+
+.account-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.account-item.active {
+  background: rgba(var(--accent-color-rgb), 0.08);
+  border-color: rgba(var(--accent-color-rgb), 0.2);
+}
+
+.account-item-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.account-item-avatar.microsoft {
+  background: linear-gradient(135deg, rgba(5, 166, 240, 0.2), rgba(255, 186, 8, 0.2));
+}
+
+.account-item-avatar.offline {
+  background: rgba(255, 255, 255, 0.06);
+  color: #8b8b9c;
+}
+
+.account-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-item-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-item-type {
+  font-size: 0.7rem;
+  color: #6b6b7c;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.account-item-active-badge {
+  font-size: 0.65rem;
+  color: var(--accent-color);
+  background: rgba(var(--accent-color-rgb), 0.12);
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.account-item-delete {
+  background: none;
+  border: none;
+  color: #4b4b5c;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  opacity: 0;
+  transition: all 0.2s;
+}
+
+.account-item:hover .account-item-delete {
+  opacity: 1;
+}
+
+.account-item-delete:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Divider */
+.account-modal-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 4px 0;
+}
+
+/* Method cards for adding accounts */
+.account-method-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.account-method-card:hover {
+  background: linear-gradient(90deg, rgba(var(--accent-color-rgb), 0.1), rgba(var(--accent-color-rgb), 0.03));
+  border-color: rgba(var(--accent-color-rgb), 0.3);
+  transform: translateX(4px);
+  box-shadow: 0 8px 20px -8px rgba(var(--accent-color-rgb), 0.25);
+}
+
+.account-method-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.account-method-icon.microsoft {
+  background: linear-gradient(135deg, rgba(5, 166, 240, 0.15), rgba(255, 186, 8, 0.15));
+}
+
+.account-method-icon.offline {
+  background: rgba(255, 255, 255, 0.06);
+  color: #8b8b9c;
+}
+
+.account-method-info h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.account-method-info p {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  color: #6b6b7c;
+}
+
+/* Offline form */
+.account-offline-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.account-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #6b6b7c;
+  cursor: pointer;
+  padding: 4px 0;
+  font-size: 0.8rem;
+  font-family: 'Inter', sans-serif;
+  transition: color 0.2s;
+  align-self: flex-start;
+}
+
+.account-back-btn:hover {
+  color: white;
+}
+
+.account-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-input-group input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: white;
+  padding: 14px 16px;
+  border-radius: 12px;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.account-input-group input:focus {
+  border-color: rgba(var(--accent-color-rgb), 0.5);
+}
+
+.account-input-group input.invalid {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.account-input-hint {
+  font-size: 0.72rem;
+  color: #5b5b6c;
+  padding-left: 4px;
+}
+
+.account-add-btn {
+  background: linear-gradient(135deg, var(--accent-color), color-mix(in srgb, var(--accent-color), #000 20%));
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.account-add-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -6px rgba(var(--accent-color-rgb), 0.5);
+}
+
+.account-add-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Custom Dropdown for Version */
