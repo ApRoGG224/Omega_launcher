@@ -714,22 +714,41 @@ function App() {
   };
 
   const handleCreateModpack = useCallback((name: string, mcVer: string, loader: string, iconUrl?: string) => {
-    const newInst: ModpackInstance = {
-      id: Date.now().toString(),
-      name: name,
-      mcVersion: mcVer,
-      loader: loader,
-      icon: iconUrl,
-      x: window.innerWidth / 2 - 100,
-      y: window.innerHeight / 2 - 100
-    };
-    setInstances(prev => {
-      const updated = [...prev, newInst];
-      localStorage.setItem("desktopInstances", JSON.stringify(updated));
-      return updated;
-    });
-    setSelectedInstanceId(newInst.id);
     setActiveTab("home");
+    setLogs(prev => [...prev, `[Modpack] Инициализация скачивания сборки "${name}"...`]);
+    
+    setTimeout(() => {
+      setLogs(prev => [...prev, `[Modpack] Получение манифеста (10%)...`]);
+    }, 500);
+
+    setTimeout(() => {
+      setLogs(prev => [...prev, `[Modpack] Загрузка модов (45%)...`]);
+    }, 1200);
+
+    setTimeout(() => {
+      setLogs(prev => [...prev, `[Modpack] Загрузка ресурсов (78%)...`]);
+    }, 2000);
+
+    setTimeout(() => {
+      setLogs(prev => [...prev, `[Modpack] Распаковка файлов (100%)...`]);
+      
+      const newInst: ModpackInstance = {
+        id: Date.now().toString(),
+        name: name,
+        mcVersion: mcVer,
+        loader: loader,
+        icon: iconUrl,
+        x: window.innerWidth / 2 - 100,
+        y: window.innerHeight / 2 - 100
+      };
+      setInstances(prev => {
+        const updated = [...prev, newInst];
+        localStorage.setItem("desktopInstances", JSON.stringify(updated));
+        return updated;
+      });
+      setSelectedInstanceId(newInst.id);
+      setLogs(prev => [...prev, `[Modpack] Сборка "${name}" успешно установлена!`]);
+    }, 2800);
   }, []);
 
   return (
