@@ -1328,7 +1328,7 @@ function App() {
                 </div>
                 <div className="account-method-info">
                   <h4>Omega Launcher</h4>
-                  <p>Формат .zip</p>
+                  <p>Формат .mrpack</p>
                 </div>
               </div>
               
