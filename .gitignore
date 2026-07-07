@@ -6,7 +6,7 @@ dist-ssr/
 .env.*
 .DS_Store
 src-tauri/target/
-src-tauri/minecraft_data/
-sidecar/node_pid.txt
-sidecar/mc_pid.txt
+minecraft_data/
+src-tauri/node_pid.txt
+src-tauri/mc_pid.txt
 ms_auth.json
