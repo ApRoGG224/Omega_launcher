@@ -92,7 +92,7 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod" }: {
   const LIMIT = 24;
 
   const [mcVersion, setMcVersion] = useState("1.21.4");
-  const [modLoader, setModLoader] = useState("fabric");
+  const [modLoader, setModLoader] = useState(projectType === "resourcepack" ? "" : "fabric");
   
   const [versionMenuOpen, setVersionMenuOpen] = useState(false);
   const [loaderMenuOpen, setLoaderMenuOpen] = useState(false);
@@ -234,23 +234,20 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod" }: {
              )}
            </div>
 
-           <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setLoaderMenuOpen(prev => !prev); setVersionMenuOpen(false); setSortMenuOpen(false); }} style={{ minWidth: "110px" }}>
-             <div className="custom-dropdown-btn" style={{ height: "46px" }}>
-               {modLoader === "" ? t.anyLoader : modLoader} <IconChevronDown />
-             </div>
-             {loaderMenuOpen && (
-               <div className="custom-dropdown-menu">
-                 {projectType === "resourcepack" 
-                   ? ["", "minecraft"].map(l => (
-                     <div key={l} className="custom-dropdown-item" onClick={() => setModLoader(l)}>{l === "" ? t.anyLoader : l}</div>
-                   ))
-                   : ["", "fabric", "forge", "quilt", "neoforge"].map(l => (
-                     <div key={l} className="custom-dropdown-item" onClick={() => setModLoader(l)}>{l === "" ? t.anyLoader : l}</div>
-                   ))
-                 }
+           {projectType === "mod" && (
+             <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setLoaderMenuOpen(prev => !prev); setVersionMenuOpen(false); setSortMenuOpen(false); }} style={{ minWidth: "110px" }}>
+               <div className="custom-dropdown-btn" style={{ height: "46px" }}>
+                 {modLoader === "" ? t.anyLoader : modLoader} <IconChevronDown />
                </div>
-             )}
-           </div>
+               {loaderMenuOpen && (
+                 <div className="custom-dropdown-menu">
+                   {["", "fabric", "forge", "quilt", "neoforge"].map(l => (
+                     <div key={l} className="custom-dropdown-item" onClick={() => setModLoader(l)}>{l === "" ? t.anyLoader : l}</div>
+                   ))}
+                 </div>
+               )}
+             </div>
+           )}
 
            <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setSortMenuOpen(prev => !prev); setVersionMenuOpen(false); setLoaderMenuOpen(false); }} style={{ minWidth: "160px" }}>
              <div className="custom-dropdown-btn" style={{ height: "46px" }}>
