@@ -1,10 +1,16 @@
 import { Auth } from 'msmc';
 import * as fs from 'fs';
 
-async function login() {
+const code = process.argv[2];
+if (!code) {
+    console.log("ERROR:No auth code provided");
+    process.exit(1);
+}
+
+async function exchangeCode() {
     try {
         const authManager = new Auth("select_account");
-        const xboxManager = await authManager.launch("raw");
+        const xboxManager = await authManager.login(code);
         const token = await xboxManager.getMinecraft();
         const mclc = token.mclc();
         fs.writeFileSync("ms_auth.json", JSON.stringify(mclc));
@@ -16,5 +22,4 @@ async function login() {
     }
 }
 
-login();
-
+exchangeCode();
