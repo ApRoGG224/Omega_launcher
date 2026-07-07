@@ -6,6 +6,7 @@ import AdmZip from 'adm-zip';
 const instanceId = process.argv[2];
 const dataDir = process.argv[3];
 const instanceName = process.argv[4] || instanceId;
+const exportDir = process.argv[5] || path.join(os.homedir(), 'Downloads');
 
 if (!instanceId || !dataDir) {
     console.error("Missing arguments!");
@@ -19,9 +20,12 @@ if (!fs.existsSync(instanceDir)) {
     process.exit(1);
 }
 
-const downloadsDir = path.join(os.homedir(), 'Downloads');
+if (!fs.existsSync(exportDir)) {
+    fs.mkdirSync(exportDir, { recursive: true });
+}
+
 const safeName = instanceName.replace(/[^a-z0-9а-яё_-]/gi, '_');
-const mrpackPath = path.join(downloadsDir, `${safeName}_modpack.mrpack`);
+const mrpackPath = path.join(exportDir, `${safeName}_modpack.mrpack`);
 
 try {
     console.log(`[EXPORT] Подготовка к экспорту сборки "${instanceName}"...`);

@@ -313,7 +313,7 @@ async fn install_modpack(app: tauri::AppHandle, mod_id: String, mc_version: Stri
 }
 
 #[tauri::command]
-async fn export_modpack(app: tauri::AppHandle, instance_id: String, instance_name: String) -> Result<String, String> {
+async fn export_modpack(app: tauri::AppHandle, instance_id: String, instance_name: String, export_path: String) -> Result<String, String> {
     let data_dir = get_data_dir(&app);
     let mut child = std::process::Command::new("npx")
         .arg("tsx")
@@ -321,6 +321,7 @@ async fn export_modpack(app: tauri::AppHandle, instance_id: String, instance_nam
         .arg(&instance_id)
         .arg(&data_dir)
         .arg(&instance_name)
+        .arg(&export_path)
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()

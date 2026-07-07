@@ -443,6 +443,8 @@ function App() {
   const [renameModalOpen, setRenameModalOpen] = useState<string | null>(null);
   const [renameInput, setRenameInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [exportPath, setExportPath] = useState(() => localStorage.getItem("exportPath") || "~/Downloads");
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     const handleClick = () => {
@@ -832,16 +834,17 @@ function App() {
                   <button className="ctx-item" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); setContextMenu(null); }}>{t.ctxIcon}</button>
                   <button className="ctx-item" onClick={async (e) => { 
                     e.stopPropagation(); 
-                    const inst = instances.find(i=>i.id===contextMenu.instanceId);
+                    const inst = instances.find(i=>i.id===contextMenu?.instanceId);
                     setContextMenu(null);
                     if (inst) {
-                      showNotification("Начинаю экспорт сборки...", "info");
+                      setIsExporting(true);
                       try {
-                        await invoke("export_modpack", { instanceId: inst.id, instanceName: inst.name });
-                        showNotification("Сборка успешно скачана в папку Загрузки!", "success");
+                        await invoke("export_modpack", { instanceId: inst.id, instanceName: inst.name, exportPath: exportPath });
+                        showNotification("Сборка успешно скачана в папку экспорта!", "success");
                       } catch (err: any) {
                         showNotification("Ошибка экспорта: " + err, "error");
                       }
+                      setIsExporting(false);
                     }
                   }}>Скачать сборку</button>
                   <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
@@ -978,8 +981,31 @@ function App() {
 
         {activeTab === "settings" && (
           <div className="settings-panel">
-            <div className="settings-header">
-              <h2>{t.settingsTitle}</h2>
+            <h2>{t.sidebarSettings}</h2>
+            
+            <div className="settings-section">
+              <h3>Пути и сохранение</h3>
+              <div className="setting-item">
+                <label>Папка для экспорта сборок</label>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input 
+                    type="text" 
+                    value={exportPath} 
+                    onChange={e => {
+                      setExportPath(e.target.value);
+                      localStorage.setItem("exportPath", e.target.value);
+                    }} 
+                    style={{ flex: 1 }}
+                  />
+                  <button className="play-btn" style={{ padding: '0 15px', height: '40px' }} onClick={() => invoke('open_path', { path: exportPath })}>
+                    <IconFolder />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <h3>{t.ramAllocation}</h3>
               <p>{t.settingsSubtitle}</p>
             </div>
 
@@ -1284,6 +1310,18 @@ function App() {
         </div>
       )}
     </main>
+      {isExporting && (
+        <div className="modal-overlay" style={{ zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px', background: 'rgba(20,20,30,0.9)', padding: '30px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(255,255,255,0.1)', borderTop: '4px solid var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+            <h3 style={{ margin: 0 }}>Подготовка архива...</h3>
+            <p style={{ color: '#8b8b9c', margin: 0, fontSize: '0.9rem' }}>Пожалуйста, подождите, сборка экспортируется</p>
+          </div>
+          <style>{`
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+          `}</style>
+        </div>
+      )}
     </div>
   );
 }
