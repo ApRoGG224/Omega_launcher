@@ -444,6 +444,8 @@ function App() {
   const [renameInput, setRenameInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [exportPath, setExportPath] = useState(() => localStorage.getItem("exportPath") || "~/Downloads");
+  const [importModalOpen, setImportModalOpen] = useState(false);
+
   useEffect(() => {
     const handleClick = () => {
       if (contextMenu) setContextMenu(null);
@@ -866,7 +868,7 @@ function App() {
                   boxShadow: '0 10px 30px rgba(0,0,0,0.5)', minWidth: '180px'
                 }}>
                   <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setDesktopContextMenu(null); setIsCreating(true); }}>Создать сборку</button>
-                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setDesktopContextMenu(null); showNotification("Импорт в разработке!", "info"); }}>Импортировать с других лаунчеров</button>
+                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setDesktopContextMenu(null); setImportModalOpen(true); }}>Импортировать с других лаунчеров</button>
                 </div>
               )}
               
@@ -1301,6 +1303,64 @@ function App() {
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {importModalOpen && (
+        <div className="modal-overlay" onClick={() => setImportModalOpen(false)}>
+          <div className="account-modal" onClick={e => e.stopPropagation()} style={{ width: '480px', padding: 0 }}>
+            <div className="account-modal-header">
+              <div className="account-modal-header-info">
+                <h3>Импорт сборки</h3>
+                <p>Выберите лаунчер, из которого нужно перенести сборку</p>
+              </div>
+              <button className="account-modal-close" onClick={() => setImportModalOpen(false)}>
+                <IconX />
+              </button>
+            </div>
+            
+            <div className="account-modal-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '10px' }}>
+              <div className="account-method-card" onClick={() => { showNotification("Пока не готово", "info"); setImportModalOpen(false); }}>
+                <div className="account-method-icon" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff' }}>
+                  <IconBox />
+                </div>
+                <div className="account-method-info">
+                  <h4>Omega Launcher</h4>
+                  <p>Формат .zip</p>
+                </div>
+              </div>
+              
+              <div className="account-method-card" onClick={() => { showNotification("Пока не готово", "info"); setImportModalOpen(false); }}>
+                <div className="account-method-icon" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff' }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" /><polyline points="12 22 12 12" /><polyline points="22 8.5 12 12" /><polyline points="2 8.5 12 12" /></svg>
+                </div>
+                <div className="account-method-info">
+                  <h4>Prism Launcher</h4>
+                  <p>Из папки instances</p>
+                </div>
+              </div>
+
+              <div className="account-method-card" onClick={() => { showNotification("Пока не готово", "info"); setImportModalOpen(false); }}>
+                <div className="account-method-icon" style={{ background: 'rgba(0,175,92,0.1)', color: '#00AF5C' }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16v16H4z"/><path d="M8 12l4-4 4 4"/></svg>
+                </div>
+                <div className="account-method-info">
+                  <h4>Modrinth App</h4>
+                  <p>Формат .mrpack</p>
+                </div>
+              </div>
+
+              <div className="account-method-card" onClick={() => { showNotification("Пока не готово", "info"); setImportModalOpen(false); }}>
+                <div className="account-method-icon" style={{ background: 'rgba(241,100,54,0.1)', color: '#F16436' }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2c0 0-5 4-5 10a5 5 0 0 0 10 0c0-6-5-10-5-10Z"/></svg>
+                </div>
+                <div className="account-method-info">
+                  <h4>CurseForge</h4>
+                  <p>Формат .zip</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
