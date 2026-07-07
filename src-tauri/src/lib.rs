@@ -263,12 +263,61 @@ async fn translate_text(text: String, target_lang: String) -> Result<String, Str
     Ok(text) // return original text if translation failed
 }
 
+#[tauri::command]
+async fn install_modpack(app: tauri::AppHandle, mod_id: String, mc_version: String, loader: String, instance_id: String) -> Result<String, String> {
+    let data_dir = get_data_dir(&app);
+    let mut child = std::process::Command::new("npx")
+        .arg("tsx")
+        .arg("../sidecar/install_modpack.ts")
+        .arg(&mod_id)
+        .arg(&mc_version)
+        .arg(&loader)
+        .arg(&instance_id)
+        .arg(&data_dir)
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    let stdout = child.stdout.take().unwrap();
+    let stderr = child.stderr.take().unwrap();
+    
+    let app_clone = app.clone();
+    std::thread::spawn(move || {
+        use std::io::BufRead;
+        let reader = std::io::BufReader::new(stdout);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                let _ = app_clone.emit("download-progress", line);
+            }
+        }
+    });
+
+    std::thread::spawn(move || {
+        use std::io::BufRead;
+        let reader = std::io::BufReader::new(stderr);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                let _ = app.emit("download-progress", format!("[ERROR] {}", line));
+            }
+        }
+    });
+
+    // We don't wait for it to finish blocking the UI, but Tauri commands are async so we can wait.
+    let status = child.wait().map_err(|e| e.to_string())?;
+    if status.success() {
+        Ok("Success".to_string())
+    } else {
+        Err("Failed to install modpack".to_string())
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder, open_path, translate_text
+            launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder, open_path, translate_text, install_modpack
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
