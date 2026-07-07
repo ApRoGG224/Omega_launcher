@@ -1338,7 +1338,7 @@ function App() {
                 </div>
                 <div className="account-method-info">
                   <h4>Prism Launcher</h4>
-                  <p>Из папки instances</p>
+                  <p>Формат .zip</p>
                 </div>
               </div>
 
