@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen, emit } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { HexColorPicker } from "react-colorful";
+import { open } from "@tauri-apps/plugin-dialog";
 import { translations, Language } from './i18n';
 import "./App.css";
 
@@ -446,7 +447,35 @@ function App() {
   const [exportPath, setExportPath] = useState(() => localStorage.getItem("exportPath") || "~/Downloads");
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importStep, setImportStep] = useState<"menu" | "prism">("menu");
-  const importFileRef = useRef<HTMLInputElement>(null);
+
+  const handlePrismImport = async (zipPath: string) => {
+    setImportModalOpen(false);
+    const tempId = Date.now().toString();
+    setLogs(prev => [...prev, `[IMPORT] Запуск импорта из архива...`]);
+    try {
+      const result = await invoke("import_prism", { instanceId: tempId, zipPath: zipPath });
+      const data = JSON.parse(result as string);
+      const newInst: ModpackInstance = {
+        id: tempId,
+        name: data.name || "Prism Import",
+        mcVersion: data.mcVersion || "1.20.1",
+        loader: data.loader || "Vanilla",
+        icon: undefined,
+        x: window.innerWidth / 2 - 80,
+        y: window.innerHeight / 2 - 80
+      };
+      setInstances(prev => {
+        const next = [...prev, newInst];
+        localStorage.setItem("desktopInstances", JSON.stringify(next));
+        return next;
+      });
+      showNotification("Импорт завершён успешно!", "success");
+      setLogs(prev => [...prev, `[IMPORT] Сборка "${newInst.name}" (${newInst.mcVersion} ${newInst.loader}) импортирована!`]);
+    } catch(e) {
+      showNotification("Ошибка импорта: " + e, "error");
+      setLogs(prev => [...prev, `[IMPORT ERROR]: ${e}`]);
+    }
+  };
 
   useEffect(() => {
     const handleClick = () => {
@@ -1379,25 +1408,11 @@ function App() {
                   onDrop={(e) => {
                     e.preventDefault();
                     const file = e.dataTransfer.files?.[0];
-                    if (file) {
-                      const name = file.name.replace('.zip', '');
-                      const newInst: ModpackInstance = {
-                        id: Date.now().toString(),
-                        name: name,
-                        mcVersion: "1.20.1",
-                        loader: "Vanilla",
-                        icon: undefined,
-                        x: window.innerWidth / 2 - 40,
-                        y: window.innerHeight / 2 - 40
-                      };
-                      setInstances(prev => {
-                        const next = [...prev, newInst];
-                        localStorage.setItem("desktopInstances", JSON.stringify(next));
-                        return next;
-                      });
-                      setLogs(prev => [...prev, `[IMPORT] Распаковка сборки "${name}" из архива Prism Launcher...`]);
-                      showNotification("Импорт начался, проверьте логи!", "success");
-                      setImportModalOpen(false);
+                    const path = file ? (file as any).path : null;
+                    if (path) {
+                      handlePrismImport(path);
+                    } else {
+                      showNotification("Не удалось получить путь файла. Используйте кнопку 'Выбрать файл'.", "error");
                     }
                   }}
                 >
@@ -1407,30 +1422,22 @@ function App() {
                     <line x1="12" y1="3" x2="12" y2="15"/>
                   </svg>
                   <p style={{ color: '#8b8b9c', textAlign: 'center', marginBottom: '20px' }}>Перетащите сюда .zip архив от Prism Launcher<br/>или нажмите кнопку ниже</p>
-                  <input type="file" ref={importFileRef} style={{ display: 'none' }} accept=".zip" onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                      const file = e.target.files[0];
-                      const name = file.name.replace('.zip', '');
-                      const newInst: ModpackInstance = {
-                        id: Date.now().toString(),
-                        name: name,
-                        mcVersion: "1.20.1",
-                        loader: "Vanilla",
-                        icon: undefined,
-                        x: window.innerWidth / 2 - 40,
-                        y: window.innerHeight / 2 - 40
-                      };
-                      setInstances(prev => {
-                        const next = [...prev, newInst];
-                        localStorage.setItem("desktopInstances", JSON.stringify(next));
-                        return next;
+                  
+                  <button className="play-btn" onClick={async () => {
+                    try {
+                      const selected = await open({
+                        multiple: false,
+                        filters: [{ name: 'Zip Archives', extensions: ['zip'] }]
                       });
-                      setLogs(prev => [...prev, `[IMPORT] Распаковка сборки "${name}" из архива Prism Launcher...`]);
-                      showNotification("Импорт начался, проверьте логи!", "success");
-                      setImportModalOpen(false);
+                      if (typeof selected === 'string') {
+                        handlePrismImport(selected);
+                      } else if (selected && Array.isArray(selected) && selected.length > 0) {
+                        handlePrismImport(selected[0].path || selected[0]);
+                      }
+                    } catch (e) {
+                      showNotification("Ошибка выбора файла", "error");
                     }
-                  }} />
-                  <button className="play-btn" onClick={() => importFileRef.current?.click()} style={{ width: '100%', justifyContent: 'center' }}>
+                  }} style={{ width: '100%', justifyContent: 'center' }}>
                     Выбрать файл
                   </button>
                 </div>

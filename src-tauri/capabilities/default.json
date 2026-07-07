@@ -2,10 +2,15 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main", "debug_window", "ms_auth"],
+  "windows": [
+    "main",
+    "debug_window",
+    "ms_auth"
+  ],
   "permissions": [
     "core:default",
     "core:window:allow-create",
-    "opener:default"
+    "opener:default",
+    "dialog:default"
   ]
 }

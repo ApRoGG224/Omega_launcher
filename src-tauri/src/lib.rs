@@ -359,12 +359,73 @@ async fn export_modpack(app: tauri::AppHandle, instance_id: String, instance_nam
     }
 }
 
+#[tauri::command]
+async fn import_prism(app: tauri::AppHandle, instance_id: String, zip_path: String) -> Result<String, String> {
+    let mut path = std::path::PathBuf::from(get_data_dir(&app));
+    path.push("instances");
+    let instances_dir = path.to_string_lossy().to_string();
+
+    let mut child = std::process::Command::new("npx")
+        .arg("tsx")
+        .arg("../sidecar/import_prism.ts")
+        .arg(&instance_id)
+        .arg(&zip_path)
+        .arg(&instances_dir)
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    let stdout = child.stdout.take().unwrap();
+    let stderr = child.stderr.take().unwrap();
+    
+    let app_clone = app.clone();
+    let result_json = std::sync::Arc::new(std::sync::Mutex::new(String::new()));
+    let result_json_clone = result_json.clone();
+
+    std::thread::spawn(move || {
+        use std::io::BufRead;
+        let reader = std::io::BufReader::new(stdout);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                if line.starts_with("SUCCESS_JSON:") {
+                    let json_str = line.trim_start_matches("SUCCESS_JSON:").to_string();
+                    if let Ok(mut r) = result_json_clone.lock() {
+                        *r = json_str;
+                    }
+                } else {
+                    let _ = app_clone.emit("download-progress", line);
+                }
+            }
+        }
+    });
+
+    std::thread::spawn(move || {
+        use std::io::BufRead;
+        let reader = std::io::BufReader::new(stderr);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                let _ = app.emit("download-progress", format!("[ERROR] {}", line));
+            }
+        }
+    });
+
+    let status = child.wait().map_err(|e| e.to_string())?;
+    if status.success() {
+        let final_json = result_json.lock().unwrap().clone();
+        Ok(final_json)
+    } else {
+        Err("Failed to import Prism modpack".to_string())
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder, open_path, translate_text, install_modpack, export_modpack
+            launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder, open_path, translate_text, install_modpack, export_modpack, import_prism
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
