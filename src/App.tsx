@@ -598,7 +598,7 @@ function App() {
       setProfileMenuOpen(false);
       setLogs(prev => [...prev, t.logWaitingBrowser]);
       const output = (await invoke("login_microsoft")) as string;
-      const match = output.toString().match(/SUCCESS:(.+)/);
+      const match = (output || "").toString().match(/SUCCESS:(.+)/);
       if (match && match[1]) {
         const msName = match[1].trim();
         const newAcc: Account = { name: msName, type: "microsoft" };
@@ -610,7 +610,7 @@ function App() {
         setAccount(newAcc);
         setLogs(prev => [...prev, t.logSuccessLogin + msName]);
       } else {
-        const errMatch = output.toString().match(/ERROR:(.+)/);
+        const errMatch = (output || "").toString().match(/ERROR:(.+)/);
         setLogs(prev => [...prev, t.logLoginError + (errMatch ? errMatch[1].trim() : t.logUnknownError)]);
       }
     } catch(e: any) {
@@ -645,7 +645,7 @@ function App() {
           ram,
           instanceId: inst.id 
         })) as string;
-        const errMatch = output.toString().match(/ERROR:(.+)/);
+        const errMatch = (output || "").toString().match(/ERROR:(.+)/);
         if (errMatch) throw new Error(errMatch[1]);
       } catch(e) {
         setIsRunning(false);
