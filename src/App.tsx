@@ -873,7 +873,7 @@ function App() {
               )}
               
               {renameModalOpen && (
-                <div className="modal-overlay" onClick={() => setRenameModalOpen(null)}>
+                <div className="account-modal-overlay" onClick={() => setRenameModalOpen(null)}>
                   <div className="create-modal" onClick={e => e.stopPropagation()}>
                     <h3>{t.renameInstTitle}</h3>
                     <input type="text" value={renameInput} onChange={e => setRenameInput(e.target.value)} placeholder={t.renameInstPlaceholder} />
@@ -1309,11 +1309,11 @@ function App() {
       )}
 
       {importModalOpen && (
-        <div className="modal-overlay" onClick={() => setImportModalOpen(false)}>
-          <div className="account-modal" onClick={e => e.stopPropagation()} style={{ width: '480px', padding: 0 }}>
+        <div className="account-modal-overlay" onClick={() => setImportModalOpen(false)}>
+          <div className="account-modal" onClick={e => e.stopPropagation()} style={{ width: '480px', padding: 0, background: 'rgba(20, 20, 30, 0.4)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
             <div className="account-modal-header">
               <div className="account-modal-header-info">
-                <h3>Импорт сборки</h3>
+                <h3 style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>Импорт сборки</h3>
                 <p>Выберите лаунчер, из которого нужно перенести сборку</p>
               </div>
               <button className="account-modal-close" onClick={() => setImportModalOpen(false)}>
