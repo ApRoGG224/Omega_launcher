@@ -72,9 +72,11 @@ async function main() {
         const filename = fileInfo.filename;
 
         const targetDataDir = process.argv[6] || path.join(process.cwd(), "minecraft_data");
+        const projectType = process.argv[7] || "mod";
 
-        // Path where mods should go for this instance
-        const modsDir = path.join(targetDataDir, "instances", instanceId, "minecraft", "mods");
+        // Path where files should go for this instance
+        const targetFolder = projectType === "resourcepack" ? "resourcepacks" : "mods";
+        const modsDir = path.join(targetDataDir, "instances", instanceId, "minecraft", targetFolder);
         
         if (!fs.existsSync(modsDir)) {
             fs.mkdirSync(modsDir, { recursive: true });

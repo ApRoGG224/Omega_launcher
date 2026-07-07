@@ -172,7 +172,8 @@ fn kill_minecraft() {
 }
 
 #[tauri::command]
-async fn download_mod(app: tauri::AppHandle, mod_id: String, mc_version: String, loader: String, instance_id: String) -> Result<String, String> {
+async fn download_mod(app: tauri::AppHandle, mod_id: String, mc_version: String, loader: String, instance_id: String, project_type: Option<String>) -> Result<String, String> {
+    let p_type = project_type.unwrap_or_else(|| "mod".to_string());
     let data_dir = get_data_dir(&app);
     let output = std::process::Command::new("npx")
         .arg("tsx")
@@ -182,6 +183,7 @@ async fn download_mod(app: tauri::AppHandle, mod_id: String, mc_version: String,
         .arg(&loader)
         .arg(&instance_id)
         .arg(&data_dir)
+        .arg(&p_type)
         .output()
         .map_err(|e| e.to_string())?;
 

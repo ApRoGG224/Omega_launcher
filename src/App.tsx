@@ -83,7 +83,7 @@ const ConsolePanel = React.memo(({ logs }: { logs: string[] }) => {
   );
 });
 
-const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackInstance[], t: any, language: string }) => {
+const ModrinthBrowser = React.memo(({ instances, t, language, projectType }: { instances: ModpackInstance[], t: any, language: string, projectType: "mod" | "resourcepack" }) => {
   const [query, setQuery] = useState("");
   const [mods, setMods] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -105,7 +105,7 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
   const searchMods = useCallback(async (q: string, ver: string, loader: string, sortOpt: string, isLoadMore = false) => {
     setLoading(true);
     try {
-       const facets: any[] = [["project_type:mod"]];
+       const facets: any[] = [[`project_type:${projectType}`]];
        if (ver && ver !== "") {
          facets.push([`versions:${ver}`]);
        }
@@ -160,7 +160,7 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
   useEffect(() => {
     searchMods(query, mcVersion, modLoader, sortBy, false);
     // eslint-disable-next-line
-  }, [mcVersion, modLoader, sortBy, language]);
+  }, [mcVersion, modLoader, sortBy, language, projectType]);
 
   useEffect(() => {
     const handleClick = () => {
@@ -204,9 +204,10 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
             modId: modIdToDownload, 
             mcVersion: inst.mcVersion, 
             loader: inst.loader === "Vanilla" ? "fabric" : inst.loader,
-            instanceId: instanceId 
+            instanceId: instanceId,
+            projectType: projectType
         });
-        showNotification("Мод успешно скачан и установлен в сборку!", 'success');
+        showNotification(projectType === "mod" ? "Мод успешно скачан и установлен в сборку!" : "Ресурспак успешно скачан!", 'success');
     } catch (e: any) {
         if (typeof e === 'string' && e.includes("ALREADY_EXISTS")) {
             showNotification(t.modAlreadyInstalled, 'error');
@@ -239,9 +240,14 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
              </div>
              {loaderMenuOpen && (
                <div className="custom-dropdown-menu">
-                 {["", "fabric", "forge", "quilt", "neoforge"].map(l => (
-                   <div key={l} className="custom-dropdown-item" onClick={() => setModLoader(l)}>{l === "" ? t.anyLoader : l}</div>
-                 ))}
+                 {projectType === "resourcepack" 
+                   ? ["", "minecraft"].map(l => (
+                     <div key={l} className="custom-dropdown-item" onClick={() => setModLoader(l)}>{l === "" ? t.anyLoader : l}</div>
+                   ))
+                   : ["", "fabric", "forge", "quilt", "neoforge"].map(l => (
+                     <div key={l} className="custom-dropdown-item" onClick={() => setModLoader(l)}>{l === "" ? t.anyLoader : l}</div>
+                   ))
+                 }
                </div>
              )}
            </div>
@@ -285,8 +291,11 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
                <div className="mod-header">
                  <img src={mod.icon_url || "https://cdn.modrinth.com/favicon.ico"} alt={mod.title} className="mod-icon" />
                  <div className="mod-info">
-                   <div className="mod-title">{mod.title}</div>
-                   <div className="mod-author">{t.byAuthor} {mod.author}</div>
+                   <h4 className="mod-title">{mod.title}</h4>
+                   <div className="mod-meta">
+                     <span><IconDownload /> {mod.downloads.toLocaleString()}</span>
+                     <span><IconBox /> {mod.project_type === "mod" ? (t as any).modLabel || "Мод" : (t as any).resourcepackLabel || "Ресурспак"}</span>
+                   </div>
                  </div>
                </div>
                <div className="mod-desc">{mod.description}</div>
@@ -309,14 +318,14 @@ const ModsPanel = React.memo(({ instances, t, language }: { instances: ModpackIn
 
           {installModalOpen && (
             <>
-              <div className="global-modal-content">
+              <div className="global-modal-content" onClick={e => e.stopPropagation()}>
                 <div className="global-modal-header">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ background: 'rgba(var(--accent-color-rgb), 0.2)', padding: '8px', borderRadius: '12px', display: 'flex' }}>
                        <IconDownload />
                     </div>
                     <h3 className="global-modal-title">
-                      {t.installTo}
+                      {projectType === "mod" ? t.installTo : "Установить ресурспак"}
                     </h3>
                   </div>
                   <button onClick={() => setInstallModalOpen(null)} className="global-modal-close">
@@ -702,16 +711,17 @@ function App() {
 
   return (
     <div className="app-container">
-      <aside className="sidebar">
+      <nav className="sidebar">
         <div className="sidebar-icon brand"><IconBox /></div>
         <div className={`sidebar-icon ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab("home")} title={t.sidebarHome}><IconHome /></div>
         <div className={`sidebar-icon ${activeTab === 'mods' ? 'active' : ''}`} onClick={() => setActiveTab("mods")} title={t.sidebarMods}><IconBox /></div>
+        <div className={`sidebar-icon ${activeTab === 'resourcepacks' ? 'active' : ''}`} onClick={() => setActiveTab("resourcepacks")} title={(t as any).sidebarResourcePacks || "Ресурспаки"}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="M2 15h10"/><path d="M9 18l3-3-3-3"/></svg></div>
         <div className={`sidebar-icon ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab("settings")} title={t.sidebarSettings}><IconSettings /></div>
-      </aside>
+      </nav>
 
       <main className="main-content">
-        <header className="top-bar" style={activeTab === 'mods' ? { justifyContent: 'flex-end', paddingBottom: '10px' } : {}}>
-          {activeTab !== 'mods' && (
+        <header className="top-bar" style={activeTab === 'mods' || activeTab === 'resourcepacks' ? { justifyContent: 'flex-end', paddingBottom: '10px' } : {}}>
+          {activeTab !== 'mods' && activeTab !== 'resourcepacks' && (
             <div className="title-area">
               <h1>Omega Launcher</h1>
             </div>
@@ -891,7 +901,8 @@ function App() {
           </>
         )}
 
-        {activeTab === "mods" && <ModsPanel instances={instances} t={t} language={language} />}
+        {activeTab === "mods" && <ModrinthBrowser instances={instances} t={t} language={language} projectType="mod" />}
+        {activeTab === "resourcepacks" && <ModrinthBrowser instances={instances} t={t} language={language} projectType="resourcepack" />}
 
         {activeTab === "settings" && (
           <div className="settings-panel">
