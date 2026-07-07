@@ -207,12 +207,12 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod" }: {
             instanceId: instanceId,
             projectType: projectType
         });
-        showNotification("Мод успешно скачан и установлен в сборку!", 'success');
+        showNotification(projectType === "mod" ? "Мод успешно скачан и установлен в сборку!" : "Ресурспак успешно скачан и установлен в сборку!", 'success');
     } catch (e: any) {
         if (typeof e === 'string' && e.includes("ALREADY_EXISTS")) {
-            showNotification(t.modAlreadyInstalled, 'error');
+            showNotification(projectType === 'mod' ? t.modAlreadyInstalled : "Ресурспак уже установлен в эту сборку", 'error');
         } else {
-            showNotification(t.modInstallError + e, 'error');
+            showNotification((projectType === 'mod' ? t.modInstallError : "Ошибка при установке ресурспака: ") + e, 'error');
         }
     }
     setLoading(false);
@@ -268,7 +268,7 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod" }: {
 
            <input 
              type="text" 
-             placeholder={`${t.searchModPlaceholder} ${mcVersion === "" ? t.anyVersion : mcVersion}...`} 
+             placeholder={`${projectType === 'mod' ? t.searchModPlaceholder : "Поиск ресурспаков для"} ${mcVersion === "" ? t.anyVersion : mcVersion}...`} 
              value={query} 
              onChange={(e) => setQuery(e.target.value)}
              onKeyDown={(e) => e.key === 'Enter' && searchMods(query, mcVersion, modLoader, sortBy, false)}
@@ -321,7 +321,7 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod" }: {
                        <IconDownload />
                     </div>
                     <h3 className="global-modal-title">
-                      {t.installTo}
+                      {projectType === 'mod' ? t.installTo : "Установить ресурспак в сборку"}
                     </h3>
                   </div>
                   <button onClick={() => setInstallModalOpen(null)} className="global-modal-close">

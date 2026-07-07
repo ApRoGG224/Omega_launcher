@@ -57,9 +57,11 @@ async function main() {
         console.log(`[DOWNLOADER] Fetching versions for mod ${modId}...`);
         const versions = await fetchVersions();
         
+        const projectType = process.argv[7] || "mod";
+        
         const valid = versions.find(v => 
             v.game_versions.includes(mcVersion) && 
-            v.loaders.includes(loader)
+            (projectType === "resourcepack" || v.loaders.includes(loader))
         );
 
         if (!valid) {
@@ -72,7 +74,6 @@ async function main() {
         const filename = fileInfo.filename;
 
         const targetDataDir = process.argv[6] || path.join(process.cwd(), "minecraft_data");
-        const projectType = process.argv[7] || "mod";
 
         // Path where files should go for this instance
         const targetFolder = projectType === "resourcepack" ? "resourcepacks" : "mods";
