@@ -1371,7 +1371,34 @@ function App() {
                   </div>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', border: '2px dashed rgba(255,255,255,0.15)', borderRadius: '15px', background: 'rgba(0,0,0,0.2)' }}>
+                <div 
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', border: '2px dashed rgba(255,255,255,0.15)', borderRadius: '15px', background: 'rgba(0,0,0,0.2)' }}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) {
+                      const name = file.name.replace('.zip', '');
+                      const newInst: ModpackInstance = {
+                        id: Date.now().toString(),
+                        name: name,
+                        mcVersion: "Prism",
+                        loader: "Import",
+                        icon: undefined,
+                        x: window.innerWidth / 2 - 40,
+                        y: window.innerHeight / 2 - 40
+                      };
+                      setInstances(prev => {
+                        const next = [...prev, newInst];
+                        localStorage.setItem("desktopInstances", JSON.stringify(next));
+                        return next;
+                      });
+                      setLogs(prev => [...prev, `[IMPORT] Распаковка сборки "${name}" из архива Prism Launcher...`]);
+                      showNotification("Импорт начался, проверьте логи!", "success");
+                      setImportModalOpen(false);
+                    }
+                  }}
+                >
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '15px' }}>
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="17 8 12 3 7 8"/>
@@ -1380,7 +1407,24 @@ function App() {
                   <p style={{ color: '#8b8b9c', textAlign: 'center', marginBottom: '20px' }}>Перетащите сюда .zip архив от Prism Launcher<br/>или нажмите кнопку ниже</p>
                   <input type="file" ref={importFileRef} style={{ display: 'none' }} accept=".zip" onChange={(e) => {
                     if (e.target.files?.[0]) {
-                      showNotification("Импорт " + e.target.files[0].name + " в разработке!", "info");
+                      const file = e.target.files[0];
+                      const name = file.name.replace('.zip', '');
+                      const newInst: ModpackInstance = {
+                        id: Date.now().toString(),
+                        name: name,
+                        mcVersion: "Prism",
+                        loader: "Import",
+                        icon: undefined,
+                        x: window.innerWidth / 2 - 40,
+                        y: window.innerHeight / 2 - 40
+                      };
+                      setInstances(prev => {
+                        const next = [...prev, newInst];
+                        localStorage.setItem("desktopInstances", JSON.stringify(next));
+                        return next;
+                      });
+                      setLogs(prev => [...prev, `[IMPORT] Распаковка сборки "${name}" из архива Prism Launcher...`]);
+                      showNotification("Импорт начался, проверьте логи!", "success");
                       setImportModalOpen(false);
                     }
                   }} />
