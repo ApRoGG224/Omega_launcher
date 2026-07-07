@@ -61,9 +61,12 @@ try {
     if (entry.isDirectory) continue;
     
     const parts = entry.entryName.split('/');
-    const mcIndex = parts.indexOf('.minecraft');
-    if (mcIndex !== -1) {
-      const relativePath = parts.slice(mcIndex + 1).join('/');
+    let rootIndex = parts.indexOf('.minecraft');
+    if (rootIndex === -1) rootIndex = parts.indexOf('minecraft');
+    if (rootIndex === -1) rootIndex = parts.indexOf('overrides');
+    
+    if (rootIndex !== -1) {
+      const relativePath = parts.slice(rootIndex + 1).join('/');
       if (!relativePath) continue;
       
       const destPath = path.join(targetDir, relativePath);
