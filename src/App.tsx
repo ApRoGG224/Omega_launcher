@@ -716,7 +716,7 @@ function App() {
             </div>
             
             {profileMenuOpen && (
-              <div className="profile-menu" onClick={(e) => e.stopPropagation()}>
+              <div className="profile-menu" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                 <span style={{ fontSize: "0.8rem", color: "#8b8b9c", marginBottom: "5px" }}>{t.accountsSection}</span>
                 <div className="saved-nicks-list">
                   {savedAccounts.map(acc => (
