@@ -1382,8 +1382,8 @@ function App() {
                       const newInst: ModpackInstance = {
                         id: Date.now().toString(),
                         name: name,
-                        mcVersion: "Prism",
-                        loader: "Import",
+                        mcVersion: "1.20.1",
+                        loader: "Vanilla",
                         icon: undefined,
                         x: window.innerWidth / 2 - 40,
                         y: window.innerHeight / 2 - 40
@@ -1412,8 +1412,8 @@ function App() {
                       const newInst: ModpackInstance = {
                         id: Date.now().toString(),
                         name: name,
-                        mcVersion: "Prism",
-                        loader: "Import",
+                        mcVersion: "1.20.1",
+                        loader: "Vanilla",
                         icon: undefined,
                         x: window.innerWidth / 2 - 40,
                         y: window.innerHeight / 2 - 40
