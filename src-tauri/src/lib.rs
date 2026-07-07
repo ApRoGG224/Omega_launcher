@@ -11,31 +11,96 @@ fn get_data_dir(app: &AppHandle) -> String {
 #[tauri::command]
 async fn login_microsoft(app: AppHandle) -> Result<String, String> {
     use std::process::Stdio;
-    let mut child = std::process::Command::new("npx")
-        .arg("tsx")
-        .arg("../sidecar/auth.ts")
-        .stdout(Stdio::piped())
-        .spawn()
-        .map_err(|e| e.to_string())?;
+    use std::sync::{Arc, Mutex};
 
-    let stdout = child.stdout.take().unwrap();
-    let reader = BufReader::new(stdout);
-    
-    for line in reader.lines() {
-        if let Ok(line) = line {
-            if line.starts_with("LINK:") {
-                let url = line.trim_start_matches("LINK:");
-                use tauri_plugin_opener::OpenerExt;
-                let _ = app.opener().open_url(url, None::<&str>);
-            } else if line.starts_with("SUCCESS:") || line.starts_with("ERROR:") {
-                let _ = child.kill();
-                return Ok(line);
+    let client_id = "00000000402b5328";
+    let redirect_uri = "https://login.live.com/oauth20_desktop.srf";
+    let auth_url = format!(
+        "https://login.live.com/oauth20_authorize.srf?client_id={}&response_type=code&redirect_uri={}&scope=XboxLive.signin%20offline_access&prompt=select_account",
+        client_id,
+        urlencoding::encode(redirect_uri)
+    );
+
+    let code: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
+    let code_clone = code.clone();
+
+    let auth_window = tauri::WebviewWindowBuilder::new(
+        &app,
+        "ms_auth",
+        tauri::WebviewUrl::External(auth_url.parse().unwrap()),
+    )
+    .title("Microsoft Login")
+    .inner_size(500.0, 650.0)
+    .center()
+    .on_navigation(move |url| {
+        let url_str = url.as_str();
+        if url_str.starts_with(redirect_uri) {
+            if let Some(query) = url.query() {
+                let params: Vec<&str> = query.split('&').collect();
+                for param in params {
+                    if let Some(c) = param.strip_prefix("code=") {
+                        let mut lock = code_clone.lock().unwrap();
+                        *lock = Some(c.to_string());
+                        return false;
+                    }
+                }
             }
+            return false;
+        }
+        true
+    })
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    let closed: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
+    let closed_clone = closed.clone();
+    auth_window.on_window_event(move |event| {
+        if let tauri::WindowEvent::Destroyed = event {
+            let mut lock = closed_clone.lock().unwrap();
+            *lock = true;
+        }
+    });
+
+    let auth_window_clone = auth_window.clone();
+    loop {
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+
+        let got_code = {
+            let lock = code.lock().unwrap();
+            lock.clone()
+        };
+
+        if let Some(auth_code) = got_code {
+            let _ = auth_window_clone.close();
+
+            let output = std::process::Command::new("npx")
+                .arg("tsx")
+                .arg("../sidecar/auth.ts")
+                .arg(&auth_code)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .output()
+                .map_err(|e| e.to_string())?;
+
+            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+            for line in stdout.lines() {
+                if line.starts_with("SUCCESS:") || line.starts_with("ERROR:") {
+                    return Ok(line.to_string());
+                }
+            }
+
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            return Err(format!("Auth failed: {}", stderr));
+        }
+
+        let is_closed = {
+            let lock = closed.lock().unwrap();
+            *lock
+        };
+        if is_closed {
+            return Err("Auth window closed by user".to_string());
         }
     }
-    
-    let _ = child.kill();
-    Err("Auth process exited without returning a result".to_string())
 }
 
 #[tauri::command]
