@@ -439,6 +439,7 @@ function App() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; instanceId: string } | null>(null);
+  const [desktopContextMenu, setDesktopContextMenu] = useState<{ visible: boolean; x: number; y: number } | null>(null);
   const [renameModalOpen, setRenameModalOpen] = useState<string | null>(null);
   const [renameInput, setRenameInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -446,10 +447,11 @@ function App() {
   useEffect(() => {
     const handleClick = () => {
       if (contextMenu) setContextMenu(null);
+      if (desktopContextMenu) setDesktopContextMenu(null);
     };
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
-  }, [contextMenu]);
+  }, [contextMenu, desktopContextMenu]);
 
   const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -784,6 +786,10 @@ function App() {
               onMouseMove={handleDesktopMouseMove}
               onMouseUp={handleDesktopMouseUp}
               onMouseLeave={handleDesktopMouseUp}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setDesktopContextMenu({ visible: true, x: e.clientX, y: e.clientY });
+              }}
             >
               <input type="file" ref={fileInputRef} onChange={handleIconChange} style={{ display: 'none' }} accept="image/*" />
               {instances.map(inst => (
@@ -835,6 +841,19 @@ function App() {
                     if (selectedInstanceId === contextMenu.instanceId) setSelectedInstanceId(null);
                     setContextMenu(null);
                   }}>{t.ctxDelete}</button>
+                </div>
+              )}
+
+              {desktopContextMenu && (
+                <div className="context-menu" style={{ 
+                  position: 'fixed', top: desktopContextMenu.y, left: desktopContextMenu.x, zIndex: 1000,
+                  background: 'rgba(20, 20, 30, 0.95)', backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px',
+                  padding: '5px', display: 'flex', flexDirection: 'column', gap: '2px',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)', minWidth: '180px'
+                }}>
+                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setDesktopContextMenu(null); setIsCreating(true); }}>Создать сборку</button>
+                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setDesktopContextMenu(null); showNotification("Импорт в разработке!", "info"); }}>Импортировать с других лаунчеров</button>
                 </div>
               )}
               
