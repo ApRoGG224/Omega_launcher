@@ -541,6 +541,7 @@ async fn import_mrpack(app: tauri::AppHandle, instance_id: String, zip_path: Str
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
