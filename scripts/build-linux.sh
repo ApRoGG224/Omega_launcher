@@ -13,7 +13,7 @@ cd "$PROJECT_ROOT"
 export WEBKIT_DISABLE_DMABUF_RENDERER=1
 export APPIMAGE_EXTRACT_AND_RUN=1
 export NO_STRIP=true
-npm run tauri build
+npm run tauri build -- --bundles appimage
 
 mkdir -p "$BUILD_DIR"
 
