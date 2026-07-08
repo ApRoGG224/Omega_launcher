@@ -19,11 +19,16 @@ tasks:
       - npm run tauri dev
 
   build:
-    desc: "Build the launcher for production"
+    desc: "Build the launcher for production (generic)"
     env:
       WEBKIT_DISABLE_DMABUF_RENDERER: 1
     cmds:
       - npm run tauri build
+
+  build:linux:
+    desc: "Build AppImage for Linux (Arch) → build/"
+    cmds:
+      - bash scripts/build-linux.sh
 
   format:
     desc: "Format code using Prettier (Prettier Validation Skill)"

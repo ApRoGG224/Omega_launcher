@@ -10,7 +10,7 @@ import "./App.css";
 // ---------------------------------
 // ИКОНКИ (Мемоизированные)
 // ---------------------------------
-const IconOmega = React.memo(() => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 20h4.5a.5.5 0 0 0 .5-.5v-2.828a2 2 0 0 1 .586-1.414l1.5-1.5a2 2 0 0 0 0-2.828l-1.172-1.172a4 4 0 0 1 0-5.656l2.172-2.172a4 4 0 0 1 5.656 0l2.172 2.172a4 4 0 0 1 0 5.656l-1.172 1.172a2 2 0 0 0 0 2.828l1.5 1.5a2 2 0 0 1 .586 1.414V19.5a.5.5 0 0 0 .5.5H21"/></svg>);
+
 const IconHome = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>);
 const IconBox = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>);
 const IconUsers = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>);
@@ -18,8 +18,7 @@ const IconSettings = React.memo(() => <svg width="20" height="20" viewBox="0 0 2
 const IconPlay = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>);
 const IconCpu = React.memo(() => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>);
 const IconFolder = React.memo(() => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>);
-const IconShield = React.memo(() => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>);
-const IconRefresh = React.memo(() => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>);
+
 const IconCheck = React.memo(() => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>);
 const IconChevronDown = React.memo(() => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>);
 const IconPlus = React.memo(() => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>);
@@ -448,6 +447,12 @@ function App() {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importStep, setImportStep] = useState<"menu" | "prism" | "curseforge" | "mrpack">("menu");
 
+  const [appNotification, setAppNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+    setAppNotification({ message, type });
+    setTimeout(() => setAppNotification(null), 3000);
+  };
+
   const handlePrismImport = async (zipPath: string) => {
     setImportModalOpen(false);
     const tempId = Date.now().toString();
@@ -757,7 +762,7 @@ function App() {
     if (!newName) return;
     
     // Open Debug Window
-    const debugWin = new WebviewWindow('debug_window', {
+    new WebviewWindow('debug_window', {
       title: 'Создание сборки - Дебаг',
       width: 600,
       height: 400,
@@ -1094,7 +1099,7 @@ function App() {
             </div>
 
             <div className="settings-section">
-              <h3>{t.ramAllocation}</h3>
+              <h3>{t.ramSettingsTitle}</h3>
               <p>{t.settingsSubtitle}</p>
             </div>
 
@@ -1491,12 +1496,7 @@ function App() {
                         multiple: false,
                         filters: [{ name: 'Archives', extensions: importStep === "mrpack" ? ['mrpack', 'zip'] : ['zip'] }]
                       });
-                      let resolvedPath = null;
-                      if (typeof selected === 'string') {
-                        resolvedPath = selected;
-                      } else if (selected && Array.isArray(selected) && selected.length > 0) {
-                        resolvedPath = selected[0].path || selected[0];
-                      }
+                      const resolvedPath = selected;
                       
                       if (resolvedPath) {
                         if (importStep === "prism") handlePrismImport(resolvedPath);
@@ -1516,6 +1516,14 @@ function App() {
         </div>
       )}
     </main>
+
+      {appNotification && (
+        <div className={`toast-notification ${appNotification.type === 'success' ? 'toast-success' : 'toast-error'}`}>
+          {appNotification.type === 'success' ? <IconCheck /> : <IconX />}
+          {appNotification.message}
+        </div>
+      )}
+
     </div>
   );
 }
