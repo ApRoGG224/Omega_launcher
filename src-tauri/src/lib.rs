@@ -237,11 +237,10 @@ async fn translate_text(text: String, target_lang: String) -> Result<String, Str
         return Ok(String::new());
     }
     
-    // Using MyMemory API instead of Google APIs
     let url = format!(
-        "https://api.mymemory.translated.net/get?q={}&langpair=en|{}",
-        urlencoding::encode(&text),
-        target_lang
+        "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t&q={}",
+        target_lang,
+        urlencoding::encode(&text)
     );
     
     let client = reqwest::Client::new();
@@ -250,12 +249,15 @@ async fn translate_text(text: String, target_lang: String) -> Result<String, Str
     if res.status().is_success() {
         let json: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
         
-        if let Some(response_data) = json.get("responseData") {
-            if let Some(translated_text) = response_data.get("translatedText").and_then(|v| v.as_str()) {
-                // MyMemory sometimes returns "MYMEMORY WARNING:" when limits are hit
-                if !translated_text.contains("MYMEMORY WARNING:") {
-                    return Ok(translated_text.to_string());
+        if let Some(sentences) = json.get(0).and_then(|v| v.as_array()) {
+            let mut translated_full = String::new();
+            for sentence in sentences {
+                if let Some(translated_part) = sentence.get(0).and_then(|v| v.as_str()) {
+                    translated_full.push_str(translated_part);
                 }
+            }
+            if !translated_full.is_empty() {
+                return Ok(translated_full);
             }
         }
     }

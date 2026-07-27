@@ -53,6 +53,71 @@ const LOADERS_LIST = ["Vanilla", "Fabric", "Forge", "NeoForge", "Quilt"];
 // КОМПОНЕНТЫ
 // ---------------------------------
 
+const MOD_ICONS = [
+  "https://cdn.modrinth.com/data/AANobbMI/295862f4724dc3f78df3447ad6072b2dcd3ef0c9_96.webp", // Sodium
+  "https://cdn.modrinth.com/data/YL57xq9U/18d0e7f076d3d6ed5bedd472b853909aac5da202_96.webp", // Iris
+  "https://cdn.modrinth.com/data/P7dR8mSH/icon.png", // Fabric API
+];
+
+const RESOURCEPACK_ICONS = [
+  "https://cdn.modrinth.com/data/50dA9Sha/3132c10e9e3c73fde9799720fd3da5561071708c_96.webp", 
+  "https://cdn.modrinth.com/data/yfDziwn1/907581019df45903df237952ce8d10ac37134cb5_96.webp",
+  "https://cdn.modrinth.com/data/uvpymuxq/fe1a61998ae57dc6ad1a4bb028334c3c3925d22f_96.webp",
+];
+
+const MODPACK_ICONS = [
+  "https://cdn.modrinth.com/data/1KVo5zza/d8152911f8fd5d7e9a8c499fe89045af81fe816e_96.webp", // Fabulously Optimized
+  "https://cdn.modrinth.com/data/l9m9tuPN/fefe3f67c37744344d100638452c7bf059d586a1_96.webp", 
+  "https://cdn.modrinth.com/data/5FFgwNNP/e7f9ee2e9d361623847853fe2ddce42f519ee64f.png", 
+];
+
+const SHADER_ICONS = [
+  "https://cdn.modrinth.com/data/HVnmMxH1/79cb7c8123bbc54945305b2ebad6b8881efdf5f8_96.webp",
+  "https://cdn.modrinth.com/data/R6NEzAwj/c85ce4049aac76360d2cd24fd9a7003de01ef312_96.webp",
+  "https://cdn.modrinth.com/data/Q1vvjJYV/2a611a3cb434fb52fb81fa5dace13c5d8b67e55d_96.webp",
+];
+
+const DATAPACK_ICONS = [
+  "https://cdn.modrinth.com/data/OhduvhIc/5ea1f538e66ee4d4e5e571ad952cba0e06e0bd5c.png",
+  "https://cdn.modrinth.com/data/8oi3bsk5/1959d924a1088944bbf07a06ba523726112d7e7a_96.webp",
+  "https://cdn.modrinth.com/data/tpehi7ww/429ba22d212868940cdd82465df949ac51c9791e_96.webp",
+];
+
+
+const AnimatedIcon = React.memo(({ images, interval = 3000 }: { images: string[], interval?: number }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [images.length, interval]);
+
+  return (
+    <div style={{ position: 'relative', width: '22px', height: '22px', margin: '0 auto' }}>
+      {images.map((img, idx) => (
+        <img 
+          key={img}
+          src={img}
+          alt="icon"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            borderRadius: '6px',
+            opacity: currentIndex === idx ? 1 : 0,
+            transition: 'opacity 0.6s ease-in-out',
+            objectFit: 'cover'
+          }}
+        />
+      ))}
+    </div>
+  );
+});
+
 const ConsolePanel = React.memo(({ logs }: { logs: string[] }) => {
   const consoleRef = useRef<HTMLDivElement>(null);
   
@@ -83,7 +148,7 @@ const ConsolePanel = React.memo(({ logs }: { logs: string[] }) => {
   );
 });
 
-const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onCreateModpack }: { instances: ModpackInstance[], t: any, language: string, projectType?: "mod" | "resourcepack" | "modpack", onCreateModpack?: (name: string, mcVer: string, loader: string, iconUrl?: string, projectId?: string) => void }) => {
+const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onCreateModpack, versionsList = VERSIONS_LIST }: { instances: ModpackInstance[], t: any, language: string, projectType?: "mod" | "resourcepack" | "modpack" | "shader" | "datapack", onCreateModpack?: (name: string, mcVer: string, loader: string, iconUrl?: string, projectId?: string) => void, versionsList?: string[] }) => {
   const [query, setQuery] = useState("");
   const [mods, setMods] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -92,10 +157,11 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
   const LIMIT = 24;
 
   const [mcVersion, setMcVersion] = useState("1.21.4");
-  const [modLoader, setModLoader] = useState(projectType === "resourcepack" ? "" : "fabric");
+  const [modLoader, setModLoader] = useState(["resourcepack", "datapack", "shader"].includes(projectType) ? "" : "fabric");
   
   const [versionMenuOpen, setVersionMenuOpen] = useState(false);
   const [loaderMenuOpen, setLoaderMenuOpen] = useState(false);
+  const [verSearch, setVerSearch] = useState("");
   
   const [sortBy, setSortBy] = useState("downloads");
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
@@ -127,18 +193,6 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
        
        let finalHits = data.hits || [];
        
-       // Translate descriptions if language is 'ru'
-       if (finalHits.length > 0 && language === "ru") {
-         finalHits = await Promise.all(finalHits.map(async (hit: any) => {
-           try {
-             const translatedDesc = await invoke("translate_text", { text: hit.description, targetLang: "ru" });
-             return { ...hit, description: translatedDesc as string };
-           } catch {
-             return hit;
-           }
-         }));
-       }
-       
        setFetchError(null);
        
        if (data.hits) {
@@ -148,6 +202,19 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
          } else {
            setMods(finalHits);
            setOffset(0);
+         }
+         
+         // Translate descriptions in the background if language is 'ru'
+         if (finalHits.length > 0 && language === "ru") {
+           finalHits.forEach((hit: any) => {
+             invoke("translate_text", { text: hit.description, targetLang: "ru" })
+               .then((translatedDesc) => {
+                 if (translatedDesc && typeof translatedDesc === 'string' && translatedDesc !== hit.description) {
+                   setMods(prev => prev.map(m => m.project_id === hit.project_id ? { ...m, description: translatedDesc } : m));
+                 }
+               })
+               .catch(() => {});
+           });
          }
        }
     } catch(e) {
@@ -215,12 +282,12 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
             instanceId: instanceId,
             projectType: projectType
         });
-        showNotification(projectType === "mod" ? "Мод успешно скачан и установлен в сборку!" : "Ресурспак успешно скачан и установлен в сборку!", 'success');
+        showNotification(projectType === "mod" ? "Мод успешно скачан и установлен в сборку!" : projectType === "shader" ? "Шейдер успешно скачан и установлен в сборку!" : projectType === "datapack" ? "Датапак успешно скачан и установлен в сборку!" : "Ресурспак успешно скачан и установлен в сборку!", 'success');
     } catch (e: any) {
         if (typeof e === 'string' && e.includes("ALREADY_EXISTS")) {
-            showNotification(projectType === 'mod' ? t.modAlreadyInstalled : "Ресурспак уже установлен в эту сборку", 'error');
+            showNotification(projectType === 'mod' ? t.modAlreadyInstalled : projectType === 'shader' ? "Шейдер уже установлен в эту сборку" : projectType === 'datapack' ? "Датапак уже установлен в эту сборку" : "Ресурспак уже установлен в эту сборку", 'error');
         } else {
-            showNotification((projectType === 'mod' ? t.modInstallError : "Ошибка при установке ресурспака: ") + e, 'error');
+            showNotification((projectType === 'mod' ? t.modInstallError : projectType === 'shader' ? "Ошибка при установке шейдера: " : projectType === 'datapack' ? "Ошибка при установке датапака: " : "Ошибка при установке ресурспака: ") + e, 'error');
         }
     }
     setLoading(false);
@@ -235,7 +302,8 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
              </div>
              {versionMenuOpen && (
                <div className="custom-dropdown-menu">
-                 {["", ...VERSIONS_LIST].map(v => (
+                 <input type="text" placeholder="Поиск..." value={verSearch} onChange={e => setVerSearch(e.target.value)} onClick={e => e.stopPropagation()} style={{ margin: '5px', padding: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '4px', outline: 'none' }} />
+                 {["", ...versionsList].filter(v => v.includes(verSearch.toLowerCase())).map(v => (
                    <div key={v} className="custom-dropdown-item" onClick={() => setMcVersion(v)}>{v === "" ? t.anyVersion : v}</div>
                  ))}
                </div>
@@ -276,7 +344,7 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
 
            <input 
              type="text" 
-             placeholder={`${projectType === 'mod' ? t.searchModPlaceholder : projectType === 'modpack' ? "Поиск готовых сборок для" : "Поиск ресурспаков для"} ${mcVersion === "" ? t.anyVersion : mcVersion}...`} 
+             placeholder={`${projectType === 'mod' ? t.searchModPlaceholder : projectType === 'modpack' ? "Поиск готовых сборок для" : projectType === 'shader' ? "Поиск шейдеров для" : projectType === 'datapack' ? "Поиск датапаков для" : "Поиск ресурспаков для"} ${mcVersion === "" ? t.anyVersion : mcVersion}...`} 
              value={query} 
              onChange={(e) => setQuery(e.target.value)}
              onKeyDown={(e) => e.key === 'Enter' && searchMods(query, mcVersion, modLoader, sortBy, false)}
@@ -329,7 +397,7 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
                        <IconDownload />
                     </div>
                     <h3 className="global-modal-title">
-                      {projectType === 'mod' ? t.installTo : "Установить ресурспак в сборку"}
+                      {projectType === 'mod' ? t.installTo : projectType === 'shader' ? "Установить шейдер в сборку" : projectType === 'datapack' ? "Установить датапак в сборку" : "Установить ресурспак в сборку"}
                     </h3>
                   </div>
                   <button onClick={() => setInstallModalOpen(null)} className="global-modal-close">
@@ -385,6 +453,28 @@ function App() {
     localStorage.setItem("launcherLang", lang);
   };
   const t = translations[language];
+
+  const [allVersionsRaw, setAllVersionsRaw] = useState<any[]>([]);
+  const [versionFilters, setVersionFilters] = useState({
+    release: localStorage.getItem("vf_release") !== "false",
+    snapshot: localStorage.getItem("vf_snapshot") === "true",
+    old_beta: localStorage.getItem("vf_old_beta") === "true",
+    old_alpha: localStorage.getItem("vf_old_alpha") === "true"
+  });
+
+  useEffect(() => {
+    fetch("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.versions) setAllVersionsRaw(data.versions);
+      })
+      .catch(console.error);
+  }, []);
+
+  const currentVersionsList = React.useMemo(() => {
+    if (allVersionsRaw.length === 0) return VERSIONS_LIST;
+    return allVersionsRaw.filter(v => versionFilters[v.type as keyof typeof versionFilters]).map(v => v.id);
+  }, [allVersionsRaw, versionFilters]);
 
   const [activeTab, setActiveTab] = useState("home");
   
@@ -598,7 +688,8 @@ function App() {
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [newVer, setNewVer] = useState("1.21.4");
-  const [newLoader, setNewLoader] = useState("Vanilla");
+  const [newVerSearch, setNewVerSearch] = useState("");
+  const [newLoader, setNewLoader] = useState("Fabric");
   const [verMenuOpen, setVerMenuOpen] = useState(false);
   const [loaderMenuOpen, setLoaderMenuOpen] = useState(false);
 
@@ -851,15 +942,17 @@ function App() {
       <aside className="sidebar">
         <div className="sidebar-icon brand"><IconBox /></div>
         <div className={`sidebar-icon ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab("home")} title={t.sidebarHome}><IconHome /></div>
-        <div className={`sidebar-icon ${activeTab === 'mods' ? 'active' : ''}`} onClick={() => setActiveTab("mods")} title={t.sidebarMods}><IconBox /></div>
-        <div className={`sidebar-icon ${activeTab === 'resourcepacks' ? 'active' : ''}`} onClick={() => setActiveTab("resourcepacks")} title="Ресурспаки"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="M2 15h10"/><path d="M9 18l3-3-3-3"/></svg></div>
-        <div className={`sidebar-icon ${activeTab === 'modpacks' ? 'active' : ''}`} onClick={() => setActiveTab("modpacks")} title="Сборки"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+        <div className={`sidebar-icon ${activeTab === 'mods' ? 'active' : ''}`} onClick={() => setActiveTab("mods")} title={t.sidebarMods}><AnimatedIcon images={MOD_ICONS} interval={2500} /></div>
+        <div className={`sidebar-icon ${activeTab === 'resourcepacks' ? 'active' : ''}`} onClick={() => setActiveTab("resourcepacks")} title="Ресурспаки"><AnimatedIcon images={RESOURCEPACK_ICONS} interval={2800} /></div>
+        <div className={`sidebar-icon ${activeTab === 'shaders' ? 'active' : ''}`} onClick={() => setActiveTab("shaders")} title="Шейдеры"><AnimatedIcon images={SHADER_ICONS} interval={2900} /></div>
+        <div className={`sidebar-icon ${activeTab === 'datapacks' ? 'active' : ''}`} onClick={() => setActiveTab("datapacks")} title="Датапаки"><AnimatedIcon images={DATAPACK_ICONS} interval={2600} /></div>
+        <div className={`sidebar-icon ${activeTab === 'modpacks' ? 'active' : ''}`} onClick={() => setActiveTab("modpacks")} title="Сборки"><AnimatedIcon images={MODPACK_ICONS} interval={3100} /></div>
         <div className={`sidebar-icon ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab("settings")} title={t.sidebarSettings}><IconSettings /></div>
       </aside>
 
       <main className="main-content">
-        <header className="top-bar" style={activeTab === 'mods' || activeTab === 'resourcepacks' || activeTab === 'modpacks' ? { justifyContent: 'flex-end', paddingBottom: '10px' } : {}}>
-          {activeTab !== 'mods' && activeTab !== 'resourcepacks' && activeTab !== 'modpacks' && (
+        <header className="top-bar" style={["mods", "resourcepacks", "modpacks", "shaders", "datapacks"].includes(activeTab) ? { justifyContent: 'flex-end', paddingBottom: '10px' } : {}}>
+          {!["mods", "resourcepacks", "modpacks", "shaders", "datapacks"].includes(activeTab) && (
             <div className="title-area">
               <h1>Omega Launcher</h1>
             </div>
@@ -1010,7 +1103,8 @@ function App() {
                             <div className="custom-dropdown-btn" style={{ height: "40px", fontSize: "0.9rem" }}>{newVer} <IconChevronDown /></div>
                             {verMenuOpen && (
                               <div className="custom-dropdown-menu upwards">
-                                {VERSIONS_LIST.map(v => <div key={v} className="custom-dropdown-item" onClick={(e) => { e.stopPropagation(); setNewVer(v); setVerMenuOpen(false); }}>{v}</div>)}
+                                <input type="text" placeholder="Поиск..." value={newVerSearch} onChange={e => setNewVerSearch(e.target.value)} onClick={e => e.stopPropagation()} style={{ margin: '5px', padding: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '4px', outline: 'none' }} />
+                                {currentVersionsList.filter(v => v.includes(newVerSearch.toLowerCase())).map(v => <div key={v} className="custom-dropdown-item" onClick={(e) => { e.stopPropagation(); setNewVer(v); setVerMenuOpen(false); }}>{v}</div>)}
                               </div>
                             )}
                           </div>
@@ -1069,9 +1163,11 @@ function App() {
           </>
         )}
 
-        {activeTab === "mods" && <ModsPanel instances={instances} t={t} language={language} projectType="mod" />}
-        {activeTab === "resourcepacks" && <ModsPanel instances={instances} t={t} language={language} projectType="resourcepack" />}
-        {activeTab === "modpacks" && <ModsPanel instances={instances} t={t} language={language} projectType="modpack" onCreateModpack={handleCreateModpack} />}
+        {activeTab === "mods" && <ModsPanel instances={instances} t={t} language={language} projectType="mod" versionsList={currentVersionsList} />}
+        {activeTab === "resourcepacks" && <ModsPanel instances={instances} t={t} language={language} projectType="resourcepack" versionsList={currentVersionsList} />}
+        {activeTab === "shaders" && <ModsPanel instances={instances} t={t} language={language} projectType="shader" versionsList={currentVersionsList} />}
+        {activeTab === "datapacks" && <ModsPanel instances={instances} t={t} language={language} projectType="datapack" versionsList={currentVersionsList} />}
+        {activeTab === "modpacks" && <ModsPanel instances={instances} t={t} language={language} projectType="modpack" onCreateModpack={handleCreateModpack} versionsList={currentVersionsList} />}
 
         {activeTab === "settings" && (
           <div className="settings-panel">
@@ -1095,6 +1191,46 @@ function App() {
                     <IconFolder />
                   </button>
                 </div>
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <h3>Отображаемые версии Minecraft</h3>
+              <p style={{ color: '#8b8b9c', fontSize: '0.85rem' }}>Выберите, какие типы версий показывать в списках. Можно комбинировать.</p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '12px' }}>
+                {([
+                  { key: 'release', label: '📦 Релизы', desc: 'Стабильные версии (1.21.4, 1.20.1...)' },
+                  { key: 'snapshot', label: '🧪 Снапшоты', desc: 'Тестовые версии (25w04a...)' },
+                  { key: 'old_beta', label: '🏗️ Беты', desc: 'Старые бета-версии (b1.8.1...)' },
+                  { key: 'old_alpha', label: '🏚️ Альфы', desc: 'Самые старые версии (a1.2.6...)' },
+                ] as const).map(item => (
+                  <label key={item.key} style={{ 
+                    display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer',
+                    padding: '12px 14px', borderRadius: '10px',
+                    background: versionFilters[item.key] ? 'rgba(var(--accent-color-rgb), 0.15)' : 'rgba(255,255,255,0.03)',
+                    border: versionFilters[item.key] ? '1px solid rgba(var(--accent-color-rgb), 0.4)' : '1px solid rgba(255,255,255,0.06)',
+                    transition: 'all 0.2s'
+                  }}>
+                    <input 
+                      type="checkbox" 
+                      checked={versionFilters[item.key]} 
+                      onChange={(e) => {
+                        const next = { ...versionFilters, [item.key]: e.target.checked };
+                        setVersionFilters(next);
+                        localStorage.setItem("vf_" + item.key, e.target.checked ? "true" : "false");
+                      }}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--accent-color)', flexShrink: 0 }}
+                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>{item.label}</span>
+                      <span style={{ fontSize: '0.75rem', color: '#8b8b9c' }}>{item.desc}</span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#6b6b7c' }}>
+                Показано версий: {currentVersionsList.length}
               </div>
             </div>
 
