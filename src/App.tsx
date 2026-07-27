@@ -167,6 +167,19 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
 
   const [installModalOpen, setInstallModalOpen] = useState<string | null>(null);
+  const [worldSelectState, setWorldSelectState] = useState<{
+    modId: string;
+    instanceId: string;
+    worlds: string[];
+    loading: boolean;
+    error: string | null;
+  } | null>(null);
+  const [selectedWorld, setSelectedWorld] = useState<string>("");
+  const [shaderInstallState, setShaderInstallState] = useState<{
+    modId: string;
+    instanceId: string;
+    loader: "fabric" | "forge" | "";
+  } | null>(null);
 
   const searchMods = useCallback(async (q: string, ver: string, loader: string, sortOpt: string, isLoadMore = false) => {
     setLoading(true);
@@ -271,6 +284,28 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
     
     const modIdToDownload = installModalOpen;
     if (!modIdToDownload) return;
+    const isShader = projectType === "shader";
+
+    if (projectType === "datapack") {
+      setLoading(true);
+      try {
+        const worlds = await invoke<string[]>("list_worlds", { instanceId });
+        setInstallModalOpen(null);
+        setWorldSelectState({ modId: modIdToDownload, instanceId, worlds: worlds || [], loading: false, error: null });
+        setSelectedWorld(worlds?.[0] || "");
+      } catch (e: any) {
+        setInstallModalOpen(null);
+        setWorldSelectState({ modId: modIdToDownload, instanceId, worlds: [], loading: false, error: "Не удалось загрузить список миров" });
+      }
+      setLoading(false);
+      return;
+    }
+
+    if (isShader) {
+      setInstallModalOpen(null);
+      setShaderInstallState({ modId: modIdToDownload, instanceId, loader: "" });
+      return;
+    }
 
     setInstallModalOpen(null);
     setLoading(true);
@@ -280,15 +315,69 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
             mcVersion: inst.mcVersion, 
             loader: inst.loader === "Vanilla" ? "fabric" : inst.loader,
             instanceId: instanceId,
-            projectType: projectType
+            projectType: projectType,
+            worldName: null
         });
-        showNotification(projectType === "mod" ? "Мод успешно скачан и установлен в сборку!" : projectType === "shader" ? "Шейдер успешно скачан и установлен в сборку!" : projectType === "datapack" ? "Датапак успешно скачан и установлен в сборку!" : "Ресурспак успешно скачан и установлен в сборку!", 'success');
+        showNotification(projectType === "mod" ? "Мод успешно скачан и установлен в сборку!" : "Ресурспак успешно скачан и установлен в сборку!", 'success');
     } catch (e: any) {
         if (typeof e === 'string' && e.includes("ALREADY_EXISTS")) {
-            showNotification(projectType === 'mod' ? t.modAlreadyInstalled : projectType === 'shader' ? "Шейдер уже установлен в эту сборку" : projectType === 'datapack' ? "Датапак уже установлен в эту сборку" : "Ресурспак уже установлен в эту сборку", 'error');
+            showNotification(projectType === 'mod' ? t.modAlreadyInstalled : "Ресурспак уже установлен в эту сборку", 'error');
         } else {
-            showNotification((projectType === 'mod' ? t.modInstallError : projectType === 'shader' ? "Ошибка при установке шейдера: " : projectType === 'datapack' ? "Ошибка при установке датапака: " : "Ошибка при установке ресурспака: ") + e, 'error');
+            showNotification((projectType === 'mod' ? t.modInstallError : "Ошибка при установке ресурспака: ") + e, 'error');
         }
+    }
+    setLoading(false);
+  };
+
+  const confirmWorldInstall = async () => {
+    if (!worldSelectState) return;
+    const inst = instances.find(i => i.id === worldSelectState.instanceId);
+    if (!inst || !selectedWorld) return;
+    const modIdToDownload = worldSelectState.modId;
+    setWorldSelectState(null);
+    setLoading(true);
+    try {
+      await invoke("download_mod", {
+        modId: modIdToDownload,
+        mcVersion: inst.mcVersion,
+        loader: inst.loader === "Vanilla" ? "fabric" : inst.loader,
+        instanceId: inst.id,
+        projectType: "datapack",
+        worldName: selectedWorld
+      });
+      showNotification("Датапак успешно скачан в выбранный мир!", "success");
+    } catch (e: any) {
+      if (typeof e === 'string' && e.includes("ALREADY_EXISTS")) {
+        showNotification("Датапак уже установлен в этот мир", 'error');
+      } else {
+        showNotification("Ошибка при установке датапака: " + e, 'error');
+      }
+    }
+    setLoading(false);
+  };
+
+  const confirmShaderInstall = async (loader: "fabric" | "forge") => {
+    if (!shaderInstallState) return;
+    const inst = instances.find(i => i.id === shaderInstallState.instanceId);
+    if (!inst) return;
+    setShaderInstallState(null);
+    setLoading(true);
+    try {
+      await invoke("download_mod", {
+        modId: shaderInstallState.modId,
+        mcVersion: inst.mcVersion,
+        loader,
+        instanceId: inst.id,
+        projectType: "shader",
+        worldName: null
+      });
+      showNotification(loader === "fabric" ? "Шейдер успешно скачан для Fabric (Iris установлен автоматически)!" : "Шейдер успешно скачан для Forge!", "success");
+    } catch (e: any) {
+      if (typeof e === 'string' && e.includes("ALREADY_EXISTS")) {
+        showNotification("Шейдер уже установлен в эту сборку", 'error');
+      } else {
+        showNotification("Ошибка при установке шейдера: " + e, 'error');
+      }
     }
     setLoading(false);
   };
@@ -328,13 +417,17 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
            {projectType !== "resourcepack" && (
              <div className="custom-dropdown-container" onClick={(e) => { e.stopPropagation(); setSortMenuOpen(prev => !prev); setVersionMenuOpen(false); setLoaderMenuOpen(false); }} style={{ minWidth: "160px" }}>
                <div className="custom-dropdown-btn" style={{ height: "46px" }}>
-                 {sortBy === "downloads" ? t.sortDownloads : sortBy === "follows" ? (projectType === 'modpack' ? "Лучшие сборки" : t.sortFollows) : sortBy === "optimization" ? t.sortOptimization : sortBy === "newest" ? t.sortNewest : t.sortUpdated} <IconChevronDown />
+                 {sortBy === "downloads" ? t.sortDownloads : sortBy === "follows" ? (projectType === 'modpack' ? "Лучшие сборки" : projectType === 'shader' ? "Лучшие шейдеры" : t.sortFollows) : sortBy === "optimization" ? t.sortOptimization : sortBy === "newest" ? t.sortNewest : t.sortUpdated} <IconChevronDown />
                </div>
                {sortMenuOpen && (
                  <div className="custom-dropdown-menu">
                    <div className="custom-dropdown-item" onClick={() => setSortBy("downloads")}>{t.sortDownloads}</div>
-                   <div className="custom-dropdown-item" onClick={() => setSortBy("follows")}>{projectType === 'modpack' ? "Лучшие сборки" : t.sortFollows}</div>
-                   <div className="custom-dropdown-item" onClick={() => setSortBy("optimization")}>{t.sortOptimization}</div>
+                   {projectType !== "datapack" && (
+                     <div className="custom-dropdown-item" onClick={() => setSortBy("follows")}>{projectType === 'modpack' ? "Лучшие сборки" : projectType === 'shader' ? "Лучшие шейдеры" : t.sortFollows}</div>
+                   )}
+                   {projectType !== "datapack" && projectType !== "shader" && (
+                     <div className="custom-dropdown-item" onClick={() => setSortBy("optimization")}>{t.sortOptimization}</div>
+                   )}
                    <div className="custom-dropdown-item" onClick={() => setSortBy("newest")}>{t.sortNewest}</div>
                    <div className="custom-dropdown-item" onClick={() => setSortBy("updated")}>{t.sortUpdated}</div>
                  </div>
@@ -433,6 +526,104 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
             </>
           )}
 
+          {worldSelectState && (
+            <>
+              <div className="global-modal-content">
+                <div className="global-modal-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ background: 'rgba(var(--accent-color-rgb), 0.2)', padding: '8px', borderRadius: '12px', display: 'flex' }}>
+                       <IconBox />
+                    </div>
+                    <h3 className="global-modal-title">Выберите мир для датапака</h3>
+                  </div>
+                  <button onClick={() => setWorldSelectState(null)} className="global-modal-close">
+                     <IconX />
+                  </button>
+                </div>
+
+                <div className="global-modal-body">
+                  {worldSelectState.error ? (
+                    <div className="modal-empty-state">{worldSelectState.error}</div>
+                  ) : worldSelectState.worlds.length === 0 ? (
+                    <div className="modal-empty-state">В папке saves не найдено миров</div>
+                  ) : worldSelectState.worlds.map((world, idx) => (
+                    <button
+                      key={world}
+                      onClick={() => setSelectedWorld(world)}
+                      className="modal-item-btn"
+                      style={{
+                        animationDelay: `${idx * 0.05}s`,
+                        border: selectedWorld === world ? "1px solid rgba(var(--accent-color-rgb), 0.6)" : undefined,
+                        background: selectedWorld === world ? "rgba(var(--accent-color-rgb), 0.15)" : undefined
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        <div style={{ background: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "var(--accent-color)" }}>
+                          <IconFolder />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left' }}>
+                          <span style={{ fontSize: "1.05rem", fontWeight: "600", letterSpacing: "0.3px" }}>{world}</span>
+                          <span style={{ color: "#8b8b9c", fontSize: "0.85rem" }}>saves/{world}</span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                    <button className="play-btn" style={{ flex: 1, whiteSpace: "normal", textAlign: "center", lineHeight: 1.2 }} onClick={confirmWorldInstall} disabled={!selectedWorld || worldSelectState.worlds.length === 0}>
+                      Установить в мир
+                    </button>
+                    <button className="play-btn" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setWorldSelectState(null)}>
+                      Отмена
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {shaderInstallState && (
+            <>
+              <div className="global-modal-content">
+                <div className="global-modal-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ background: 'rgba(var(--accent-color-rgb), 0.2)', padding: '8px', borderRadius: '12px', display: 'flex' }}>
+                       <IconBox />
+                    </div>
+                    <h3 className="global-modal-title">Куда установить шейдер?</h3>
+                  </div>
+                  <button onClick={() => setShaderInstallState(null)} className="global-modal-close">
+                     <IconX />
+                  </button>
+                </div>
+
+                <div className="global-modal-body">
+                  <button className="modal-item-btn" onClick={() => confirmShaderInstall("fabric")}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{ background: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "var(--accent-color)" }}>
+                        <IconBox />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left' }}>
+                        <span style={{ fontSize: "1.05rem", fontWeight: "600" }}>Fabric</span>
+                        <span style={{ color: "#8b8b9c", fontSize: "0.85rem" }}>Установит Iris автоматически</span>
+                      </div>
+                    </div>
+                  </button>
+                  <button className="modal-item-btn" onClick={() => confirmShaderInstall("forge")}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{ background: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "var(--accent-color)" }}>
+                        <IconBox />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left' }}>
+                        <span style={{ fontSize: "1.05rem", fontWeight: "600" }}>Forge</span>
+                        <span style={{ color: "#8b8b9c", fontSize: "0.85rem" }}>Без дополнительных модов</span>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
           {notification && (
             <div className={`toast-notification ${notification.type === 'success' ? 'toast-success' : 'toast-error'}`}>
               {notification.type === 'success' ? <IconCheck /> : <IconX />}
@@ -524,6 +715,7 @@ function App() {
 
   // Desktop Instances State
   const [instances, setInstances] = useState<ModpackInstance[]>([]);
+  const [instancesLoaded, setInstancesLoaded] = useState(false);
   const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -724,7 +916,17 @@ function App() {
         }
       } catch(e) {}
     }
+    setInstancesLoaded(true);
   }, []);
+
+  useEffect(() => {
+    if (!instancesLoaded) return;
+    try {
+      localStorage.setItem("desktopInstances", JSON.stringify(instances));
+    } catch (e) {
+      console.error("Failed to persist desktopInstances", e);
+    }
+  }, [instances, instancesLoaded]);
 
   useEffect(() => {
     const unlisten = listen("download-progress", (event) => {

@@ -1,4 +1,5 @@
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Read};
+use flate2::read::GzDecoder;
 use tauri::{AppHandle, Emitter, Manager};
 
 fn get_data_dir(app: &AppHandle) -> String {
@@ -6,6 +7,120 @@ fn get_data_dir(app: &AppHandle) -> String {
     path.push("minecraft_data");
     let _ = std::fs::create_dir_all(&path);
     path.to_string_lossy().to_string()
+}
+
+fn read_nbt_string(data: &[u8], pos: &mut usize) -> Option<String> {
+    if *pos + 2 > data.len() { return None; }
+    let len = u16::from_be_bytes([data[*pos], data[*pos + 1]]) as usize;
+    *pos += 2;
+    if *pos + len > data.len() { return None; }
+    let s = String::from_utf8_lossy(&data[*pos..*pos + len]).to_string();
+    *pos += len;
+    Some(s)
+}
+
+fn find_level_name(level_dat_path: &std::path::Path) -> Option<String> {
+    let file = std::fs::File::open(level_dat_path).ok()?;
+    let mut decoder = GzDecoder::new(file);
+    let mut bytes = Vec::new();
+    decoder.read_to_end(&mut bytes).ok()?;
+
+    let mut pos = 0usize;
+    if bytes.get(pos).copied()? != 10 {
+        return None;
+    }
+    pos += 1;
+    let _root_name = read_nbt_string(&bytes, &mut pos)?;
+
+    while pos < bytes.len() {
+        let tag_id = bytes[pos];
+        pos += 1;
+        if tag_id == 0 {
+            break;
+        }
+        let name = read_nbt_string(&bytes, &mut pos)?;
+        match tag_id {
+            8 => {
+                let value = read_nbt_string(&bytes, &mut pos)?;
+                if name == "LevelName" {
+                    return Some(value);
+                }
+            }
+            1 => pos += 1,
+            2 => pos += 2,
+            3 => pos += 4,
+            4 => pos += 8,
+            5 => pos += 4,
+            6 => pos += 8,
+            7 => {
+                if pos + 4 > bytes.len() { return None; }
+                let len = u32::from_be_bytes([bytes[pos], bytes[pos + 1], bytes[pos + 2], bytes[pos + 3]]) as usize;
+                pos += 4 + len;
+            }
+            9 => {
+                if pos >= bytes.len() { return None; }
+                let child_type = bytes[pos];
+                pos += 1;
+                if pos + 4 > bytes.len() { return None; }
+                let len = u32::from_be_bytes([bytes[pos], bytes[pos + 1], bytes[pos + 2], bytes[pos + 3]]) as usize;
+                pos += 4;
+                for _ in 0..len {
+                    let _ = read_nbt_string(&bytes, &mut pos)?;
+                    match child_type {
+                        1 => pos += 1,
+                        2 => pos += 2,
+                        3 => pos += 4,
+                        4 => pos += 8,
+                        5 => pos += 4,
+                        6 => pos += 8,
+                        7 => {
+                            if pos + 4 > bytes.len() { return None; }
+                            let blen = u32::from_be_bytes([bytes[pos], bytes[pos + 1], bytes[pos + 2], bytes[pos + 3]]) as usize;
+                            pos += 4 + blen;
+                        }
+                        8 => {
+                            let _ = read_nbt_string(&bytes, &mut pos)?;
+                        }
+                        9 | 10 => {}
+                        _ => return None,
+                    }
+                }
+            }
+            10 => {
+                loop {
+                    if pos >= bytes.len() { return None; }
+                    if bytes[pos] == 0 {
+                        pos += 1;
+                        break;
+                    }
+                    let nested_type = bytes[pos];
+                    pos += 1;
+                    let _ = read_nbt_string(&bytes, &mut pos)?;
+                    match nested_type {
+                        1 => pos += 1,
+                        2 => pos += 2,
+                        3 => pos += 4,
+                        4 => pos += 8,
+                        5 => pos += 4,
+                        6 => pos += 8,
+                        7 => {
+                            if pos + 4 > bytes.len() { return None; }
+                            let blen = u32::from_be_bytes([bytes[pos], bytes[pos + 1], bytes[pos + 2], bytes[pos + 3]]) as usize;
+                            pos += 4 + blen;
+                        }
+                        8 => {
+                            let _ = read_nbt_string(&bytes, &mut pos)?;
+                        }
+                        9 | 10 => {}
+                        _ => return None,
+                    }
+                }
+            }
+            _ => return None,
+        }
+    }
+
+    None
 }
 
 #[tauri::command]
@@ -172,7 +287,7 @@ fn kill_minecraft() {
 }
 
 #[tauri::command]
-async fn download_mod(app: tauri::AppHandle, mod_id: String, mc_version: String, loader: String, instance_id: String, project_type: Option<String>) -> Result<String, String> {
+async fn download_mod(app: tauri::AppHandle, mod_id: String, mc_version: String, loader: String, instance_id: String, project_type: Option<String>, world_name: Option<String>) -> Result<String, String> {
     let p_type = project_type.unwrap_or_else(|| "mod".to_string());
     let data_dir = get_data_dir(&app);
     let output = std::process::Command::new("npx")
@@ -184,6 +299,7 @@ async fn download_mod(app: tauri::AppHandle, mod_id: String, mc_version: String,
         .arg(&instance_id)
         .arg(&data_dir)
         .arg(&p_type)
+        .arg(world_name.unwrap_or_default())
         .output()
         .map_err(|e| e.to_string())?;
 
@@ -210,6 +326,33 @@ fn open_folder(app: tauri::AppHandle, instance_id: String) {
         use tauri_plugin_opener::OpenerExt;
         let _ = app.opener().open_path(path_str, None::<&str>);
     }
+}
+
+#[tauri::command]
+fn list_worlds(app: tauri::AppHandle, instance_id: String) -> Result<Vec<String>, String> {
+    let mut path = std::path::PathBuf::from(get_data_dir(&app));
+    path.push("instances");
+    path.push(&instance_id);
+    path.push("minecraft");
+    path.push("saves");
+
+    let entries = std::fs::read_dir(&path).map_err(|e| e.to_string())?;
+    let mut worlds: Vec<String> = entries
+        .filter_map(|entry| entry.ok())
+        .filter_map(|entry| {
+            let file_type = entry.file_type().ok()?;
+            if !file_type.is_dir() {
+                return None;
+            }
+            let folder_name = entry.file_name().to_string_lossy().to_string();
+            let level_dat = entry.path().join("level.dat");
+            let display_name = find_level_name(&level_dat).unwrap_or(folder_name);
+            if display_name.is_empty() { None } else { Some(display_name) }
+        })
+        .collect();
+
+    worlds.sort();
+    Ok(worlds)
 }
 
 #[tauri::command]
@@ -548,7 +691,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder, open_path, translate_text, install_modpack, export_modpack, import_prism, import_curseforge, import_mrpack
+            launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder, list_worlds, open_path, translate_text, install_modpack, export_modpack, import_prism, import_curseforge, import_mrpack
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

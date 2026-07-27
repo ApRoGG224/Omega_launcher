@@ -4006,6 +4006,7 @@ name = "temp_app"
 version = "0.1.0"
 dependencies = [
  "dirs",
+ "flate2",
  "reqwest",
  "serde",
  "serde_json",
