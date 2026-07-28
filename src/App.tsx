@@ -721,6 +721,7 @@ function App() {
   const [modCount, setModCount] = useState(0);
   const [isDragging, setIsDragging] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const suppressGameplayLogsRef = useRef(false);
 
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; instanceId: string } | null>(null);
   const [desktopContextMenu, setDesktopContextMenu] = useState<{ visible: boolean; x: number; y: number } | null>(null);
@@ -933,11 +934,38 @@ function App() {
   useEffect(() => {
     const unlisten = listen("download-progress", (event) => {
       const line = event.payload as string;
+      const isRuntimeStatusLine =
+        line.includes("[main/INFO]: Killing Minecraft process") ||
+        line.includes("[main/INFO]: Minecraft process killed") ||
+        line.includes("[main/INFO]: No running Minecraft process found") ||
+        line.includes("[launcher/INFO]: Minecraft process exited") ||
+        line.includes("[launcher/INFO] Minecraft process exited");
+
+      const isSpawnLine = line.includes("[launcher/INFO] Minecraft process spawned with PID:");
+      const shouldAppend =
+        !suppressGameplayLogsRef.current ||
+        isRuntimeStatusLine ||
+        isSpawnLine ||
+        line.startsWith("[ERROR]");
+
+      if (isSpawnLine) {
+        suppressGameplayLogsRef.current = true;
+      }
+
+      if (!shouldAppend) {
+        if (line.includes("[launcher/INFO] Minecraft process exited")) {
+          setIsRunning(false);
+          suppressGameplayLogsRef.current = false;
+        }
+        return;
+      }
+
       setLogs((prev) => {
         const newLogs = [...prev, line];
         return newLogs.slice(-100);
       });
       if (line.includes("[launcher/INFO] Minecraft process exited")) {
+          suppressGameplayLogsRef.current = false;
           setIsRunning(false);
       }
     });
@@ -1049,9 +1077,11 @@ function App() {
     if (!selectedInstanceId) return alert(t.alertNoInstance);
     const inst = instances.find(i => i.id === selectedInstanceId);
     if (!inst) return;
+    if (isRunning) return;
 
     if (account) {
       setIsRunning(true);
+      suppressGameplayLogsRef.current = false;
       setLogs([t.logStartingMc]);
       try {
         const safeMcVersion = inst.mcVersion === "Prism" ? "1.20.1" : inst.mcVersion;
@@ -1069,7 +1099,7 @@ function App() {
         setLogs(prev => [...prev, `[ERROR]: ${e}`]);
       }
     }
-  }, [account, ram, serverIp, instances, selectedInstanceId]);
+  }, [account, ram, serverIp, instances, selectedInstanceId, isRunning]);
 
   const handleStop = useCallback(async () => {
       try {
