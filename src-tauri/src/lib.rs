@@ -329,6 +329,28 @@ fn open_folder(app: tauri::AppHandle, instance_id: String) {
 }
 
 #[tauri::command]
+fn count_installed_mods(app: tauri::AppHandle, instance_id: String) -> Result<usize, String> {
+    let mut path = std::path::PathBuf::from(get_data_dir(&app));
+    path.push("instances");
+    path.push(&instance_id);
+    path.push("minecraft");
+    path.push("mods");
+
+    if !path.exists() {
+        return Ok(0);
+    }
+
+    let entries = std::fs::read_dir(&path).map_err(|e| e.to_string())?;
+    let count = entries
+        .filter_map(|entry| entry.ok())
+        .filter_map(|entry| entry.file_type().ok())
+        .filter(|file_type| file_type.is_file())
+        .count();
+
+    Ok(count)
+}
+
+#[tauri::command]
 fn list_worlds(app: tauri::AppHandle, instance_id: String) -> Result<Vec<String>, String> {
     let mut path = std::path::PathBuf::from(get_data_dir(&app));
     path.push("instances");
@@ -691,7 +713,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder, list_worlds, open_path, translate_text, install_modpack, export_modpack, import_prism, import_curseforge, import_mrpack
+            launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder, count_installed_mods, list_worlds, open_path, translate_text, install_modpack, export_modpack, import_prism, import_curseforge, import_mrpack
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

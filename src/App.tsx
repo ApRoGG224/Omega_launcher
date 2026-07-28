@@ -717,6 +717,7 @@ function App() {
   const [instances, setInstances] = useState<ModpackInstance[]>([]);
   const [instancesLoaded, setInstancesLoaded] = useState(false);
   const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
+  const [modCount, setModCount] = useState(0);
   const [isDragging, setIsDragging] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
@@ -943,6 +944,35 @@ function App() {
       unlisten.then((f) => f());
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadModCount = async () => {
+      if (!selectedInstanceId) {
+        setModCount(0);
+        return;
+      }
+
+      try {
+        const count = await invoke("count_installed_mods", { instanceId: selectedInstanceId });
+        if (!cancelled) {
+          setModCount(typeof count === "number" ? count : Number(count) || 0);
+        }
+      } catch (error) {
+        console.error("Failed to load mod count", error);
+        if (!cancelled) {
+          setModCount(0);
+        }
+      }
+    };
+
+    loadModCount();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedInstanceId, instances]);
 
   useEffect(() => {
     const handleClick = () => {
@@ -1339,9 +1369,7 @@ function App() {
 
                 <div className="stats-row">
                   <div className="stat-card">
-                    <span className="stat-val">
-                      {selectedInstanceId && instances.find(i => i.id === selectedInstanceId)?.loader !== "Vanilla" ? "12" : "0"}
-                    </span>
+                    <span className="stat-val">{modCount}</span>
                     <span className="stat-lbl">{t.modsCount}</span>
                   </div>
                   <div 
