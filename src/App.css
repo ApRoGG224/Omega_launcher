@@ -18,6 +18,24 @@ body {
   overflow: hidden;
 }
 
+.app-container,
+.app-container * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.app-container input,
+.app-container textarea,
+.app-container [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.app-container img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
 input[type="color"] {
   -webkit-appearance: none;
   border: none;

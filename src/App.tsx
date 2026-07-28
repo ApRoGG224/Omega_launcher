@@ -101,6 +101,7 @@ const AnimatedIcon = React.memo(({ images, interval = 3000 }: { images: string[]
           key={img}
           src={img}
           alt="icon"
+          draggable={false}
           style={{
             position: 'absolute',
             top: 0,
@@ -457,7 +458,7 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
              {mods.map((mod, idx) => (
              <div key={`${mod.project_id}-${idx}`} className="mod-card">
                <div className="mod-header">
-                 <img src={mod.icon_url || "https://cdn.modrinth.com/favicon.ico"} alt={mod.title} className="mod-icon" />
+                 <img src={mod.icon_url || "https://cdn.modrinth.com/favicon.ico"} alt={mod.title} className="mod-icon" draggable={false} />
                  <div className="mod-info">
                    <div className="mod-title">{mod.title}</div>
                    <div className="mod-author">{t.byAuthor} {mod.author}</div>
@@ -1170,7 +1171,12 @@ function App() {
   }, []);
 
   return (
-    <div className="app-container">
+    <div
+      className="app-container"
+      onCopy={(e) => e.preventDefault()}
+      onCut={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+    >
       <aside className="sidebar">
         <div className="sidebar-icon brand"><IconBox /></div>
         <div className={`sidebar-icon ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab("home")} title={t.sidebarHome}><IconHome /></div>
@@ -1234,7 +1240,7 @@ function App() {
                    }}
                  >
                    {inst.icon ? (
-                     <img src={inst.icon} alt="icon" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', marginBottom: 8 }} />
+                     <img src={inst.icon} alt="icon" draggable={false} style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', marginBottom: 8 }} />
                    ) : (
                      <div className="desktop-icon-img"><IconBox /></div>
                    )}
