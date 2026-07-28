@@ -1051,20 +1051,19 @@ function App() {
     if (!inst) return;
 
     if (account) {
+      setIsRunning(true);
       setLogs([t.logStartingMc]);
       try {
         const safeMcVersion = inst.mcVersion === "Prism" ? "1.20.1" : inst.mcVersion;
         const safeLoader = inst.loader === "Import" ? "Vanilla" : inst.loader;
         const fullVersionName = safeLoader === "Vanilla" ? safeMcVersion : `${safeMcVersion}-${safeLoader.toLowerCase()}`;
-        const output = (await invoke("launch_minecraft", { 
+        await invoke("launch_minecraft", { 
           version: fullVersionName, 
           server: serverIp, 
           username: account.name, 
           ram,
           instanceId: inst.id 
-        })) as string;
-        const errMatch = (output || "").toString().match(/ERROR:(.+)/);
-        if (errMatch) throw new Error(errMatch[1]);
+        });
       } catch(e) {
         setIsRunning(false);
         setLogs(prev => [...prev, `[ERROR]: ${e}`]);
@@ -1073,9 +1072,14 @@ function App() {
   }, [account, ram, serverIp, instances, selectedInstanceId]);
 
   const handleStop = useCallback(async () => {
-      await invoke("kill_minecraft");
-      setIsRunning(false);
-      setLogs(prev => [...prev, t.logKillingMc]);
+      try {
+        const result = await invoke("kill_minecraft");
+        setLogs(prev => [...prev, typeof result === "string" ? result : t.logKillingMc]);
+      } catch (e) {
+        setLogs(prev => [...prev, `[ERROR]: ${e}`]);
+      } finally {
+        setIsRunning(false);
+      }
   }, [t.logKillingMc]);
 
   const sliderStyle = useMemo(() => ({

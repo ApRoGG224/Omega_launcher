@@ -1,4 +1,5 @@
 use std::io::{BufRead, BufReader, Read};
+use std::time::Duration;
 use flate2::read::GzDecoder;
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -261,29 +262,72 @@ fn launch_minecraft(app: AppHandle, version: String, server: String, username: S
 }
 
 #[tauri::command]
-fn kill_minecraft() {
+fn kill_minecraft() -> Result<String, String> {
     println!("Attempting to kill Minecraft and launcher tasks...");
-    
-    let kill_from_file = |filepath: &str| {
+
+    let mut pids: Vec<String> = Vec::new();
+
+    let collect_pid = |filepath: &str, pids: &mut Vec<String>| {
         if let Ok(pid_str) = std::fs::read_to_string(filepath) {
             let pid = pid_str.trim();
-            if !pid.is_empty() {
-                println!("Killing PID from {}: {}", filepath, pid);
-                #[cfg(target_os = "windows")]
-                let _ = std::process::Command::new("taskkill").arg("/F").arg("/PID").arg(pid).status();
-                
-                #[cfg(not(target_os = "windows"))]
-                let _ = std::process::Command::new("kill").arg("-9").arg(pid).status();
-                
-                let _ = std::fs::remove_file(filepath);
+            if !pid.is_empty() && !pids.iter().any(|existing| existing == pid) {
+                println!("Found PID from {}: {}", filepath, pid);
+                pids.push(pid.to_string());
             }
         }
     };
 
-    kill_from_file("../sidecar/mc_pid.txt");
-    kill_from_file("mc_pid.txt");
-    kill_from_file("../sidecar/node_pid.txt");
-    kill_from_file("node_pid.txt");
+    // Try to stop the game process first, then the launcher wrapper.
+    collect_pid("../sidecar/mc_pid.txt", &mut pids);
+    collect_pid("mc_pid.txt", &mut pids);
+    collect_pid("../sidecar/node_pid.txt", &mut pids);
+    collect_pid("node_pid.txt", &mut pids);
+
+    if pids.is_empty() {
+        return Ok("No running Minecraft process found".to_string());
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        for pid in &pids {
+            let _ = std::process::Command::new("taskkill")
+                .arg("/PID")
+                .arg(pid)
+                .arg("/T")
+                .status();
+        }
+
+        std::thread::sleep(Duration::from_millis(1500));
+
+        for pid in &pids {
+            let _ = std::process::Command::new("taskkill")
+                .arg("/F")
+                .arg("/PID")
+                .arg(pid)
+                .arg("/T")
+                .status();
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        for pid in &pids {
+            let _ = std::process::Command::new("kill").arg("-TERM").arg(pid).status();
+        }
+
+        std::thread::sleep(Duration::from_millis(1500));
+
+        for pid in &pids {
+            let _ = std::process::Command::new("kill").arg("-9").arg(pid).status();
+        }
+    }
+
+    let _ = std::fs::remove_file("../sidecar/mc_pid.txt");
+    let _ = std::fs::remove_file("mc_pid.txt");
+    let _ = std::fs::remove_file("../sidecar/node_pid.txt");
+    let _ = std::fs::remove_file("node_pid.txt");
+
+    Ok("Minecraft stop requested".to_string())
 }
 
 #[tauri::command]
