@@ -778,6 +778,14 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   flex-direction: column;
 }
+.copyable-console,
+.copyable-console * {
+  -webkit-user-select: text;
+  user-select: text;
+}
+.copyable-console {
+  cursor: text;
+}
 
 /* Controls */
 .controls-panel {

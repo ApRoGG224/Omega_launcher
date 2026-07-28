@@ -1,5 +1,4 @@
 use std::io::{BufRead, BufReader, Read};
-use std::time::Duration;
 use flate2::read::GzDecoder;
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -262,8 +261,9 @@ fn launch_minecraft(app: AppHandle, version: String, server: String, username: S
 }
 
 #[tauri::command]
-fn kill_minecraft() -> Result<String, String> {
+fn kill_minecraft(app: AppHandle) -> Result<String, String> {
     println!("Attempting to kill Minecraft and launcher tasks...");
+    let _ = app.emit("download-progress", "[main/INFO]: Killing Minecraft process...");
 
     let mut pids: Vec<String> = Vec::new();
 
@@ -284,21 +284,12 @@ fn kill_minecraft() -> Result<String, String> {
     collect_pid("node_pid.txt", &mut pids);
 
     if pids.is_empty() {
+        let _ = app.emit("download-progress", "[main/INFO]: No running Minecraft process found");
         return Ok("No running Minecraft process found".to_string());
     }
 
     #[cfg(target_os = "windows")]
     {
-        for pid in &pids {
-            let _ = std::process::Command::new("taskkill")
-                .arg("/PID")
-                .arg(pid)
-                .arg("/T")
-                .status();
-        }
-
-        std::thread::sleep(Duration::from_millis(1500));
-
         for pid in &pids {
             let _ = std::process::Command::new("taskkill")
                 .arg("/F")
@@ -312,12 +303,6 @@ fn kill_minecraft() -> Result<String, String> {
     #[cfg(not(target_os = "windows"))]
     {
         for pid in &pids {
-            let _ = std::process::Command::new("kill").arg("-TERM").arg(pid).status();
-        }
-
-        std::thread::sleep(Duration::from_millis(1500));
-
-        for pid in &pids {
             let _ = std::process::Command::new("kill").arg("-9").arg(pid).status();
         }
     }
@@ -327,6 +312,7 @@ fn kill_minecraft() -> Result<String, String> {
     let _ = std::fs::remove_file("../sidecar/node_pid.txt");
     let _ = std::fs::remove_file("node_pid.txt");
 
+    let _ = app.emit("download-progress", "[main/INFO]: Minecraft process killed");
     Ok("Minecraft stop requested".to_string())
 }
 

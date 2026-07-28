@@ -138,7 +138,7 @@ const ConsolePanel = React.memo(({ logs }: { logs: string[] }) => {
         </div>
         <span className="console-title">GAME OUTPUT</span>
       </div>
-      <div className="console-content" ref={consoleRef}>
+      <div className="console-content copyable-console" ref={consoleRef}>
         {logs.length === 0 ? (
           <span style={{ opacity: 0.5 }}>Waiting for game to launch...</span>
         ) : (
@@ -1073,14 +1073,13 @@ function App() {
 
   const handleStop = useCallback(async () => {
       try {
-        const result = await invoke("kill_minecraft");
-        setLogs(prev => [...prev, typeof result === "string" ? result : t.logKillingMc]);
+        await invoke("kill_minecraft");
       } catch (e) {
         setLogs(prev => [...prev, `[ERROR]: ${e}`]);
       } finally {
         setIsRunning(false);
       }
-  }, [t.logKillingMc]);
+  }, []);
 
   const sliderStyle = useMemo(() => ({
     background: `linear-gradient(to right, var(--accent-color) ${(ram - 1) / 15 * 100}%, rgba(255,255,255,0.1) ${(ram - 1) / 15 * 100}%)`
@@ -1177,8 +1176,16 @@ function App() {
   return (
     <div
       className="app-container"
-      onCopy={(e) => e.preventDefault()}
-      onCut={(e) => e.preventDefault()}
+      onCopy={(e) => {
+        if (!(e.target as HTMLElement).closest(".copyable-console")) {
+          e.preventDefault();
+        }
+      }}
+      onCut={(e) => {
+        if (!(e.target as HTMLElement).closest(".copyable-console")) {
+          e.preventDefault();
+        }
+      }}
       onDragStart={(e) => e.preventDefault()}
     >
       <aside className="sidebar">
