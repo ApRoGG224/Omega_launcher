@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 tasks:
   default:
@@ -34,3 +34,8 @@ tasks:
     desc: "Format code using Prettier (Prettier Validation Skill)"
     cmds:
       - npx prettier --write .
+
+  install:cli:
+    desc: "Install 'omega' command into ~/.local/bin"
+    cmds:
+      - bash scripts/setup-cli.sh
