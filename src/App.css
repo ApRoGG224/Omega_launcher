@@ -1,9 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --accent-color: #a855f7;
-  --accent-color-rgb: 168, 85, 247;
-  --accent-color-dark: #6d28d9;
+  --accent-color: #960DF2;
+  --accent-color-rgb: 150, 13, 242;
+  --accent-color-light: #AB3DF5;
+  --accent-color-dark: #6805ac;
 }
 * {
   box-sizing: border-box;
@@ -13,7 +14,7 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background: #0f111a;
+  background: #050408;
   color: #ffffff;
   overflow: hidden;
 }
@@ -52,9 +53,9 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   height: 100vh;
   width: 100vw;
-  background: radial-gradient(circle at 0% 0%, rgba(var(--accent-color-rgb), 0.4) 0%, transparent 40%),
-              radial-gradient(circle at 100% 100%, rgba(var(--accent-color-rgb), 0.15) 0%, transparent 40%),
-              #0d1117;
+  background: radial-gradient(circle at 10% 10%, rgba(150, 13, 242, 0.25) 0%, transparent 45%),
+              radial-gradient(circle at 90% 85%, rgba(171, 61, 245, 0.2) 0%, transparent 45%),
+              #050408;
 }
 
 /* Sidebar */
@@ -1179,3 +1180,454 @@ input[type="color"]::-webkit-color-swatch {
   background: var(--accent-color);
   color: white;
 }
+
+/* -------------------------------------------------------------
+   ПОЛЬЗОВАТЕЛЬСКИЙ ИНТЕРФЕЙС ИЗ ЭСКИЗОВ (BOTTOM DOCK & SKETCH UI)
+   ------------------------------------------------------------- */
+
+/* Floating Bottom Navigation Bar */
+.dock-wrapper {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.floating-dock {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  background: rgba(10, 8, 16, 0.92);
+  backdrop-filter: blur(25px);
+  padding: 10px 32px;
+  border-radius: 36px;
+  border: 1px solid rgba(171, 61, 245, 0.35);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(150, 13, 242, 0.25);
+  animation: slideUpFade 0.3s ease;
+}
+
+.dock-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: #8b8b9c;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.dock-btn:hover {
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.dock-btn.active {
+  color: #AB3DF5;
+}
+
+.dock-btn.active .dock-icon-circle {
+  background: rgba(150, 13, 242, 0.25);
+  border-color: #AB3DF5;
+  box-shadow: 0 0 18px rgba(171, 61, 245, 0.5);
+  color: #ffffff;
+}
+
+.dock-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  transition: all 0.25s ease;
+}
+
+.dock-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Central Rhombus (Diamond) Play Button */
+.dock-play-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  top: -12px;
+}
+
+.dock-version-badge {
+  background: linear-gradient(90deg, #960DF2, #AB3DF5);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(150, 13, 242, 0.6);
+  letter-spacing: 0.5px;
+}
+
+.rhombus-play-btn {
+  width: 58px;
+  height: 58px;
+  background: linear-gradient(135deg, #960DF2 0%, #AB3DF5 100%);
+  transform: rotate(45deg);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 25px rgba(150, 13, 242, 0.7), inset 0 0 10px rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  outline: none;
+}
+
+.rhombus-play-btn:hover {
+  transform: rotate(45deg) scale(1.12);
+  box-shadow: 0 0 35px rgba(171, 61, 245, 0.95);
+}
+
+.rhombus-play-btn:active {
+  transform: rotate(45deg) scale(0.98);
+}
+
+.rhombus-play-btn .play-icon-inner {
+  transform: rotate(-45deg);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Home Dashboard Grid Layout (Screenshot 1) */
+.home-sketch-dashboard {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 24px;
+  height: calc(100vh - 160px);
+  padding-bottom: 70px;
+}
+
+.sketch-card {
+  background: rgba(14, 11, 22, 0.75);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(171, 61, 245, 0.2);
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.25s;
+}
+
+.sketch-card:hover {
+  border-color: rgba(171, 61, 245, 0.4);
+}
+
+.sketch-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.sketch-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recent-instances-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.recent-instance-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recent-instance-item:hover, .recent-instance-item.selected {
+  background: rgba(150, 13, 242, 0.18);
+  border-color: rgba(171, 61, 245, 0.5);
+  transform: translateX(4px);
+}
+
+.recent-inst-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.recent-inst-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1a1528, #2a1f42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #AB3DF5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.recent-inst-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+.recent-inst-ver {
+  font-size: 0.78rem;
+  color: #8b8b9c;
+}
+
+/* Friends Panel (Right Side Screenshot 1) */
+.friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.friend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 12px 16px;
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+
+.friend-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.friend-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #960DF2, #AB3DF5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(150, 13, 242, 0.4);
+}
+
+.friend-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #ffffff;
+}
+
+.friend-status {
+  font-size: 0.78rem;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.friend-activity {
+  font-size: 0.75rem;
+  color: #8b8b9c;
+}
+
+/* Assemblies Horizontal Scroll & Info Card (Screenshot 2) */
+.assemblies-horizontal-list {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 10px 4px;
+  scroll-behavior: smooth;
+}
+
+.assembly-scroll-card {
+  min-width: 190px;
+  background: rgba(20, 16, 32, 0.8);
+  border: 1px solid rgba(171, 61, 245, 0.25);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.assembly-scroll-card:hover, .assembly-scroll-card.active {
+  background: rgba(150, 13, 242, 0.22);
+  border-color: #AB3DF5;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(150, 13, 242, 0.3);
+}
+
+.assembly-info-card-detail {
+  background: rgba(14, 11, 22, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(171, 61, 245, 0.3);
+  border-radius: 18px;
+  padding: 20px;
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+/* Store Sub-tabs Navigation (Screenshot 3) */
+.store-sub-tabs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sub-tab-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #8b8b9c;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sub-tab-btn:hover {
+  color: #fff;
+}
+
+.sub-tab-btn.active {
+  background: linear-gradient(135deg, #960DF2, #AB3DF5);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(150, 13, 242, 0.4);
+}
+
+/* Servers List & Server Cards */
+.server-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 12px 16px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.server-item:hover {
+  background: rgba(150, 13, 242, 0.12);
+  border-color: rgba(171, 61, 245, 0.4);
+}
+
+.server-info-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.server-icon-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(150, 13, 242, 0.3), rgba(171, 61, 245, 0.15));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  border: 1px solid rgba(171, 61, 245, 0.3);
+}
+
+.server-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #ffffff;
+}
+
+.server-ip {
+  font-size: 0.76rem;
+  color: #8b8b9c;
+}
+
+.server-players-tag {
+  font-size: 0.75rem;
+  color: #AB3DF5;
+  background: rgba(171, 61, 245, 0.12);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(171, 61, 245, 0.25);
+  font-weight: 500;
+}
+
+/* Mod Preview Chips for Assembly Info Card */
+.mod-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.mod-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mod-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #AB3DF5;
+}
+
+/* Main Content Padding for Floating Dock */
+.main-content {
+  padding-bottom: 90px !important;
+  overflow-y: auto;
+}
+

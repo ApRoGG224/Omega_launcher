@@ -49,6 +49,18 @@ interface ModpackInstance {
 const VERSIONS_LIST = ["1.21.4", "1.21.1", "1.20.4", "1.19.4", "1.18.2", "1.16.5", "1.12.2", "1.8", "1.7.10"];
 const LOADERS_LIST = ["Vanilla", "Fabric", "Forge", "NeoForge", "Quilt"];
 
+const FRIENDS_LIST = [
+  { id: "1", name: "пронуб_228", status: "В игре (1.20.1)", online: true, activity: "Играет на Hypixel" },
+  { id: "2", name: "Alex_Crafter", status: "В сети", online: true, activity: "В главном меню" },
+  { id: "3", name: "Steve_Pro", status: "Офлайн", online: false, activity: "Был 15 мин назад" }
+];
+
+const RECENT_SERVERS = [
+  { id: "1", name: "Hypixel Network", ip: "mc.hypixel.net", version: "1.20.1", players: "42 150 онлайн", icon: "🎮" },
+  { id: "2", name: "Omega SMP", ip: "smp.omega-launcher.org", version: "1.20.1", players: "18 онлайн", icon: "⚡" }
+];
+
+
 // ---------------------------------
 // КОМПОНЕНТЫ
 // ---------------------------------
@@ -718,9 +730,10 @@ function App() {
   const [instances, setInstances] = useState<ModpackInstance[]>([]);
   const [instancesLoaded, setInstancesLoaded] = useState(false);
   const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
+  const selectedInstance = React.useMemo(() => {
+    return instances.find(i => i.id === selectedInstanceId) || instances[0] || null;
+  }, [instances, selectedInstanceId]);
   const [modCount, setModCount] = useState(0);
-  const [isDragging, setIsDragging] = useState<string | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const suppressGameplayLogsRef = useRef(false);
 
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; instanceId: string } | null>(null);
@@ -1152,23 +1165,7 @@ function App() {
     }, 600);
   };
 
-  const handleDesktopMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
-      const desktopRect = e.currentTarget.getBoundingClientRect();
-      let newX = e.clientX - desktopRect.left - dragOffset.x;
-      let newY = e.clientY - desktopRect.top - dragOffset.y;
-      
-      const updated = instances.map(inst => inst.id === isDragging ? { ...inst, x: newX, y: newY } : inst);
-      setInstances(updated);
-    }
-  };
 
-  const handleDesktopMouseUp = () => {
-    if (isDragging) {
-      setIsDragging(null);
-      localStorage.setItem("desktopInstances", JSON.stringify(instances));
-    }
-  };
 
   const handleCreateModpack = useCallback(async (name: string, mcVer: string, loader: string, iconUrl?: string, projectId?: string) => {
     setActiveTab("home");
@@ -1218,24 +1215,14 @@ function App() {
       }}
       onDragStart={(e) => e.preventDefault()}
     >
-      <aside className="sidebar">
-        <div className="sidebar-icon brand"><IconBox /></div>
-        <div className={`sidebar-icon ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab("home")} title={t.sidebarHome}><IconHome /></div>
-        <div className={`sidebar-icon ${activeTab === 'mods' ? 'active' : ''}`} onClick={() => setActiveTab("mods")} title={t.sidebarMods}><AnimatedIcon images={MOD_ICONS} interval={2500} /></div>
-        <div className={`sidebar-icon ${activeTab === 'resourcepacks' ? 'active' : ''}`} onClick={() => setActiveTab("resourcepacks")} title="Ресурспаки"><AnimatedIcon images={RESOURCEPACK_ICONS} interval={2800} /></div>
-        <div className={`sidebar-icon ${activeTab === 'shaders' ? 'active' : ''}`} onClick={() => setActiveTab("shaders")} title="Шейдеры"><AnimatedIcon images={SHADER_ICONS} interval={2900} /></div>
-        <div className={`sidebar-icon ${activeTab === 'datapacks' ? 'active' : ''}`} onClick={() => setActiveTab("datapacks")} title="Датапаки"><AnimatedIcon images={DATAPACK_ICONS} interval={2600} /></div>
-        <div className={`sidebar-icon ${activeTab === 'modpacks' ? 'active' : ''}`} onClick={() => setActiveTab("modpacks")} title="Сборки"><AnimatedIcon images={MODPACK_ICONS} interval={3100} /></div>
-        <div className={`sidebar-icon ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab("settings")} title={t.sidebarSettings}><IconSettings /></div>
-      </aside>
-
       <main className="main-content">
-        <header className="top-bar" style={["mods", "resourcepacks", "modpacks", "shaders", "datapacks"].includes(activeTab) ? { justifyContent: 'flex-end', paddingBottom: '10px' } : {}}>
-          {!["mods", "resourcepacks", "modpacks", "shaders", "datapacks"].includes(activeTab) && (
-            <div className="title-area">
-              <h1>Omega Launcher</h1>
+        <header className="top-bar">
+          <div className="title-area" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="sidebar-icon brand" style={{ width: 36, height: 36, marginBottom: 0, borderRadius: 10 }}>
+              <IconBox />
             </div>
-          )}
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '0.5px' }}>Omega Launcher</h1>
+          </div>
           
           <div className="user-profile" onClick={() => { setProfileMenuOpen(true); setAccountModalView("list"); }}>
             <div className="avatar">
@@ -1249,206 +1236,302 @@ function App() {
         </header>
 
         {activeTab === "home" && (
-          <>
-            {/* РАБОЧИЙ СТОЛ */}
-            <div 
-              className="desktop-area" 
-              onMouseMove={handleDesktopMouseMove}
-              onMouseUp={handleDesktopMouseUp}
-              onMouseLeave={handleDesktopMouseUp}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                setDesktopContextMenu({ visible: true, x: e.clientX, y: e.clientY });
-              }}
-            >
-              <input type="file" ref={fileInputRef} onChange={handleIconChange} style={{ display: 'none' }} accept="image/*" />
-              {instances.map(inst => (
-                 <div 
-                   key={inst.id}
-                   className={`desktop-icon ${selectedInstanceId === inst.id ? 'selected' : ''}`}
-                   style={{ left: inst.x, top: inst.y }}
-                   onContextMenu={(e) => {
-                     e.preventDefault();
-                     e.stopPropagation();
-                     setSelectedInstanceId(inst.id);
-                     setContextMenu({ visible: true, x: e.clientX, y: e.clientY, instanceId: inst.id });
-                   }}
-                   onMouseDown={(e) => {
-                     setSelectedInstanceId(inst.id);
-                     setIsDragging(inst.id);
-                     const rect = e.currentTarget.getBoundingClientRect();
-                     setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-                   }}
-                 >
-                   {inst.icon ? (
-                     <img src={inst.icon} alt="icon" draggable={false} style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', marginBottom: 8 }} />
-                   ) : (
-                     <div className="desktop-icon-img"><IconBox /></div>
-                   )}
-                   <div className="desktop-icon-name">{inst.name}</div>
-                   <div className="desktop-icon-version">{inst.mcVersion} {inst.loader !== "Vanilla" ? inst.loader : ""}</div>
-                 </div>
-              ))}
-              {contextMenu && (
-                <div className="context-menu" style={{ 
-                  position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 1000,
-                  background: 'rgba(20, 20, 30, 0.95)', backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px',
-                  padding: '5px', display: 'flex', flexDirection: 'column', gap: '2px',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)', minWidth: '180px'
-                }}>
-                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setContextMenu(null); handlePlay(); }}>{t.ctxPlay}</button>
-                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setRenameModalOpen(contextMenu.instanceId); setRenameInput(instances.find(i=>i.id===contextMenu.instanceId)?.name || ""); setContextMenu(null); }}>{t.ctxRename}</button>
-                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); setContextMenu(null); }}>{t.ctxIcon}</button>
-                  <button className="ctx-item" onClick={async (e) => { 
-                    e.stopPropagation(); 
-                    const inst = instances.find(i=>i.id===contextMenu?.instanceId);
-                    setContextMenu(null);
-                    if (inst) {
-                      try {
-                        await invoke("export_modpack", { instanceId: inst.id, instanceName: inst.name, exportPath: exportPath });
-                        showNotification("Сборка успешно скачана в папку экспорта!", "success");
-                      } catch (err: any) {
-                        showNotification("Ошибка экспорта: " + err, "error");
-                      }
-                    }
-                  }}>Скачать сборку</button>
-                  <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
-                  <button className="ctx-item" style={{color: '#ef4444'}} onClick={(e) => {
-                    e.stopPropagation();
-                    setInstances(prev => {
-                      const next = prev.filter(i => i.id !== contextMenu.instanceId);
-                      localStorage.setItem("desktopInstances", JSON.stringify(next));
-                      return next;
-                    });
-                    if (selectedInstanceId === contextMenu.instanceId) setSelectedInstanceId(null);
-                    setContextMenu(null);
-                  }}>{t.ctxDelete}</button>
+          <div className="home-sketch-dashboard">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* РАБОЧИЙ СТОЛ & ПОСЛЕДНИЕ СБОРКИ (Снимок 1) */}
+              <div className="sketch-card">
+                <div className="sketch-card-header">
+                  <span className="sketch-card-title"><IconBox /> Последние запущенные сборки</span>
+                  <button className="play-btn" style={{ height: '32px', fontSize: '0.8rem', padding: '0 12px' }} onClick={() => setIsCreating(true)}>
+                    <IconPlus /> Создать
+                  </button>
                 </div>
-              )}
-
-              {desktopContextMenu && (
-                <div className="context-menu" style={{ 
-                  position: 'fixed', top: desktopContextMenu.y, left: desktopContextMenu.x, zIndex: 1000,
-                  background: 'rgba(20, 20, 30, 0.95)', backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px',
-                  padding: '5px', display: 'flex', flexDirection: 'column', gap: '2px',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)', minWidth: '180px'
-                }}>
-                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setDesktopContextMenu(null); setIsCreating(true); }}>Создать сборку</button>
-                  <button className="ctx-item" onClick={(e) => { e.stopPropagation(); setDesktopContextMenu(null); setImportModalOpen(true); setImportStep("menu"); }}>Импортировать с других лаунчеров</button>
-                </div>
-              )}
-              
-              {renameModalOpen && (
-                <div className="account-modal-overlay" onClick={() => setRenameModalOpen(null)}>
-                  <div className="create-modal" onClick={e => e.stopPropagation()}>
-                    <h3>{t.renameInstTitle}</h3>
-                    <input type="text" value={renameInput} onChange={e => setRenameInput(e.target.value)} placeholder={t.renameInstPlaceholder} />
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                      <button className="play-btn" style={{ flex: 1 }} onClick={() => {
-                        setInstances(prev => {
-                          const next = prev.map(i => i.id === renameModalOpen ? { ...i, name: renameInput } : i);
-                          localStorage.setItem("desktopInstances", JSON.stringify(next));
-                          return next;
-                        });
-                        setRenameModalOpen(null);
-                      }}>{t.saveBtn}</button>
-                      <button className="play-btn" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setRenameModalOpen(null)}>{t.cancel}</button>
+                <div className="recent-instances-list">
+                  {instances.length === 0 ? (
+                    <div style={{ color: '#8b8b9c', textAlign: 'center', padding: '20px' }}>
+                      Нет созданных сборок. Нажмите "+ Создать"!
                     </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="bottom-area">
-              <ConsolePanel logs={logs} />
-
-              <div className="controls-panel">
-                <div className="primary-controls">
-                  <div className="selected-instance-display">
-                    {selectedInstanceId 
-                      ? instances.find(i => i.id === selectedInstanceId)?.name || t.unknown
-                      : t.noInstanceSelected}
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
-                    {isCreating && (
-                      <div className="create-modal" onClick={e => e.stopPropagation()}>
-                        <h3>{t.newInstTitle}</h3>
-                        <input type="text" placeholder={t.newInstNamePlaceholder} value={newName} onChange={e => setNewName(e.target.value)} />
-                        
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                          <div className="custom-dropdown-container" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setVerMenuOpen(!verMenuOpen); setLoaderMenuOpen(false); }} style={{ flex: 1 }}>
-                            <div className="custom-dropdown-btn" style={{ height: "40px", fontSize: "0.9rem" }}>{newVer} <IconChevronDown /></div>
-                            {verMenuOpen && (
-                              <div className="custom-dropdown-menu upwards">
-                                <input type="text" placeholder="Поиск..." value={newVerSearch} onChange={e => setNewVerSearch(e.target.value)} onClick={e => e.stopPropagation()} style={{ margin: '5px', padding: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '4px', outline: 'none' }} />
-                                {currentVersionsList.filter(v => v.includes(newVerSearch.toLowerCase())).map(v => <div key={v} className="custom-dropdown-item" onClick={(e) => { e.stopPropagation(); setNewVer(v); setVerMenuOpen(false); }}>{v}</div>)}
-                              </div>
-                            )}
+                  ) : (
+                    instances.slice(0, 3).map(inst => (
+                      <div 
+                        key={inst.id} 
+                        className={`recent-instance-item ${selectedInstanceId === inst.id ? 'selected' : ''}`}
+                        onClick={() => setSelectedInstanceId(inst.id)}
+                      >
+                        <div className="recent-inst-info">
+                          <div className="recent-inst-icon">
+                            {inst.icon ? <img src={inst.icon} alt="icon" style={{ width: 28, height: 28, borderRadius: 6 }} /> : <IconBox />}
                           </div>
-                          <div className="custom-dropdown-container" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setLoaderMenuOpen(!loaderMenuOpen); setVerMenuOpen(false); }} style={{ flex: 1 }}>
-                            <div className="custom-dropdown-btn" style={{ height: "40px", fontSize: "0.9rem" }}>{newLoader} <IconChevronDown /></div>
-                            {loaderMenuOpen && (
-                              <div className="custom-dropdown-menu upwards">
-                                {LOADERS_LIST.map(l => <div key={l} className="custom-dropdown-item" onClick={(e) => { e.stopPropagation(); setNewLoader(l); setLoaderMenuOpen(false); }}>{l}</div>)}
-                              </div>
-                            )}
+                          <div>
+                            <div className="recent-inst-name">{inst.name}</div>
+                            <div className="recent-inst-ver">{inst.mcVersion} • {inst.loader}</div>
                           </div>
                         </div>
+                        <button 
+                          className="play-btn" 
+                          style={{ height: '32px', fontSize: '0.78rem', padding: '0 12px' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedInstanceId(inst.id);
+                            handlePlay();
+                          }}
+                        >
+                          <IconPlay /> Играть
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
 
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                          <button className="play-btn" style={{ flex: 1, height: "40px", fontSize: "0.9rem", padding: 0, justifyContent: "center" }} onClick={handleCreateInstance}>{t.createBtn}</button>
-                          <button className="play-btn" style={{ flex: 1, height: "40px", fontSize: "0.9rem", padding: 0, justifyContent: "center", background: "rgba(255,255,255,0.1)", boxShadow: "none" }} onClick={() => setIsCreating(false)}>{t.cancel}</button>
+              {/* НЕАВНИЕ СЕРВЕРА (Снимок 1) */}
+              <div className="sketch-card">
+                <div className="sketch-card-header">
+                  <span className="sketch-card-title">🌐 Последние играные сервера</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {RECENT_SERVERS.map(server => (
+                    <div key={server.id} className="server-item">
+                      <div className="server-info-left">
+                        <div className="server-icon-badge">{server.icon}</div>
+                        <div>
+                          <div className="server-name">{server.name}</div>
+                          <div className="server-ip">{server.ip} • {server.version}</div>
                         </div>
                       </div>
-                    )}
-                    <button className="play-btn" style={{ background: "rgba(var(--accent-color-rgb), 0.2)", border: "1px solid rgba(var(--accent-color-rgb), 0.4)", color: "#fff", height: "40px", fontSize: "0.9rem" }} onClick={() => setIsCreating(true)}>
-                      <IconPlus /> {t.createInstance}
-                    </button>
-                    {isRunning ? (
-                        <button className="play-btn" style={{ background: "rgba(239, 68, 68, 0.2)", border: "1px solid rgba(239, 68, 68, 0.4)", color: "#ef4444" }} onClick={handleStop}><IconX /> {t.stopBtn}</button>
-                    ) : (
-                        <button className="play-btn" onClick={handlePlay}><IconPlay /> {t.playBtn}</button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="stats-row">
-                  <div className="stat-card">
-                    <span className="stat-val">{modCount}</span>
-                    <span className="stat-lbl">{t.modsCount}</span>
-                  </div>
-                  <div 
-                    className="stat-card" 
-                    onClick={() => selectedInstanceId && invoke("open_folder", { instanceId: selectedInstanceId })}
-                    style={{ cursor: "pointer", transition: "0.2s" }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = "rgba(var(--accent-color-rgb), 0.2)"}
-                    onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"}
-                    title={t.folderBtn}
-                  >
-                    <span className="stat-val" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconFolder /></span>
-                    <span className="stat-lbl">{t.folderBtn}</span>
-                  </div>
-                  <div className="stat-card">
-                    <span className="stat-val">{ram} GB</span>
-                    <span className="stat-lbl">RAM</span>
-                  </div>
+                      <span className="server-players-tag">{server.players}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-          </>
+
+            {/* СПИСОК ДРУЗЕЙ И ИХ АКТИВНОСТЬ (Снимок 1) */}
+            <div className="sketch-card" style={{ height: '100%' }}>
+              <div className="sketch-card-header">
+                <span className="sketch-card-title"><IconUsers /> Друзья и их активность</span>
+                <span className="user-status" style={{ fontSize: '0.8rem', color: '#10b981' }}>
+                  <span className="status-dot" /> 2 онлайн
+                </span>
+              </div>
+              <div className="friends-list">
+                {FRIENDS_LIST.map(friend => (
+                  <div key={friend.id} className="friend-item">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div className="friend-avatar" style={{ background: friend.online ? 'linear-gradient(135deg, #960DF2, #AB3DF5)' : '#2a2a35' }}>
+                        {friend.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="friend-name">{friend.name}</div>
+                        <div className="friend-activity">{friend.activity}</div>
+                      </div>
+                    </div>
+                    <div className="friend-status" style={{ color: friend.online ? '#10b981' : '#8b8b9c' }}>
+                      <span className="status-dot" style={{ background: friend.online ? '#10b981' : '#6b7280' }} />
+                      {friend.status}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Модальное окно создания сборки */}
+            {isCreating && (
+              <div className="account-modal-overlay" onClick={() => setIsCreating(false)}>
+                <div className="create-modal" onClick={e => e.stopPropagation()}>
+                  <h3>{t.newInstTitle}</h3>
+                  <input type="text" placeholder={t.newInstNamePlaceholder} value={newName} onChange={e => setNewName(e.target.value)} />
+                  
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                    <div className="custom-dropdown-container" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setVerMenuOpen(!verMenuOpen); setLoaderMenuOpen(false); }} style={{ flex: 1 }}>
+                      <div className="custom-dropdown-btn" style={{ height: "40px", fontSize: "0.9rem" }}>{newVer} <IconChevronDown /></div>
+                      {verMenuOpen && (
+                        <div className="custom-dropdown-menu upwards">
+                          <input type="text" placeholder="Поиск..." value={newVerSearch} onChange={e => setNewVerSearch(e.target.value)} onClick={e => e.stopPropagation()} style={{ margin: '5px', padding: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '4px', outline: 'none' }} />
+                          {currentVersionsList.filter(v => v.includes(newVerSearch.toLowerCase())).map(v => <div key={v} className="custom-dropdown-item" onClick={(e) => { e.stopPropagation(); setNewVer(v); setVerMenuOpen(false); }}>{v}</div>)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="custom-dropdown-container" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setLoaderMenuOpen(!loaderMenuOpen); setVerMenuOpen(false); }} style={{ flex: 1 }}>
+                      <div className="custom-dropdown-btn" style={{ height: "40px", fontSize: "0.9rem" }}>{newLoader} <IconChevronDown /></div>
+                      {loaderMenuOpen && (
+                        <div className="custom-dropdown-menu upwards">
+                          {LOADERS_LIST.map(l => <div key={l} className="custom-dropdown-item" onClick={(e) => { e.stopPropagation(); setNewLoader(l); setLoaderMenuOpen(false); }}>{l}</div>)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                    <button className="play-btn" style={{ flex: 1, height: "40px", fontSize: "0.9rem", padding: 0, justifyContent: "center" }} onClick={handleCreateInstance}>{t.createBtn}</button>
+                    <button className="play-btn" style={{ flex: 1, height: "40px", fontSize: "0.9rem", padding: 0, justifyContent: "center", background: "rgba(255,255,255,0.1)", boxShadow: "none" }} onClick={() => setIsCreating(false)}>{t.cancel}</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
-        {activeTab === "mods" && <ModsPanel instances={instances} t={t} language={language} projectType="mod" versionsList={currentVersionsList} />}
-        {activeTab === "resourcepacks" && <ModsPanel instances={instances} t={t} language={language} projectType="resourcepack" versionsList={currentVersionsList} />}
-        {activeTab === "shaders" && <ModsPanel instances={instances} t={t} language={language} projectType="shader" versionsList={currentVersionsList} />}
-        {activeTab === "datapacks" && <ModsPanel instances={instances} t={t} language={language} projectType="datapack" versionsList={currentVersionsList} />}
-        {activeTab === "modpacks" && <ModsPanel instances={instances} t={t} language={language} projectType="modpack" onCreateModpack={handleCreateModpack} versionsList={currentVersionsList} />}
+        {/* ЭКРАН СБОРОК (Снимок 2) */}
+        {activeTab === "modpacks" && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2>Ваши сборки</h2>
+              <button className="play-btn" style={{ height: '36px', fontSize: '0.85rem' }} onClick={() => setIsCreating(true)}>
+                <IconPlus /> Создать сборку
+              </button>
+            </div>
+
+            {/* Горизонтальный скролл сборок */}
+            <div className="assemblies-horizontal-list">
+              {instances.map(inst => (
+                <div 
+                  key={inst.id}
+                  className={`assembly-scroll-card ${selectedInstanceId === inst.id ? 'active' : ''}`}
+                  onClick={() => setSelectedInstanceId(inst.id)}
+                >
+                  <div className="recent-inst-icon" style={{ width: 54, height: 54, borderRadius: 14 }}>
+                    {inst.icon ? <img src={inst.icon} alt="icon" style={{ width: 36, height: 36, borderRadius: 8 }} /> : <IconBox />}
+                  </div>
+                  <div style={{ fontWeight: 600, fontSize: '0.95rem', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>
+                    {inst.name}
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#8b8b9c' }}>
+                    {inst.mcVersion} ({inst.loader})
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Info Card выбранной сборки (Снимок 2) */}
+            {selectedInstance && (
+              <div className="assembly-info-card-detail">
+                <input type="file" ref={fileInputRef} onChange={handleIconChange} style={{ display: 'none' }} accept="image/*" />
+                <div 
+                  className="recent-inst-icon" 
+                  style={{ width: 64, height: 64, borderRadius: 16, cursor: 'pointer' }}
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Нажмите, чтобы сменить иконку"
+                >
+                  {selectedInstance.icon ? <img src={selectedInstance.icon} alt="icon" style={{ width: 44, height: 44, borderRadius: 10 }} /> : <IconBox />}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '4px' }}>{selectedInstance.name}</h3>
+                    <button 
+                      className="play-btn" 
+                      style={{ height: '26px', fontSize: '0.75rem', padding: '0 8px', background: 'rgba(255,255,255,0.06)', boxShadow: 'none' }}
+                      onClick={() => { setRenameModalOpen(selectedInstance.id); setRenameInput(selectedInstance.name); }}
+                    >
+                      Переименовать
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#8b8b9c', marginBottom: '8px' }}>
+                    Версия: <span style={{ color: '#AB3DF5', fontWeight: 600 }}>{selectedInstance.mcVersion}</span> • Загрузчик: <span style={{ color: '#fff' }}>{selectedInstance.loader}</span>
+                  </div>
+                  <div className="mod-chips-container">
+                    <span className="mod-chip"><span className="mod-chip-dot" /> Установлено модов: {modCount}</span>
+                    <span className="mod-chip"><span className="mod-chip-dot" /> Fabric API</span>
+                    <span className="mod-chip"><span className="mod-chip-dot" /> Sodium (Оптимизация)</span>
+                    <span className="mod-chip"><span className="mod-chip-dot" /> Iris Shaders</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <button className="play-btn" onClick={handlePlay}>
+                    <IconPlay /> Играть
+                  </button>
+                  <button 
+                    className="play-btn" 
+                    style={{ background: 'rgba(255,255,255,0.08)', boxShadow: 'none', fontSize: '0.82rem' }}
+                    onClick={() => invoke("open_folder", { instanceId: selectedInstance.id })}
+                  >
+                    <IconFolder /> Папка сборки
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Каталог готовых сборок из Modrinth */}
+            <div style={{ marginTop: '20px' }}>
+              <h3>Каталог готовых сборок</h3>
+              <ModsPanel instances={instances} t={t} language={language} projectType="modpack" onCreateModpack={handleCreateModpack} versionsList={currentVersionsList} />
+            </div>
+
+            {renameModalOpen && (
+              <div className="account-modal-overlay" onClick={() => setRenameModalOpen(null)}>
+                <div className="create-modal" onClick={e => e.stopPropagation()}>
+                  <h3>{t.renameInstTitle}</h3>
+                  <input type="text" value={renameInput} onChange={e => setRenameInput(e.target.value)} placeholder={t.renameInstPlaceholder} />
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                    <button className="play-btn" style={{ flex: 1 }} onClick={() => {
+                      setInstances(prev => {
+                        const next = prev.map(i => i.id === renameModalOpen ? { ...i, name: renameInput } : i);
+                        localStorage.setItem("desktopInstances", JSON.stringify(next));
+                        return next;
+                      });
+                      setRenameModalOpen(null);
+                    }}>{t.saveBtn}</button>
+                    <button className="play-btn" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setRenameModalOpen(null)}>{t.cancel}</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ЭКРАН КАТАЛОГА / МОДОВ (Снимок 3) */}
+        {["mods", "resourcepacks", "shaders", "datapacks"].includes(activeTab) && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="store-sub-tabs">
+              <button 
+                className={`sub-tab-btn ${activeTab === 'mods' ? 'active' : ''}`}
+                onClick={() => setActiveTab("mods")}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AnimatedIcon images={MOD_ICONS} interval={2500} /> Моды
+                </div>
+              </button>
+              <button 
+                className={`sub-tab-btn ${activeTab === 'resourcepacks' ? 'active' : ''}`}
+                onClick={() => setActiveTab("resourcepacks")}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AnimatedIcon images={RESOURCEPACK_ICONS} interval={2800} /> Текстуры
+                </div>
+              </button>
+              <button 
+                className={`sub-tab-btn ${activeTab === 'shaders' ? 'active' : ''}`}
+                onClick={() => setActiveTab("shaders")}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AnimatedIcon images={SHADER_ICONS} interval={2900} /> Шейдеры
+                </div>
+              </button>
+              <button 
+                className={`sub-tab-btn ${activeTab === 'datapacks' ? 'active' : ''}`}
+                onClick={() => setActiveTab("datapacks")}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AnimatedIcon images={DATAPACK_ICONS} interval={2600} /> Датапаки
+                </div>
+              </button>
+            </div>
+
+            {activeTab === "mods" && <ModsPanel instances={instances} t={t} language={language} projectType="mod" versionsList={currentVersionsList} />}
+            {activeTab === "resourcepacks" && <ModsPanel instances={instances} t={t} language={language} projectType="resourcepack" versionsList={currentVersionsList} />}
+            {activeTab === "shaders" && <ModsPanel instances={instances} t={t} language={language} projectType="shader" versionsList={currentVersionsList} />}
+            {activeTab === "datapacks" && <ModsPanel instances={instances} t={t} language={language} projectType="datapack" versionsList={currentVersionsList} />}
+          </div>
+        )}
 
         {activeTab === "settings" && (
           <div className="settings-panel">
             <h2>{t.sidebarSettings}</h2>
+
+            <div className="settings-section">
+              <h3>Логи запуска и консоль</h3>
+              <ConsolePanel logs={logs} />
+            </div>
             
             <div className="settings-section">
               <h3>Пути и сохранение</h3>
@@ -1929,6 +2012,70 @@ function App() {
         </div>
       )}
     </main>
+
+      {/* Floating Bottom Dock Navigation */}
+      <div className="dock-wrapper">
+        <div className="floating-dock">
+          <button 
+            className={`dock-btn ${["mods", "resourcepacks", "shaders", "datapacks"].includes(activeTab) ? 'active' : ''}`}
+            onClick={() => setActiveTab("mods")}
+            title="Каталог & Моды"
+          >
+            <div className="dock-icon-circle">
+              <AnimatedIcon images={MOD_ICONS} interval={2500} />
+            </div>
+            <span className="dock-label">Каталог</span>
+          </button>
+
+          <div className="dock-play-container">
+            <div className="dock-version-badge">
+              {selectedInstance ? selectedInstance.mcVersion : "1.20.1"}
+            </div>
+            <button 
+              className="rhombus-play-btn"
+              onClick={isRunning ? handleStop : handlePlay}
+              title={isRunning ? t.stopBtn : t.playBtn}
+            >
+              <div className="play-icon-inner">
+                {isRunning ? <IconX /> : <IconPlay />}
+              </div>
+            </button>
+          </div>
+
+          <button 
+            className={`dock-btn ${activeTab === 'modpacks' ? 'active' : ''}`}
+            onClick={() => setActiveTab("modpacks")}
+            title="Сборки"
+          >
+            <div className="dock-icon-circle">
+              <AnimatedIcon images={MODPACK_ICONS} interval={3100} />
+            </div>
+            <span className="dock-label">Сборки</span>
+          </button>
+
+          <button 
+            className={`dock-btn ${activeTab === 'home' ? 'active' : ''}`}
+            onClick={() => setActiveTab("home")}
+            title="Главная"
+          >
+            <div className="dock-icon-circle">
+              <IconHome />
+            </div>
+            <span className="dock-label">Главная</span>
+          </button>
+
+          <button 
+            className={`dock-btn ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab("settings")}
+            title="Настройки"
+          >
+            <div className="dock-icon-circle">
+              <IconSettings />
+            </div>
+            <span className="dock-label">Настройки</span>
+          </button>
+        </div>
+      </div>
 
       {appNotification && (
         <div className={`toast-notification ${appNotification.type === 'success' ? 'toast-success' : 'toast-error'}`}>
