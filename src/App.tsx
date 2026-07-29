@@ -696,6 +696,7 @@ function App() {
   const [serverIp, setServerIp] = useState("");
   const [logs, setLogs] = useState<string[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [consoleOpen, setConsoleOpen] = useState(true);
   
   const [themeHex, setThemeHex] = useState(() => {
     return localStorage.getItem("omegaTheme") || "#a855f7";
@@ -1305,54 +1306,80 @@ function App() {
               </div>
             </div>
 
-            {/* КОЛОНКА 2 (ЦЕНТРАЛЬНАЯ): Визуальные логи */}
-            <div className="sketch-card" style={{ overflow: 'hidden', padding: 0, position: 'relative' }}>
-              <div style={{
-                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                background: 'linear-gradient(180deg, rgba(150,13,242,0.06) 0%, rgba(5,4,8,0.98) 100%)',
-                pointerEvents: 'none', zIndex: 0
-              }} />
-              <div style={{ position: 'relative', zIndex: 1, padding: '20px', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                  <span style={{ fontWeight: 700, fontSize: '0.88rem', color: '#AB3DF5', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: isRunning ? '#10b981' : '#6b7280', display: 'inline-block', boxShadow: isRunning ? '0 0 8px #10b981' : 'none' }} />
-                    {isRunning ? 'Игра запущена' : 'Консоль'}
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: '#4a4a5a', fontFamily: 'monospace' }}>
-                    {selectedInstance ? `${selectedInstance.mcVersion} • ${selectedInstance.loader}` : 'нет сборки'}
-                  </span>
-                </div>
-
+            {/* КОЛОНКА 2 (ЦЕНТРАЛЬНАЯ): Консоль логов (сворачиваемая) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, alignSelf: 'end', width: '100%' }}>
+              <div
+                className="sketch-card"
+                style={{
+                  overflow: 'hidden', padding: 0, position: 'relative',
+                  height: consoleOpen ? '260px' : 'auto',
+                  transition: 'height 0.3s cubic-bezier(0.4,0,0.2,1)',
+                  flexShrink: 0
+                }}
+              >
                 <div style={{
-                  flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px',
-                  fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                  scrollbarWidth: 'thin', scrollbarColor: 'rgba(171,61,245,0.2) transparent'
-                }}>
-                  {logs.length === 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12 }}>
-                      <div style={{
-                        width: 56, height: 56, borderRadius: '50%', border: '2px solid rgba(171,61,245,0.3)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem',
-                        background: 'rgba(150,13,242,0.08)'
-                      }}>📟</div>
-                      <div style={{ color: '#4a4a5a', fontSize: '0.8rem', textAlign: 'center' }}>Запустите сборку<br/>чтобы увидеть логи</div>
+                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                  background: 'linear-gradient(180deg, rgba(150,13,242,0.07) 0%, rgba(5,4,8,0.97) 100%)',
+                  pointerEvents: 'none', zIndex: 0
+                }} />
+                <div style={{ position: 'relative', zIndex: 1, padding: '12px 14px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  {/* Header + toggle */}
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
+                    onClick={() => setConsoleOpen(p => !p)}
+                  >
+                    <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#AB3DF5', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{
+                        width: 7, height: 7, borderRadius: '50%',
+                        background: isRunning ? '#10b981' : '#6b7280',
+                        display: 'inline-block',
+                        boxShadow: isRunning ? '0 0 6px #10b981' : 'none'
+                      }} />
+                      {isRunning ? 'Игра запущена' : 'Консоль'}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: '0.68rem', color: '#4a4a5a', fontFamily: 'monospace' }}>
+                        {selectedInstance ? `${selectedInstance.mcVersion} • ${selectedInstance.loader}` : ''}
+                      </span>
+                      <span style={{
+                        fontSize: '0.7rem', color: '#6b7280',
+                        transform: consoleOpen ? 'rotate(0deg)' : 'rotate(180deg)',
+                        transition: 'transform 0.3s', display: 'inline-block', lineHeight: 1
+                      }}>▲</span>
                     </div>
-                  ) : (
-                    logs.slice(-60).map((line, i) => {
-                      const isError = /error|exception|failed/i.test(line);
-                      const isWarn = /warn/i.test(line);
-                      const isInfo = /\[info\]/i.test(line);
-                      return (
-                        <div key={i} style={{
-                          fontSize: '0.72rem', lineHeight: 1.5, padding: '2px 6px', borderRadius: 4,
-                          color: isError ? '#f87171' : isWarn ? '#fbbf24' : isInfo ? '#60a5fa' : '#7c7c8a',
-                          background: isError ? 'rgba(248,113,113,0.06)' : 'transparent',
-                          wordBreak: 'break-all'
-                        }}>
-                          {line}
+                  </div>
+
+                  {/* Log body */}
+                  {consoleOpen && (
+                    <div style={{
+                      flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px',
+                      marginTop: 10,
+                      fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                      scrollbarWidth: 'thin', scrollbarColor: 'rgba(171,61,245,0.2) transparent'
+                    }}>
+                      {logs.length === 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 8 }}>
+                          <span style={{ fontSize: '1.3rem' }}>📟</span>
+                          <div style={{ color: '#4a4a5a', fontSize: '0.72rem', textAlign: 'center' }}>Запустите сборку, чтобы увидеть логи</div>
                         </div>
-                      );
-                    })
+                      ) : (
+                        logs.slice(-40).map((line, i) => {
+                          const isError = /error|exception|failed/i.test(line);
+                          const isWarn = /warn/i.test(line);
+                          const isInfo = /\[info\]/i.test(line);
+                          return (
+                            <div key={i} style={{
+                              fontSize: '0.65rem', lineHeight: 1.45, padding: '1px 4px', borderRadius: 3,
+                              color: isError ? '#f87171' : isWarn ? '#fbbf24' : isInfo ? '#60a5fa' : '#6b6b7a',
+                              background: isError ? 'rgba(248,113,113,0.05)' : 'transparent',
+                              wordBreak: 'break-all'
+                            }}>
+                              {line}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
