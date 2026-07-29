@@ -1317,8 +1317,8 @@ input[type="color"]::-webkit-color-swatch {
 /* Home Dashboard 3-Column Grid Layout */
 .home-sketch-dashboard {
   display: grid;
-  grid-template-columns: 290px 1fr 270px;
-  gap: 20px;
+  grid-template-columns: 410px 1fr 380px;
+  gap: 24px;
   height: calc(100vh - 140px);
   padding-bottom: 70px;
 }
