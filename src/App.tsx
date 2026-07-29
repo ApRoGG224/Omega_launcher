@@ -1237,19 +1237,19 @@ function App() {
 
         {activeTab === "home" && (
           <div className="home-sketch-dashboard">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {/* РАБОЧИЙ СТОЛ & ПОСЛЕДНИЕ СБОРКИ (Снимок 1) */}
+            {/* КОЛОНКА 1 (ЛЕВАЯ): Сборки & Сервера */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div className="sketch-card">
                 <div className="sketch-card-header">
-                  <span className="sketch-card-title"><IconBox /> Последние запущенные сборки</span>
-                  <button className="play-btn" style={{ height: '32px', fontSize: '0.8rem', padding: '0 12px' }} onClick={() => setIsCreating(true)}>
+                  <span className="sketch-card-title"><IconBox /> Последние сборки</span>
+                  <button className="play-btn" style={{ height: '28px', fontSize: '0.75rem', padding: '0 10px' }} onClick={() => setIsCreating(true)}>
                     <IconPlus /> Создать
                   </button>
                 </div>
                 <div className="recent-instances-list">
                   {instances.length === 0 ? (
-                    <div style={{ color: '#8b8b9c', textAlign: 'center', padding: '20px' }}>
-                      Нет созданных сборок. Нажмите "+ Создать"!
+                    <div style={{ color: '#8b8b9c', textAlign: 'center', padding: '15px', fontSize: '0.85rem' }}>
+                      Нет сборок. Нажмите "+ Создать"!
                     </div>
                   ) : (
                     instances.slice(0, 3).map(inst => (
@@ -1260,23 +1260,23 @@ function App() {
                       >
                         <div className="recent-inst-info">
                           <div className="recent-inst-icon">
-                            {inst.icon ? <img src={inst.icon} alt="icon" style={{ width: 28, height: 28, borderRadius: 6 }} /> : <IconBox />}
+                            {inst.icon ? <img src={inst.icon} alt="icon" style={{ width: 24, height: 24, borderRadius: 6 }} /> : <IconBox />}
                           </div>
                           <div>
-                            <div className="recent-inst-name">{inst.name}</div>
-                            <div className="recent-inst-ver">{inst.mcVersion} • {inst.loader}</div>
+                            <div className="recent-inst-name" style={{ fontSize: '0.88rem' }}>{inst.name}</div>
+                            <div className="recent-inst-ver" style={{ fontSize: '0.72rem' }}>{inst.mcVersion} • {inst.loader}</div>
                           </div>
                         </div>
                         <button 
                           className="play-btn" 
-                          style={{ height: '32px', fontSize: '0.78rem', padding: '0 12px' }}
+                          style={{ height: '28px', fontSize: '0.75rem', padding: '0 10px' }}
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedInstanceId(inst.id);
                             handlePlay();
                           }}
                         >
-                          <IconPlay /> Играть
+                          <IconPlay />
                         </button>
                       </div>
                     ))
@@ -1284,50 +1284,113 @@ function App() {
                 </div>
               </div>
 
-              {/* НЕАВНИЕ СЕРВЕРА (Снимок 1) */}
               <div className="sketch-card">
                 <div className="sketch-card-header">
-                  <span className="sketch-card-title">🌐 Последние играные сервера</span>
+                  <span className="sketch-card-title">🌐 Сервера</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {RECENT_SERVERS.map(server => (
-                    <div key={server.id} className="server-item">
-                      <div className="server-info-left">
-                        <div className="server-icon-badge">{server.icon}</div>
+                    <div key={server.id} className="server-item" style={{ padding: '8px 12px' }}>
+                      <div className="server-info-left" style={{ gap: '10px' }}>
+                        <div className="server-icon-badge" style={{ width: 34, height: 34, fontSize: '1rem' }}>{server.icon}</div>
                         <div>
-                          <div className="server-name">{server.name}</div>
-                          <div className="server-ip">{server.ip} • {server.version}</div>
+                          <div className="server-name" style={{ fontSize: '0.85rem' }}>{server.name}</div>
+                          <div className="server-ip" style={{ fontSize: '0.72rem' }}>{server.ip}</div>
                         </div>
                       </div>
-                      <span className="server-players-tag">{server.players}</span>
+                      <span className="server-players-tag" style={{ fontSize: '0.7rem', padding: '2px 8px' }}>{server.players}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* СПИСОК ДРУЗЕЙ И ИХ АКТИВНОСТЬ (Снимок 1) */}
+            {/* КОЛОНКА 2 (ЦЕНТРАЛЬНАЯ): КРАСИВЫЙ БАННЕР И ШОУКЕЙС */}
+            <div 
+              className="sketch-card" 
+              style={{ 
+                background: 'linear-gradient(145deg, rgba(20, 14, 35, 0.9) 0%, rgba(10, 8, 16, 0.95) 100%)',
+                position: 'relative', overflow: 'hidden', justifyContent: 'space-between', padding: '24px'
+              }}
+            >
+              {/* Анимированный фоновый неоновый свет */}
+              <div style={{
+                position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)',
+                width: '320px', height: '320px', borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(171, 61, 245, 0.25) 0%, transparent 70%)',
+                pointerEvents: 'none', filter: 'blur(40px)'
+              }} />
+
+              <div style={{ position: 'relative', zIndex: 2 }}>
+                <div style={{
+                  display: 'inline-block', padding: '4px 12px', borderRadius: '20px',
+                  background: 'rgba(150, 13, 242, 0.2)', border: '1px solid rgba(171, 61, 245, 0.4)',
+                  color: '#AB3DF5', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px'
+                }}>
+                  Omega Launcher MVP
+                </div>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginBottom: '8px', lineHeight: 1.2 }}>
+                  Погрузись в мир <span style={{ background: 'linear-gradient(90deg, #960DF2, #AB3DF5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Minecraft</span>
+                </h2>
+                <p style={{ color: '#8b8b9c', fontSize: '0.88rem', maxWidth: '360px', lineHeight: 1.5 }}>
+                  Максимальная производительность, мгновенный запуск и лёгкое управление модами с Modrinth.
+                </p>
+              </div>
+
+              {/* Карточка текущей выбранной сборки по центру */}
+              {selectedInstance && (
+                <div style={{
+                  position: 'relative', zIndex: 2, background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(171, 61, 245, 0.3)', borderRadius: '16px', padding: '16px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', backdropFilter: 'blur(10px)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div className="recent-inst-icon" style={{ width: 46, height: 46, borderRadius: 12 }}>
+                      {selectedInstance.icon ? <img src={selectedInstance.icon} alt="icon" style={{ width: 32, height: 32, borderRadius: 6 }} /> : <IconBox />}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.98rem', color: '#fff' }}>{selectedInstance.name}</div>
+                      <div style={{ fontSize: '0.78rem', color: '#8b8b9c' }}>{selectedInstance.mcVersion} ({selectedInstance.loader})</div>
+                    </div>
+                  </div>
+                  <button className="play-btn" onClick={handlePlay} style={{ padding: '8px 20px', fontSize: '0.85rem' }}>
+                    <IconPlay /> Старт
+                  </button>
+                </div>
+              )}
+
+              <div style={{ position: 'relative', zIndex: 2, display: 'flex', gap: '12px' }}>
+                <button className="sub-tab-btn active" onClick={() => setActiveTab("mods")} style={{ flex: 1, padding: '10px' }}>
+                  🔍 Моды & Магазин
+                </button>
+                <button className="sub-tab-btn" onClick={() => setActiveTab("modpacks")} style={{ flex: 1, padding: '10px' }}>
+                  📦 Сборки
+                </button>
+              </div>
+            </div>
+
+            {/* КОЛОНКА 3 (ПРАВАЯ): Друзья и активность */}
             <div className="sketch-card" style={{ height: '100%' }}>
               <div className="sketch-card-header">
-                <span className="sketch-card-title"><IconUsers /> Друзья и их активность</span>
-                <span className="user-status" style={{ fontSize: '0.8rem', color: '#10b981' }}>
+                <span className="sketch-card-title"><IconUsers /> Друзья</span>
+                <span className="user-status" style={{ fontSize: '0.78rem', color: '#10b981' }}>
                   <span className="status-dot" /> 2 онлайн
                 </span>
               </div>
               <div className="friends-list">
                 {FRIENDS_LIST.map(friend => (
-                  <div key={friend.id} className="friend-item">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div className="friend-avatar" style={{ background: friend.online ? 'linear-gradient(135deg, #960DF2, #AB3DF5)' : '#2a2a35' }}>
+                  <div key={friend.id} className="friend-item" style={{ padding: '10px 12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div className="friend-avatar" style={{ width: 34, height: 34, fontSize: '0.8rem', background: friend.online ? 'linear-gradient(135deg, #960DF2, #AB3DF5)' : '#2a2a35' }}>
                         {friend.name.substring(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <div className="friend-name">{friend.name}</div>
-                        <div className="friend-activity">{friend.activity}</div>
+                        <div className="friend-name" style={{ fontSize: '0.85rem' }}>{friend.name}</div>
+                        <div className="friend-activity" style={{ fontSize: '0.72rem' }}>{friend.activity}</div>
                       </div>
                     </div>
-                    <div className="friend-status" style={{ color: friend.online ? '#10b981' : '#8b8b9c' }}>
-                      <span className="status-dot" style={{ background: friend.online ? '#10b981' : '#6b7280' }} />
+                    <div className="friend-status" style={{ fontSize: '0.72rem', color: friend.online ? '#10b981' : '#8b8b9c' }}>
+                      <span className="status-dot" style={{ width: 6, height: 6, background: friend.online ? '#10b981' : '#6b7280' }} />
                       {friend.status}
                     </div>
                   </div>
@@ -2016,6 +2079,7 @@ function App() {
       {/* Floating Bottom Dock Navigation */}
       <div className="dock-wrapper">
         <div className="floating-dock">
+          {/* Button 1: Каталог */}
           <button 
             className={`dock-btn ${["mods", "resourcepacks", "shaders", "datapacks"].includes(activeTab) ? 'active' : ''}`}
             onClick={() => setActiveTab("mods")}
@@ -2027,6 +2091,19 @@ function App() {
             <span className="dock-label">Каталог</span>
           </button>
 
+          {/* Button 2: Сборки */}
+          <button 
+            className={`dock-btn ${activeTab === 'modpacks' ? 'active' : ''}`}
+            onClick={() => setActiveTab("modpacks")}
+            title="Сборки"
+          >
+            <div className="dock-icon-circle">
+              <AnimatedIcon images={MODPACK_ICONS} interval={3100} />
+            </div>
+            <span className="dock-label">Сборки</span>
+          </button>
+
+          {/* CENTER: Rhombus Play Button */}
           <div className="dock-play-container">
             <div className="dock-version-badge">
               {selectedInstance ? selectedInstance.mcVersion : "1.20.1"}
@@ -2042,17 +2119,7 @@ function App() {
             </button>
           </div>
 
-          <button 
-            className={`dock-btn ${activeTab === 'modpacks' ? 'active' : ''}`}
-            onClick={() => setActiveTab("modpacks")}
-            title="Сборки"
-          >
-            <div className="dock-icon-circle">
-              <AnimatedIcon images={MODPACK_ICONS} interval={3100} />
-            </div>
-            <span className="dock-label">Сборки</span>
-          </button>
-
+          {/* Button 3: Главная */}
           <button 
             className={`dock-btn ${activeTab === 'home' ? 'active' : ''}`}
             onClick={() => setActiveTab("home")}
@@ -2064,6 +2131,7 @@ function App() {
             <span className="dock-label">Главная</span>
           </button>
 
+          {/* Button 4: Настройки */}
           <button 
             className={`dock-btn ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab("settings")}

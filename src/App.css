@@ -1201,13 +1201,13 @@ input[type="color"]::-webkit-color-swatch {
 .floating-dock {
   display: flex;
   align-items: center;
-  gap: 32px;
-  background: rgba(10, 8, 16, 0.92);
+  gap: 20px;
+  background: rgba(10, 8, 16, 0.94);
   backdrop-filter: blur(25px);
-  padding: 10px 32px;
-  border-radius: 36px;
+  padding: 6px 24px;
+  border-radius: 30px;
   border: 1px solid rgba(171, 61, 245, 0.35);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(150, 13, 242, 0.25);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.9), 0 0 20px rgba(150, 13, 242, 0.2);
   animation: slideUpFade 0.3s ease;
 }
 
@@ -1215,7 +1215,7 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: transparent;
   border: none;
   color: #8b8b9c;
@@ -1236,60 +1236,61 @@ input[type="color"]::-webkit-color-swatch {
 .dock-btn.active .dock-icon-circle {
   background: rgba(150, 13, 242, 0.25);
   border-color: #AB3DF5;
-  box-shadow: 0 0 18px rgba(171, 61, 245, 0.5);
+  box-shadow: 0 0 14px rgba(171, 61, 245, 0.5);
   color: #ffffff;
 }
 
 .dock-icon-circle {
-  width: 48px;
-  height: 48px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   transition: all 0.25s ease;
 }
 
 .dock-label {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.3px;
 }
 
-/* Central Rhombus (Diamond) Play Button */
+/* Central Rhombus (Diamond) Play Button - Compact */
 .dock-play-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   position: relative;
-  top: -12px;
+  top: -8px;
+  margin: 0 4px;
 }
 
 .dock-version-badge {
   background: linear-gradient(90deg, #960DF2, #AB3DF5);
   color: #fff;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 12px;
-  box-shadow: 0 0 12px rgba(150, 13, 242, 0.6);
+  padding: 2px 8px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(150, 13, 242, 0.6);
   letter-spacing: 0.5px;
 }
 
 .rhombus-play-btn {
-  width: 58px;
-  height: 58px;
+  width: 48px;
+  height: 48px;
   background: linear-gradient(135deg, #960DF2 0%, #AB3DF5 100%);
   transform: rotate(45deg);
-  border-radius: 14px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 25px rgba(150, 13, 242, 0.7), inset 0 0 10px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 20px rgba(150, 13, 242, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.3);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid rgba(255, 255, 255, 0.4);
@@ -1297,12 +1298,12 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .rhombus-play-btn:hover {
-  transform: rotate(45deg) scale(1.12);
-  box-shadow: 0 0 35px rgba(171, 61, 245, 0.95);
+  transform: rotate(45deg) scale(1.1);
+  box-shadow: 0 0 30px rgba(171, 61, 245, 0.95);
 }
 
 .rhombus-play-btn:active {
-  transform: rotate(45deg) scale(0.98);
+  transform: rotate(45deg) scale(0.96);
 }
 
 .rhombus-play-btn .play-icon-inner {
@@ -1313,12 +1314,12 @@ input[type="color"]::-webkit-color-swatch {
   justify-content: center;
 }
 
-/* Home Dashboard Grid Layout (Screenshot 1) */
+/* Home Dashboard 3-Column Grid Layout */
 .home-sketch-dashboard {
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  gap: 24px;
-  height: calc(100vh - 160px);
+  grid-template-columns: 290px 1fr 270px;
+  gap: 20px;
+  height: calc(100vh - 140px);
   padding-bottom: 70px;
 }
 
