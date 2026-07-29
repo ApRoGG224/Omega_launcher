@@ -847,12 +847,15 @@ input[type="color"]::-webkit-color-swatch {
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   padding: 30px;
+  padding-bottom: 80px;
   margin-top: 20px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
   width: 100%;
+  height: calc(100vh - 130px);
+  box-sizing: border-box;
 }
 .settings-header h2 { font-size: 1.8rem; font-weight: 500; margin-bottom: 5px; }
 .settings-header p { color: #8b8b9c; font-size: 0.9rem; }

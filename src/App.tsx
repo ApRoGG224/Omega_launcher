@@ -1439,7 +1439,7 @@ function App() {
 
         {/* ЭКРАН СБОРОК (Снимок 2) */}
         {activeTab === "modpacks" && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, minHeight: 0, height: 'calc(100vh - 130px)', paddingBottom: '75px', overflowY: 'auto', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2>Ваши сборки</h2>
               <button className="play-btn" style={{ height: '36px', fontSize: '0.85rem' }} onClick={() => setIsCreating(true)}>
@@ -1546,7 +1546,7 @@ function App() {
 
         {/* ЭКРАН КАТАЛОГА / МОДОВ (Снимок 3) */}
         {["mods", "resourcepacks", "shaders", "datapacks"].includes(activeTab) && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minHeight: 0, height: 'calc(100vh - 130px)', paddingBottom: '75px', boxSizing: 'border-box' }}>
             <div className="store-sub-tabs">
               <button 
                 className={`sub-tab-btn ${activeTab === 'mods' ? 'active' : ''}`}
