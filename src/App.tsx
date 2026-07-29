@@ -131,35 +131,8 @@ const AnimatedIcon = React.memo(({ images, interval = 3000 }: { images: string[]
   );
 });
 
-const ConsolePanel = React.memo(({ logs }: { logs: string[] }) => {
-  const consoleRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    if (consoleRef.current) {
-      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
-    }
-  }, [logs]);
 
-  return (
-    <div className="console-panel">
-      <div className="console-header">
-        <div className="mac-dots">
-          <div className="mac-dot red" />
-          <div className="mac-dot yellow" />
-          <div className="mac-dot green" />
-        </div>
-        <span className="console-title">GAME OUTPUT</span>
-      </div>
-      <div className="console-content copyable-console" ref={consoleRef}>
-        {logs.length === 0 ? (
-          <span style={{ opacity: 0.5 }}>Waiting for game to launch...</span>
-        ) : (
-          logs.map((log, i) => <div key={i}>{log}</div>)
-        )}
-      </div>
-    </div>
-  );
-});
+
 
 const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onCreateModpack, versionsList = VERSIONS_LIST }: { instances: ModpackInstance[], t: any, language: string, projectType?: "mod" | "resourcepack" | "modpack" | "shader" | "datapack", onCreateModpack?: (name: string, mcVer: string, loader: string, iconUrl?: string, projectId?: string) => void, versionsList?: string[] }) => {
   const [query, setQuery] = useState("");
@@ -1240,20 +1213,20 @@ function App() {
           <div className="home-sketch-dashboard">
             {/* КОЛОНКА 1 (ЛЕВАЯ): Сборки & Сервера (До самого низа) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
-              <div className="sketch-card" style={{ flex: 1 }}>
+              <div className="sketch-card" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                 <div className="sketch-card-header">
                   <span className="sketch-card-title"><IconBox /> Последние сборки</span>
                   <button className="play-btn" style={{ height: '28px', fontSize: '0.75rem', padding: '0 10px' }} onClick={() => setIsCreating(true)}>
                     <IconPlus /> Создать
                   </button>
                 </div>
-                <div className="recent-instances-list">
+                <div className="recent-instances-list" style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
                   {instances.length === 0 ? (
                     <div style={{ color: '#8b8b9c', textAlign: 'center', padding: '15px', fontSize: '0.85rem' }}>
                       Нет сборок. Нажмите "+ Создать"!
                     </div>
                   ) : (
-                    instances.slice(0, 3).map(inst => (
+                    instances.slice(0, 5).map(inst => (
                       <div 
                         key={inst.id} 
                         className={`recent-instance-item ${selectedInstanceId === inst.id ? 'selected' : ''}`}
@@ -1270,7 +1243,7 @@ function App() {
                         </div>
                         <button 
                           className="play-btn" 
-                          style={{ height: '28px', fontSize: '0.75rem', padding: '0 10px' }}
+                          style={{ height: '28px', fontSize: '0.75rem', padding: '0 10px', flexShrink: 0 }}
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedInstanceId(inst.id);
@@ -1285,13 +1258,13 @@ function App() {
                 </div>
               </div>
 
-              <div className="sketch-card" style={{ flex: 1 }}>
+              <div className="sketch-card" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                 <div className="sketch-card-header">
                   <span className="sketch-card-title">🌐 Сервера</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flex: 1, minHeight: 0 }}>
                   {RECENT_SERVERS.map(server => (
-                    <div key={server.id} className="server-item" style={{ padding: '8px 12px' }}>
+                    <div key={server.id} className="server-item" style={{ padding: '8px 12px', flexShrink: 0 }}>
                       <div className="server-info-left" style={{ gap: '10px' }}>
                         <div className="server-icon-badge" style={{ width: 34, height: 34, fontSize: '1rem' }}>{server.icon}</div>
                         <div>
@@ -1385,15 +1358,15 @@ function App() {
               </div>
             </div>
 
-            {/* КОЛОНКА 3 (ПРАВАЯ): Друзья и активность (До самого низа) */}
-            <div className="sketch-card" style={{ height: '100%' }}>
+            {/* КОЛОНКА 3 (ПРАВАЯ): Друзья и активность */}
+            <div className="sketch-card" style={{ height: '100%', overflow: 'hidden' }}>
               <div className="sketch-card-header">
                 <span className="sketch-card-title"><IconUsers /> Друзья</span>
                 <span className="user-status" style={{ fontSize: '0.78rem', color: '#10b981' }}>
                   <span className="status-dot" /> 2 онлайн
                 </span>
               </div>
-              <div className="friends-list">
+              <div className="friends-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                 {FRIENDS_LIST.map(friend => (
                   <div key={friend.id} className="friend-item" style={{ padding: '10px 12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1412,6 +1385,19 @@ function App() {
                   </div>
                 ))}
               </div>
+              <button
+                style={{
+                  marginTop: 'auto', flexShrink: 0, width: '100%', padding: '10px',
+                  background: 'rgba(150,13,242,0.12)', border: '1px dashed rgba(171,61,245,0.35)',
+                  borderRadius: '10px', color: '#AB3DF5', fontSize: '0.8rem', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(150,13,242,0.22)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(150,13,242,0.12)')}
+              >
+                <IconPlus /> Добавить друга
+              </button>
             </div>
 
             {/* Модальное окно создания сборки */}
@@ -1607,10 +1593,7 @@ function App() {
           <div className="settings-panel">
             <h2>{t.sidebarSettings}</h2>
 
-            <div className="settings-section">
-              <h3>Логи запуска и консоль</h3>
-              <ConsolePanel logs={logs} />
-            </div>
+
             
             <div className="settings-section">
               <h3>Пути и сохранение</h3>

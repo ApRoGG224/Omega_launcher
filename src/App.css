@@ -889,10 +889,12 @@ input[type="color"]::-webkit-color-swatch {
 /* Inputs */
 .input-group { display: flex; flex-direction: column; gap: 8px; }
 .input-group label { font-size: 0.7rem; color: #8b8b9c; letter-spacing: 1px; }
-.input-wrapper { display: flex; background: rgba(15, 15, 20, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; overflow: hidden; }
-.input-wrapper input { flex: 1; background: transparent; border: none; color: #fff; padding: 14px 15px; font-family: 'Inter', sans-serif; outline: none; }
-.folder-btn { background: transparent; border: none; border-left: 1px solid rgba(255, 255, 255, 0.05); color: #8b8b9c; padding: 0 15px; cursor: pointer; transition: all 0.2s; }
-.folder-btn:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+.input-wrapper { display: flex; background: rgba(10, 8, 20, 0.7); border: 1px solid rgba(150, 13, 242, 0.25); border-radius: 10px; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; }
+.input-wrapper:focus-within { border-color: rgba(171, 61, 245, 0.6); box-shadow: 0 0 0 2px rgba(150, 13, 242, 0.12); }
+.input-wrapper input { flex: 1; background: transparent; border: none; color: #e0d6f5; padding: 12px 14px; font-family: 'Inter', sans-serif; outline: none; font-size: 0.9rem; }
+.input-wrapper input::placeholder { color: rgba(171, 61, 245, 0.35); }
+.folder-btn { background: rgba(150, 13, 242, 0.15); border: none; border-left: 1px solid rgba(150, 13, 242, 0.25); color: #AB3DF5; padding: 0 14px; cursor: pointer; transition: all 0.2s; }
+.folder-btn:hover { background: rgba(150, 13, 242, 0.3); color: #fff; }
 
 /* Info Table */
 .info-row { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 8px 0; }
