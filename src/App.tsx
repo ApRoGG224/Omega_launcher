@@ -1212,7 +1212,7 @@ function App() {
         {activeTab === "home" && (
           <div className="home-sketch-dashboard">
             {/* КОЛОНКА 1 (ЛЕВАЯ): Сборки & Сервера (До самого низа) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', minHeight: 0 }}>
               <div className="sketch-card" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                 <div className="sketch-card-header">
                   <span className="sketch-card-title"><IconBox /> Последние сборки</span>
@@ -1280,7 +1280,7 @@ function App() {
             </div>
 
             {/* КОЛОНКА 2 (ЦЕНТРАЛЬНАЯ): Консоль логов (сворачиваемая) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, alignSelf: 'end', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, alignSelf: 'end', justifyContent: 'flex-end', height: '100%', minHeight: 0, width: '100%' }}>
               <div
                 className="sketch-card"
                 style={{
@@ -1359,7 +1359,7 @@ function App() {
             </div>
 
             {/* КОЛОНКА 3 (ПРАВАЯ): Друзья и активность */}
-            <div className="sketch-card" style={{ height: '100%', overflow: 'hidden' }}>
+            <div className="sketch-card" style={{ height: '100%', minHeight: 0, overflow: 'hidden' }}>
               <div className="sketch-card-header">
                 <span className="sketch-card-title"><IconUsers /> Друзья</span>
                 <span className="user-status" style={{ fontSize: '0.78rem', color: '#10b981' }}>

@@ -1320,9 +1320,12 @@ input[type="color"]::-webkit-color-swatch {
 .home-sketch-dashboard {
   display: grid;
   grid-template-columns: 380px 1fr 380px;
-  gap: 24px;
-  height: calc(100vh - 140px);
-  padding-bottom: 70px;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 130px);
+  padding-bottom: 60px;
+  box-sizing: border-box;
 }
 
 .sketch-card {
