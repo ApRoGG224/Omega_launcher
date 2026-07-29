@@ -1305,8 +1305,58 @@ function App() {
               </div>
             </div>
 
-            {/* КОЛОНКА 2 (ЦЕНТРАЛЬНАЯ): ПУСТАЯ ОБЛАСТЬ ПО ВАШЕМУ ТРЕБОВАНИЮ */}
-            <div style={{ pointerEvents: 'none' }} />
+            {/* КОЛОНКА 2 (ЦЕНТРАЛЬНАЯ): Визуальные логи */}
+            <div className="sketch-card" style={{ overflow: 'hidden', padding: 0, position: 'relative' }}>
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'linear-gradient(180deg, rgba(150,13,242,0.06) 0%, rgba(5,4,8,0.98) 100%)',
+                pointerEvents: 'none', zIndex: 0
+              }} />
+              <div style={{ position: 'relative', zIndex: 1, padding: '20px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '0.88rem', color: '#AB3DF5', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: isRunning ? '#10b981' : '#6b7280', display: 'inline-block', boxShadow: isRunning ? '0 0 8px #10b981' : 'none' }} />
+                    {isRunning ? 'Игра запущена' : 'Консоль'}
+                  </span>
+                  <span style={{ fontSize: '0.72rem', color: '#4a4a5a', fontFamily: 'monospace' }}>
+                    {selectedInstance ? `${selectedInstance.mcVersion} • ${selectedInstance.loader}` : 'нет сборки'}
+                  </span>
+                </div>
+
+                <div style={{
+                  flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px',
+                  fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                  scrollbarWidth: 'thin', scrollbarColor: 'rgba(171,61,245,0.2) transparent'
+                }}>
+                  {logs.length === 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12 }}>
+                      <div style={{
+                        width: 56, height: 56, borderRadius: '50%', border: '2px solid rgba(171,61,245,0.3)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem',
+                        background: 'rgba(150,13,242,0.08)'
+                      }}>📟</div>
+                      <div style={{ color: '#4a4a5a', fontSize: '0.8rem', textAlign: 'center' }}>Запустите сборку<br/>чтобы увидеть логи</div>
+                    </div>
+                  ) : (
+                    logs.slice(-60).map((line, i) => {
+                      const isError = /error|exception|failed/i.test(line);
+                      const isWarn = /warn/i.test(line);
+                      const isInfo = /\[info\]/i.test(line);
+                      return (
+                        <div key={i} style={{
+                          fontSize: '0.72rem', lineHeight: 1.5, padding: '2px 6px', borderRadius: 4,
+                          color: isError ? '#f87171' : isWarn ? '#fbbf24' : isInfo ? '#60a5fa' : '#7c7c8a',
+                          background: isError ? 'rgba(248,113,113,0.06)' : 'transparent',
+                          wordBreak: 'break-all'
+                        }}>
+                          {line}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
 
             {/* КОЛОНКА 3 (ПРАВАЯ): Друзья и активность (До самого низа) */}
             <div className="sketch-card" style={{ height: '100%' }}>
@@ -2042,35 +2092,27 @@ function App() {
             <span className="dock-label">Сборки</span>
           </button>
 
-          {/* CENTER: Rhombus Play Button */}
+          {/* CENTER: Rhombus — Play/Stop on home, Home button on other tabs */}
           <div className="dock-play-container">
-            <div className="dock-version-badge">
-              {selectedInstance ? selectedInstance.mcVersion : "1.20.1"}
-            </div>
+            {activeTab === 'home' && (
+              <div className="dock-version-badge">
+                {selectedInstance ? selectedInstance.mcVersion : "1.20.1"}
+              </div>
+            )}
             <button 
               className="rhombus-play-btn"
-              onClick={isRunning ? handleStop : handlePlay}
-              title={isRunning ? t.stopBtn : t.playBtn}
+              onClick={activeTab === 'home' ? (isRunning ? handleStop : handlePlay) : () => setActiveTab('home')}
+              title={activeTab === 'home' ? (isRunning ? t.stopBtn : t.playBtn) : 'Главная'}
             >
               <div className="play-icon-inner">
-                {isRunning ? <IconX /> : <IconPlay />}
+                {activeTab === 'home'
+                  ? (isRunning ? <IconX /> : <IconPlay />)
+                  : <IconHome />}
               </div>
             </button>
           </div>
 
-          {/* Button 3: Главная */}
-          <button 
-            className={`dock-btn ${activeTab === 'home' ? 'active' : ''}`}
-            onClick={() => setActiveTab("home")}
-            title="Главная"
-          >
-            <div className="dock-icon-circle">
-              <IconHome />
-            </div>
-            <span className="dock-label">Главная</span>
-          </button>
-
-          {/* Button 4: Настройки */}
+          {/* Button 3: Настройки */}
           <button 
             className={`dock-btn ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab("settings")}
