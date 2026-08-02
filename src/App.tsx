@@ -1,21 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { listen, emit } from "@tauri-apps/api/event";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { listen } from "@tauri-apps/api/event";
 import { HexColorPicker } from "react-colorful";
 import { open } from "@tauri-apps/plugin-dialog";
 import { translations, Language } from './i18n';
+import { IconBox, IconUsers, IconSettings, IconPlay } from "./ui/icons";
+import { FloatingDock } from "./components/navigation/FloatingDock";
+import { CatalogTabs } from "./components/catalog/CatalogTabs";
 import "./App.css";
 
-// ---------------------------------
-// ИКОНКИ (Мемоизированные)
-// ---------------------------------
-
-const IconHome = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>);
-const IconBox = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>);
-const IconUsers = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>);
-const IconSettings = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>);
-const IconPlay = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>);
 const IconCpu = React.memo(() => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>);
 const IconFolder = React.memo(() => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>);
 
@@ -44,6 +37,7 @@ interface ModpackInstance {
   x: number;
   y: number;
   icon?: string;
+  group?: string;
 }
 
 const VERSIONS_LIST = ["1.21.4", "1.21.1", "1.20.4", "1.19.4", "1.18.2", "1.16.5", "1.12.2", "1.8", "1.7.10"];
@@ -714,6 +708,12 @@ function App() {
   const [desktopContextMenu, setDesktopContextMenu] = useState<{ visible: boolean; x: number; y: number } | null>(null);
   const [renameModalOpen, setRenameModalOpen] = useState<string | null>(null);
   const [renameInput, setRenameInput] = useState("");
+  const [editModalOpen, setEditModalOpen] = useState<string | null>(null);
+  const [editNameInput, setEditNameInput] = useState("");
+  const [editVersionInput, setEditVersionInput] = useState("");
+  const [editLoaderInput, setEditLoaderInput] = useState("");
+  const [groupModalOpen, setGroupModalOpen] = useState<string | null>(null);
+  const [groupInput, setGroupInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [exportPath, setExportPath] = useState(() => localStorage.getItem("exportPath") || "~/Downloads");
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -1060,6 +1060,104 @@ function App() {
     });
   }, [account.name]);
 
+  const openRenameModal = useCallback((instanceId: string) => {
+    const inst = instances.find(i => i.id === instanceId);
+    if (!inst) return;
+    setRenameModalOpen(instanceId);
+    setRenameInput(inst.name);
+  }, [instances]);
+
+  const openEditModal = useCallback((instanceId: string) => {
+    const inst = instances.find(i => i.id === instanceId);
+    if (!inst) return;
+    setEditModalOpen(instanceId);
+    setEditNameInput(inst.name);
+    setEditVersionInput(inst.mcVersion);
+    setEditLoaderInput(inst.loader);
+  }, [instances]);
+
+  const openGroupModal = useCallback((instanceId: string) => {
+    const inst = instances.find(i => i.id === instanceId);
+    if (!inst) return;
+    setGroupModalOpen(instanceId);
+    setGroupInput(inst.group || "");
+  }, [instances]);
+
+  const handleCopyInstanceInfo = useCallback(async (instanceId: string) => {
+    const inst = instances.find(i => i.id === instanceId);
+    if (!inst) return;
+    const text = `${inst.name}\n${inst.mcVersion}\n${inst.loader}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      showNotification("Информация о сборке скопирована", "success");
+    } catch {
+      showNotification("Не удалось скопировать информацию", "error");
+    }
+  }, [instances]);
+
+  const handleCreateShortcut = useCallback(async (instanceId: string) => {
+    try {
+      await invoke("create_shortcut", { instanceId });
+      showNotification("Ярлык создан", "success");
+    } catch (e) {
+      showNotification("Не удалось создать ярлык: " + e, "error");
+    }
+  }, []);
+
+  const handleExportInstance = useCallback(async (instanceId: string) => {
+    const inst = instances.find(i => i.id === instanceId);
+    if (!inst) return;
+    try {
+      await invoke("export_modpack", {
+        instanceId: inst.id,
+        instanceName: inst.name,
+        exportPath,
+      });
+      showNotification("Экспорт запущен", "success");
+    } catch (e) {
+      showNotification("Не удалось экспортировать сборку: " + e, "error");
+    }
+  }, [instances, exportPath]);
+
+  const handleDeleteInstance = useCallback(async (instanceId: string) => {
+    setInstances(prev => {
+      const next = prev.filter(i => i.id !== instanceId);
+      localStorage.setItem("desktopInstances", JSON.stringify(next));
+      return next;
+    });
+    if (selectedInstanceId === instanceId) {
+      setSelectedInstanceId(() => {
+        const remaining = instances.filter(i => i.id !== instanceId);
+        return remaining[0]?.id || null;
+      });
+    }
+  }, [instances, selectedInstanceId]);
+
+  const saveEditInstance = useCallback(() => {
+    if (!editModalOpen) return;
+    setInstances(prev => {
+      const next = prev.map(i => i.id === editModalOpen ? {
+        ...i,
+        name: editNameInput.trim() || i.name,
+        mcVersion: editVersionInput.trim() || i.mcVersion,
+        loader: editLoaderInput.trim() || i.loader,
+      } : i);
+      localStorage.setItem("desktopInstances", JSON.stringify(next));
+      return next;
+    });
+    setEditModalOpen(null);
+  }, [editModalOpen, editNameInput, editVersionInput, editLoaderInput]);
+
+  const saveGroupInstance = useCallback(() => {
+    if (!groupModalOpen) return;
+    setInstances(prev => {
+      const next = prev.map(i => i.id === groupModalOpen ? { ...i, group: groupInput.trim() } : i);
+      localStorage.setItem("desktopInstances", JSON.stringify(next));
+      return next;
+    });
+    setGroupModalOpen(null);
+  }, [groupModalOpen, groupInput]);
+
   const handlePlay = useCallback(async () => {
     if (!selectedInstanceId) return alert(t.alertNoInstance);
     const inst = instances.find(i => i.id === selectedInstanceId);
@@ -1104,21 +1202,7 @@ function App() {
 
   const handleCreateInstance = () => {
     if (!newName) return;
-    
-    // Open Debug Window
-    new WebviewWindow('debug_window', {
-      title: 'Создание сборки - Дебаг',
-      width: 600,
-      height: 400,
-    });
-    
-    setTimeout(() => {
-      emit('debug-log', `[CREATE] Начинаю создание сборки...`);
-      emit('debug-log', `[CREATE] Название: ${newName}`);
-      emit('debug-log', `[CREATE] Версия Minecraft: ${newVer}`);
-      emit('debug-log', `[CREATE] Тип лоадера: ${newLoader}`);
-    }, 500); // Give the window a moment to open and attach listeners
-    
+
     const newInst: ModpackInstance = {
       id: Date.now().toString(),
       name: newName,
@@ -1133,10 +1217,9 @@ function App() {
     localStorage.setItem("desktopInstances", JSON.stringify(updated));
     setIsCreating(false);
     setNewName("");
-    
-    setTimeout(() => {
-       emit('debug-log', `[CREATE] Сборка ${newInst.id} успешно сохранена в localStorage!`);
-    }, 600);
+    setNewVerSearch("");
+    setVerMenuOpen(false);
+    setLoaderMenuOpen(false);
   };
 
 
@@ -1220,13 +1303,13 @@ function App() {
                     <IconPlus /> Создать
                   </button>
                 </div>
-                <div className="recent-instances-list" style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
+                <div className="recent-instances-list recent-instances-fixed" style={{ overflowY: 'hidden', flex: 1, minHeight: 0 }}>
                   {instances.length === 0 ? (
                     <div style={{ color: '#8b8b9c', textAlign: 'center', padding: '15px', fontSize: '0.85rem' }}>
                       Нет сборок. Нажмите "+ Создать"!
                     </div>
                   ) : (
-                    instances.slice(0, 5).map(inst => (
+                    instances.slice(0, 3).map(inst => (
                       <div 
                         key={inst.id} 
                         className={`recent-instance-item ${selectedInstanceId === inst.id ? 'selected' : ''}`}
@@ -1403,10 +1486,9 @@ function App() {
             {/* Модальное окно создания сборки */}
             {isCreating && (
               <div className="account-modal-overlay" onClick={() => setIsCreating(false)}>
-                <div className="create-modal" onClick={e => e.stopPropagation()}>
+                <div className="create-modal create-instance-modal" onClick={e => e.stopPropagation()}>
                   <h3>{t.newInstTitle}</h3>
                   <input type="text" placeholder={t.newInstNamePlaceholder} value={newName} onChange={e => setNewName(e.target.value)} />
-                  
                   <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                     <div className="custom-dropdown-container" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setVerMenuOpen(!verMenuOpen); setLoaderMenuOpen(false); }} style={{ flex: 1 }}>
                       <div className="custom-dropdown-btn" style={{ height: "40px", fontSize: "0.9rem" }}>{newVer} <IconChevronDown /></div>
@@ -1447,13 +1529,18 @@ function App() {
               </button>
             </div>
 
-            {/* Горизонтальный скролл сборок */}
+            {/* Вертикальный список сборок */}
             <div className="assemblies-horizontal-list">
               {instances.map(inst => (
                 <div 
                   key={inst.id}
                   className={`assembly-scroll-card ${selectedInstanceId === inst.id ? 'active' : ''}`}
                   onClick={() => setSelectedInstanceId(inst.id)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setSelectedInstanceId(inst.id);
+                    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, instanceId: inst.id });
+                  }}
                 >
                   <div className="recent-inst-icon" style={{ width: 54, height: 54, borderRadius: 14 }}>
                     {inst.icon ? <img src={inst.icon} alt="icon" style={{ width: 36, height: 36, borderRadius: 8 }} /> : <IconBox />}
@@ -1516,19 +1603,13 @@ function App() {
               </div>
             )}
 
-            {/* Каталог готовых сборок из Modrinth */}
-            <div style={{ marginTop: '20px' }}>
-              <h3>Каталог готовых сборок</h3>
-              <ModsPanel instances={instances} t={t} language={language} projectType="modpack" onCreateModpack={handleCreateModpack} versionsList={currentVersionsList} />
-            </div>
-
             {renameModalOpen && (
               <div className="account-modal-overlay" onClick={() => setRenameModalOpen(null)}>
                 <div className="create-modal" onClick={e => e.stopPropagation()}>
                   <h3>{t.renameInstTitle}</h3>
                   <input type="text" value={renameInput} onChange={e => setRenameInput(e.target.value)} placeholder={t.renameInstPlaceholder} />
                   <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                    <button className="play-btn" style={{ flex: 1 }} onClick={() => {
+                    <button className="play-btn modal-action-btn" style={{ flex: 1 }} onClick={() => {
                       setInstances(prev => {
                         const next = prev.map(i => i.id === renameModalOpen ? { ...i, name: renameInput } : i);
                         localStorage.setItem("desktopInstances", JSON.stringify(next));
@@ -1536,7 +1617,35 @@ function App() {
                       });
                       setRenameModalOpen(null);
                     }}>{t.saveBtn}</button>
-                    <button className="play-btn" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setRenameModalOpen(null)}>{t.cancel}</button>
+                    <button className="play-btn modal-action-btn" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setRenameModalOpen(null)}>{t.cancel}</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {editModalOpen && (
+              <div className="account-modal-overlay" onClick={() => setEditModalOpen(null)}>
+                <div className="create-modal" onClick={e => e.stopPropagation()}>
+                  <h3>Изменить сборку</h3>
+                  <input type="text" value={editNameInput} onChange={e => setEditNameInput(e.target.value)} placeholder="Название" />
+                  <input type="text" value={editVersionInput} onChange={e => setEditVersionInput(e.target.value)} placeholder="Версия" />
+                  <input type="text" value={editLoaderInput} onChange={e => setEditLoaderInput(e.target.value)} placeholder="Загрузчик" />
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                    <button className="play-btn modal-action-btn" style={{ flex: 1 }} onClick={saveEditInstance}>Сохранить</button>
+                    <button className="play-btn modal-action-btn" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setEditModalOpen(null)}>Отмена</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {groupModalOpen && (
+              <div className="account-modal-overlay" onClick={() => setGroupModalOpen(null)}>
+                <div className="create-modal" onClick={e => e.stopPropagation()}>
+                  <h3>Изменить группу</h3>
+                  <input type="text" value={groupInput} onChange={e => setGroupInput(e.target.value)} placeholder="Название группы" />
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                    <button className="play-btn modal-action-btn" style={{ flex: 1 }} onClick={saveGroupInstance}>Сохранить</button>
+                    <button className="play-btn modal-action-btn" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setGroupModalOpen(null)}>Отмена</button>
                   </div>
                 </div>
               </div>
@@ -1544,48 +1653,72 @@ function App() {
           </div>
         )}
 
+        {contextMenu && (
+          <div
+            className="instance-context-menu"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+            onClick={(e) => e.stopPropagation()}
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            <button className="instance-context-item" onClick={() => { openRenameModal(contextMenu.instanceId); setContextMenu(null); }}>
+              <span>✏️</span><span>Переименовать</span>
+            </button>
+            <button className="instance-context-item" onClick={() => { fileInputRef.current?.click(); setContextMenu(null); }}>
+              <span>🖼️</span><span>Выбрать значок</span>
+            </button>
+            <div className="instance-context-sep" />
+            <button className="instance-context-item" onClick={() => { setActiveTab("home"); setSelectedInstanceId(contextMenu.instanceId); handlePlay(); setContextMenu(null); }}>
+              <span>▶</span><span>Запустить</span>
+            </button>
+            <button className="instance-context-item" onClick={() => { handleStop(); setContextMenu(null); }}>
+              <span>■</span><span>Остановить</span>
+            </button>
+            <div className="instance-context-sep" />
+            <button className="instance-context-item" onClick={() => { openEditModal(contextMenu.instanceId); setContextMenu(null); }}>
+              <span>🛠️</span><span>Изменить...</span>
+            </button>
+            <button className="instance-context-item" onClick={() => { openGroupModal(contextMenu.instanceId); setContextMenu(null); }}>
+              <span>📁</span><span>Изменить группу...</span>
+            </button>
+            <button className="instance-context-item" onClick={() => { invoke("open_folder", { instanceId: contextMenu.instanceId }); setContextMenu(null); }}>
+              <span>📂</span><span>Папка</span>
+            </button>
+            <button className="instance-context-item" onClick={() => { void handleExportInstance(contextMenu.instanceId); setContextMenu(null); }}>
+              <span>📤</span><span>Экспортировать...</span>
+            </button>
+            <button className="instance-context-item" onClick={() => { void handleCopyInstanceInfo(contextMenu.instanceId); setContextMenu(null); }}>
+              <span>📋</span><span>Копировать...</span>
+            </button>
+            <button className="instance-context-item danger" onClick={() => { void handleDeleteInstance(contextMenu.instanceId); setContextMenu(null); }}>
+              <span>🗑️</span><span>Удалить</span>
+            </button>
+            <button className="instance-context-item" onClick={() => { void handleCreateShortcut(contextMenu.instanceId); setContextMenu(null); }}>
+              <span>🔗</span><span>Создать ярлык</span>
+            </button>
+          </div>
+        )}
+
         {/* ЭКРАН КАТАЛОГА / МОДОВ (Снимок 3) */}
-        {["mods", "resourcepacks", "shaders", "datapacks"].includes(activeTab) && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minHeight: 0, height: 'calc(100vh - 130px)', paddingBottom: '75px', boxSizing: 'border-box' }}>
-            <div className="store-sub-tabs">
-              <button 
-                className={`sub-tab-btn ${activeTab === 'mods' ? 'active' : ''}`}
-                onClick={() => setActiveTab("mods")}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <AnimatedIcon images={MOD_ICONS} interval={2500} /> Моды
-                </div>
-              </button>
-              <button 
-                className={`sub-tab-btn ${activeTab === 'resourcepacks' ? 'active' : ''}`}
-                onClick={() => setActiveTab("resourcepacks")}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <AnimatedIcon images={RESOURCEPACK_ICONS} interval={2800} /> Текстуры
-                </div>
-              </button>
-              <button 
-                className={`sub-tab-btn ${activeTab === 'shaders' ? 'active' : ''}`}
-                onClick={() => setActiveTab("shaders")}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <AnimatedIcon images={SHADER_ICONS} interval={2900} /> Шейдеры
-                </div>
-              </button>
-              <button 
-                className={`sub-tab-btn ${activeTab === 'datapacks' ? 'active' : ''}`}
-                onClick={() => setActiveTab("datapacks")}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <AnimatedIcon images={DATAPACK_ICONS} interval={2600} /> Датапаки
-                </div>
-              </button>
-            </div>
+        {["mods", "resourcepacks", "shaders", "datapacks", "catalog"].includes(activeTab) && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              flex: 1,
+              minHeight: 0,
+              height: '100%',
+              paddingBottom: '20px',
+              boxSizing: 'border-box'
+            }}
+          >
+            <CatalogTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
             {activeTab === "mods" && <ModsPanel instances={instances} t={t} language={language} projectType="mod" versionsList={currentVersionsList} />}
             {activeTab === "resourcepacks" && <ModsPanel instances={instances} t={t} language={language} projectType="resourcepack" versionsList={currentVersionsList} />}
             {activeTab === "shaders" && <ModsPanel instances={instances} t={t} language={language} projectType="shader" versionsList={currentVersionsList} />}
             {activeTab === "datapacks" && <ModsPanel instances={instances} t={t} language={language} projectType="datapack" versionsList={currentVersionsList} />}
+            {activeTab === "catalog" && <ModsPanel instances={instances} t={t} language={language} projectType="modpack" onCreateModpack={handleCreateModpack} versionsList={currentVersionsList} />}
           </div>
         )}
 
@@ -2076,65 +2209,20 @@ function App() {
     </main>
 
       {/* Floating Bottom Dock Navigation */}
-      <div className="dock-wrapper">
-        <div className="floating-dock">
-          {/* Button 1: Каталог */}
-          <button 
-            className={`dock-btn ${["mods", "resourcepacks", "shaders", "datapacks"].includes(activeTab) ? 'active' : ''}`}
-            onClick={() => setActiveTab("mods")}
-            title="Каталог & Моды"
-          >
-            <div className="dock-icon-circle">
-              <AnimatedIcon images={MOD_ICONS} interval={2500} />
-            </div>
-            <span className="dock-label">Каталог</span>
-          </button>
-
-          {/* Button 2: Сборки */}
-          <button 
-            className={`dock-btn ${activeTab === 'modpacks' ? 'active' : ''}`}
-            onClick={() => setActiveTab("modpacks")}
-            title="Сборки"
-          >
-            <div className="dock-icon-circle">
-              <AnimatedIcon images={MODPACK_ICONS} interval={3100} />
-            </div>
-            <span className="dock-label">Сборки</span>
-          </button>
-
-          {/* CENTER: Rhombus — Play/Stop on home, Home button on other tabs */}
-          <div className="dock-play-container">
-            {activeTab === 'home' && (
-              <div className="dock-version-badge">
-                {selectedInstance ? selectedInstance.mcVersion : "1.20.1"}
-              </div>
-            )}
-            <button 
-              className="rhombus-play-btn"
-              onClick={activeTab === 'home' ? (isRunning ? handleStop : handlePlay) : () => setActiveTab('home')}
-              title={activeTab === 'home' ? (isRunning ? t.stopBtn : t.playBtn) : 'Главная'}
-            >
-              <div className="play-icon-inner">
-                {activeTab === 'home'
-                  ? (isRunning ? <IconX /> : <IconPlay />)
-                  : <IconHome />}
-              </div>
-            </button>
-          </div>
-
-          {/* Button 3: Настройки */}
-          <button 
-            className={`dock-btn ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab("settings")}
-            title="Настройки"
-          >
-            <div className="dock-icon-circle">
-              <IconSettings />
-            </div>
-            <span className="dock-label">Настройки</span>
-          </button>
-        </div>
-      </div>
+      <FloatingDock
+        activeTab={activeTab}
+        isHome={activeTab === "home"}
+        isRunning={isRunning}
+        selectedVersionLabel={selectedInstance ? selectedInstance.mcVersion : "1.20.1"}
+        onHome={() => setActiveTab("home")}
+        onCatalog={() => setActiveTab("mods")}
+        onModpacks={() => setActiveTab("modpacks")}
+        onSettings={() => setActiveTab("settings")}
+        onFriends={() => setActiveTab("friends")}
+        onPlay={handlePlay}
+        onStop={handleStop}
+        t={t}
+      />
 
       {appNotification && (
         <div className={`toast-notification ${appNotification.type === 'success' ? 'toast-success' : 'toast-error'}`}>

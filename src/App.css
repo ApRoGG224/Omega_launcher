@@ -103,6 +103,7 @@ input[type="color"]::-webkit-color-swatch {
   padding: 30px;
   overflow: hidden;
   position: relative;
+  padding-bottom: 12px;
 }
 
 .bottom-area {
@@ -224,21 +225,54 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .create-modal {
-  position: absolute;
-  bottom: calc(100% + 15px);
-  right: 0;
+  position: relative;
   background: rgba(30, 30, 40, 0.98);
   backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 20px;
   border-radius: 12px;
   width: 320px;
+  max-width: calc(100vw - 32px);
+  max-height: 320px;
+  overflow: hidden;
   box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
   z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.create-instance-modal {
+  width: 360px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.65);
+}
+
+.loader-toggle-btn {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #d7d7e3;
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.loader-toggle-btn:hover {
+  background: rgba(150, 13, 242, 0.12);
+  border-color: rgba(171, 61, 245, 0.35);
+}
+
+.loader-toggle-btn.active {
+  background: linear-gradient(135deg, #960DF2, #AB3DF5);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 0 12px rgba(150, 13, 242, 0.35);
 }
 
 .create-modal h3 {
-  margin: 0 0 15px 0;
+  margin: 0;
   font-size: 1.1rem;
 }
 
@@ -246,11 +280,12 @@ input[type="color"]::-webkit-color-swatch {
   width: 100%;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 10px;
+  padding: 8px 10px;
   border-radius: 8px;
   color: #fff;
   font-family: inherit;
   outline: none;
+  min-width: 0;
 }
 .create-modal input:focus { border-color: var(--accent-color); }
 
@@ -816,6 +851,15 @@ input[type="color"]::-webkit-color-swatch {
   transition: all 0.2s;
   box-shadow: 0 4px 15px rgba(79, 50, 150, 0.4);
 }
+.modal-action-btn {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 0.92rem;
+  letter-spacing: 0.2px;
+  justify-content: center;
+  white-space: nowrap;
+  min-width: 0;
+}
 .play-btn:hover {
   background: #5b3aa8;
   transform: translateY(-2px);
@@ -1193,7 +1237,7 @@ input[type="color"]::-webkit-color-swatch {
 /* Floating Bottom Navigation Bar */
 .dock-wrapper {
   position: fixed;
-  bottom: 20px;
+  bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
@@ -1203,13 +1247,23 @@ input[type="color"]::-webkit-color-swatch {
   gap: 6px;
 }
 
+.dock-home {
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.dock-overlay {
+  z-index: 1200;
+  pointer-events: auto;
+}
+
 .floating-dock {
   display: flex;
   align-items: center;
   gap: 20px;
   background: rgba(10, 8, 16, 0.94);
   backdrop-filter: blur(25px);
-  padding: 6px 24px;
+  padding: 8px 26px;
   border-radius: 30px;
   border: 1px solid rgba(171, 61, 245, 0.35);
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.9), 0 0 20px rgba(150, 13, 242, 0.2);
@@ -1227,6 +1281,7 @@ input[type="color"]::-webkit-color-swatch {
   cursor: pointer;
   transition: all 0.25s ease;
   position: relative;
+  min-width: 64px;
 }
 
 .dock-btn:hover {
@@ -1246,8 +1301,8 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .dock-icon-circle {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1271,7 +1326,7 @@ input[type="color"]::-webkit-color-swatch {
   align-items: center;
   gap: 3px;
   position: relative;
-  top: -8px;
+  top: -10px;
   margin: 0 4px;
 }
 
@@ -1322,13 +1377,23 @@ input[type="color"]::-webkit-color-swatch {
 /* Home Dashboard 3-Column Grid Layout */
 .home-sketch-dashboard {
   display: grid;
-  grid-template-columns: 380px 1fr 380px;
-  gap: 20px;
+  grid-template-columns: 340px minmax(0, 1fr) 340px;
+  gap: 16px;
   flex: 1;
   min-height: 0;
-  height: calc(100vh - 130px);
-  padding-bottom: 60px;
+  height: calc(100vh - 110px);
+  padding-bottom: 20px;
   box-sizing: border-box;
+  align-items: start;
+}
+
+.home-sketch-dashboard > div {
+  min-height: 0;
+}
+
+.home-sketch-dashboard > div:first-child,
+.home-sketch-dashboard > div:last-child {
+  height: 100%;
 }
 
 .sketch-card {
@@ -1336,10 +1401,10 @@ input[type="color"]::-webkit-color-swatch {
   backdrop-filter: blur(15px);
   border: 1px solid rgba(171, 61, 245, 0.2);
   border-radius: 18px;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
   transition: border-color 0.25s;
 }
@@ -1353,7 +1418,7 @@ input[type="color"]::-webkit-color-swatch {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 12px;
+  padding-bottom: 10px;
 }
 
 .sketch-card-title {
@@ -1368,8 +1433,17 @@ input[type="color"]::-webkit-color-swatch {
 .recent-instances-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   overflow-y: auto;
+}
+
+.recent-instances-fixed {
+  overflow: hidden;
+}
+
+.recent-instances-fixed .recent-instance-item {
+  min-height: 72px;
+  padding: 10px 12px;
 }
 
 .recent-instance-item {
@@ -1397,8 +1471,8 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .recent-inst-icon {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   background: linear-gradient(135deg, #1a1528, #2a1f42);
   display: flex;
@@ -1410,12 +1484,12 @@ input[type="color"]::-webkit-color-swatch {
 
 .recent-inst-name {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   color: #fff;
 }
 
 .recent-inst-ver {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: #8b8b9c;
 }
 
@@ -1423,9 +1497,18 @@ input[type="color"]::-webkit-color-swatch {
 .friends-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   overflow-y: auto;
   flex: 1;
+}
+
+.friends-list .friend-item {
+  min-height: 56px;
+  padding: 8px 10px;
+}
+
+.sketch-card {
+  min-height: 0;
 }
 
 .friend-item {
@@ -1476,23 +1559,25 @@ input[type="color"]::-webkit-color-swatch {
   color: #8b8b9c;
 }
 
-/* Assemblies Horizontal Scroll & Info Card (Screenshot 2) */
+/* Assemblies list & Info Card (Screenshot 2) */
 .assemblies-horizontal-list {
   display: flex;
+  flex-direction: column;
   gap: 16px;
-  overflow-x: auto;
-  padding: 10px 4px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
   scroll-behavior: smooth;
 }
 
 .assembly-scroll-card {
-  min-width: 190px;
+  width: 100%;
   background: rgba(20, 16, 32, 0.8);
   border: 1px solid rgba(171, 61, 245, 0.25);
   border-radius: 16px;
   padding: 16px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 10px;
   cursor: pointer;
@@ -1502,7 +1587,7 @@ input[type="color"]::-webkit-color-swatch {
 .assembly-scroll-card:hover, .assembly-scroll-card.active {
   background: rgba(150, 13, 242, 0.22);
   border-color: #AB3DF5;
-  transform: translateY(-4px);
+  transform: translateX(4px);
   box-shadow: 0 10px 25px rgba(150, 13, 242, 0.3);
 }
 
@@ -1521,6 +1606,7 @@ input[type="color"]::-webkit-color-swatch {
 /* Store Sub-tabs Navigation (Screenshot 3) */
 .store-sub-tabs {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   background: rgba(255, 255, 255, 0.04);
@@ -1607,6 +1693,58 @@ input[type="color"]::-webkit-color-swatch {
   font-weight: 500;
 }
 
+.instance-context-menu {
+  position: fixed;
+  z-index: 2500;
+  width: 270px;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(20, 16, 32, 0.96);
+  border: 1px solid rgba(171, 61, 245, 0.22);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(18px);
+}
+
+.instance-context-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: #e8e5f2;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.instance-context-item:hover {
+  background: rgba(150, 13, 242, 0.15);
+  color: #fff;
+}
+
+.instance-context-item span:last-child {
+  flex: 1;
+  text-align: left;
+}
+
+.instance-context-item.danger {
+  color: #f87171;
+}
+
+.instance-context-item.danger:hover {
+  background: rgba(248, 113, 113, 0.12);
+}
+
+.instance-context-sep {
+  height: 1px;
+  margin: 6px 4px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
 /* Mod Preview Chips for Assembly Info Card */
 .mod-chips-container {
   display: flex;
@@ -1639,4 +1777,3 @@ input[type="color"]::-webkit-color-swatch {
   padding-bottom: 90px !important;
   overflow-y: auto;
 }
-

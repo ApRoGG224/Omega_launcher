@@ -359,6 +359,26 @@ fn open_folder(app: tauri::AppHandle, instance_id: String) {
 }
 
 #[tauri::command]
+fn create_shortcut(app: tauri::AppHandle, instance_id: String) -> Result<String, String> {
+    let mut instance_path = std::path::PathBuf::from(get_data_dir(&app));
+    instance_path.push("instances");
+    instance_path.push(&instance_id);
+    let instance_path = std::fs::canonicalize(&instance_path).unwrap_or(instance_path);
+
+    let desktop_dir = dirs::desktop_dir().ok_or_else(|| "Desktop directory not found".to_string())?;
+    std::fs::create_dir_all(&desktop_dir).map_err(|e| e.to_string())?;
+
+    let shortcut_path = desktop_dir.join(format!("Omega Launcher - {}.desktop", instance_id));
+    let content = format!(
+        "[Desktop Entry]\nType=Application\nName=Omega Launcher Instance {}\nExec=xdg-open \"{}\"\nTerminal=false\n",
+        instance_id,
+        instance_path.to_string_lossy()
+    );
+    std::fs::write(&shortcut_path, content).map_err(|e| e.to_string())?;
+    Ok(shortcut_path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
 fn count_installed_mods(app: tauri::AppHandle, instance_id: String) -> Result<usize, String> {
     let mut path = std::path::PathBuf::from(get_data_dir(&app));
     path.push("instances");
@@ -743,7 +763,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder, count_installed_mods, list_worlds, open_path, translate_text, install_modpack, export_modpack, import_prism, import_curseforge, import_mrpack
+            launch_minecraft, login_microsoft, kill_minecraft, download_mod, open_folder, create_shortcut, count_installed_mods, list_worlds, open_path, translate_text, install_modpack, export_modpack, import_prism, import_curseforge, import_mrpack
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
