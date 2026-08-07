@@ -701,6 +701,9 @@ function App() {
   const selectedInstance = React.useMemo(() => {
     return instances.find(i => i.id === selectedInstanceId) || instances[0] || null;
   }, [instances, selectedInstanceId]);
+  const visibleInstances = React.useMemo(() => {
+    return [...instances].reverse();
+  }, [instances]);
   const [modCount, setModCount] = useState(0);
   const suppressGameplayLogsRef = useRef(false);
 
@@ -1531,7 +1534,7 @@ function App() {
 
             {/* Вертикальный список сборок */}
             <div className="assemblies-horizontal-list">
-              {instances.map(inst => (
+              {visibleInstances.map(inst => (
                 <div 
                   key={inst.id}
                   className={`assembly-scroll-card ${selectedInstanceId === inst.id ? 'active' : ''}`}
@@ -1542,14 +1545,16 @@ function App() {
                     setContextMenu({ visible: true, x: e.clientX, y: e.clientY, instanceId: inst.id });
                   }}
                 >
-                  <div className="recent-inst-icon" style={{ width: 54, height: 54, borderRadius: 14 }}>
+                  <div className="recent-inst-icon assembly-card-icon">
                     {inst.icon ? <img src={inst.icon} alt="icon" style={{ width: 36, height: 36, borderRadius: 8 }} /> : <IconBox />}
                   </div>
-                  <div style={{ fontWeight: 600, fontSize: '0.95rem', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>
-                    {inst.name}
-                  </div>
-                  <div style={{ fontSize: '0.78rem', color: '#8b8b9c' }}>
-                    {inst.mcVersion} ({inst.loader})
+                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1, gap: '1px' }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.95rem', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {inst.name}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#8b8b9c', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {inst.mcVersion} ({inst.loader})
+                    </div>
                   </div>
                 </div>
               ))}

@@ -1562,24 +1562,26 @@ input[type="color"]::-webkit-color-swatch {
 /* Assemblies list & Info Card (Screenshot 2) */
 .assemblies-horizontal-list {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 16px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  align-items: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding: 0;
   scroll-behavior: smooth;
 }
 
 .assembly-scroll-card {
-  width: 100%;
+  width: 280px;
+  max-width: 100%;
   background: rgba(20, 16, 32, 0.8);
   border: 1px solid rgba(171, 61, 245, 0.25);
   border-radius: 16px;
-  padding: 16px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
   transition: all 0.25s ease;
 }
@@ -1601,6 +1603,19 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   gap: 20px;
   align-items: center;
+}
+
+.assembly-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  flex: 0 0 40px;
+}
+
+.assembly-card-icon svg,
+.assembly-card-icon img {
+  width: 22px !important;
+  height: 22px !important;
 }
 
 /* Store Sub-tabs Navigation (Screenshot 3) */
