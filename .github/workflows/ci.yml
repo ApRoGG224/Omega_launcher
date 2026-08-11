@@ -1,0 +1,55 @@
+name: "CI"
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  frontend:
+    name: Frontend (typecheck + tests + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck and build
+        run: npm run build
+
+      - name: Run frontend tests
+        run: npm run test
+
+  backend:
+    name: Backend (cargo check + tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: cargo check
+        working-directory: src-tauri
+        run: cargo check --locked
+
+      - name: cargo test
+        working-directory: src-tauri
+        run: cargo test
