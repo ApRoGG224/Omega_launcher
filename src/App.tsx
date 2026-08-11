@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { HexColorPicker } from "react-colorful";
@@ -88,6 +89,306 @@ const DATAPACK_ICONS = [
   "https://cdn.modrinth.com/data/8oi3bsk5/1959d924a1088944bbf07a06ba523726112d7e7a_96.webp",
   "https://cdn.modrinth.com/data/tpehi7ww/429ba22d212868940cdd82465df949ac51c9791e_96.webp",
 ];
+
+type Point = { x: number; y: number };
+type WindowSize = { width: number; height: number };
+type ResizeDirection = "n" | "e" | "s" | "w" | "ne" | "nw" | "se" | "sw";
+type AlignmentGuides = { vertical: number | null; horizontal: number | null };
+
+let nextWindowZIndex = 1000;
+
+const getInitialWindowPosition = (key: string, fallback: Point) => {
+  if (typeof window === "undefined") return fallback;
+  const stored = localStorage.getItem(key);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (typeof parsed?.x === "number" && typeof parsed?.y === "number") {
+        return parsed as Point;
+      }
+    } catch {
+      // Ignore malformed state and fall back to centered positioning.
+    }
+  }
+  return fallback;
+};
+
+const getInitialWindowSize = (key: string, fallback?: WindowSize) => {
+  if (!fallback || typeof window === "undefined") return fallback;
+  const stored = localStorage.getItem(`${key}:size`);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (typeof parsed?.width === "number" && typeof parsed?.height === "number") {
+        return parsed as WindowSize;
+      }
+    } catch {
+      // Ignore malformed state and use the panel's default size.
+    }
+  }
+  return fallback;
+};
+
+const DraggableWindow = React.memo(({
+  storageKey,
+  className,
+  defaultPosition,
+  defaultSize,
+  handleSelector = ".draggable-window-handle",
+  children,
+}: {
+  storageKey: string;
+  className: string;
+  defaultPosition: Point;
+  defaultSize?: WindowSize;
+  handleSelector?: string;
+  children: React.ReactNode;
+}) => {
+  const windowRef = useRef<HTMLDivElement | null>(null);
+  const [position, setPosition] = useState<Point>(() => getInitialWindowPosition(storageKey, defaultPosition));
+  const [size, setSize] = useState<WindowSize | undefined>(() => getInitialWindowSize(storageKey, defaultSize));
+  const [zIndex, setZIndex] = useState(() => ++nextWindowZIndex);
+  const [alignmentGuides, setAlignmentGuides] = useState<AlignmentGuides>({ vertical: null, horizontal: null });
+  const dragState = useRef<{ pointerId: number; offsetX: number; offsetY: number } | null>(null);
+  const resizeState = useRef<{
+    pointerId: number;
+    direction: ResizeDirection;
+    startX: number;
+    startY: number;
+    position: Point;
+    size: WindowSize;
+  } | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(position));
+  }, [position, storageKey]);
+
+  useEffect(() => {
+    if (!size) return;
+    localStorage.setItem(`${storageKey}:size`, JSON.stringify(size));
+  }, [size, storageKey]);
+
+  const persistSize = (nextSize: WindowSize) => {
+    localStorage.setItem(`${storageKey}:size`, JSON.stringify(nextSize));
+  };
+
+  useEffect(() => {
+    const element = windowRef.current;
+    if (!element || !defaultSize) return;
+    const observer = new ResizeObserver(() => {
+      // offsetWidth/offsetHeight ignore the opening transform animation.
+      const width = element.offsetWidth;
+      const height = element.offsetHeight;
+      setSize((previous) => {
+        if (previous && Math.round(previous.width) === Math.round(width) && Math.round(previous.height) === Math.round(height)) {
+          return previous;
+        }
+        const nextSize = { width, height };
+        persistSize(nextSize);
+        return nextSize;
+      });
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [defaultSize]);
+
+  useEffect(() => {
+    const clampToViewport = () => {
+      const rect = windowRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const maxX = Math.max(12, window.innerWidth - rect.width - 12);
+      const maxY = Math.max(12, window.innerHeight - rect.height - 12);
+      setPosition((prev) => ({
+        x: Math.min(Math.max(prev.x, 12), maxX),
+        y: Math.min(Math.max(prev.y, 12), maxY),
+      }));
+    };
+
+    clampToViewport();
+    window.addEventListener("resize", clampToViewport);
+    return () => window.removeEventListener("resize", clampToViewport);
+  }, []);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    setZIndex(++nextWindowZIndex);
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    const resizeHandle = target.closest<HTMLElement>(".window-resize-handle");
+    if (resizeHandle) {
+      const rect = windowRef.current?.getBoundingClientRect();
+      const direction = resizeHandle.dataset.direction as ResizeDirection | undefined;
+      if (!rect || !direction) return;
+      resizeState.current = {
+        pointerId: e.pointerId,
+        direction,
+        startX: e.clientX,
+        startY: e.clientY,
+        position: { x: rect.left, y: rect.top },
+        size: { width: rect.width, height: rect.height },
+      };
+      setAlignmentGuides({ vertical: window.innerWidth / 2, horizontal: window.innerHeight / 2 });
+      (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+      e.preventDefault();
+      return;
+    }
+    if (target.closest("button, input, textarea, select, [role='button']")) return;
+    if (!target.closest(handleSelector)) return;
+    const rect = windowRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    dragState.current = {
+      pointerId: e.pointerId,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+    };
+    setAlignmentGuides({ vertical: window.innerWidth / 2, horizontal: window.innerHeight / 2 });
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+    e.preventDefault();
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const resize = resizeState.current;
+    if (resize?.pointerId === e.pointerId) {
+      const deltaX = e.clientX - resize.startX;
+      const deltaY = e.clientY - resize.startY;
+      const minWidth = 260;
+      const minHeight = 160;
+      let nextX = resize.position.x;
+      let nextY = resize.position.y;
+      let nextWidth = resize.size.width;
+      let nextHeight = resize.size.height;
+
+      if (resize.direction.includes("e")) {
+        nextWidth = Math.min(Math.max(minWidth, resize.size.width + deltaX), window.innerWidth - resize.position.x - 12);
+      }
+      if (resize.direction.includes("w")) {
+        nextX = Math.min(Math.max(12, resize.position.x + deltaX), resize.position.x + resize.size.width - minWidth);
+        nextWidth = resize.position.x + resize.size.width - nextX;
+      }
+      if (resize.direction.includes("s")) {
+        nextHeight = Math.min(Math.max(minHeight, resize.size.height + deltaY), window.innerHeight - resize.position.y - 12);
+      }
+      if (resize.direction.includes("n")) {
+        nextY = Math.min(Math.max(12, resize.position.y + deltaY), resize.position.y + resize.size.height - minHeight);
+        nextHeight = resize.position.y + resize.size.height - nextY;
+      }
+
+      const otherWindows = Array.from(document.querySelectorAll<HTMLElement>(".draggable-window"))
+        .filter((element) => element !== windowRef.current)
+        .map((element) => element.getBoundingClientRect());
+      const verticalCandidates = [window.innerWidth / 2, ...otherWindows.flatMap((item) => [item.left, item.left + item.width / 2, item.right])];
+      const horizontalCandidates = [window.innerHeight / 2, ...otherWindows.flatMap((item) => [item.top, item.top + item.height / 2, item.bottom])];
+      const findGuide = (value: number, candidates: number[]) => {
+        let best: { guide: number; distance: number } | undefined;
+        candidates.forEach((guide) => {
+          const distance = Math.abs(value - guide);
+          if (distance <= 10 && (!best || distance < best.distance)) best = { guide, distance };
+        });
+        return best?.guide;
+      };
+      const rightGuide = resize.direction.includes("e") ? findGuide(nextX + nextWidth, verticalCandidates) : undefined;
+      const leftGuide = resize.direction.includes("w") ? findGuide(nextX, verticalCandidates) : undefined;
+      const bottomGuide = resize.direction.includes("s") ? findGuide(nextY + nextHeight, horizontalCandidates) : undefined;
+      const topGuide = resize.direction.includes("n") ? findGuide(nextY, horizontalCandidates) : undefined;
+      if (rightGuide !== undefined && rightGuide - nextX >= minWidth) nextWidth = rightGuide - nextX;
+      if (leftGuide !== undefined && resize.position.x + resize.size.width - leftGuide >= minWidth) {
+        nextX = leftGuide;
+        nextWidth = resize.position.x + resize.size.width - nextX;
+      }
+      if (bottomGuide !== undefined && bottomGuide - nextY >= minHeight) nextHeight = bottomGuide - nextY;
+      if (topGuide !== undefined && resize.position.y + resize.size.height - topGuide >= minHeight) {
+        nextY = topGuide;
+        nextHeight = resize.position.y + resize.size.height - nextY;
+      }
+
+      const nextSize = { width: nextWidth, height: nextHeight };
+      setPosition({ x: nextX, y: nextY });
+      setSize(nextSize);
+      persistSize(nextSize);
+      setAlignmentGuides({
+        vertical: rightGuide ?? leftGuide ?? window.innerWidth / 2,
+        horizontal: bottomGuide ?? topGuide ?? window.innerHeight / 2,
+      });
+      return;
+    }
+    if (!dragState.current || dragState.current.pointerId !== e.pointerId) return;
+    const rect = windowRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const rawX = Math.min(Math.max(e.clientX - dragState.current.offsetX, 12), Math.max(12, window.innerWidth - rect.width - 12));
+    const rawY = Math.min(Math.max(e.clientY - dragState.current.offsetY, 12), Math.max(12, window.innerHeight - rect.height - 12));
+    const otherWindows = Array.from(document.querySelectorAll<HTMLElement>(".draggable-window"))
+      .filter((element) => element !== windowRef.current)
+      .map((element) => element.getBoundingClientRect());
+    const verticalCandidates = [window.innerWidth / 2, ...otherWindows.flatMap((item) => [item.left, item.left + item.width / 2, item.right])];
+    const horizontalCandidates = [window.innerHeight / 2, ...otherWindows.flatMap((item) => [item.top, item.top + item.height / 2, item.bottom])];
+    const snapAxis = (raw: number, extent: number, candidates: number[]): { position: number; guide: number; distance: number } | undefined => {
+      const anchors = [0, -extent / 2, -extent];
+      let best: { position: number; guide: number; distance: number } | undefined;
+      candidates.forEach((guide) => anchors.forEach((anchor) => {
+        const position = guide + anchor;
+        const distance = Math.abs(raw - position);
+        if (distance <= 10 && (!best || distance < best.distance)) best = { position, guide, distance };
+      }));
+      return best;
+    };
+    const verticalSnap = snapAxis(rawX, rect.width, verticalCandidates);
+    const horizontalSnap = snapAxis(rawY, rect.height, horizontalCandidates);
+    setPosition({
+      x: verticalSnap ? Math.min(Math.max(verticalSnap.position, 12), Math.max(12, window.innerWidth - rect.width - 12)) : rawX,
+      y: horizontalSnap ? Math.min(Math.max(horizontalSnap.position, 12), Math.max(12, window.innerHeight - rect.height - 12)) : rawY,
+    });
+    setAlignmentGuides({
+      vertical: verticalSnap?.guide ?? window.innerWidth / 2,
+      horizontal: horizontalSnap?.guide ?? window.innerHeight / 2,
+    });
+  };
+
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const isResizing = resizeState.current?.pointerId === e.pointerId;
+    const isDragging = dragState.current?.pointerId === e.pointerId;
+    if (!isResizing && !isDragging) return;
+    dragState.current = null;
+    resizeState.current = null;
+    setAlignmentGuides({ vertical: null, horizontal: null });
+    try {
+      (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
+    } catch {
+      // Ignore release errors from stale pointer capture state.
+    }
+  };
+
+  return (
+    <>
+      <div
+        ref={windowRef}
+        className={className}
+        style={{
+          position: "fixed",
+          left: position.x,
+          top: position.y,
+          zIndex,
+          ...(size ? { width: size.width, height: size.height } : {}),
+        }}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        {children}
+        {(["n", "e", "s", "w", "ne", "nw", "se", "sw"] as ResizeDirection[]).map((direction) => (
+          <span key={direction} className={`window-resize-handle window-resize-${direction}`} data-direction={direction} aria-hidden="true" />
+        ))}
+      </div>
+      {(alignmentGuides.vertical !== null || alignmentGuides.horizontal !== null) && createPortal(
+        <>
+          {alignmentGuides.vertical !== null && <div className="window-alignment-guide window-alignment-guide-vertical" style={{ left: alignmentGuides.vertical, zIndex: zIndex + 1 }} />}
+          {alignmentGuides.horizontal !== null && <div className="window-alignment-guide window-alignment-guide-horizontal" style={{ top: alignmentGuides.horizontal, zIndex: zIndex + 1 }} />}
+        </>,
+        document.body,
+      )}
+    </>
+  );
+});
 
 
 const AnimatedIcon = React.memo(({ images, interval = 3000 }: { images: string[], interval?: number }) => {
@@ -463,8 +764,12 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
 
           {installModalOpen && (
             <>
-              <div className="global-modal-content">
-                <div className="global-modal-header">
+              <DraggableWindow
+                storageKey={`omega:install-window:${projectType}`}
+                className="global-modal-content draggable-window"
+                defaultPosition={{ x: 220, y: 90 }}
+              >
+                <div className="global-modal-header draggable-window-handle">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ background: 'rgba(var(--accent-color-rgb), 0.2)', padding: '8px', borderRadius: '12px', display: 'flex' }}>
                        <IconDownload />
@@ -502,14 +807,18 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
                     </button>
                   ))}
                 </div>
-              </div>
+              </DraggableWindow>
             </>
           )}
 
           {worldSelectState && (
             <>
-              <div className="global-modal-content">
-                <div className="global-modal-header">
+              <DraggableWindow
+                storageKey="omega:datapack-world-window"
+                className="global-modal-content draggable-window"
+                defaultPosition={{ x: 240, y: 110 }}
+              >
+                <div className="global-modal-header draggable-window-handle">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ background: 'rgba(var(--accent-color-rgb), 0.2)', padding: '8px', borderRadius: '12px', display: 'flex' }}>
                        <IconBox />
@@ -557,14 +866,18 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
                     </button>
                   </div>
                 </div>
-              </div>
+              </DraggableWindow>
             </>
           )}
 
           {shaderInstallState && (
             <>
-              <div className="global-modal-content">
-                <div className="global-modal-header">
+              <DraggableWindow
+                storageKey="omega:shader-loader-window"
+                className="global-modal-content draggable-window"
+                defaultPosition={{ x: 260, y: 130 }}
+              >
+                <div className="global-modal-header draggable-window-handle">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ background: 'rgba(var(--accent-color-rgb), 0.2)', padding: '8px', borderRadius: '12px', display: 'flex' }}>
                        <IconBox />
@@ -600,7 +913,7 @@ const ModsPanel = React.memo(({ instances, t, language, projectType = "mod", onC
                     </div>
                   </button>
                 </div>
-              </div>
+              </DraggableWindow>
             </>
           )}
 
@@ -1211,8 +1524,8 @@ function App() {
       name: newName,
       mcVersion: newVer,
       loader: newLoader,
-      x: 50 + Math.random() * 50,
-      y: 50 + Math.random() * 50
+      x: 24 + Math.random() * 120,
+      y: 24 + Math.random() * 120
     };
     const updated = [...instances, newInst];
     setInstances(updated);
@@ -1237,8 +1550,8 @@ function App() {
       mcVersion: mcVer,
       loader: loader,
       icon: iconUrl,
-      x: window.innerWidth / 2 - 100,
-      y: window.innerHeight / 2 - 100
+      x: 24 + Math.random() * 160,
+      y: 24 + Math.random() * 160
     };
     setInstances(prev => {
       const updated = [...prev, newInst];
@@ -1297,10 +1610,14 @@ function App() {
 
         {activeTab === "home" && (
           <div className="home-sketch-dashboard">
-            {/* КОЛОНКА 1 (ЛЕВАЯ): Сборки & Сервера (До самого низа) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', minHeight: 0 }}>
-              <div className="sketch-card" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
-                <div className="sketch-card-header">
+            <DraggableWindow
+              storageKey="omega:recent-instances-panel"
+              className="sketch-card floating-dashboard-window draggable-window"
+              defaultPosition={{ x: 100, y: 94 }}
+              defaultSize={{ width: 340, height: 330 }}
+            >
+              <div className="floating-dashboard-content" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
+                <div className="sketch-card-header draggable-window-handle">
                   <span className="sketch-card-title"><IconBox /> Последние сборки</span>
                   <button className="play-btn" style={{ height: '28px', fontSize: '0.75rem', padding: '0 10px' }} onClick={() => setIsCreating(true)}>
                     <IconPlus /> Создать
@@ -1313,8 +1630,8 @@ function App() {
                     </div>
                   ) : (
                     instances.slice(0, 3).map(inst => (
-                      <div 
-                        key={inst.id} 
+                      <div
+                        key={inst.id}
                         className={`recent-instance-item ${selectedInstanceId === inst.id ? 'selected' : ''}`}
                         onClick={() => setSelectedInstanceId(inst.id)}
                       >
@@ -1327,8 +1644,8 @@ function App() {
                             <div className="recent-inst-ver" style={{ fontSize: '0.72rem' }}>{inst.mcVersion} • {inst.loader}</div>
                           </div>
                         </div>
-                        <button 
-                          className="play-btn" 
+                        <button
+                          className="play-btn"
                           style={{ height: '28px', fontSize: '0.75rem', padding: '0 10px', flexShrink: 0 }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1343,9 +1660,15 @@ function App() {
                   )}
                 </div>
               </div>
-
-              <div className="sketch-card" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
-                <div className="sketch-card-header">
+            </DraggableWindow>
+            <DraggableWindow
+              storageKey="omega:servers-panel"
+              className="sketch-card floating-dashboard-window draggable-window"
+              defaultPosition={{ x: 100, y: 442 }}
+              defaultSize={{ width: 340, height: 300 }}
+            >
+              <div className="floating-dashboard-content" style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
+                <div className="sketch-card-header draggable-window-handle">
                   <span className="sketch-card-title">🌐 Сервера</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flex: 1, minHeight: 0 }}>
@@ -1363,15 +1686,18 @@ function App() {
                   ))}
                 </div>
               </div>
-            </div>
+            </DraggableWindow>
 
-            {/* КОЛОНКА 2 (ЦЕНТРАЛЬНАЯ): Консоль логов (сворачиваемая) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, alignSelf: 'end', justifyContent: 'flex-end', height: '100%', minHeight: 0, width: '100%' }}>
+            <DraggableWindow
+              storageKey="omega:console-panel"
+              className="sketch-card floating-dashboard-window draggable-window"
+              defaultPosition={{ x: 462, y: 430 }}
+              defaultSize={{ width: 560, height: 310 }}
+            >
               <div
-                className="sketch-card"
                 style={{
                   overflow: 'hidden', padding: 0, position: 'relative',
-                  height: consoleOpen ? '260px' : 'auto',
+                  height: '100%',
                   transition: 'height 0.3s cubic-bezier(0.4,0,0.2,1)',
                   flexShrink: 0
                 }}
@@ -1384,6 +1710,7 @@ function App() {
                 <div style={{ position: 'relative', zIndex: 1, padding: '12px 14px', height: '100%', display: 'flex', flexDirection: 'column' }}>
                   {/* Header + toggle */}
                   <div
+                    className="draggable-window-handle"
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
                     onClick={() => setConsoleOpen(p => !p)}
                   >
@@ -1442,11 +1769,16 @@ function App() {
                   )}
                 </div>
               </div>
-            </div>
+            </DraggableWindow>
 
-            {/* КОЛОНКА 3 (ПРАВАЯ): Друзья и активность */}
-            <div className="sketch-card" style={{ height: '100%', minHeight: 0, overflow: 'hidden' }}>
-              <div className="sketch-card-header">
+            <DraggableWindow
+              storageKey="omega:friends-panel"
+              className="sketch-card floating-dashboard-window draggable-window"
+              defaultPosition={{ x: Math.max(100, window.innerWidth - 370), y: 94 }}
+              defaultSize={{ width: 340, height: 648 }}
+            >
+            <div style={{ height: '100%', minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="sketch-card-header draggable-window-handle">
                 <span className="sketch-card-title"><IconUsers /> Друзья</span>
                 <span className="user-status" style={{ fontSize: '0.78rem', color: '#10b981' }}>
                   <span className="status-dot" /> 2 онлайн
@@ -1485,38 +1817,85 @@ function App() {
                 <IconPlus /> Добавить друга
               </button>
             </div>
+            </DraggableWindow>
 
             {/* Модальное окно создания сборки */}
             {isCreating && (
               <div className="account-modal-overlay" onClick={() => setIsCreating(false)}>
-                <div className="create-modal create-instance-modal" onClick={e => e.stopPropagation()}>
-                  <h3>{t.newInstTitle}</h3>
-                  <input type="text" placeholder={t.newInstNamePlaceholder} value={newName} onChange={e => setNewName(e.target.value)} />
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                    <div className="custom-dropdown-container" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setVerMenuOpen(!verMenuOpen); setLoaderMenuOpen(false); }} style={{ flex: 1 }}>
-                      <div className="custom-dropdown-btn" style={{ height: "40px", fontSize: "0.9rem" }}>{newVer} <IconChevronDown /></div>
-                      {verMenuOpen && (
-                        <div className="custom-dropdown-menu upwards">
-                          <input type="text" placeholder="Поиск..." value={newVerSearch} onChange={e => setNewVerSearch(e.target.value)} onClick={e => e.stopPropagation()} style={{ margin: '5px', padding: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '4px', outline: 'none' }} />
-                          {currentVersionsList.filter(v => v.includes(newVerSearch.toLowerCase())).map(v => <div key={v} className="custom-dropdown-item" onClick={(e) => { e.stopPropagation(); setNewVer(v); setVerMenuOpen(false); }}>{v}</div>)}
-                        </div>
-                      )}
+                <DraggableWindow
+                  storageKey="omega:create-instance-window"
+                  className="account-modal create-instance-modal draggable-window"
+                  defaultPosition={{ x: 80, y: 90 }}
+                >
+                  <div className="account-modal-header draggable-window-handle">
+                    <div className="account-modal-header-info">
+                      <h3>{t.newInstTitle}</h3>
+                      <p>{language === "en" ? "Set the name, version, and loader before creating." : "Задайте имя, версию и загрузчик перед созданием"}</p>
                     </div>
-                    <div className="custom-dropdown-container" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setLoaderMenuOpen(!loaderMenuOpen); setVerMenuOpen(false); }} style={{ flex: 1 }}>
-                      <div className="custom-dropdown-btn" style={{ height: "40px", fontSize: "0.9rem" }}>{newLoader} <IconChevronDown /></div>
-                      {loaderMenuOpen && (
-                        <div className="custom-dropdown-menu upwards">
-                          {LOADERS_LIST.map(l => <div key={l} className="custom-dropdown-item" onClick={(e) => { e.stopPropagation(); setNewLoader(l); setLoaderMenuOpen(false); }}>{l}</div>)}
-                        </div>
-                      )}
-                    </div>
+                    <button className="account-modal-close" onClick={() => setIsCreating(false)}>
+                      <IconX />
+                    </button>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                    <button className="play-btn" style={{ flex: 1, height: "40px", fontSize: "0.9rem", padding: 0, justifyContent: "center" }} onClick={handleCreateInstance}>{t.createBtn}</button>
-                    <button className="play-btn" style={{ flex: 1, height: "40px", fontSize: "0.9rem", padding: 0, justifyContent: "center", background: "rgba(255,255,255,0.1)", boxShadow: "none" }} onClick={() => setIsCreating(false)}>{t.cancel}</button>
+                  <div className="account-modal-body">
+                    <div className="create-instance-hero">
+                      <div className="create-instance-hero-icon">
+                        <IconPlus />
+                      </div>
+                      <div className="create-instance-hero-text">
+                        <strong>{t.newInstTitle}</strong>
+                        <span>{language === "en" ? "Prepare a profile in a few seconds" : "Подготовьте профиль за несколько секунд"}</span>
+                      </div>
+                    </div>
+
+                    <div className="account-offline-form">
+                      <div className="account-input-group">
+                        <input type="text" placeholder={t.newInstNamePlaceholder} value={newName} onChange={e => setNewName(e.target.value)} />
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                        <div className="custom-dropdown-container" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setVerMenuOpen(!verMenuOpen); setLoaderMenuOpen(false); }} style={{ flex: 1 }}>
+                          <div className="custom-dropdown-btn" style={{ height: "40px", fontSize: "0.9rem" }}>{newVer} <IconChevronDown /></div>
+                          {verMenuOpen && (
+                            <div className="custom-dropdown-menu upwards">
+                              <input type="text" placeholder="Поиск..." value={newVerSearch} onChange={e => setNewVerSearch(e.target.value)} onClick={e => e.stopPropagation()} style={{ margin: '5px', padding: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '4px', outline: 'none' }} />
+                              {currentVersionsList.filter(v => v.includes(newVerSearch.toLowerCase())).map(v => <div key={v} className="custom-dropdown-item" onClick={(e) => { e.stopPropagation(); setNewVer(v); setVerMenuOpen(false); }}>{v}</div>)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="custom-dropdown-container" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setLoaderMenuOpen(!loaderMenuOpen); setVerMenuOpen(false); }} style={{ flex: 1 }}>
+                          <div className="custom-dropdown-btn" style={{ height: "40px", fontSize: "0.9rem" }}>{newLoader} <IconChevronDown /></div>
+                          {loaderMenuOpen && (
+                            <div className="custom-dropdown-menu upwards">
+                              {LOADERS_LIST.map(l => <div key={l} className="custom-dropdown-item" onClick={(e) => { e.stopPropagation(); setNewLoader(l); setLoaderMenuOpen(false); }}>{l}</div>)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                        <button className="create-action-btn create-action-btn-primary" style={{ flex: 1 }} onClick={handleCreateInstance}>
+                          <div className="account-method-icon" style={{ background: 'rgba(var(--accent-color-rgb), 0.15)', color: 'var(--accent-color)' }}>
+                            <IconPlus />
+                          </div>
+                          <div className="account-method-info">
+                            <h4>{t.createBtn}</h4>
+                            <p>{language === "en" ? "Create a new instance" : "Создать новую сборку"}</p>
+                          </div>
+                        </button>
+                        <button className="create-action-btn create-action-btn-secondary" style={{ flex: 1 }} onClick={() => setIsCreating(false)}>
+                          <div className="account-method-icon offline">
+                            <IconX />
+                          </div>
+                          <div className="account-method-info">
+                            <h4>{t.cancel}</h4>
+                            <p>{language === "en" ? "Close the window" : "Закрыть окно"}</p>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </DraggableWindow>
               </div>
             )}
           </div>
@@ -1610,7 +1989,11 @@ function App() {
 
             {renameModalOpen && (
               <div className="account-modal-overlay" onClick={() => setRenameModalOpen(null)}>
-                <div className="create-modal" onClick={e => e.stopPropagation()}>
+                <DraggableWindow
+                  storageKey={`omega:rename-window:${renameModalOpen}`}
+                  className="create-modal draggable-window"
+                  defaultPosition={{ x: 120, y: 120 }}
+                >
                   <h3>{t.renameInstTitle}</h3>
                   <input type="text" value={renameInput} onChange={e => setRenameInput(e.target.value)} placeholder={t.renameInstPlaceholder} />
                   <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
@@ -1624,13 +2007,17 @@ function App() {
                     }}>{t.saveBtn}</button>
                     <button className="play-btn modal-action-btn" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setRenameModalOpen(null)}>{t.cancel}</button>
                   </div>
-                </div>
+                </DraggableWindow>
               </div>
             )}
 
             {editModalOpen && (
               <div className="account-modal-overlay" onClick={() => setEditModalOpen(null)}>
-                <div className="create-modal" onClick={e => e.stopPropagation()}>
+                <DraggableWindow
+                  storageKey={`omega:edit-window:${editModalOpen}`}
+                  className="create-modal draggable-window"
+                  defaultPosition={{ x: 140, y: 140 }}
+                >
                   <h3>Изменить сборку</h3>
                   <input type="text" value={editNameInput} onChange={e => setEditNameInput(e.target.value)} placeholder="Название" />
                   <input type="text" value={editVersionInput} onChange={e => setEditVersionInput(e.target.value)} placeholder="Версия" />
@@ -1639,20 +2026,24 @@ function App() {
                     <button className="play-btn modal-action-btn" style={{ flex: 1 }} onClick={saveEditInstance}>Сохранить</button>
                     <button className="play-btn modal-action-btn" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setEditModalOpen(null)}>Отмена</button>
                   </div>
-                </div>
+                </DraggableWindow>
               </div>
             )}
 
             {groupModalOpen && (
               <div className="account-modal-overlay" onClick={() => setGroupModalOpen(null)}>
-                <div className="create-modal" onClick={e => e.stopPropagation()}>
+                <DraggableWindow
+                  storageKey={`omega:group-window:${groupModalOpen}`}
+                  className="create-modal draggable-window"
+                  defaultPosition={{ x: 160, y: 160 }}
+                >
                   <h3>Изменить группу</h3>
                   <input type="text" value={groupInput} onChange={e => setGroupInput(e.target.value)} placeholder="Название группы" />
                   <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                     <button className="play-btn modal-action-btn" style={{ flex: 1 }} onClick={saveGroupInstance}>Сохранить</button>
                     <button className="play-btn modal-action-btn" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', boxShadow: 'none' }} onClick={() => setGroupModalOpen(null)}>Отмена</button>
                   </div>
-                </div>
+                </DraggableWindow>
               </div>
             )}
           </div>
@@ -1964,9 +2355,14 @@ function App() {
           </div>
         )}
         {profileMenuOpen && (
-        <div className="account-modal-overlay" onClick={() => setProfileMenuOpen(false)}>
-          <div className="account-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="account-modal-header">
+        <div className="account-modal-overlay profile-modal-overlay" onClick={() => setProfileMenuOpen(false)}>
+          <DraggableWindow
+            storageKey="omega:profile-window"
+            className="account-modal draggable-window"
+            defaultPosition={{ x: 180, y: 90 }}
+            defaultSize={{ width: 420, height: 520 }}
+          >
+            <div className="account-modal-header draggable-window-handle">
               <div className="account-modal-header-info">
                 <h3>
                   {accountModalView === "list" && t.accountsSection}
@@ -2096,14 +2492,18 @@ function App() {
                 </div>
               )}
             </div>
-          </div>
+          </DraggableWindow>
         </div>
       )}
 
       {importModalOpen && (
         <div className="account-modal-overlay" onClick={() => setImportModalOpen(false)}>
-          <div className="account-modal" onClick={e => e.stopPropagation()} style={{ width: '480px', padding: 0, background: 'rgba(20, 20, 30, 0.4)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-            <div className="account-modal-header">
+          <DraggableWindow
+            storageKey="omega:import-window"
+            className="account-modal draggable-window"
+            defaultPosition={{ x: 200, y: 110 }}
+          >
+            <div className="account-modal-header draggable-window-handle">
               <div className="account-modal-header-info">
                 <h3 style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
                   {importStep === "menu" ? "Импорт сборки" : importStep === "prism" ? "Импорт из Prism Launcher" : importStep === "curseforge" ? "Импорт из CurseForge" : "Импорт .mrpack"}
@@ -2208,7 +2608,7 @@ function App() {
                 </div>
               )}
             </div>
-          </div>
+          </DraggableWindow>
         </div>
       )}
     </main>
