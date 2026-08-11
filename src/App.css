@@ -1860,6 +1860,38 @@ input[type="color"]::-webkit-color-swatch {
   box-shadow: 0 10px 25px rgba(150, 13, 242, 0.3);
 }
 
+.assembly-scroll-card.drop-target {
+  background: rgba(150, 13, 242, 0.35);
+  border-color: #AB3DF5;
+  border-style: dashed;
+  transform: translateX(4px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(150, 13, 242, 0.5);
+}
+
+.install-progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+.install-progress-bar > div {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #AB3DF5, #7C5CFF);
+  transition: width 0.3s ease;
+}
+
+.install-progress-label {
+  font-size: 0.75rem;
+  color: #8b8b9c;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
 .assembly-info-card-detail {
   background: rgba(14, 11, 22, 0.85);
   backdrop-filter: blur(20px);
