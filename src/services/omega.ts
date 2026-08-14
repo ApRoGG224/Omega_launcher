@@ -116,10 +116,19 @@ export async function omegaGetProfile(): Promise<OmegaProfile | null> {
   const { data } = await sb.auth.getUser();
   const uid = data.user?.id;
   if (!uid) return null;
-  const { data: row } = await sb
+  let { data: row } = await sb
     .from("profiles")
     .select("id, username, friend_code, avatar_url")
     .eq("id", uid)
     .maybeSingle();
+  if (!row) {
+    // Fallback for projects where the avatar_url migration is not applied yet.
+    const { data: rowFallback } = await sb
+      .from("profiles")
+      .select("id, username, friend_code")
+      .eq("id", uid)
+      .maybeSingle();
+    row = rowFallback as typeof row;
+  }
   return row ? rowToProfile(row) : null;
 }

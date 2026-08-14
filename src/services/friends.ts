@@ -69,6 +69,26 @@ export async function removeFriend(friendId: string): Promise<void> {
   await sb.from("friends").delete().eq("user_id", friendId).eq("friend_id", me);
 }
 
+async function fetchProfiles(ids: string[]) {
+  const sb = getSupabase();
+  let profiles: any[] | null = null;
+  const first = await sb
+    .from("profiles")
+    .select("id, username, friend_code, avatar_url")
+    .in("id", ids);
+  if (!first.error && first.data) {
+    profiles = first.data;
+  } else {
+    // Fallback for projects where the avatar_url migration is not applied yet.
+    const fallback = await sb
+      .from("profiles")
+      .select("id, username, friend_code")
+      .in("id", ids);
+    if (!fallback.error && fallback.data) profiles = fallback.data;
+  }
+  return profiles ?? [];
+}
+
 export async function loadFriends(): Promise<FriendsData> {
   const sb = getSupabase();
   const me = await currentUserId();
@@ -80,11 +100,7 @@ export async function loadFriends(): Promise<FriendsData> {
   if (!rows || rows.length === 0) return { friends: [], requests: [] };
 
   const ids = rows.map((r) => (r.user_id === me ? r.friend_id : r.user_id));
-  const { data: profiles, error: profileError } = await sb
-    .from("profiles")
-    .select("id, username, friend_code, avatar_url")
-    .in("id", ids);
-  if (profileError) throw new Error(profileError.message);
+  const profiles = await fetchProfiles(ids);
   const byId = new Map((profiles ?? []).map((p) => [p.id, p]));
 
   const friends: FriendEntry[] = [];
