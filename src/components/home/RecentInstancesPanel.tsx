@@ -1,15 +1,23 @@
 import React from "react";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import type { ModpackInstance } from "../../types";
 import DraggableWindow from "../../ui/DraggableWindow";
 import { IconBox, IconPlay, IconPlus } from "../../ui/icons";
 
+const resolveIcon = (icon: string | undefined) => {
+  if (!icon) return undefined;
+  return icon.startsWith("data:") || icon.startsWith("http") ? icon : convertFileSrc(icon);
+};
+
 export const RecentInstancesPanel = React.memo(({
+  t,
   instances,
   selectedInstanceId,
   onSelectInstance,
   onPlayInstance,
   onCreate,
 }: {
+  t: any;
   instances: ModpackInstance[];
   selectedInstanceId: string | null;
   onSelectInstance: (id: string) => void;
@@ -26,16 +34,16 @@ export const RecentInstancesPanel = React.memo(({
       <div className="floating-dashboard-content" style={{ flex: 1, overflow: "hidden", minHeight: 0 }}>
         <div className="sketch-card-header draggable-window-handle">
           <span className="sketch-card-title">
-            <IconBox /> Последние сборки
+            <IconBox /> {t.recentTitle}
           </span>
           <button className="play-btn" style={{ height: "28px", fontSize: "0.75rem", padding: "0 10px" }} onClick={onCreate}>
-            <IconPlus /> Создать
+            <IconPlus /> {t.createShort}
           </button>
         </div>
         <div className="recent-instances-list recent-instances-fixed" style={{ overflowY: "hidden", flex: 1, minHeight: 0 }}>
           {instances.length === 0 ? (
             <div style={{ color: "#8b8b9c", textAlign: "center", padding: "15px", fontSize: "0.85rem" }}>
-              Нет сборок. Нажмите "+ Создать"!
+              {t.noBuildsHome}
             </div>
           ) : (
             instances.slice(0, 3).map((inst) => (
@@ -46,7 +54,7 @@ export const RecentInstancesPanel = React.memo(({
               >
                 <div className="recent-inst-info">
                   <div className="recent-inst-icon">
-                    {inst.icon ? <img src={inst.icon} alt="icon" style={{ width: 24, height: 24, borderRadius: 6 }} /> : <IconBox />}
+                    {inst.icon ? <img src={resolveIcon(inst.icon)} alt="icon" style={{ width: 24, height: 24, borderRadius: 6 }} /> : <IconBox />}
                   </div>
                   <div>
                     <div className="recent-inst-name" style={{ fontSize: "0.88rem" }}>{inst.name}</div>

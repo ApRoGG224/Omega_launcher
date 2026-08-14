@@ -4,6 +4,7 @@ dist-ssr/
 *.local
 .env
 .env.*
+!.env.example
 .DS_Store
 src-tauri/target/
 minecraft_data/

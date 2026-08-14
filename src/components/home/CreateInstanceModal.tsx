@@ -7,7 +7,6 @@ const LOADERS_LIST = ["Vanilla", "Fabric", "Forge", "NeoForge", "Quilt"];
 
 export const CreateInstanceModal = React.memo(({
   t,
-  language,
   versionsList,
   newName,
   setNewName,
@@ -16,10 +15,10 @@ export const CreateInstanceModal = React.memo(({
   newLoader,
   setNewLoader,
   onCreate,
+  onImport,
   onClose,
 }: {
   t: any;
-  language: string;
   versionsList: string[];
   newName: string;
   setNewName: (v: string) => void;
@@ -28,6 +27,7 @@ export const CreateInstanceModal = React.memo(({
   newLoader: string;
   setNewLoader: (v: string) => void;
   onCreate: () => void;
+  onImport: () => void;
   onClose: () => void;
 }) => {
   useEffect(() => {
@@ -51,7 +51,7 @@ export const CreateInstanceModal = React.memo(({
         <div className="account-modal-header draggable-window-handle">
           <div className="account-modal-header-info">
             <h3>{t.newInstTitle}</h3>
-            <p>{language === "en" ? "Set the name, version, and loader before creating." : "Задайте имя, версию и загрузчик перед созданием"}</p>
+            <p>{t.setMetaSub}</p>
           </div>
           <button className="account-modal-close" onClick={onClose}>
             <IconX />
@@ -65,7 +65,7 @@ export const CreateInstanceModal = React.memo(({
             </div>
             <div className="create-instance-hero-text">
               <strong>{t.newInstTitle}</strong>
-              <span>{language === "en" ? "Prepare a profile in a few seconds" : "Подготовьте профиль за несколько секунд"}</span>
+              <span>{t.heroSub}</span>
             </div>
           </div>
 
@@ -95,23 +95,17 @@ export const CreateInstanceModal = React.memo(({
             </div>
 
             <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-              <button className="create-action-btn create-action-btn-primary" style={{ flex: 1 }} onClick={onCreate}>
-                <div className="account-method-icon" style={{ background: "rgba(var(--accent-color-rgb), 0.15)", color: "var(--accent-color)" }}>
-                  <IconPlus />
-                </div>
-                <div className="account-method-info">
-                  <h4>{t.createBtn}</h4>
-                  <p>{language === "en" ? "Create a new instance" : "Создать новую сборку"}</p>
-                </div>
+              <button className="create-action-btn create-action-btn-primary create-action-btn-compact" style={{ flex: 1 }} onClick={onCreate}>
+                <IconPlus />
+                <h4>{t.createBtn}</h4>
               </button>
-              <button className="create-action-btn create-action-btn-secondary" style={{ flex: 1 }} onClick={onClose}>
-                <div className="account-method-icon offline">
-                  <IconX />
-                </div>
-                <div className="account-method-info">
-                  <h4>{t.cancel}</h4>
-                  <p>{language === "en" ? "Close the window" : "Закрыть окно"}</p>
-                </div>
+              <button className="create-action-btn create-action-btn-secondary create-action-btn-compact" style={{ flex: 1 }} onClick={onImport}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3v12" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <rect x="3" y="17" width="18" height="4" rx="2" />
+                </svg>
+                <h4>{t.importBtn}</h4>
               </button>
             </div>
           </div>

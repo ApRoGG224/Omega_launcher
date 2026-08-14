@@ -9,9 +9,11 @@ export interface ShaderInstallState {
 }
 
 export const ShaderInstallModal = React.memo(({
+  t,
   onPickLoader,
   onCancel,
 }: {
+  t: any;
   onPickLoader: (loader: "fabric" | "forge") => void;
   onCancel: () => void;
 }) => {
@@ -30,7 +32,7 @@ export const ShaderInstallModal = React.memo(({
           <div style={{ background: "rgba(var(--accent-color-rgb), 0.2)", padding: "8px", borderRadius: "12px", display: "flex" }}>
             <IconBox />
           </div>
-          <h3 className="global-modal-title">Куда установить шейдер?</h3>
+          <h3 className="global-modal-title">{t.shaderModalTitle}</h3>
         </div>
         <button onClick={onCancel} className="global-modal-close">
           <IconX />
@@ -45,10 +47,10 @@ export const ShaderInstallModal = React.memo(({
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px", textAlign: "left" }}>
               <span style={{ fontSize: "1.05rem", fontWeight: "600" }}>Fabric</span>
-              <span style={{ color: "#8b8b9c", fontSize: "0.8rem" }}>Будет установлен Iris</span>
+              <span style={{ color: "#8b8b9c", fontSize: "0.8rem" }}>{t.irisNote}</span>
             </div>
           </div>
-          <div className="modal-item-tag">Рекомендуется</div>
+          <div className="modal-item-tag">{t.recommended}</div>
         </button>
         <button className="modal-item-btn" onClick={() => pick("forge")} style={{ animationDelay: "0.05s" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
@@ -57,7 +59,7 @@ export const ShaderInstallModal = React.memo(({
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px", textAlign: "left" }}>
               <span style={{ fontSize: "1.05rem", fontWeight: "600" }}>Forge</span>
-              <span style={{ color: "#8b8b9c", fontSize: "0.8rem" }}>Для совместимости с Forge</span>
+              <span style={{ color: "#8b8b9c", fontSize: "0.8rem" }}>{t.forgeCompat}</span>
             </div>
           </div>
         </button>

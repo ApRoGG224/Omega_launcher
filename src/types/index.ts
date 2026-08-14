@@ -1,6 +1,6 @@
 export type Language = "ru" | "en";
 
-export type AccountType = "microsoft" | "offline";
+export type AccountType = "microsoft" | "offline" | "omega";
 
 export interface Account {
   name: string;
@@ -16,6 +16,8 @@ export interface ModpackInstance {
   y: number;
   icon?: string;
   group?: string;
+  playTimeMs?: number;
+  lastPlayedAt?: string;
 }
 
 export type ProjectType = "mod" | "resourcepack" | "modpack" | "shader" | "datapack";

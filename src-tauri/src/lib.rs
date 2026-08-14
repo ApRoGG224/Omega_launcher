@@ -27,6 +27,20 @@ fn find_system_java(mc_version: String) -> Option<String> {
     java::find_system_java(required)
 }
 
+#[tauri::command]
+fn app_exit(app: AppHandle) {
+    app.exit(0);
+}
+
+/// Returns the first non-loopback IPv4 address of this machine, used for
+/// friend "join my world" invites (LAN play).
+#[tauri::command]
+fn get_local_ip() -> Option<String> {
+    let socket = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
+    socket.connect("8.8.8.8:80").ok()?;
+    socket.local_addr().ok().map(|a| a.ip().to_string())
+}
+
 fn read_nbt_string(data: &[u8], pos: &mut usize) -> Option<String> {
     if *pos + 2 > data.len() { return None; }
     let len = u16::from_be_bytes([data[*pos], data[*pos + 1]]) as usize;
@@ -297,6 +311,8 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             find_system_java,
+            app_exit,
+            get_local_ip,
             launch::launch_minecraft,
             auth::login_microsoft,
             launch::kill_minecraft,
@@ -327,6 +343,7 @@ pub fn run() {
             network::ping_server,
             network::db_load_servers,
             network::db_save_server,
+            network::db_save_server_favicon,
             network::db_delete_server
         ])
         .run(tauri::generate_context!())

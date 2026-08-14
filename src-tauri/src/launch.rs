@@ -35,6 +35,13 @@ fn rules_match(rules: Option<&Value>) -> bool {
     let mut allowed = false;
     for rule in arr {
         let action = rule.get("action").and_then(|a| a.as_str()).unwrap_or("allow");
+        // Launcher features (demo mode, custom resolution, quick play) are
+        // never enabled by Omega Launcher, so feature-gated rules never match.
+        if let Some(features) = rule.get("features").and_then(|f| f.as_object()) {
+            if features.values().any(|v| v.as_bool() == Some(true)) {
+                continue;
+            }
+        }
         let os_matches = match rule.get("os") {
             Some(os) => os.get("name").and_then(|n| n.as_str()).map(|n| n == os_name).unwrap_or(true),
             None => true,
@@ -191,13 +198,133 @@ fn expand_library_path_native(name: &str, classifier: &str) -> String {
     )
 }
 
-async fn ensure_assets(app: &AppHandle, client: &reqwest::Client, root: &Path, asset_index_id: &str) -> Result<(), String> {
+/// Collects JVM and game arguments from the complete version profile chain.
+/// Loader profiles usually inherit the vanilla profile's resource arguments
+/// (`--assets`, `--assetIndex`, `--gameDir`, etc.) instead of copying them.
+fn collect_profile_arguments(
+    root: &Path,
+    version_name: &str,
+) -> Result<(Vec<String>, Vec<String>), String> {
+    let mut profiles = Vec::new();
+    let mut visited = std::collections::HashSet::new();
+    let mut current = version_name.to_string();
+
+    loop {
+        if !visited.insert(current.clone()) {
+            break;
+        }
+        let json_path = root.join("versions").join(&current).join(format!("{current}.json"));
+        if !json_path.exists() {
+            break;
+        }
+        let json: Value = serde_json::from_str(
+            &std::fs::read_to_string(&json_path).map_err(|e| e.to_string())?,
+        )
+        .map_err(|e| e.to_string())?;
+        current = json
+            .get("inheritsFrom")
+            .and_then(|value| value.as_str())
+            .map(str::to_string)
+            .unwrap_or_default();
+        profiles.push(json);
+        if current.is_empty() {
+            break;
+        }
+    }
+
+    // Parent arguments must be present before loader-specific arguments.
+    profiles.reverse();
+    let mut jvm_args = Vec::new();
+    let mut game_args = Vec::new();
+
+    for profile in profiles {
+        if let Some(args) = profile
+            .get("arguments")
+            .and_then(|arguments| arguments.get("jvm"))
+            .and_then(|jvm| jvm.as_array())
+        {
+            let mut skip_classpath_value = false;
+            for arg in args {
+                if let Some(value) = arg.as_str() {
+                    if skip_classpath_value {
+                        skip_classpath_value = false;
+                        continue;
+                    }
+                    if value == "-cp" || value == "-classpath" {
+                        // The launcher supplies its own complete classpath below.
+                        skip_classpath_value = true;
+                        continue;
+                    }
+                    if !value.starts_with("-Djava.library.path") {
+                        jvm_args.push(value.to_string());
+                    }
+                } else if rules_match(arg.get("rules")) {
+                    if let Some(value) = arg.get("value") {
+                        let values: Vec<String> = value
+                            .as_array()
+                            .map(|array| {
+                                array
+                                    .iter()
+                                    .filter_map(|item| item.as_str().map(str::to_string))
+                                    .collect()
+                            })
+                            .or_else(|| value.as_str().map(|item| vec![item.to_string()]))
+                            .unwrap_or_default();
+                        jvm_args.extend(values);
+                    }
+                }
+            }
+        }
+
+        if let Some(args) = profile
+            .get("arguments")
+            .and_then(|arguments| arguments.get("game"))
+            .and_then(|game| game.as_array())
+        {
+            for arg in args {
+                if let Some(value) = arg.as_str() {
+                    game_args.push(value.to_string());
+                } else if rules_match(arg.get("rules")) {
+                    if let Some(value) = arg.get("value") {
+                        let values: Vec<String> = value
+                            .as_array()
+                            .map(|array| {
+                                array
+                                    .iter()
+                                    .filter_map(|item| item.as_str().map(str::to_string))
+                                    .collect()
+                            })
+                            .or_else(|| value.as_str().map(|item| vec![item.to_string()]))
+                            .unwrap_or_default();
+                        game_args.extend(values);
+                    }
+                }
+            }
+        } else if let Some(legacy) = profile.get("minecraftArguments").and_then(|value| value.as_str()) {
+            game_args.extend(legacy.split_whitespace().map(str::to_string));
+        }
+    }
+
+    Ok((jvm_args, game_args))
+}
+
+async fn ensure_assets(
+    app: &AppHandle,
+    client: &reqwest::Client,
+    root: &Path,
+    asset_index_id: &str,
+    asset_index_url: Option<&str>,
+) -> Result<(), String> {
     let index_path = root.join("assets").join("indexes").join(format!("{asset_index_id}.json"));
     let objects: Value = if index_path.exists() {
         serde_json::from_str(&std::fs::read_to_string(&index_path).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?
     } else {
-        let url = format!("https://piston-meta.mojang.com/mc/assets/{asset_index_id}.json");
-        let v: Value = get_json(client, &url).await?;
+        let url = asset_index_url.ok_or_else(|| {
+            format!("Version profile has no downloadable asset index URL for {asset_index_id}")
+        })?;
+        let v: Value = get_json(client, url).await.map_err(|error| {
+            format!("Failed to download asset index {asset_index_id} from {url}: {error}")
+        })?;
         std::fs::create_dir_all(index_path.parent().unwrap()).map_err(|e| e.to_string())?;
         std::fs::write(&index_path, serde_json::to_string(&v).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
         v
@@ -336,12 +463,73 @@ pub async fn launch_minecraft(
     let profile_text = std::fs::read_to_string(&profile_path).map_err(|e| format!("Version {final_version} is not installed: {e}"))?;
     let profile: Value = serde_json::from_str(&profile_text).map_err(|e| e.to_string())?;
 
-    let asset_index_id = profile
+    let mut asset_index_url = profile
+        .get("assetIndex")
+        .and_then(|a| a.get("url"))
+        .and_then(|u| u.as_str())
+        .map(str::to_string);
+    if asset_index_url.is_none() {
+        if let Some(sha1) = profile
+            .get("assetIndex")
+            .and_then(|a| a.get("sha1"))
+            .and_then(|s| s.as_str())
+        {
+            asset_index_url = Some(format!(
+                "https://piston-meta.mojang.com/v1/packages/{sha1}/{}.json",
+                profile
+                    .get("assetIndex")
+                    .and_then(|a| a.get("id"))
+                    .and_then(|i| i.as_str())
+                    .unwrap_or("assets")
+            ));
+        }
+    }
+    let mut asset_index_id = profile
         .get("assetIndex")
         .and_then(|a| a.get("id"))
         .and_then(|i| i.as_str())
-        .unwrap_or("legacy")
+        .unwrap_or("")
         .to_string();
+
+    // Loader profiles often inherit the asset index from the vanilla profile.
+    // Never fall back to "legacy": that endpoint does not exist for modern
+    // Minecraft versions.
+    if asset_index_id.is_empty() {
+        if let Some(parent) = profile.get("inheritsFrom").and_then(|i| i.as_str()) {
+            let parent_path = data_dir
+                .join("versions")
+                .join(parent)
+                .join(format!("{parent}.json"));
+            if let Ok(parent_text) = std::fs::read_to_string(parent_path) {
+                if let Ok(parent_profile) = serde_json::from_str::<Value>(&parent_text) {
+                    asset_index_id = parent_profile
+                        .get("assetIndex")
+                        .and_then(|a| a.get("id"))
+                        .and_then(|i| i.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    if asset_index_url.is_none() {
+                        asset_index_url = parent_profile
+                            .get("assetIndex")
+                            .and_then(|a| a.get("url"))
+                            .and_then(|u| u.as_str())
+                            .map(str::to_string);
+                    }
+                    if asset_index_url.is_none() {
+                        if let Some(sha1) = parent_profile
+                            .get("assetIndex")
+                            .and_then(|a| a.get("sha1"))
+                            .and_then(|s| s.as_str())
+                        {
+                            asset_index_url = Some(format!(
+                                "https://piston-meta.mojang.com/v1/packages/{sha1}/{asset_index_id}.json"
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     let main_class = profile
         .get("mainClass")
@@ -375,49 +563,22 @@ pub async fn launch_minecraft(
     std::fs::create_dir_all(&game_dir).map_err(|e| e.to_string())?;
 
     let libraries = collect_libraries(&app, &client, &final_version, &data_dir, &libraries_dir, &natives_dir).await?;
-    ensure_assets(&app, &client, &data_dir, &asset_index_id).await?;
-
-    let mut jvm_args: Vec<String> = Vec::new();
-    if let Some(args) = profile.get("arguments").and_then(|a| a.get("jvm")).and_then(|j| j.as_array()) {
-        for arg in args {
-            if let Some(s) = arg.as_str() {
-                if !s.starts_with("-Djava.library.path") && !s.starts_with("-cp") && !s.starts_with("-classpath") {
-                    jvm_args.push(s.to_string());
-                }
-            } else if rules_match(arg.get("rules")) {
-                if let Some(v) = arg.get("value") {
-                    let vals: Vec<String> = v
-                        .as_array()
-                        .map(|arr| arr.iter().filter_map(|x| x.as_str().map(|s| s.to_string())).collect())
-                        .or_else(|| v.as_str().map(|s| vec![s.to_string()]))
-                        .unwrap_or_default();
-                    jvm_args.extend(vals);
-                }
-            }
-        }
+    if asset_index_id.is_empty() {
+        return Err("Version profile has no asset index; cannot start Minecraft with resources".to_string());
+    } else {
+        ensure_assets(
+            &app,
+            &client,
+            &data_dir,
+            &asset_index_id,
+            asset_index_url.as_deref(),
+        )
+        .await?;
     }
 
-    let mut game_args: Vec<String> = Vec::new();
-    if let Some(args) = profile.get("arguments").and_then(|a| a.get("game")).and_then(|g| g.as_array()) {
-        for arg in args {
-            if let Some(s) = arg.as_str() {
-                game_args.push(s.to_string());
-            } else if rules_match(arg.get("rules")) {
-                if let Some(v) = arg.get("value") {
-                    let vals: Vec<String> = v
-                        .as_array()
-                        .map(|arr| arr.iter().filter_map(|x| x.as_str().map(|s| s.to_string())).collect())
-                        .or_else(|| v.as_str().map(|s| vec![s.to_string()]))
-                        .unwrap_or_default();
-                    game_args.extend(vals);
-                }
-            }
-        }
-    } else if let Some(legacy) = profile.get("minecraftArguments").and_then(|m| m.as_str()) {
-        game_args = legacy.split_whitespace().map(|s| s.to_string()).collect();
-    }
+    let (jvm_args, game_args) = collect_profile_arguments(&data_dir, &final_version)?;
 
-    // Collect + order: topmost profile jvm args, then inheritsFrom chain args.
+    // Collect arguments from vanilla first, then apply loader-specific values.
     let mut config = LaunchConfig {
         version_name: final_version.clone(),
         game_dir: game_dir.clone(),
@@ -445,6 +606,7 @@ pub async fn launch_minecraft(
         arg.replace("${auth_player_name}", &config.auth_name)
             .replace("${version_name}", &config.version_name)
             .replace("${game_directory}", &config.game_dir.to_string_lossy())
+            .replace("${natives_directory}", &config.natives_dir.to_string_lossy())
             .replace("${assets_root}", &config.assets_root.to_string_lossy())
             .replace("${assets_index_name}", &config.asset_index_id)
             .replace("${auth_uuid}", &config.auth_uuid)
@@ -456,6 +618,7 @@ pub async fn launch_minecraft(
             .replace("${clientid}", &config.client_token)
             .replace("${launcher_name}", "Omega Launcher")
             .replace("${launcher_version}", "1.0.0")
+            .replace("${version_type}", "release")
     };
 
     let ram_g = if ram == 0 { 4 } else { ram };
@@ -467,6 +630,14 @@ pub async fn launch_minecraft(
         .arg(format!("-Djava.library.path={}", config.natives_dir.to_string_lossy()))
         .arg("-Dminecraft.launcher.brand=Omega Launcher")
         .arg("-Dminecraft.launcher.version=1.0.0");
+
+    // LWJGL uses native libraries. Java 25 warns about this unless native
+    // access is explicitly granted to classpath code.
+    command.arg("--enable-native-access=ALL-UNNAMED");
+    if crate::java::required_java_version(&vanilla_version) >= 24 {
+        // LWJGL 3.4.1 still uses sun.misc.Unsafe on Java 24+.
+        command.arg("--sun-misc-unsafe-memory-access=allow");
+    }
 
     let resolved_jvm: Vec<String> = config.jvm_args.iter().map(|a| arg_replace(a, &config)).collect();
     command
@@ -501,6 +672,7 @@ pub async fn launch_minecraft(
     let stdout = child.stdout.expect("stdout piped");
     let stderr = child.stderr.expect("stderr piped");
     let app1 = app.clone();
+    let pid_file_exit = pid_file.clone();
     std::thread::spawn(move || {
         let reader = BufReader::new(stdout);
         for line in reader.lines() {
@@ -508,6 +680,10 @@ pub async fn launch_minecraft(
                 let _ = app1.emit("download-progress", line);
             }
         }
+        // stdout EOF means the game process exited: tell the frontend so the
+        // Play button resets, and clean up the stale pid file.
+        let _ = app1.emit("download-progress", "[launcher/INFO] Minecraft process exited");
+        let _ = std::fs::remove_file(&pid_file_exit);
     });
     std::thread::spawn(move || {
         let reader = BufReader::new(stderr);
@@ -557,4 +733,55 @@ pub fn kill_minecraft(app: AppHandle, instance_id: String) -> Result<String, Str
     let _ = std::fs::remove_file(&pid_file);
     emit_line(&app, "[main/INFO]: Minecraft process killed");
     Ok("Minecraft stop requested".to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn plain_rules_match() {
+        assert!(rules_match(None));
+        assert!(rules_match(Some(&json!([{ "action": "allow" }]))));
+    }
+
+    #[test]
+    fn feature_gated_rules_never_match() {
+        let rules = json!([
+            { "action": "allow", "features": { "is_quick_play_singleplayer": true } },
+            { "action": "allow", "features": { "is_demo_user": true } },
+            { "action": "allow", "features": { "has_custom_resolution": true } },
+        ]);
+        assert!(!rules_match(Some(&rules)));
+    }
+
+    #[test]
+    fn os_disallow_rule_blocks_on_matching_os() {
+        let rules = json!([
+            { "action": "allow" },
+            { "action": "disallow", "os": { "name": "windows" } },
+        ]);
+        // A rule that does not match its OS does not participate.
+        assert!(!rules_match(Some(&json!([{ "action": "disallow", "os": { "name": "windows" } }]))), "single unmatched disallow allows nothing");
+        if cfg!(target_os = "windows") {
+            assert!(!rules_match(Some(&rules)));
+        } else {
+            assert!(rules_match(Some(&rules)));
+        }
+    }
+
+    #[test]
+    fn quickplay_args_from_modern_profiles_are_skipped() {
+        let args = json!([
+            { "rules": [{ "action": "allow", "features": { "is_demo_user": true } }], "value": "--demo" },
+            { "rules": [{ "action": "allow", "features": { "has_quick_plays_support": true } }], "value": ["--quickPlayPath", "${quickPlayPath}"] },
+            { "rules": [{ "action": "allow", "features": { "is_quick_play_singleplayer": true } }], "value": ["--quickPlaySingleplayer", "${quickPlaySingleplayer}"] },
+            { "rules": [{ "action": "allow", "features": { "is_quick_play_multiplayer": true } }], "value": ["--quickPlayMultiplayer", "${quickPlayMultiplayer}"] },
+            { "rules": [{ "action": "allow", "features": { "is_quick_play_realms": true } }], "value": ["--quickPlayRealms", "${quickPlayRealms}"] },
+        ]);
+        for arg in args.as_array().unwrap() {
+            assert!(!rules_match(arg.get("rules")), "feature-gated rule must never match");
+        }
+    }
 }

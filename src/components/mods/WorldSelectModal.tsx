@@ -11,12 +11,14 @@ export interface WorldSelectState {
 }
 
 export const WorldSelectModal = React.memo(({
+  t,
   state,
   selectedWorld,
   onSelectWorld,
   onConfirm,
   onCancel,
 }: {
+  t: any;
   state: WorldSelectState;
   selectedWorld: string;
   onSelectWorld: (world: string) => void;
@@ -34,7 +36,7 @@ export const WorldSelectModal = React.memo(({
           <div style={{ background: "rgba(var(--accent-color-rgb), 0.2)", padding: "8px", borderRadius: "12px", display: "flex" }}>
             <IconBox />
           </div>
-          <h3 className="global-modal-title">Выберите мир для датапака</h3>
+          <h3 className="global-modal-title">{t.worldModalTitle}</h3>
         </div>
         <button onClick={onCancel} className="global-modal-close">
           <IconX />
@@ -45,7 +47,7 @@ export const WorldSelectModal = React.memo(({
         {state.error ? (
           <div className="modal-empty-state">{state.error}</div>
         ) : state.worlds.length === 0 ? (
-          <div className="modal-empty-state">В папке saves не найдено миров</div>
+          <div className="modal-empty-state">{t.noWorlds}</div>
         ) : (
           state.worlds.map((world, idx) => (
             <button
@@ -77,14 +79,14 @@ export const WorldSelectModal = React.memo(({
             onClick={onConfirm}
             disabled={!selectedWorld || state.worlds.length === 0}
           >
-            Установить в мир
+            {t.installToWorld}
           </button>
           <button
             className="play-btn"
             style={{ flex: 1, background: "rgba(255,255,255,0.1)", boxShadow: "none" }}
             onClick={onCancel}
           >
-            Отмена
+            {t.cancel}
           </button>
         </div>
       </div>

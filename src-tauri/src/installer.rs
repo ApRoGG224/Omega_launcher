@@ -218,8 +218,14 @@ pub async fn install_loader(
 ) -> Result<String, String> {
     let client = reqwest::Client::new();
     match loader_type.to_lowercase().as_str() {
-        "fabric" => install_fabric(app, &client, mc_version, root).await,
-        "quilt" => install_quilt(app, &client, mc_version, root).await,
+        "fabric" => {
+            ensure_vanilla(app, &client, mc_version, root).await?;
+            install_fabric(app, &client, mc_version, root).await
+        }
+        "quilt" => {
+            ensure_vanilla(app, &client, mc_version, root).await?;
+            install_quilt(app, &client, mc_version, root).await
+        }
         "forge" => {
             ensure_vanilla(app, &client, mc_version, root).await?;
             install_forge(app, &client, mc_version, root, java_path).await

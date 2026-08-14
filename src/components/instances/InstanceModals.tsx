@@ -1,41 +1,9 @@
 import React from "react";
 import DraggableWindow from "../../ui/DraggableWindow";
-
-export const RenameModal = React.memo(({
-  instanceId,
-  value,
-  onChange,
-  onSave,
-  onClose,
-  t,
-  title,
-  placeholder,
-}: {
-  instanceId: string;
-  value: string;
-  onChange: (v: string) => void;
-  onSave: () => void;
-  onClose: () => void;
-  t: any;
-  title?: string;
-  placeholder?: string;
-}) => {
-  return (
-    <div className="account-modal-overlay" onClick={onClose}>
-      <DraggableWindow storageKey={`omega:rename-window:${instanceId}`} className="create-modal draggable-window" defaultPosition={{ x: 120, y: 120 }}>
-        <h3>{title || t.renameInstTitle}</h3>
-        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder || t.renameInstPlaceholder} />
-        <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
-          <button className="play-btn modal-action-btn" style={{ flex: 1 }} onClick={onSave}>{t.saveBtn}</button>
-          <button className="play-btn modal-action-btn" style={{ flex: 1, background: "rgba(255,255,255,0.1)", boxShadow: "none" }} onClick={onClose}>{t.cancel}</button>
-        </div>
-      </DraggableWindow>
-    </div>
-  );
-});
+import { IconX } from "../../ui/icons";
 
 export const EditModal = React.memo(({
-  instanceId,
+  t,
   name,
   setName,
   version,
@@ -45,7 +13,7 @@ export const EditModal = React.memo(({
   onSave,
   onClose,
 }: {
-  instanceId: string;
+  t: any;
   name: string;
   setName: (v: string) => void;
   version: string;
@@ -54,46 +22,30 @@ export const EditModal = React.memo(({
   setLoader: (v: string) => void;
   onSave: () => void;
   onClose: () => void;
-}) => {
-  return (
-    <div className="account-modal-overlay" onClick={onClose}>
-      <DraggableWindow storageKey={`omega:edit-window:${instanceId}`} className="create-modal draggable-window" defaultPosition={{ x: 140, y: 140 }}>
-        <h3>Изменить сборку</h3>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Название" />
-        <input type="text" value={version} onChange={(e) => setVersion(e.target.value)} placeholder="Версия" />
-        <input type="text" value={loader} onChange={(e) => setLoader(e.target.value)} placeholder="Загрузчик" />
-        <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
-          <button className="play-btn modal-action-btn" style={{ flex: 1 }} onClick={onSave}>Сохранить</button>
-          <button className="play-btn modal-action-btn" style={{ flex: 1, background: "rgba(255,255,255,0.1)", boxShadow: "none" }} onClick={onClose}>Отмена</button>
+}) => (
+  <div className="account-modal-overlay" onClick={onClose}>
+    <DraggableWindow storageKey="omega:edit-window" className="account-modal draggable-window" defaultPosition={{ x: 220, y: 130 }}>
+      <div className="account-modal-header draggable-window-handle">
+        <div className="account-modal-header-info">
+          <h3>{t.editBuildTitle}</h3>
         </div>
-      </DraggableWindow>
-    </div>
-  );
-});
-
-export const GroupModal = React.memo(({
-  instanceId,
-  value,
-  onChange,
-  onSave,
-  onClose,
-}: {
-  instanceId: string;
-  value: string;
-  onChange: (v: string) => void;
-  onSave: () => void;
-  onClose: () => void;
-}) => {
-  return (
-    <div className="account-modal-overlay" onClick={onClose}>
-      <DraggableWindow storageKey={`omega:group-window:${instanceId}`} className="create-modal draggable-window" defaultPosition={{ x: 160, y: 160 }}>
-        <h3>Изменить группу</h3>
-        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder="Название группы" />
-        <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
-          <button className="play-btn modal-action-btn" style={{ flex: 1 }} onClick={onSave}>Сохранить</button>
-          <button className="play-btn modal-action-btn" style={{ flex: 1, background: "rgba(255,255,255,0.1)", boxShadow: "none" }} onClick={onClose}>Отмена</button>
+        <button className="account-modal-close" onClick={onClose}><IconX /></button>
+      </div>
+      <div className="account-modal-body" style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "10px" }}>
+        <div className="input-group">
+          <label>{t.namePh}</label>
+          <input type="text" className="settings-text-input" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
-      </DraggableWindow>
-    </div>
-  );
-});
+        <div className="input-group">
+          <label>{t.versionPh}</label>
+          <input type="text" className="settings-text-input" value={version} onChange={(e) => setVersion(e.target.value)} placeholder="1.26.2" />
+        </div>
+        <div className="input-group">
+          <label>{t.loaderPh}</label>
+          <input type="text" className="settings-text-input" value={loader} onChange={(e) => setLoader(e.target.value)} placeholder="Fabric / Forge / Vanilla" />
+        </div>
+        <button className="play-btn modal-action-btn" style={{ flex: 1 }} onClick={onSave}>{t.saveBtn}</button>
+      </div>
+    </DraggableWindow>
+  </div>
+));

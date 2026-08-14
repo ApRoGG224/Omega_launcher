@@ -90,7 +90,7 @@ export const ModsPanel = React.memo(({
         setSelectedWorld(worlds?.[0] || "");
       } catch (e: any) {
         setInstallModalOpen(null);
-        setWorldSelectState({ modId: modIdToDownload, instanceId, worlds: [], loading: false, error: "Не удалось загрузить список миров" });
+        setWorldSelectState({ modId: modIdToDownload, instanceId, worlds: [], loading: false, error: t.errorLoadWorlds });
       }
       return;
     }
@@ -111,12 +111,12 @@ export const ModsPanel = React.memo(({
         projectType,
         worldName: null,
       });
-      showNotification(projectType === "mod" ? "Мод успешно скачан и установлен в сборку!" : "Ресурспак успешно скачан и установлен в сборку!", "success");
+      showNotification(projectType === "mod" ? t.modInstallSuccess : t.modInstallSuccessRes, "success");
     } catch (e: any) {
       if (typeof e === "string" && e.includes("ALREADY_EXISTS")) {
-        showNotification(projectType === "mod" ? t.modAlreadyInstalled : "Ресурспак уже установлен в эту сборку", "error");
+        showNotification(projectType === "mod" ? t.modAlreadyInstalled : t.modAlreadyInstalledRes, "error");
       } else {
-        showNotification((projectType === "mod" ? t.modInstallError : "Ошибка при установке ресурспака: ") + e, "error");
+        showNotification((projectType === "mod" ? t.modInstallError : t.modInstallErrorRes) + e, "error");
       }
     }
   };
@@ -136,12 +136,12 @@ export const ModsPanel = React.memo(({
         projectType: "datapack",
         worldName: selectedWorld,
       });
-      showNotification("Датапак успешно скачан в выбранный мир!", "success");
+      showNotification(t.datapackInstallSuccess, "success");
     } catch (e: any) {
       if (typeof e === "string" && e.includes("ALREADY_EXISTS")) {
-        showNotification("Датапак уже установлен в этот мир", "error");
+        showNotification(t.datapackAlreadyInstalled, "error");
       } else {
-        showNotification("Ошибка при установке датапака: " + e, "error");
+        showNotification(t.datapackInstallError + e, "error");
       }
     }
   };
@@ -160,12 +160,12 @@ export const ModsPanel = React.memo(({
         projectType: "shader",
         worldName: null,
       });
-      showNotification(loader === "fabric" ? "Шейдер успешно скачан для Fabric (Iris установлен автоматически)!" : "Шейдер успешно скачан для Forge!", "success");
+      showNotification(loader === "fabric" ? t.shaderInstallSuccessFabric : t.shaderInstallSuccessForge, "success");
     } catch (e: any) {
       if (typeof e === "string" && e.includes("ALREADY_EXISTS")) {
-        showNotification("Шейдер уже установлен в эту сборку", "error");
+        showNotification(t.shaderAlreadyInstalled, "error");
       } else {
-        showNotification("Ошибка при установке шейдера: " + e, "error");
+        showNotification(t.shaderInstallError + e, "error");
       }
     }
   };
@@ -174,12 +174,12 @@ export const ModsPanel = React.memo(({
     projectType === "mod"
       ? t.searchModPlaceholder
       : projectType === "modpack"
-        ? "Поиск готовых сборок для"
+        ? t.searchPackPlaceholder
         : projectType === "shader"
-          ? "Поиск шейдеров для"
+          ? t.searchShaderPlaceholder
           : projectType === "datapack"
-            ? "Поиск датапаков для"
-            : "Поиск ресурспаков для"
+            ? t.searchDatapackPlaceholder
+            : t.searchRespackPlaceholder
   } ${search.mcVersion === "" ? t.anyVersion : search.mcVersion}...`;
 
   const sortLabel = (value: string) => {
@@ -187,7 +187,7 @@ export const ModsPanel = React.memo(({
       case "downloads":
         return t.sortDownloads;
       case "follows":
-        return projectType === "modpack" ? "Лучшие сборки" : projectType === "shader" ? "Лучшие шейдеры" : t.sortFollows;
+        return projectType === "modpack" ? t.bestPacks : projectType === "shader" ? t.bestShaders : t.sortFollows;
       case "optimization":
         return t.sortOptimization;
       case "newest":
@@ -303,6 +303,7 @@ export const ModsPanel = React.memo(({
 
       {worldSelectState && (
         <WorldSelectModal
+          t={t}
           state={worldSelectState}
           selectedWorld={selectedWorld}
           onSelectWorld={setSelectedWorld}
@@ -313,6 +314,7 @@ export const ModsPanel = React.memo(({
 
       {shaderInstallState && (
         <ShaderInstallModal
+          t={t}
           onPickLoader={(loader) => void confirmShaderInstall(loader)}
           onCancel={() => setShaderInstallState(null)}
         />

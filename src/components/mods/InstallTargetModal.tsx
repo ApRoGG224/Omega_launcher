@@ -18,10 +18,10 @@ export const InstallTargetModal = React.memo(({
 }) => {
   const titles: Record<ProjectType, string> = {
     mod: t.installTo,
-    shader: "Установить шейдер в сборку",
-    datapack: "Установить датапак в сборку",
-    resourcepack: "Установить ресурспак в сборку",
-    modpack: "Установить сборку",
+    shader: t.installShaderTitle,
+    datapack: t.installDatapackTitle,
+    resourcepack: t.installRespackTitle,
+    modpack: t.installPackTitle,
   };
 
   return (

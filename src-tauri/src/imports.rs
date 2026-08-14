@@ -7,6 +7,7 @@ use tauri::{AppHandle, Emitter};
 use crate::util::{app_data_dir, download_file, emit_line, get_json, relative_after};
 
 #[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 struct ImportSummary {
     name: String,
     mc_version: String,
@@ -27,6 +28,26 @@ fn read_zip_entry(zip_path: &Path, wanted: &str) -> Option<String> {
         }
     }
     None
+}
+
+/// Extracts a single entry (by exact or suffix path match) from a zip archive.
+fn extract_zip_entry(zip_path: &Path, wanted: &str, dest: &Path) -> Result<bool, String> {
+    let file = std::fs::File::open(zip_path).map_err(|e| e.to_string())?;
+    let mut archive = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
+    for i in 0..archive.len() {
+        let mut entry = archive.by_index(i).map_err(|e| e.to_string())?;
+        let name = entry.name().to_string();
+        if entry.is_dir() || (name != wanted && !name.ends_with(&format!("/{wanted}"))) {
+            continue;
+        }
+        if let Some(parent) = dest.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
+        let mut out = std::fs::File::create(dest).map_err(|e| e.to_string())?;
+        std::io::copy(&mut entry, &mut out).map_err(|e| e.to_string())?;
+        return Ok(true);
+    }
+    Ok(false)
 }
 
 /// Extracts all entries whose path contains a root folder (e.g. `.minecraft`,
@@ -83,6 +104,40 @@ fn loader_from_parts(parts: &[Value]) -> String {
     "Vanilla".to_string()
 }
 
+/// Picks the vanilla version id from `.minecraft/versions/<id>/<id>.json` entries.
+/// Used as a last-resort fallback when `instance.cfg` and `mmc-pack.json` are missing.
+fn version_from_versions_folder(zip_path: &Path) -> Option<String> {
+    let file = std::fs::File::open(zip_path).ok()?;
+    let mut archive = zip::ZipArchive::new(file).ok()?;
+    let mut candidates: Vec<String> = Vec::new();
+    for i in 0..archive.len() {
+        let entry = archive.by_index(i).ok()?;
+        if entry.is_dir() {
+            continue;
+        }
+        let name = entry.name().to_string();
+        if !name.ends_with(".json") {
+            continue;
+        }
+        let lower = name.to_lowercase();
+        if lower.contains("loader") || lower.contains("fabric-") || lower.contains("forge-")
+            || lower.contains("quilt-") || lower.contains("neoforge-") {
+            continue;
+        }
+        let parts: Vec<&str> = name.split('/').collect();
+        if parts.len() < 2 {
+            continue;
+        }
+        let file_name = parts[parts.len() - 1];
+        let Some(stem) = file_name.strip_suffix(".json") else { continue };
+        if parts[parts.len() - 2] == stem && stem.contains('.') {
+            candidates.push(stem.to_string());
+        }
+    }
+    candidates.sort();
+    candidates.pop()
+}
+
 #[tauri::command]
 pub async fn import_prism(
     app: AppHandle,
@@ -104,6 +159,7 @@ pub async fn import_prism(
         .unwrap_or("Prism Import")
         .to_string();
 
+    let mut mmc_version_found = false;
     if let Some(text) = read_zip_entry(&zip_path, "mmc-pack.json") {
         if let Ok(json) = serde_json::from_str::<Value>(&text) {
             let components = json.get("components").and_then(|c| c.as_array());
@@ -112,7 +168,10 @@ pub async fn import_prism(
                     let uid = c.get("uid").and_then(|v| v.as_str()).unwrap_or("");
                     match uid {
                         "net.minecraft" => {
-                            mc_version = c.get("version").and_then(|v| v.as_str()).unwrap_or("1.20.1").to_string();
+                            if let Some(v) = c.get("version").and_then(|v| v.as_str()) {
+                                mc_version = v.to_string();
+                                mmc_version_found = true;
+                            }
                         }
                         "net.fabricmc.fabric-loader" => loader = "Fabric".to_string(),
                         "net.minecraftforge" => loader = "Forge".to_string(),
@@ -125,17 +184,59 @@ pub async fn import_prism(
         }
     }
 
+    // Prefer mmc-pack.json: it describes the actual component selected for the
+    // instance. Some Prism exports keep a stale MinecraftVer in instance.cfg.
+    // Use instance.cfg as a fallback for older/incomplete exports.
+    let mut cfg_found = false;
     if let Some(text) = read_zip_entry(&zip_path, "instance.cfg") {
-        if let Some((_, rest)) = text.split_once("name=") {
-            let trimmed = rest.lines().next().unwrap_or("").trim();
-            if !trimmed.is_empty() {
-                name = trimmed.to_string();
+        cfg_found = true;
+        for line in text.lines() {
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
+            let Some((key, value)) = line.split_once('=') else { continue };
+            let key = key.trim();
+            let value = value.trim();
+            match key {
+                "name" if !value.is_empty() => name = value.to_string(),
+                "MinecraftVer" if !mmc_version_found && !value.is_empty() => {
+                    mc_version = value.to_string();
+                }
+                "LoaderVersion" | "ModLoader" if loader == "Vanilla" && !value.is_empty() => {
+                    let lower = value.to_lowercase();
+                    if lower.contains("fabric") {
+                        loader = "Fabric".to_string();
+                    } else if lower.contains("quilt") {
+                        loader = "Quilt".to_string();
+                    } else if lower.contains("neoforge") {
+                        loader = "NeoForge".to_string();
+                    } else if lower.contains("forge") {
+                        loader = "Forge".to_string();
+                    }
+                }
+                _ => {}
             }
         }
     }
 
+    if !cfg_found && mc_version == "1.20.1" {
+        // Not a Prism export: maybe a raw .minecraft folder dump.
+        if let Some(v) = version_from_versions_folder(&zip_path) {
+            emit_line(&app, &format!("[IMPORT] mmc-pack.json и instance.cfg не найдены, версия взята из папки versions: {v}"));
+            mc_version = v;
+        }
+    }
+
+    emit_line(&app, &format!("[IMPORT] Определено: Minecraft {mc_version}, загрузчик {loader}."));
+
     let count = extract_roots(&zip_path, &instance_dir, &[".minecraft", "minecraft", "overrides"])?;
     emit_line(&app, &format!("[IMPORT] Успешно извлечено {count} файлов."));
+    let _ = app.emit(
+        "install-progress",
+        serde_json::json!({ "step": "extract", "current": 1, "total": 1 }),
+    );
+    let _ = app.emit("install-progress", serde_json::json!({ "step": "done", "current": 1, "total": 1 }));
 
     let summary = ImportSummary { name, mc_version, loader };
     Ok(serde_json::to_string(&summary).map_err(|e| e.to_string())?)
@@ -180,12 +281,17 @@ pub async fn import_curseforge(
         }
     }
 
-    let count = extract_roots(&zip_path, &instance_dir, &[&overrides_folder])?;
+    let count = extract_roots(&zip_path, &instance_dir, &[&overrides_folder, "minecraft", ".minecraft"])?;
     emit_line(&app, &format!("[IMPORT] Успешно извлечено {count} файлов."));
     emit_line(
         &app,
         "[IMPORT] Внимание: Из-за ограничений CurseForge API автоматическое скачивание самих модов (.jar) отключено.",
     );
+    let _ = app.emit(
+        "install-progress",
+        serde_json::json!({ "step": "extract", "current": 1, "total": 1 }),
+    );
+    let _ = app.emit("install-progress", serde_json::json!({ "step": "done", "current": 1, "total": 1 }));
 
     let summary = ImportSummary { name, mc_version, loader };
     Ok(serde_json::to_string(&summary).map_err(|e| e.to_string())?)
@@ -237,7 +343,16 @@ pub async fn import_mrpack(
     emit_line(&app, &format!("[IMPORT] Найдено {} файлов для скачивания...", files.len()));
     let client = reqwest::Client::new();
     let mut downloaded = 0;
-    for file in files {
+    let total_files = files.len();
+    for (i, file) in files.iter().enumerate() {
+        let _ = app.emit(
+            "install-progress",
+            serde_json::json!({
+                "step": "mods",
+                "current": i + 1,
+                "total": total_files
+            }),
+        );
         let Some(path) = file.get("path").and_then(|v| v.as_str()) else { continue };
         let Some(url) = file.get("downloads").and_then(|d| d.as_array()).and_then(|a| a.first()).and_then(|v| v.as_str()) else {
             continue;
@@ -253,13 +368,21 @@ pub async fn import_mrpack(
                     emit_line(&app, &format!("[IMPORT] Скачано {downloaded}/{} файлов...", files.len()));
                 }
             }
-            Err(e) => emit_line(&app, &format!("[IMPORT] Ошибка загрузки {url}: {e}")),
+            Err(e) => {
+                // Offline fallback: pull the file straight out of the archive if present.
+                match extract_zip_entry(&zip_path, path, &dest) {
+                    Ok(true) => downloaded += 1,
+                    Ok(false) => emit_line(&app, &format!("[IMPORT] Файл не найден ни в сети, ни в архиве: {path}")),
+                    Err(_) => emit_line(&app, &format!("[IMPORT] Ошибка загрузки {url}: {e}")),
+                }
+            }
         }
     }
     emit_line(&app, &format!("[IMPORT] Успешно скачано {downloaded} файлов модов."));
 
     let count = extract_roots(&zip_path, &instance_dir, &["overrides"])?;
     emit_line(&app, &format!("[IMPORT] Успешно извлечено {count} дополнительных файлов."));
+    let _ = app.emit("install-progress", serde_json::json!({ "step": "done", "current": 1, "total": 1 }));
 
     let summary = ImportSummary { name, mc_version, loader };
     Ok(serde_json::to_string(&summary).map_err(|e| e.to_string())?)

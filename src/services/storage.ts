@@ -101,3 +101,7 @@ export const setStoredTheme = (hex: string) => localStorage.setItem(THEME_KEY, h
 
 export const getStoredExportPath = () => localStorage.getItem(EXPORT_PATH_KEY) || "~/Downloads";
 export const setStoredExportPath = (path: string) => localStorage.setItem(EXPORT_PATH_KEY, path);
+
+export const CLOSE_ON_LAUNCH_KEY = "closeLauncherOnLaunch";
+export const getStoredCloseOnLaunch = () => localStorage.getItem(CLOSE_ON_LAUNCH_KEY) === "true";
+export const setStoredCloseOnLaunch = (value: boolean) => localStorage.setItem(CLOSE_ON_LAUNCH_KEY, String(value));

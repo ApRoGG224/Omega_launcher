@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import type { ModpackInstance } from "../types";
 import { ipc } from "../services/ipc";
+import { getStoredCloseOnLaunch } from "../services/storage";
 
 export interface GameApi {
   ram: number;
@@ -21,11 +22,18 @@ export interface GameApi {
   consoleOpen: boolean;
   setConsoleOpen: React.Dispatch<React.SetStateAction<boolean>>;
   sliderStyle: React.CSSProperties;
-  playInstance: (instance: ModpackInstance, username: string, t: any) => Promise<void>;
+  playInstance: (
+    instance: ModpackInstance,
+    username: string,
+    t: any,
+    server?: string,
+  ) => Promise<void>;
   stopGame: () => Promise<void>;
 }
 
-export function useGameSession(): GameApi {
+export function useGameSession(
+  onSessionRecord?: (instanceId: string, durationMs: number) => void,
+): GameApi {
   const [ram, setRam] = useState(4);
   const [javaPath, setJavaPath] = useState("/usr/lib/jvm/java-21");
   const [gamePath, setGamePath] = useState("~/.omega-launcher/minecraft");
@@ -34,6 +42,12 @@ export function useGameSession(): GameApi {
   const [runningInstanceId, setRunningInstanceId] = useState<string | null>(null);
   const [consoleOpen, setConsoleOpen] = useState(true);
   const suppressGameplayLogsRef = useRef(false);
+  const runningIdRef = useRef<string | null>(null);
+  const sessionStartRef = useRef<{ id: string; at: number } | null>(null);
+
+  useEffect(() => {
+    runningIdRef.current = runningInstanceId;
+  }, [runningInstanceId]);
 
   const isRunning = runningInstanceId !== null;
 
@@ -66,6 +80,11 @@ export function useGameSession(): GameApi {
 
       if (isSpawnLine) {
         suppressGameplayLogsRef.current = true;
+        const id = runningIdRef.current;
+        if (id) sessionStartRef.current = { id, at: Date.now() };
+        if (getStoredCloseOnLaunch()) {
+          void ipc.appExit().catch(() => {});
+        }
       }
 
       if (!shouldAppend) {
@@ -80,6 +99,12 @@ export function useGameSession(): GameApi {
       if (isExitedLine) {
         suppressGameplayLogsRef.current = false;
         setRunningInstanceId(null);
+        runningIdRef.current = null;
+        if (sessionStartRef.current) {
+          const { id, at } = sessionStartRef.current;
+          sessionStartRef.current = null;
+          onSessionRecord?.(id, Date.now() - at);
+        }
       }
     }).then((fn) => {
       if (cancelled) fn();
@@ -92,30 +117,35 @@ export function useGameSession(): GameApi {
       cancelled = true;
       unlisten?.();
     };
-  }, [pushLog]);
+  }, [pushLog, onSessionRecord]);
 
-  const playInstance = useCallback(async (instance: ModpackInstance, username: string, t: any) => {
-    if (isRunning) return;
-    setRunningInstanceId(instance.id);
-    suppressGameplayLogsRef.current = false;
-    pushLog(t.logStartingMc);
-    try {
-      const safeMcVersion = instance.mcVersion === "Prism" ? "1.20.1" : instance.mcVersion;
-      const safeLoader = instance.loader === "Import" ? "Vanilla" : instance.loader;
-      const fullVersionName =
-        safeLoader === "Vanilla" ? safeMcVersion : `${safeMcVersion}-${safeLoader.toLowerCase()}`;
-      await ipc.launchMinecraft({
-        version: fullVersionName,
-        server: serverIp,
-        username,
-        ram,
-        instanceId: instance.id,
-      });
-    } catch (e) {
-      setRunningInstanceId(null);
-      pushLog(`[ERROR]: ${e}`);
-    }
-  }, [isRunning, ram, serverIp, pushLog]);
+  const playInstance = useCallback(
+    async (instance: ModpackInstance, username: string, t: any, server?: string) => {
+      if (isRunning) return;
+      setRunningInstanceId(instance.id);
+      runningIdRef.current = instance.id;
+      suppressGameplayLogsRef.current = false;
+      pushLog(t.logStartingMc);
+      try {
+        const safeMcVersion = instance.mcVersion === "Prism" ? "1.20.1" : instance.mcVersion;
+        const safeLoader = instance.loader === "Import" ? "Vanilla" : instance.loader;
+        const fullVersionName =
+          safeLoader === "Vanilla" ? safeMcVersion : `${safeMcVersion}-${safeLoader.toLowerCase()}`;
+        await ipc.launchMinecraft({
+          version: fullVersionName,
+          server: server !== undefined ? server : serverIp,
+          username,
+          ram,
+          instanceId: instance.id,
+        });
+      } catch (e) {
+        setRunningInstanceId(null);
+        runningIdRef.current = null;
+        pushLog(`[ERROR]: ${e}`);
+      }
+    },
+    [isRunning, ram, serverIp, pushLog],
+  );
 
   const stopGame = useCallback(async () => {
     if (!runningInstanceId) return;
@@ -125,6 +155,7 @@ export function useGameSession(): GameApi {
       pushLog(`[ERROR]: ${e}`);
     } finally {
       setRunningInstanceId(null);
+      runningIdRef.current = null;
     }
   }, [runningInstanceId, pushLog]);
 

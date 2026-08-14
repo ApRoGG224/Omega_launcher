@@ -6,9 +6,13 @@ use crate::util::{emit_line, extract_zip};
 
 pub fn required_java_version(mc_version: &str) -> u32 {
     let parts: Vec<&str> = mc_version.split('.').collect();
+    let major: u32 = parts.get(0).and_then(|p| p.parse().ok()).unwrap_or(0);
     let minor: u32 = parts.get(1).and_then(|p| p.parse().ok()).unwrap_or(0);
     let patch: u32 = parts.get(2).and_then(|p| p.parse().ok()).unwrap_or(0);
-    if minor > 20 || (minor == 20 && patch >= 5) {
+    if major > 1 {
+        // Year-based versions like 26.x require Java 25+.
+        25
+    } else if minor > 20 || (minor == 20 && patch >= 5) {
         21
     } else if minor >= 17 {
         17
@@ -132,7 +136,7 @@ fn java_bin() -> &'static str {
 }
 
 /// Ensures a Java runtime for the given Minecraft version is cached inside
-/// `root/runtime`. Mirrors the old sidecar: picks 21 / 17 / 8 and prefers a
+/// `root/runtime`. Picks 25 / 21 / 17 / 8 and prefers a
 /// compatible system JDK before downloading the Adoptium JRE.
 pub fn ensure_java(app: &AppHandle, mc_version: &str, root: &Path) -> Result<String, String> {
     let java_version = required_java_version(mc_version);

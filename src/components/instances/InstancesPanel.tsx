@@ -2,13 +2,9 @@ import React from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import type { ModpackInstance } from "../../types";
 import { IconBox, IconFolder, IconPlay, IconPlus } from "../../ui/icons";
-import { InstanceContextMenu, type InstanceContextMenuState } from "./InstanceContextMenu";
-import { RenameModal, EditModal, GroupModal } from "./InstanceModals";
+import { EditModal } from "./InstanceModals";
 
 export interface InstanceModalsState {
-  renameModalOpen: string | null;
-  renameInput: string;
-  setRenameInput: (v: string) => void;
   editModalOpen: string | null;
   editNameInput: string;
   setEditNameInput: (v: string) => void;
@@ -16,9 +12,6 @@ export interface InstanceModalsState {
   setEditVersionInput: (v: string) => void;
   editLoaderInput: string;
   setEditLoaderInput: (v: string) => void;
-  groupModalOpen: string | null;
-  groupInput: string;
-  setGroupInput: (v: string) => void;
 }
 
 export const InstancesPanel = React.memo(({
@@ -26,18 +19,18 @@ export const InstancesPanel = React.memo(({
   selectedInstanceId,
   selectedInstance,
   modCount,
-  contextMenu,
   fileInputRef,
   t,
   modals,
   onSelectInstance,
-  onContextMenu,
-  onCloseContextMenu,
   onIconChange,
   onPlay,
   onOpenFolder,
+  onEditInstance,
+  onDeleteInstance,
+  onSaveEdit,
+  onCloseEdit,
   onCreate,
-  onModalAction,
   onDropMod,
   installProgress,
 }: {
@@ -45,22 +38,27 @@ export const InstancesPanel = React.memo(({
   selectedInstanceId: string | null;
   selectedInstance: ModpackInstance | null;
   modCount: number;
-  contextMenu: InstanceContextMenuState | null;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   t: any;
   modals: InstanceModalsState;
   onSelectInstance: (id: string) => void;
-  onContextMenu: (id: string, x: number, y: number) => void;
-  onCloseContextMenu: () => void;
   onIconChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onPlay: () => void;
   onOpenFolder: (instanceId: string) => void;
+  onEditInstance: (instanceId: string) => void;
+  onDeleteInstance: (instanceId: string) => void;
+  onSaveEdit: () => void;
+  onCloseEdit: () => void;
   onCreate: () => void;
-  onModalAction: (action: string, instanceId: string) => void;
   onDropMod: (instanceId: string, payload: { projectId: string; projectType: string }) => void;
   installProgress: { step: string; current: number; total: number } | null;
 }) => {
   const [dropTarget, setDropTarget] = React.useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+
+  React.useEffect(() => {
+    setConfirmDelete(false);
+  }, [selectedInstanceId]);
 
   const handleDrop = (e: React.DragEvent, instanceId: string) => {
     e.preventDefault();
@@ -93,10 +91,10 @@ export const InstancesPanel = React.memo(({
           <div className="install-progress-label">
             <span>
               {installProgress.step === "mods"
-                ? "Установка модов сборки..."
+                ? t.installingMods
                 : installProgress.step === "overrides"
-                  ? "Применение конфигураций..."
-                  : "Установка сборки..."}
+                  ? t.applyingConfig
+                  : t.installingBuild}
             </span>
             <span>
               {installProgress.current} / {installProgress.total}
@@ -109,9 +107,9 @@ export const InstancesPanel = React.memo(({
       )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2>Ваши сборки</h2>
+        <h2>{t.myBuilds}</h2>
         <button className="play-btn" style={{ height: "36px", fontSize: "0.85rem" }} onClick={onCreate}>
-          <IconPlus /> Создать сборку
+          <IconPlus /> {t.createBuild}
         </button>
       </div>
 
@@ -121,10 +119,6 @@ export const InstancesPanel = React.memo(({
             key={inst.id}
             className={`assembly-scroll-card ${selectedInstanceId === inst.id ? "active" : ""} ${dropTarget === inst.id ? "drop-target" : ""}`}
             onClick={() => onSelectInstance(inst.id)}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              onContextMenu(inst.id, e.clientX, e.clientY);
-            }}
             onDragOver={(e) => {
               e.preventDefault();
               if (dropTarget !== inst.id) setDropTarget(inst.id);
@@ -155,34 +149,26 @@ export const InstancesPanel = React.memo(({
         ))}
       </div>
 
+      <input type="file" ref={fileInputRef} onChange={onIconChange} style={{ display: "none" }} accept="image/*" />
+
       {selectedInstance && (
         <div className="assembly-info-card-detail">
-          <input type="file" ref={fileInputRef} onChange={onIconChange} style={{ display: "none" }} accept="image/*" />
           <div
             className="recent-inst-icon"
             style={{ width: 64, height: 64, borderRadius: 16, cursor: "pointer" }}
             onClick={() => fileInputRef.current?.click()}
-            title="Нажмите, чтобы сменить иконку"
+            title={t.changeIconHint}
           >
-            {selectedInstance.icon ? <img src={selectedInstance.icon} alt="icon" style={{ width: 44, height: 44, borderRadius: 10 }} /> : <IconBox />}
+            {selectedInstance.icon ? <img src={selectedInstance.icon.startsWith("data:") || selectedInstance.icon.startsWith("http") ? selectedInstance.icon : convertFileSrc(selectedInstance.icon)} alt="icon" style={{ width: 44, height: 44, borderRadius: 10 }} /> : <IconBox />}
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "4px" }}>{selectedInstance.name}</h3>
-              <button
-                className="play-btn"
-                style={{ height: "26px", fontSize: "0.75rem", padding: "0 8px", background: "rgba(255,255,255,0.06)", boxShadow: "none" }}
-                onClick={() => onModalAction("rename", selectedInstance.id)}
-              >
-                Переименовать
-              </button>
-            </div>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "4px" }}>{selectedInstance.name}</h3>
             <div style={{ fontSize: "0.85rem", color: "#8b8b9c", marginBottom: "8px" }}>
-              Версия: <span style={{ color: "#AB3DF5", fontWeight: 600 }}>{selectedInstance.mcVersion}</span> • Загрузчик:{" "}
+              {t.versionLabel} <span style={{ color: "#AB3DF5", fontWeight: 600 }}>{selectedInstance.mcVersion}</span> • {t.loaderLabel}{" "}
               <span style={{ color: "#fff" }}>{selectedInstance.loader}</span>
             </div>
             <div className="mod-chips-container">
-              <span className="mod-chip"><span className="mod-chip-dot" /> Установлено модов: {modCount}</span>
+              <span className="mod-chip"><span className="mod-chip-dot" /> {t.installedMods} {modCount}</span>
               <span className="mod-chip"><span className="mod-chip-dot" /> Fabric API</span>
               <span className="mod-chip"><span className="mod-chip-dot" /> Sodium (Оптимизация)</span>
               <span className="mod-chip"><span className="mod-chip-dot" /> Iris Shaders</span>
@@ -190,63 +176,47 @@ export const InstancesPanel = React.memo(({
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <button className="play-btn" onClick={onPlay}>
-              <IconPlay /> Играть
+              <IconPlay /> {t.playShort}
             </button>
             <button
               className="play-btn"
               style={{ background: "rgba(255,255,255,0.08)", boxShadow: "none", fontSize: "0.82rem" }}
               onClick={() => onOpenFolder(selectedInstance.id)}
             >
-              <IconFolder /> Папка сборки
+              <IconFolder /> {t.openFolderShort}
+            </button>
+            <button
+              className="play-btn"
+              style={{ background: "rgba(255,255,255,0.08)", boxShadow: "none", fontSize: "0.82rem" }}
+              onClick={() => onEditInstance(selectedInstance.id)}
+            >
+              🛠️ {t.editBuildBtn}
+            </button>
+            <button
+              className="play-btn"
+              style={{ background: confirmDelete ? "rgba(248,113,113,0.25)" : "rgba(255,255,255,0.05)", boxShadow: "none", fontSize: "0.82rem", color: confirmDelete ? "#f87171" : "#f87171" }}
+              onClick={() => {
+                if (confirmDelete) onDeleteInstance(selectedInstance.id);
+                else setConfirmDelete(true);
+              }}
+            >
+              🗑️ {confirmDelete ? t.confirmDelete : t.deleteBuild}
             </button>
           </div>
         </div>
       )}
 
-      {contextMenu && (
-        <InstanceContextMenu
-          menu={contextMenu}
-          onAction={(action) => {
-            onModalAction(action, contextMenu.instanceId);
-            onCloseContextMenu();
-          }}
-        />
-      )}
-
-      {modals.renameModalOpen && (
-        <RenameModal
-          instanceId={modals.renameModalOpen}
-          value={modals.renameInput}
-          onChange={modals.setRenameInput}
-          onSave={() => {
-            onModalAction("saveRename", modals.renameModalOpen!);
-          }}
-          onClose={() => onModalAction("closeRename", modals.renameModalOpen!)}
-          t={t}
-        />
-      )}
-
       {modals.editModalOpen && (
         <EditModal
-          instanceId={modals.editModalOpen}
+          t={t}
           name={modals.editNameInput}
           setName={modals.setEditNameInput}
           version={modals.editVersionInput}
           setVersion={modals.setEditVersionInput}
           loader={modals.editLoaderInput}
           setLoader={modals.setEditLoaderInput}
-          onSave={() => onModalAction("saveEdit", modals.editModalOpen!)}
-          onClose={() => onModalAction("closeEdit", modals.editModalOpen!)}
-        />
-      )}
-
-      {modals.groupModalOpen && (
-        <GroupModal
-          instanceId={modals.groupModalOpen}
-          value={modals.groupInput}
-          onChange={modals.setGroupInput}
-          onSave={() => onModalAction("saveGroup", modals.groupModalOpen!)}
-          onClose={() => onModalAction("closeGroup", modals.groupModalOpen!)}
+          onSave={onSaveEdit}
+          onClose={onCloseEdit}
         />
       )}
     </div>

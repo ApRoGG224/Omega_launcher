@@ -22,6 +22,10 @@ pub struct DbInstance {
     pub icon: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub group_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub play_time_ms: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_played_at: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -77,6 +81,54 @@ pub fn init(app: &AppHandle) -> Result<Connection, String> {
          );",
     )
     .map_err(|e| format!("Failed to initialise database schema: {e}"))?;
+
+    // Migration: older databases lack the servers.favicon column.
+    let has_favicon = {
+        let mut stmt = conn
+            .prepare("PRAGMA table_info(servers)")
+            .map_err(|e| e.to_string())?;
+        let cols = stmt
+            .query_map([], |row| row.get::<_, String>(1))
+            .map_err(|e| e.to_string())?;
+        let mut found = false;
+        for col in cols {
+            if col.map(|c| c == "favicon").unwrap_or(false) {
+                found = true;
+            }
+        }
+        found
+    };
+    if !has_favicon {
+        conn.execute(
+            "ALTER TABLE servers ADD COLUMN favicon TEXT",
+            [],
+        )
+        .map_err(|e| format!("Failed to migrate servers table: {e}"))?;
+    }
+
+    // Migration: older databases lack the instances.play_time_ms /
+    // instances.last_played_at columns.
+    let mut instance_cols = Vec::new();
+    {
+        let mut stmt = conn
+            .prepare("PRAGMA table_info(instances)")
+            .map_err(|e| e.to_string())?;
+        let cols = stmt
+            .query_map([], |row| row.get::<_, String>(1))
+            .map_err(|e| e.to_string())?;
+        for col in cols {
+            instance_cols.push(col.map_err(|e| e.to_string())?);
+        }
+    }
+    if !instance_cols.iter().any(|c| c == "play_time_ms") {
+        conn.execute("ALTER TABLE instances ADD COLUMN play_time_ms INTEGER NOT NULL DEFAULT 0", [])
+            .map_err(|e| format!("Failed to migrate instances table (play_time_ms): {e}"))?;
+    }
+    if !instance_cols.iter().any(|c| c == "last_played_at") {
+        conn.execute("ALTER TABLE instances ADD COLUMN last_played_at TEXT", [])
+            .map_err(|e| format!("Failed to migrate instances table (last_played_at): {e}"))?;
+    }
+
     Ok(conn)
 }
 
@@ -90,6 +142,8 @@ fn row_to_instance(row: &rusqlite::Row<'_>) -> rusqlite::Result<DbInstance> {
         y: row.get(5)?,
         icon: row.get(6)?,
         group_name: row.get(7)?,
+        play_time_ms: row.get(8)?,
+        last_played_at: row.get(9)?,
     })
 }
 
@@ -97,7 +151,7 @@ fn row_to_instance(row: &rusqlite::Row<'_>) -> rusqlite::Result<DbInstance> {
 pub fn db_load_instances(db: State<'_, Db>) -> Result<Vec<DbInstance>, String> {
     let conn = db.0.lock().map_err(|e| e.to_string())?;
     let mut stmt = conn
-        .prepare("SELECT id, name, mc_version, loader, x, y, icon, group_name FROM instances")
+        .prepare("SELECT id, name, mc_version, loader, x, y, icon, group_name, play_time_ms, last_played_at FROM instances")
         .map_err(|e| e.to_string())?;
     let rows = stmt
         .query_map([], row_to_instance)
@@ -115,7 +169,7 @@ pub fn db_save_instances(db: State<'_, Db>, instances: Vec<DbInstance>) -> Resul
     conn.execute("DELETE FROM instances", []).map_err(|e| e.to_string())?;
     {
         let mut stmt = conn
-            .prepare("INSERT OR REPLACE INTO instances (id, name, mc_version, loader, x, y, icon, group_name) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)")
+            .prepare("INSERT OR REPLACE INTO instances (id, name, mc_version, loader, x, y, icon, group_name, play_time_ms, last_played_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)")
             .map_err(|e| e.to_string())?;
         for inst in &instances {
             stmt.execute(rusqlite::params![
@@ -126,7 +180,9 @@ pub fn db_save_instances(db: State<'_, Db>, instances: Vec<DbInstance>) -> Resul
                 inst.x,
                 inst.y,
                 inst.icon,
-                inst.group_name
+                inst.group_name,
+                inst.play_time_ms,
+                inst.last_played_at
             ])
             .map_err(|e| e.to_string())?;
         }

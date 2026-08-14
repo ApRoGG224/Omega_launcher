@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { Language, ModpackInstance } from "./types";
 import { translations } from "./i18n";
 import { IconBox, IconMicrosoft } from "./ui/icons";
@@ -7,15 +7,19 @@ import { CatalogTabs } from "./components/catalog/CatalogTabs";
 import { ToastProvider, useToast } from "./ui/ToastProvider";
 import { useInstances } from "./hooks/useInstances";
 import { useAccounts } from "./hooks/useAccounts";
+import { useOmegaAuth } from "./hooks/useOmegaAuth";
+import { useFriends } from "./hooks/useFriends";
+import { usePresence, type InviteInfo } from "./hooks/usePresence";
 import { useVersions } from "./hooks/useVersions";
 import { useGameSession } from "./hooks/useGameSession";
-import { getStoredLanguage, getStoredTheme, setStoredLanguage, setStoredTheme } from "./services/storage";
+import { getStoredLanguage, getStoredTheme, setStoredLanguage, setStoredTheme, getStoredCloseOnLaunch, setStoredCloseOnLaunch } from "./services/storage";
 import { ipc } from "./services/ipc";
 import { HomeDashboard } from "./components/home/HomeDashboard";
 import { CreateInstanceModal } from "./components/home/CreateInstanceModal";
 import { ModsPanel } from "./components/mods/ModsPanel";
 import { InstancesPanel } from "./components/instances/InstancesPanel";
 import { ImportModal } from "./components/instances/ImportModal";
+import { ImportProgressPopup } from "./components/instances/ImportProgressPopup";
 import { AccountModal } from "./components/accounts/AccountModal";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
 import "./App.css";
@@ -24,20 +28,36 @@ function App() {
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = translations[language];
   const { showToast } = useToast();
-  const game = useGameSession();
+  const instancesApiRef = useRef<ReturnType<typeof useInstances> | null>(null);
+  const game = useGameSession(
+    useCallback((id: string, ms: number) => {
+      instancesApiRef.current?.recordPlaySession(id, ms);
+    }, []),
+  );
 
   const changeLanguage = useCallback((lang: Language) => {
     setLanguage(lang);
     setStoredLanguage(lang);
   }, []);
 
-  const instancesApi = useInstances(game.pushLog, showToast);
-  const accountsApi = useAccounts(t, game.pushLog);
+  const instancesApi = useInstances(game.pushLog, showToast, t);
+  instancesApiRef.current = instancesApi;
+  const omegaAuth = useOmegaAuth();
+  const [invites, setInvites] = useState<InviteInfo[]>([]);
+  const presenceApi = usePresence(omegaAuth, (invite) => {
+    setInvites((prev) =>
+      prev.some((i) => i.fromId === invite.fromId) ? prev : [...prev, invite],
+    );
+    showToast(`${invite.fromName} ${t.friendsInvite} (${invite.hostPort})`, "success");
+  });
+  const accountsApi = useAccounts(t, game.pushLog, omegaAuth);
+  const friendsApi = useFriends(omegaAuth);
 
   const { currentVersionsList, versionFilters, toggleVersionFilter, manifestError } = useVersions();
 
   const [activeTab, setActiveTab] = useState("home");
   const [isCreating, setIsCreating] = useState(false);
+  const [importPopupHidden, setImportPopupHidden] = useState(false);
   const [newName, setNewName] = useState("");
   const [newVer, setNewVer] = useState("1.21.4");
   const [newLoader, setNewLoader] = useState("Fabric");
@@ -45,6 +65,11 @@ function App() {
   const [themeHex, setThemeHex] = useState(() => getStoredTheme());
   const [customThemeInput, setCustomThemeInput] = useState("");
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [closeOnLaunch, setCloseOnLaunch] = useState(() => getStoredCloseOnLaunch());
+
+  useEffect(() => {
+    if (instancesApi.importing) setImportPopupHidden(false);
+  }, [instancesApi.importing]);
 
   const applyTheme = useCallback((hex: string) => {
     setThemeHex(hex);
@@ -73,14 +98,10 @@ function App() {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (instancesApi.contextMenu) instancesApi.setContextMenu(null);
-      if (instancesApi.desktopContextMenu) instancesApi.setDesktopContextMenu(null);
       if (isCreating) setIsCreating(false);
       if (accountsApi.profileMenuOpen) accountsApi.setProfileMenuOpen(false);
       if (instancesApi.importModalOpen) instancesApi.setImportModalOpen(false);
-      if (instancesApi.renameModalOpen) instancesApi.setRenameModalOpen(null);
       if (instancesApi.editModalOpen) instancesApi.setEditModalOpen(null);
-      if (instancesApi.groupModalOpen) instancesApi.setGroupModalOpen(null);
     };
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
@@ -105,138 +126,30 @@ function App() {
   const playSelected = useCallback(() => {
     const inst = instancesApi.selectedInstance;
     if (!inst) return alert(t.alertNoInstance);
+    instancesApi.moveInstanceToTop(inst.id);
+    presenceApi.setGameStatus({ instanceName: inst.name });
     void game.playInstance(inst, accountsApi.account.name, t);
-  }, [instancesApi.selectedInstance, game, accountsApi.account, t]);
+  }, [instancesApi.selectedInstance, game, accountsApi.account, presenceApi, t]);
 
   const playInstanceById = useCallback((instanceId: string) => {
     const inst = instancesApi.instances.find((i) => i.id === instanceId);
     if (!inst) return;
+    instancesApi.moveInstanceToTop(instanceId);
+    presenceApi.setGameStatus({ instanceName: inst.name });
     void game.playInstance(inst, accountsApi.account.name, t);
-  }, [instancesApi.instances, game, accountsApi.account, t]);
+  }, [instancesApi.instances, game, accountsApi.account, presenceApi, t]);
 
-  const handleCopyInstanceInfo = useCallback(async (instanceId: string) => {
+  const handleServerLaunch = useCallback((instanceId: string, serverHostPort: string) => {
     const inst = instancesApi.instances.find((i) => i.id === instanceId);
     if (!inst) return;
-    const text = `${inst.name}\n${inst.mcVersion}\n${inst.loader}`;
-    try {
-      await navigator.clipboard.writeText(text);
-      showToast("Информация о сборке скопирована", "success");
-    } catch {
-      showToast("Не удалось скопировать информацию", "error");
-    }
-  }, [instancesApi.instances, showToast]);
+    instancesApi.moveInstanceToTop(instanceId);
+    presenceApi.setGameStatus({ instanceName: inst.name, serverHost: serverHostPort });
+    void game.playInstance(inst, accountsApi.account.name, t, serverHostPort);
+  }, [instancesApi.instances, game, accountsApi.account, presenceApi, t]);
 
-  const handleCreateShortcut = useCallback(async (instanceId: string) => {
-    try {
-      await ipc.createShortcut(instanceId);
-      showToast("Ярлык создан", "success");
-    } catch (e) {
-      showToast("Не удалось создать ярлык: " + e, "error");
-    }
-  }, [showToast]);
-
-  const handleExportInstance = useCallback(async (instanceId: string) => {
-    const inst = instancesApi.instances.find((i) => i.id === instanceId);
-    if (!inst) return;
-    try {
-      await ipc.exportModpack({
-        instanceId: inst.id,
-        instanceName: inst.name,
-        exportPath: instancesApi.exportPath,
-      });
-      showToast("Экспорт запущен", "success");
-    } catch (e) {
-      showToast("Не удалось экспортировать сборку: " + e, "error");
-    }
-  }, [instancesApi.instances, instancesApi.exportPath, showToast]);
-
-  const handleUpdateMods = useCallback(async (instanceId: string) => {
-    try {
-      const updated = await ipc.updateAllMods(instanceId);
-      showToast(`Обновлено модов: ${updated}`, "success");
-    } catch (e) {
-      showToast("Ошибка обновления модов: " + e, "error");
-    }
-  }, [showToast]);
-
-  const handleExportOmega = useCallback(async (instanceId: string) => {
-    const inst = instancesApi.instances.find((i) => i.id === instanceId);
-    if (!inst) return;
-    try {
-      await ipc.exportOmega({
-        instanceId: inst.id,
-        instanceName: inst.name,
-        mcVersion: inst.mcVersion,
-        loader: inst.loader,
-        exportPath: instancesApi.exportPath,
-      });
-      showToast("Экспорт .omega запущен", "success");
-    } catch (e) {
-      showToast("Не удалось экспортировать: " + e, "error");
-    }
-  }, [instancesApi.instances, instancesApi.exportPath, showToast]);
-
-  const handleInstanceAction = useCallback((action: string, instanceId: string) => {
-    switch (action) {
-      case "rename":
-        instancesApi.openRenameModal(instanceId);
-        break;
-      case "icon":
-        instancesApi.fileInputRef.current?.click();
-        break;
-      case "play":
-        playInstanceById(instanceId);
-        break;
-      case "stop":
-        void game.stopGame();
-        break;
-      case "edit":
-        instancesApi.openEditModal(instanceId);
-        break;
-      case "group":
-        instancesApi.openGroupModal(instanceId);
-        break;
-      case "folder":
-        void ipc.openFolder(instanceId);
-        break;
-      case "export":
-        void handleExportInstance(instanceId);
-        break;
-      case "export_omega":
-        void handleExportOmega(instanceId);
-        break;
-      case "update_mods":
-        void handleUpdateMods(instanceId);
-        break;
-      case "copy":
-        void handleCopyInstanceInfo(instanceId);
-        break;
-      case "delete":
-        instancesApi.deleteInstance(instanceId);
-        break;
-      case "shortcut":
-        void handleCreateShortcut(instanceId);
-        break;
-      case "saveRename":
-        instancesApi.saveRename();
-        break;
-      case "closeRename":
-        instancesApi.setRenameModalOpen(null);
-        break;
-      case "saveEdit":
-        instancesApi.saveEdit();
-        break;
-      case "closeEdit":
-        instancesApi.setEditModalOpen(null);
-        break;
-      case "saveGroup":
-        instancesApi.saveGroup();
-        break;
-      case "closeGroup":
-        instancesApi.setGroupModalOpen(null);
-        break;
-    }
-  }, [instancesApi, game, playInstanceById, handleExportInstance, handleExportOmega, handleUpdateMods, handleCopyInstanceInfo, handleCreateShortcut]);
+  useEffect(() => {
+    if (!game.runningInstanceId) presenceApi.setGameStatus(null);
+  }, [game.runningInstanceId, presenceApi]);
 
   return (
     <div
@@ -279,7 +192,7 @@ function App() {
             <div className="user-info">
               <span className="user-name">{accountsApi.account.name}</span>
               <span className="user-status">
-                <span className="status-dot" /> Онлайн
+                <span className="status-dot" /> {t.onlineStatus}
               </span>
             </div>
           </div>
@@ -287,7 +200,8 @@ function App() {
 
         {activeTab === "home" && (
           <HomeDashboard
-            instances={instancesApi.instances}
+            t={t}
+            instances={instancesApi.visibleInstances}
             selectedInstanceId={instancesApi.selectedInstanceId}
             selectedInstance={instancesApi.selectedInstance}
             logs={game.logs}
@@ -296,6 +210,14 @@ function App() {
             onToggleConsole={() => game.setConsoleOpen((p) => !p)}
             onSelectInstance={(id) => instancesApi.setSelectedInstanceId(id)}
             onPlayInstance={playInstanceById}
+            onServerLaunch={handleServerLaunch}
+            friendsApi={friendsApi}
+            presenceApi={presenceApi}
+            invites={invites}
+            onDismissInvite={(fromId) =>
+              setInvites((prev) => prev.filter((i) => i.fromId !== fromId))
+            }
+            onNotify={showToast}
             onCreate={() => setIsCreating(true)}
           />
         )}
@@ -306,13 +228,9 @@ function App() {
             selectedInstanceId={instancesApi.selectedInstanceId}
             selectedInstance={instancesApi.selectedInstance}
             modCount={instancesApi.modCount}
-            contextMenu={instancesApi.contextMenu}
             fileInputRef={instancesApi.fileInputRef}
             t={t}
             modals={{
-              renameModalOpen: instancesApi.renameModalOpen,
-              renameInput: instancesApi.renameInput,
-              setRenameInput: instancesApi.setRenameInput,
               editModalOpen: instancesApi.editModalOpen,
               editNameInput: instancesApi.editNameInput,
               setEditNameInput: instancesApi.setEditNameInput,
@@ -320,18 +238,16 @@ function App() {
               setEditVersionInput: instancesApi.setEditVersionInput,
               editLoaderInput: instancesApi.editLoaderInput,
               setEditLoaderInput: instancesApi.setEditLoaderInput,
-              groupModalOpen: instancesApi.groupModalOpen,
-              groupInput: instancesApi.groupInput,
-              setGroupInput: instancesApi.setGroupInput,
             }}
             onSelectInstance={(id) => instancesApi.setSelectedInstanceId(id)}
-            onContextMenu={(id, x, y) => instancesApi.setContextMenu({ visible: true, x, y, instanceId: id })}
-            onCloseContextMenu={() => instancesApi.setContextMenu(null)}
             onIconChange={instancesApi.handleIconChange}
             onPlay={playSelected}
             onOpenFolder={(instanceId) => void ipc.openFolder(instanceId)}
+            onEditInstance={(id) => instancesApi.openEditModal(id)}
+            onDeleteInstance={(id) => instancesApi.deleteInstance(id)}
+            onSaveEdit={instancesApi.saveEdit}
+            onCloseEdit={() => instancesApi.setEditModalOpen(null)}
             onCreate={() => setIsCreating(true)}
-            onModalAction={handleInstanceAction}
             onDropMod={(instanceId, payload) => void instancesApi.installModByDrag(instanceId, payload)}
             installProgress={instancesApi.installProgress}
           />
@@ -350,7 +266,7 @@ function App() {
               boxSizing: "border-box",
             }}
           >
-            <CatalogTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+            <CatalogTabs t={t} activeTab={activeTab} setActiveTab={setActiveTab} />
 
             {activeTab === "mods" && <ModsPanel instances={instancesApi.instances} t={t} language={language} projectType="mod" versionsList={currentVersionsList} />}
             {activeTab === "resourcepacks" && <ModsPanel instances={instancesApi.instances} t={t} language={language} projectType="resourcepack" versionsList={currentVersionsList} />}
@@ -401,13 +317,17 @@ function App() {
             currentVersionsList={currentVersionsList}
             toggleVersionFilter={toggleVersionFilter}
             manifestError={manifestError}
+            closeOnLaunch={closeOnLaunch}
+            setCloseOnLaunch={(v) => {
+              setCloseOnLaunch(v);
+              setStoredCloseOnLaunch(v);
+            }}
           />
         )}
 
         {isCreating && (
           <CreateInstanceModal
             t={t}
-            language={language}
             versionsList={currentVersionsList}
             newName={newName}
             setNewName={setNewName}
@@ -416,6 +336,10 @@ function App() {
             newLoader={newLoader}
             setNewLoader={setNewLoader}
             onCreate={handleCreateInstance}
+            onImport={() => {
+              setIsCreating(false);
+              instancesApi.setImportModalOpen(true);
+            }}
             onClose={() => setIsCreating(false)}
           />
         )}
@@ -429,11 +353,22 @@ function App() {
           savedAccounts={accountsApi.savedAccounts}
           newUsernameInput={accountsApi.newUsernameInput}
           setNewUsernameInput={accountsApi.setNewUsernameInput}
+          omegaMode={accountsApi.omegaMode}
+          setOmegaMode={accountsApi.setOmegaMode}
+          omegaEmail={accountsApi.omegaEmail}
+          setOmegaEmail={accountsApi.setOmegaEmail}
+          omegaUsername={accountsApi.omegaUsername}
+          setOmegaUsername={accountsApi.setOmegaUsername}
+          omegaPassword={accountsApi.omegaPassword}
+          setOmegaPassword={accountsApi.setOmegaPassword}
+          omegaBusy={accountsApi.omegaBusy}
+          omegaError={accountsApi.omegaError}
           onBack={() => accountsApi.setAccountModalView("list")}
           onSelectAccount={accountsApi.handleSelectAccount}
           onDeleteAccount={accountsApi.handleDeleteAccount}
           onAddOffline={accountsApi.handleAddOffline}
           onAddMicrosoft={() => void accountsApi.handleAddMicrosoft()}
+          onAddOmega={() => void accountsApi.handleAddOmega()}
           onChangeView={accountsApi.setAccountModalView}
           onClose={() => accountsApi.setProfileMenuOpen(false)}
         />
@@ -441,6 +376,7 @@ function App() {
 
       {instancesApi.importModalOpen && (
         <ImportModal
+          t={t}
           step={instancesApi.importStep}
           onSelectStep={instancesApi.setImportStep}
           onImport={(kind, path) => void instancesApi.importFromArchive(kind, path)}
@@ -462,8 +398,48 @@ function App() {
         onStop={() => void game.stopGame()}
         t={t}
       />
+
+      <ImportProgressPopup
+        t={t}
+        visible={instancesApi.importing && !importPopupHidden}
+        progress={instancesApi.installProgress}
+        onClose={() => setImportPopupHidden(true)}
+      />
+
+      {instancesApi.selectedInstance && (
+        <div className="playtime-badge">
+          <span className="playtime-badge-dot" />
+          <span>
+            {t.playtimeLabel}: <b>{formatPlayTime(instancesApi.selectedInstance.playTimeMs, t)}</b>
+          </span>
+          <span className="playtime-badge-sep">•</span>
+          <span>
+            {t.lastLaunchLabel}: <b>{formatLastLaunch(instancesApi.selectedInstance.lastPlayedAt, language, t)}</b>
+          </span>
+        </div>
+      )}
     </div>
   );
+}
+
+function formatPlayTime(ms: number | undefined, t: any): string {
+  const totalMin = Math.floor((ms || 0) / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h > 0) return `${h} ${t.timeH} ${m} ${t.timeMin}`;
+  if (m > 0) return `${m} ${t.timeMin}`;
+  return `0 ${t.timeMin}`;
+}
+
+function formatLastLaunch(iso: string | undefined, language: Language, t: any): string {
+  if (!iso) return t.neverLaunched;
+  return new Date(iso).toLocaleString(language === "ru" ? "ru-RU" : "en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export default function AppWithToast() {

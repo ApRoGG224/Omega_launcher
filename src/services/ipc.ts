@@ -35,6 +35,14 @@ export const ipc = {
     return invoke<string>("kill_minecraft", { instanceId });
   },
 
+  async appExit(): Promise<void> {
+    await invoke("app_exit");
+  },
+
+  async getLocalIp(): Promise<string | null> {
+    return invoke<string | null>("get_local_ip");
+  },
+
   async downloadMod(args: DownloadModArgs): Promise<string> {
     return invoke<string>("download_mod", {
       modId: args.modId,
@@ -161,6 +169,10 @@ export const ipc = {
     await invoke("db_delete_server", { host, port });
   },
 
+  async dbSaveServerFavicon(host: string, port: number, favicon: string): Promise<void> {
+    await invoke("db_save_server_favicon", { host, port, favicon });
+  },
+
   async findSystemJava(mcVersion = "1.20.1"): Promise<string | null> {
     return invoke<string | null>("find_system_java", { mcVersion });
   },
@@ -175,12 +187,14 @@ export interface ServerInfo {
   playersMax: number;
   online: boolean;
   latencyMs: number;
+  favicon?: string | null;
 }
 
 export interface ServerRow {
   host: string;
   port: number;
   name: string;
+  favicon?: string | null;
 }
 
 export interface DbInstance {
@@ -192,6 +206,8 @@ export interface DbInstance {
   y: number;
   icon?: string;
   groupName?: string;
+  playTimeMs?: number;
+  lastPlayedAt?: string;
 }
 
 export interface DbAccount {

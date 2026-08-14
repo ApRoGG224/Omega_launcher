@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import type { Account, ToastType } from "../types";
 import { loadAccounts, persistAccounts } from "../services/storage";
 import { ipc } from "../services/ipc";
+import type { OmegaAuthApi } from "./useOmegaAuth";
 
-export type AccountModalView = "list" | "method" | "offline";
+export type AccountModalView = "list" | "method" | "offline" | "omega";
+export type OmegaFormMode = "register" | "login";
 
 export interface AccountsApi {
   account: Account;
@@ -14,15 +16,27 @@ export interface AccountsApi {
   setNewUsernameInput: (v: string) => void;
   accountModalView: AccountModalView;
   setAccountModalView: (v: AccountModalView) => void;
+  omegaMode: OmegaFormMode;
+  setOmegaMode: (v: OmegaFormMode) => void;
+  omegaEmail: string;
+  setOmegaEmail: (v: string) => void;
+  omegaUsername: string;
+  setOmegaUsername: (v: string) => void;
+  omegaPassword: string;
+  setOmegaPassword: (v: string) => void;
+  omegaBusy: boolean;
+  omegaError: string | null;
   handleAddOffline: () => void;
   handleSelectAccount: (acc: Account) => void;
   handleAddMicrosoft: () => Promise<void>;
+  handleAddOmega: () => Promise<void>;
   handleDeleteAccount: (accName: string) => void;
 }
 
 export function useAccounts(
   t: any,
   onLog: (line: string) => void,
+  omega?: OmegaAuthApi,
 ): AccountsApi {
   const [account, setAccount] = useState<Account>(() => {
     const accounts = loadAccounts();
@@ -35,6 +49,12 @@ export function useAccounts(
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [newUsernameInput, setNewUsernameInput] = useState("");
   const [accountModalView, setAccountModalView] = useState<AccountModalView>("list");
+  const [omegaMode, setOmegaMode] = useState<OmegaFormMode>("login");
+  const [omegaEmail, setOmegaEmail] = useState("");
+  const [omegaUsername, setOmegaUsername] = useState("");
+  const [omegaPassword, setOmegaPassword] = useState("");
+  const [omegaBusy, setOmegaBusy] = useState(false);
+  const [omegaError, setOmegaError] = useState<string | null>(null);
 
   const syncAccountsToDb = useCallback((accounts: Account[]) => {
     void ipc
@@ -110,6 +130,39 @@ export function useAccounts(
     }
   }, [t, savedAccounts, commitAccounts, onLog]);
 
+  const handleAddOmega = useCallback(async () => {
+    if (!omega || !omega.configured) {
+      setOmegaError(t.omegaNotConfigured);
+      return;
+    }
+    setOmegaBusy(true);
+    setOmegaError(null);
+    try {
+      let omegaName: string | null = null;
+      if (omegaMode === "register") {
+        if (!/^[a-zA-Z0-9_]{3,16}$/.test(omegaUsername.trim())) {
+          setOmegaError(t.nicknameRules);
+          return;
+        }
+        omegaName = (await omega.register(omegaEmail.trim(), omegaUsername.trim(), omegaPassword)).username;
+      } else {
+        omegaName = (await omega.login(omegaEmail.trim(), omegaPassword)).username;
+      }
+      const newAcc: Account = { name: omegaName, type: "omega" };
+      commitAccounts([newAcc, ...savedAccounts.filter((a) => a.name !== omegaName)], newAcc);
+      setOmegaEmail("");
+      setOmegaUsername("");
+      setOmegaPassword("");
+      setAccountModalView("list");
+      setProfileMenuOpen(false);
+      onLog(t.omegaSuccess + omegaName);
+    } catch (e: any) {
+      setOmegaError(e?.message || t.omegaLoginError);
+    } finally {
+      setOmegaBusy(false);
+    }
+  }, [omega, omegaMode, omegaEmail, omegaUsername, omegaPassword, t, savedAccounts, commitAccounts, onLog]);
+
   const handleDeleteAccount = useCallback((accName: string) => {
     const updated = savedAccounts.filter((a) => a.name !== accName);
     persistAccounts(updated);
@@ -128,9 +181,20 @@ export function useAccounts(
     setNewUsernameInput,
     accountModalView,
     setAccountModalView,
+    omegaMode,
+    setOmegaMode,
+    omegaEmail,
+    setOmegaEmail,
+    omegaUsername,
+    setOmegaUsername,
+    omegaPassword,
+    setOmegaPassword,
+    omegaBusy,
+    omegaError,
     handleAddOffline,
     handleSelectAccount,
     handleAddMicrosoft,
+    handleAddOmega,
     handleDeleteAccount,
   };
 }

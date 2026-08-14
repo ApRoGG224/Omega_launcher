@@ -1,22 +1,35 @@
 import React from "react";
 import type { ModpackInstance } from "../../types";
 import DraggableWindow from "../../ui/DraggableWindow";
+import { useToast } from "../../ui/ToastProvider";
 
 export const ConsolePanel = React.memo(({
+  t,
   logs,
   isRunning,
   consoleOpen,
   onToggleConsole,
   selectedInstance,
 }: {
+  t: any;
   logs: string[];
   isRunning: boolean;
   consoleOpen: boolean;
   onToggleConsole: () => void;
   selectedInstance: ModpackInstance | null;
 }) => {
+  const { showToast } = useToast();
   const statusColor = isRunning ? "#10b981" : "#6b7280";
   const statusGlow = isRunning ? "0 0 6px #10b981" : "none";
+
+  const copyLogs = async () => {
+    try {
+      await navigator.clipboard.writeText(logs.join("\n"));
+      showToast(t.copyLogsDone, "success");
+    } catch {
+      showToast(t.copyLogsFailed, "error");
+    }
+  };
 
   return (
     <DraggableWindow
@@ -46,9 +59,28 @@ export const ConsolePanel = React.memo(({
           >
             <span style={{ fontWeight: 700, fontSize: "0.8rem", color: "#AB3DF5", display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: statusColor, display: "inline-block", boxShadow: statusGlow }} />
-              {isRunning ? "Игра запущена" : "Консоль"}
+              {isRunning ? t.consoleRunning : t.consoleTitle}
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void copyLogs();
+                }}
+                title={t.copyLogs}
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "#8b8b9c",
+                  borderRadius: 6,
+                  padding: "2px 8px",
+                  fontSize: "0.66rem",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                📋 {t.copyLogs}
+              </button>
               <span style={{ fontSize: "0.68rem", color: "#4a4a5a", fontFamily: "monospace" }}>
                 {selectedInstance ? `${selectedInstance.mcVersion} • ${selectedInstance.loader}` : ""}
               </span>
@@ -69,6 +101,7 @@ export const ConsolePanel = React.memo(({
 
           {consoleOpen && (
             <div
+              className="copyable-console"
               style={{
                 flex: 1,
                 overflowY: "auto",
@@ -84,7 +117,7 @@ export const ConsolePanel = React.memo(({
               {logs.length === 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 8 }}>
                   <span style={{ fontSize: "1.3rem" }}>📟</span>
-                  <div style={{ color: "#4a4a5a", fontSize: "0.72rem", textAlign: "center" }}>Запустите сборку, чтобы увидеть логи</div>
+                  <div style={{ color: "#4a4a5a", fontSize: "0.72rem", textAlign: "center" }}>{t.consoleEmpty}</div>
                 </div>
               ) : (
                 logs.slice(-40).map((line, i) => {

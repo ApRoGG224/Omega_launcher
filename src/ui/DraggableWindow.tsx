@@ -70,20 +70,28 @@ const DraggableWindow = React.memo(({
 
   useEffect(() => {
     const clampToViewport = () => {
-      const rect = windowRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const maxX = Math.max(12, window.innerWidth - rect.width - 12);
-      const maxY = Math.max(12, window.innerHeight - rect.height - 12);
+      const element = windowRef.current;
+      // Skip while the webview has not reported real dimensions yet (Tauri startup).
+      if (!element || window.innerWidth <= 0 || window.innerHeight <= 0) return;
+      // Use offset sizes: immune to entrance animations/transforms.
+      const width = element.offsetWidth;
+      const height = element.offsetHeight;
+      const maxX = Math.max(12, window.innerWidth - width - 12);
+      const maxY = Math.max(12, window.innerHeight - height - 12);
       setPosition((prev) => ({
         x: Math.min(Math.max(prev.x, 12), maxX),
         y: Math.min(Math.max(prev.y, 12), maxY),
       }));
     };
 
-    clampToViewport();
+    // Run after first paint and layout settle so measurements are reliable.
+    const raf = requestAnimationFrame(() => setTimeout(clampToViewport, 50));
     window.addEventListener("resize", clampToViewport);
-    return () => window.removeEventListener("resize", clampToViewport);
-  }, []);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", clampToViewport);
+    };
+  }, [size]);
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     setZIndex(++nextWindowZIndex);

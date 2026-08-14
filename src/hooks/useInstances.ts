@@ -14,12 +14,6 @@ export interface InstancesApi {
   selectedInstance: ModpackInstance | null;
   visibleInstances: ModpackInstance[];
   modCount: number;
-  contextMenu: { visible: boolean; x: number; y: number; instanceId: string } | null;
-  desktopContextMenu: { visible: boolean; x: number; y: number } | null;
-  renameModalOpen: string | null;
-  renameInput: string;
-  setRenameInput: (v: string) => void;
-  setRenameModalOpen: (v: string | null) => void;
   editModalOpen: string | null;
   editNameInput: string;
   setEditNameInput: (v: string) => void;
@@ -28,10 +22,8 @@ export interface InstancesApi {
   editLoaderInput: string;
   setEditLoaderInput: (v: string) => void;
   setEditModalOpen: (v: string | null) => void;
-  groupModalOpen: string | null;
-  groupInput: string;
-  setGroupInput: (v: string) => void;
-  setGroupModalOpen: (v: string | null) => void;
+  openEditModal: (instanceId: string) => void;
+  saveEdit: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   exportPath: string;
   setExportPath: (v: string) => void;
@@ -40,42 +32,33 @@ export interface InstancesApi {
   importStep: "menu" | "prism" | "curseforge" | "mrpack";
   setImportStep: (v: "menu" | "prism" | "curseforge" | "mrpack") => void;
   setSelectedInstanceId: (id: string | null) => void;
-  setContextMenu: (m: InstancesApi["contextMenu"]) => void;
-  setDesktopContextMenu: (m: InstancesApi["desktopContextMenu"]) => void;
   addInstance: (inst: ModpackInstance) => void;
   deleteInstance: (instanceId: string) => void;
   updateInstance: (id: string, patch: Partial<ModpackInstance>) => void;
-  openRenameModal: (instanceId: string) => void;
-  openEditModal: (instanceId: string) => void;
-  openGroupModal: (instanceId: string) => void;
-  saveRename: () => void;
-  saveEdit: () => void;
-  saveGroup: () => void;
+  moveInstanceToTop: (id: string) => void;
   handleIconChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   importFromArchive: (kind: ImportKind, zipPath: string) => Promise<void>;
   createFromCatalog: (name: string, mcVer: string, loader: string, iconUrl?: string, projectId?: string) => Promise<void>;
   installModByDrag: (instanceId: string, payload: { projectId: string; projectType: string }) => Promise<void>;
   installProgress: { step: string; current: number; total: number } | null;
+  importing: boolean;
+  recordPlaySession: (id: string, durationMs: number) => void;
 }
 
 export function useInstances(
   onLog: (line: string) => void,
   onToast: (message: string, type?: ToastType) => void,
+  t: any,
 ): InstancesApi {
   const [instances, setInstances] = useState<ModpackInstance[]>(() => loadInstances());
   const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
   const [modCount, setModCount] = useState(0);
-  const [contextMenu, setContextMenu] = useState<InstancesApi["contextMenu"]>(null);
-  const [desktopContextMenu, setDesktopContextMenu] = useState<InstancesApi["desktopContextMenu"]>(null);
-  const [renameModalOpen, setRenameModalOpen] = useState<string | null>(null);
-  const [renameInput, setRenameInput] = useState("");
   const [editModalOpen, setEditModalOpen] = useState<string | null>(null);
   const [editNameInput, setEditNameInput] = useState("");
   const [editVersionInput, setEditVersionInput] = useState("");
   const [editLoaderInput, setEditLoaderInput] = useState("");
-  const [groupModalOpen, setGroupModalOpen] = useState<string | null>(null);
-  const [groupInput, setGroupInput] = useState("");
   const [installProgress, setInstallProgress] = useState<InstancesApi["installProgress"]>(null);
+  const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [exportPath, setExportPath] = useState(() => localStorage.getItem("exportPath") || "~/Downloads");
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -110,6 +93,8 @@ export function useInstances(
               y: row.y,
               icon: row.icon,
               group: row.groupName,
+              playTimeMs: row.playTimeMs || 0,
+              lastPlayedAt: row.lastPlayedAt || undefined,
             })),
           );
         } else {
@@ -155,15 +140,6 @@ export function useInstances(
   }, []);
 
   useEffect(() => {
-    const handleClick = () => {
-      if (contextMenu) setContextMenu(null);
-      if (desktopContextMenu) setDesktopContextMenu(null);
-    };
-    document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
-  }, [contextMenu, desktopContextMenu]);
-
-  useEffect(() => {
     let cancelled = false;
     const loadModCount = async () => {
       if (!selectedInstanceId) {
@@ -202,12 +178,28 @@ export function useInstances(
     setInstances((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
   }, []);
 
-  const openRenameModal = useCallback((instanceId: string) => {
-    const inst = instances.find((i) => i.id === instanceId);
-    if (!inst) return;
-    setRenameModalOpen(instanceId);
-    setRenameInput(inst.name);
-  }, [instances]);
+  const moveInstanceToTop = useCallback((id: string) => {
+    setInstances((prev) => {
+      const inst = prev.find((i) => i.id === id);
+      if (!inst) return prev;
+      return [...prev.filter((i) => i.id !== id), inst];
+    });
+  }, []);
+
+  const recordPlaySession = useCallback((id: string, durationMs: number) => {
+    if (durationMs <= 0) return;
+    setInstances((prev) =>
+      prev.map((i) =>
+        i.id === id
+          ? {
+              ...i,
+              playTimeMs: (i.playTimeMs || 0) + Math.round(durationMs),
+              lastPlayedAt: new Date().toISOString(),
+            }
+          : i,
+      ),
+    );
+  }, []);
 
   const openEditModal = useCallback((instanceId: string) => {
     const inst = instances.find((i) => i.id === instanceId);
@@ -217,19 +209,6 @@ export function useInstances(
     setEditVersionInput(inst.mcVersion);
     setEditLoaderInput(inst.loader);
   }, [instances]);
-
-  const openGroupModal = useCallback((instanceId: string) => {
-    const inst = instances.find((i) => i.id === instanceId);
-    if (!inst) return;
-    setGroupModalOpen(instanceId);
-    setGroupInput(inst.group || "");
-  }, [instances]);
-
-  const saveRename = useCallback(() => {
-    if (!renameModalOpen) return;
-    updateInstance(renameModalOpen, { name: renameInput });
-    setRenameModalOpen(null);
-  }, [renameModalOpen, renameInput, updateInstance]);
 
   const saveEdit = useCallback(() => {
     if (!editModalOpen) return;
@@ -242,12 +221,6 @@ export function useInstances(
     });
     setEditModalOpen(null);
   }, [editModalOpen, editNameInput, editVersionInput, editLoaderInput, instances, updateInstance]);
-
-  const saveGroup = useCallback(() => {
-    if (!groupModalOpen) return;
-    updateInstance(groupModalOpen, { group: groupInput.trim() });
-    setGroupModalOpen(null);
-  }, [groupModalOpen, groupInput, updateInstance]);
 
   const handleIconChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -294,9 +267,10 @@ export function useInstances(
 
   const importFromArchive = useCallback(async (kind: ImportKind, zipPath: string) => {
     setImportModalOpen(false);
+    setImporting(true);
     const tempId = Date.now().toString();
     const kindLabel = kind === "prism" ? "Prism" : kind === "curseforge" ? "CurseForge" : "Modrinth/Omega";
-    onLog(`[IMPORT] Запуск импорта из архива...`);
+    onLog(`[IMPORT] ${t.importingArchive}`);
     try {
       const result = await ipc.importModpack(kind, tempId, zipPath);
       const data: ImportResult = JSON.parse(result);
@@ -306,18 +280,21 @@ export function useInstances(
         mcVersion: data.mcVersion || "1.20.1",
         loader: data.loader || "Vanilla",
         icon: undefined,
-        x: window.innerWidth / 2 - 80,
-        y: window.innerHeight / 2 - 80,
+        x: 24 + Math.random() * 160,
+        y: 24 + Math.random() * 160,
       };
       addInstance(newInst);
       setSelectedInstanceId(newInst.id);
-      onToast("Импорт завершён!", "success");
-      onLog(`[IMPORT] Сборка "${newInst.name}" (${newInst.mcVersion} ${newInst.loader}) импортирована (${kindLabel})`);
+      onToast(t.importFinished, "success");
+      onLog(`[IMPORT] ${t.importedOk} "${newInst.name}" (${newInst.mcVersion} ${newInst.loader}) (${kindLabel})`);
     } catch (e) {
-      onToast("Ошибка импорта: " + e, "error");
+      onToast(t.importFailed + e, "error");
       onLog(`[IMPORT ERROR]: ${e}`);
+    } finally {
+      setImporting(false);
+      setInstallProgress(null);
     }
-  }, [addInstance, onLog, onToast, setImportModalOpen]);
+  }, [addInstance, onLog, onToast, setImportModalOpen, t]);
 
   const createFromCatalog = useCallback(async (name: string, mcVer: string, loader: string, iconUrl?: string, projectId?: string) => {
     const newInst: ModpackInstance = {
@@ -331,20 +308,20 @@ export function useInstances(
     };
     addInstance(newInst);
     setSelectedInstanceId(newInst.id);
-    onLog(`[Modpack] Инициализация скачивания сборки "${name}"...`);
+    onLog(`[Modpack] ${t.installingModsLog} "${name}"...`);
     if (!projectId) return;
     try {
       await ipc.installModpack({ modId: projectId, mcVersion: mcVer, loader, instanceId: newInst.id });
-      onLog(`[Modpack] Сборка "${name}" успешно установлена и готова к запуску!`);
+      onLog(`[Modpack] ${t.packInstalledLog} "${name}"`);
     } catch (e: any) {
-      onLog(`[ERROR] Ошибка установки сборки: ${e}`);
+      onLog(`[ERROR] ${t.errorInstallingPack} ${e}`);
     }
-  }, [addInstance, onLog]);
+  }, [addInstance, onLog, t]);
 
   const installModByDrag = useCallback(async (instanceId: string, payload: { projectId: string; projectType: string }) => {
     const inst = instances.find((i) => i.id === instanceId);
     if (!inst) return;
-    onLog(`[Drag&Drop] Установка "${payload.projectId}" в сборку "${inst.name}"...`);
+    onLog(`[Drag&Drop] ${t.dragInstallingLog} "${payload.projectId}" → "${inst.name}"...`);
     try {
       await ipc.downloadMod({
         modId: payload.projectId,
@@ -354,11 +331,11 @@ export function useInstances(
         projectType: (payload.projectType || "mod") as "mod" | "resourcepack",
         worldName: null,
       });
-      onToast(payload.projectType === "mod" ? "Мод установлен в сборку!" : "Ресурспак установлен в сборку!", "success");
+      onToast(payload.projectType === "mod" ? t.modInstalledDrag : t.respackInstalledDrag, "success");
     } catch (e: any) {
-      onToast("Ошибка установки: " + e, "error");
+      onToast(t.installFailedDrag + e, "error");
     }
-  }, [instances, onLog, onToast]);
+  }, [instances, onLog, onToast, t]);
 
   return {
     instances,
@@ -367,12 +344,6 @@ export function useInstances(
     selectedInstance,
     visibleInstances,
     modCount,
-    contextMenu,
-    desktopContextMenu,
-    renameModalOpen,
-    renameInput,
-    setRenameInput,
-    setRenameModalOpen,
     editModalOpen,
     editNameInput,
     setEditNameInput,
@@ -381,10 +352,8 @@ export function useInstances(
     editLoaderInput,
     setEditLoaderInput,
     setEditModalOpen,
-    groupModalOpen,
-    groupInput,
-    setGroupInput,
-    setGroupModalOpen,
+    openEditModal,
+    saveEdit,
     fileInputRef,
     exportPath,
     setExportPath,
@@ -393,21 +362,16 @@ export function useInstances(
     importStep,
     setImportStep,
     setSelectedInstanceId,
-    setContextMenu,
-    setDesktopContextMenu,
     addInstance,
     deleteInstance,
     updateInstance,
-    openRenameModal,
-    openEditModal,
-    openGroupModal,
-    saveRename,
-    saveEdit,
-    saveGroup,
+    moveInstanceToTop,
     handleIconChange,
     importFromArchive,
     createFromCatalog,
     installModByDrag,
     installProgress,
+    importing,
+    recordPlaySession,
   };
 }

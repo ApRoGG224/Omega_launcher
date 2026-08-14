@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useInstances } from "./useInstances";
+import { translations } from "../i18n";
 import { ipc } from "../services/ipc";
 import { invoke } from "@tauri-apps/api/core";
 import type { ModpackInstance } from "../types";
@@ -40,7 +41,7 @@ describe("useInstances", () => {
   });
 
   it("добавляет инстанс и синхронизирует с localStorage", () => {
-    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn()));
+    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn(), translations.ru));
     expect(result.current.instances).toHaveLength(0);
 
     act(() => {
@@ -53,7 +54,7 @@ describe("useInstances", () => {
   });
 
   it("удаляет инстанс и вызывает db_delete_instance + kill_minecraft", () => {
-    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn()));
+    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn(), translations.ru));
     act(() => {
       result.current.addInstance(makeInstance("a1"));
     });
@@ -67,28 +68,54 @@ describe("useInstances", () => {
     expect(mockInvoke).toHaveBeenCalledWith("kill_minecraft", { instanceId: "a1" });
   });
 
-  it("updateInstance и saveRename обновляют поля", () => {
-    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn()));
+  it("updateInstance обновляет поля", () => {
+    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn(), translations.ru));
     act(() => {
       result.current.addInstance(makeInstance("a1", "Старое имя"));
     });
     act(() => {
-      result.current.updateInstance("a1", { loader: "Forge" });
-      result.current.openRenameModal("a1");
-    });
-    act(() => {
-      result.current.setRenameInput("Новое имя");
-    });
-    act(() => {
-      result.current.saveRename();
+      result.current.updateInstance("a1", { loader: "Forge", name: "Новое имя" });
     });
 
     expect(result.current.instances[0].loader).toBe("Forge");
     expect(result.current.instances[0].name).toBe("Новое имя");
   });
 
+  it("moveInstanceToTop поднимает инстанс наверх списка последних", () => {
+    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn(), translations.ru));
+    act(() => {
+      result.current.addInstance(makeInstance("a1"));
+      result.current.addInstance(makeInstance("a2"));
+      result.current.addInstance(makeInstance("a3"));
+    });
+
+    expect(result.current.visibleInstances.map((i) => i.id)).toEqual(["a3", "a2", "a1"]);
+
+    act(() => {
+      result.current.moveInstanceToTop("a1");
+    });
+
+    expect(result.current.visibleInstances.map((i) => i.id)).toEqual(["a1", "a3", "a2"]);
+    expect(result.current.visibleInstances.slice(0, 3)[0].id).toBe("a1");
+  });
+
+  it("recordPlaySession накапливает время и сохраняет последний запуск", () => {
+    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn(), translations.ru));
+    act(() => {
+      result.current.addInstance(makeInstance("a1"));
+    });
+
+    act(() => {
+      result.current.recordPlaySession("a1", 10 * 60 * 1000);
+      result.current.recordPlaySession("a1", 5 * 60 * 1000);
+    });
+
+    expect(result.current.instances[0].playTimeMs).toBe(15 * 60 * 1000);
+    expect(result.current.instances[0].lastPlayedAt).toBeDefined();
+  });
+
   it("createFromCatalog создаёт инстанс и вызывает install_modpack", async () => {
-    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn()));
+    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn(), translations.ru));
     mockInvoke.mockResolvedValueOnce("ok");
 
     await act(async () => {
@@ -109,7 +136,7 @@ describe("useInstances", () => {
       return null;
     });
 
-    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn()));
+    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn(), translations.ru));
 
     await waitFor(() => {
       expect(result.current.instances).toHaveLength(1);
@@ -120,7 +147,7 @@ describe("useInstances", () => {
   });
 
   it("installModByDrag устанавливает мод через download_mod", async () => {
-    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn()));
+    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn(), translations.ru));
     act(() => {
       result.current.addInstance(makeInstance("a1"));
     });
@@ -141,7 +168,7 @@ describe("useInstances", () => {
   });
 
   it("dbSaveInstances вызывается при изменении (sync эффект)", async () => {
-    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn()));
+    const { result } = renderHook(() => useInstances(vi.fn(), vi.fn(), translations.ru));
     act(() => {
       result.current.addInstance(makeInstance("a1"));
     });

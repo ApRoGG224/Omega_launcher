@@ -1,5 +1,6 @@
 use std::io::Write;
 use std::path::Path;
+use std::time::{Duration, Instant};
 
 use futures_util::StreamExt;
 use serde::de::DeserializeOwned;
@@ -74,6 +75,8 @@ pub async fn download_file_max(
     let mut stream = res.bytes_stream();
     let mut file = std::fs::File::create(dest).map_err(|e| e.to_string())?;
     let mut written: u64 = 0;
+    let mut last_percent: Option<u32> = None;
+    let mut last_progress_at = Instant::now() - Duration::from_secs(1);
     while let Some(chunk) = stream.next().await {
         let chunk = chunk.map_err(|e| e.to_string())?;
         written += chunk.len() as u64;
@@ -83,12 +86,23 @@ pub async fn download_file_max(
             return Err(format!("Download from {url} exceeded the size limit ({written} bytes)"));
         }
         file.write_all(&chunk).map_err(|e| e.to_string())?;
-        if total > 0 && written % (1024 * 1024) < 64 * 1024 {
+        if total > 0 {
             let pct = ((written as f64 / total as f64) * 100.0).round() as u32;
-            emit_line(app, &format!("Downloading: {pct}%"));
+            let now = Instant::now();
+            if last_percent != Some(pct)
+                && (now.duration_since(last_progress_at) >= Duration::from_millis(250)
+                    || pct >= 100)
+            {
+                emit_line(app, &format!("Downloading: {pct}%"));
+                last_percent = Some(pct);
+                last_progress_at = now;
+            }
         }
     }
     file.flush().map_err(|e| e.to_string())?;
+    if total > 0 && last_percent != Some(100) {
+        emit_line(app, "Downloading: 100%");
+    }
     Ok(())
 }
 
