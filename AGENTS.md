@@ -36,6 +36,7 @@
 - Keep commits focused on one change.
 - PRs should include a concise summary, validation steps, and screenshots or screen recordings for UI changes.
 - Mention any platform-specific impact, especially for Windows, Linux, or macOS packaging behavior.
+- **IMPORTANT: The user has requested that every change made during a working session must be committed and pushed to `origin/master` (github.com/ApRoGG224/Omega_launcher, auth via `gh` at `~/.local/bin/gh`).** After completing any task or logical group of changes: run `npm run build` (+ `cargo check` in `src-tauri` if native code touched), then `git add -A`, commit with a conventional message describing the bug fix / feature, and `git push origin HEAD`. Do not wait to be asked.
 
 ## Agent-Specific Instructions
 
