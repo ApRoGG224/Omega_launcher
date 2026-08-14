@@ -55,6 +55,9 @@ export function useAccounts(
   const [omegaPassword, setOmegaPassword] = useState("");
   const [omegaBusy, setOmegaBusy] = useState(false);
   const [omegaError, setOmegaError] = useState<string | null>(null);
+  const [dismissedOmega, setDismissedOmega] = useState<string | null>(() =>
+    localStorage.getItem("omega_dismissed_account"),
+  );
 
   const syncAccountsToDb = useCallback((accounts: Account[]) => {
     void ipc
@@ -94,6 +97,15 @@ export function useAccounts(
     },
     [syncAccountsToDb],
   );
+
+  const omegaName = omega?.profile?.username;
+  useEffect(() => {
+    if (!omegaName || omegaName === dismissedOmega || savedAccounts.some((a) => a.name === omegaName)) return;
+    const updated: Account[] = [{ name: omegaName, type: "omega" }, ...savedAccounts];
+    persistAccounts(updated);
+    syncAccountsToDb(updated);
+    setSavedAccounts(updated);
+  }, [omegaName, dismissedOmega, savedAccounts, syncAccountsToDb]);
 
   const handleAddOffline = useCallback(() => {
     const trimmed = newUsernameInput.trim();
@@ -150,6 +162,8 @@ export function useAccounts(
       }
       const newAcc: Account = { name: omegaName, type: "omega" };
       commitAccounts([newAcc, ...savedAccounts.filter((a) => a.name !== omegaName)], newAcc);
+      localStorage.removeItem("omega_dismissed_account");
+      setDismissedOmega(null);
       setOmegaEmail("");
       setOmegaUsername("");
       setOmegaPassword("");
@@ -167,10 +181,14 @@ export function useAccounts(
     const updated = savedAccounts.filter((a) => a.name !== accName);
     persistAccounts(updated);
     setSavedAccounts(updated);
-    if (account.name === accName && updated.length > 0) {
+    if (updated.length > 0 && account.name === accName) {
       setAccount(updated[0]);
     }
-  }, [savedAccounts, account.name]);
+    if (accName === omegaName) {
+      localStorage.setItem("omega_dismissed_account", accName);
+      setDismissedOmega(accName);
+    }
+  }, [savedAccounts, account.name, omegaName]);
 
   return {
     account,
