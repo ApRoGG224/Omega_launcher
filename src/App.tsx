@@ -21,6 +21,7 @@ import { InstancesPanel } from "./components/instances/InstancesPanel";
 import { ImportModal } from "./components/instances/ImportModal";
 import { ImportProgressPopup } from "./components/instances/ImportProgressPopup";
 import { AccountModal } from "./components/accounts/AccountModal";
+import { FriendsTab } from "./components/friends/FriendsTab";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
 import "./App.css";
 
@@ -321,6 +322,25 @@ function App() {
             setCloseOnLaunch={(v) => {
               setCloseOnLaunch(v);
               setStoredCloseOnLaunch(v);
+            }}
+          />
+        )}
+
+        {activeTab === "friends" && (
+          <FriendsTab
+            t={t}
+            friends={friendsApi}
+            presence={presenceApi}
+            instances={instancesApi.instances}
+            invites={invites}
+            onDismissInvite={(fromId) =>
+              setInvites((prev) => prev.filter((i) => i.fromId !== fromId))
+            }
+            onLaunch={handleServerLaunch}
+            onNotify={showToast}
+            onOpenAccounts={() => {
+              accountsApi.setProfileMenuOpen(true);
+              accountsApi.setAccountModalView("list");
             }}
           />
         )}
