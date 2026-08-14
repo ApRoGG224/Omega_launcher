@@ -15,6 +15,14 @@
 - `npm run preview` — preview the production build locally.
 - `npm run tauri` — run the Tauri CLI for native app tasks.
 - Rust-side checks should be run from `src-tauri/` when needed, for example with `cargo check` or `cargo test`.
+- `just build` — apply pending Supabase migrations, then build frontend + run tests + `cargo check` (needs `just` and `SUPABASE_ACCESS_TOKEN` in `.env`).
+- `just migration` / `just migration-new <name>` / `just migration-status` / `just migration-import` — Supabase DB migrations.
+
+## Database Migrations
+
+- DB schema is managed via numbered SQL files in `supabase/migrations/` (applied in order by `scripts/migrations.mjs`).
+- NEVER edit an already-applied migration. Add a new `NNNN_description.sql` file via `just migration-new <name>` instead.
+- If a DB change was ever applied manually outside migrations, use `just migration-import` to mark current files as applied before relying on `just migration`.
 
 ## Coding Style & Naming Conventions
 

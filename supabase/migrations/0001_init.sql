@@ -1,5 +1,5 @@
--- Omega Launcher — схема Supabase (Этап 9: Omega-аккаунты и друзья)
--- Выполнить в SQL Editor проекта Supabase.
+-- Omega Launcher — начальная схема (профили, друзья, RLS, RPC).
+-- Применяется раннером миграций (just migration). Идемпотентна.
 
 -- 1. Профили (один к одному с auth.users)
 create table if not exists public.profiles (
@@ -9,9 +9,6 @@ create table if not exists public.profiles (
   avatar_url text,
   created_at timestamptz not null default now()
 );
-
--- Миграция: колонка аватарки (идемпотентно)
-alter table public.profiles add column if not exists avatar_url text;
 
 -- 2. Друзья (заявка -> принятие)
 create table if not exists public.friends (
