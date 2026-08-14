@@ -924,6 +924,42 @@ input[type="color"]::-webkit-color-swatch {
   line-height: 1.35;
 }
 
+.omega-password-row {
+  position: relative;
+}
+
+.omega-password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #8b8b9c;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.omega-password-toggle:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.omega-password-toggle svg {
+  width: 15px;
+  height: 15px;
+}
+
+.omega-password-row input {
+  padding-right: 42px;
+}
+
 .account-method-info h4 {
   margin: 0;
   font-size: 0.95rem;

@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import type { Account } from "../../types";
 import DraggableWindow from "../../ui/DraggableWindow";
-import { IconArrowLeft, IconMicrosoft, IconPlus, IconTrash, IconUser, IconUsers, IconX } from "../../ui/icons";
+import { IconArrowLeft, IconEye, IconEyeOff, IconMicrosoft, IconPlus, IconTrash, IconUser, IconUsers, IconX } from "../../ui/icons";
 import type { AccountModalView, OmegaFormMode } from "../../hooks/useAccounts";
 
 export const AccountModal = React.memo(({
@@ -56,6 +56,7 @@ export const AccountModal = React.memo(({
   onClose: () => void;
 }) => {
   const nicknameValid = newUsernameInput.trim().length > 0 && /^[a-zA-Z0-9_]{3,16}$/.test(newUsernameInput.trim());
+  const [showOmegaPassword, setShowOmegaPassword] = useState(false);
   const omegaSubmitEnabled =
     omegaEmail.trim().length > 0 &&
     omegaPassword.length >= 6 &&
@@ -252,14 +253,22 @@ export const AccountModal = React.memo(({
                 </div>
               )}
 
-              <div className="account-input-group">
+              <div className="account-input-group omega-password-row">
                 <input
-                  type="password"
+                  type={showOmegaPassword ? "text" : "password"}
                   placeholder={(t as any).omegaPasswordPlaceholder}
                   value={omegaPassword}
                   onChange={(e) => setOmegaPassword(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && omegaSubmitEnabled && onAddOmega()}
                 />
+                <button
+                  type="button"
+                  className="omega-password-toggle"
+                  onClick={() => setShowOmegaPassword((p) => !p)}
+                  title={showOmegaPassword ? (t as any).omegaHidePassword : (t as any).omegaShowPassword}
+                >
+                  {showOmegaPassword ? <IconEyeOff /> : <IconEye />}
+                </button>
               </div>
 
               {omegaError && <div className="omega-error">{omegaError}</div>}
