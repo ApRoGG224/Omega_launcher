@@ -5,6 +5,7 @@ export interface FriendEntry {
   id: string;
   username: string;
   friend_code: string;
+  avatar_url?: string | null;
   status: "pending" | "accepted";
   direction: "incoming" | "outgoing";
 }
@@ -81,7 +82,7 @@ export async function loadFriends(): Promise<FriendsData> {
   const ids = rows.map((r) => (r.user_id === me ? r.friend_id : r.user_id));
   const { data: profiles, error: profileError } = await sb
     .from("profiles")
-    .select("id, username, friend_code")
+    .select("id, username, friend_code, avatar_url")
     .in("id", ids);
   if (profileError) throw new Error(profileError.message);
   const byId = new Map((profiles ?? []).map((p) => [p.id, p]));
@@ -97,6 +98,7 @@ export async function loadFriends(): Promise<FriendsData> {
       id: counterpartId,
       username: profile.username,
       friend_code: profile.friend_code,
+      avatar_url: profile.avatar_url ?? null,
       status: row.status,
       direction: isOutgoing ? "outgoing" : "incoming",
     };

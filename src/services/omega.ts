@@ -4,6 +4,7 @@ export interface OmegaProfile {
   id: string;
   username: string;
   friend_code: string;
+  avatar_url?: string | null;
 }
 
 const FRIEND_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -19,7 +20,56 @@ export function generateFriendCode(): string {
 }
 
 function rowToProfile(row: any): OmegaProfile {
-  return { id: row.id, username: row.username, friend_code: row.friend_code };
+  return {
+    id: row.id,
+    username: row.username,
+    friend_code: row.friend_code,
+    avatar_url: row.avatar_url ?? null,
+  };
+}
+
+export async function updateOmegaAvatar(dataUrl: string): Promise<OmegaProfile> {
+  const sb = getSupabase();
+  const { data } = await sb.auth.getUser();
+  const uid = data.user?.id;
+  if (!uid) throw new Error("Not logged in");
+  const { error } = await sb.from("profiles").update({ avatar_url: dataUrl }).eq("id", uid);
+  if (error) throw new Error(error.message);
+  return { id: uid, username: "", friend_code: "", avatar_url: dataUrl };
+}
+
+export async function resizeAvatarImage(file: File, size = 128): Promise<string> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+  return new Promise<string>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas not available"));
+      const min = Math.min(img.width, img.height);
+      ctx.drawImage(
+        img,
+        (img.width - min) / 2,
+        (img.height - min) / 2,
+        min,
+        min,
+        0,
+        0,
+        size,
+        size,
+      );
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => reject(new Error("Invalid image file"));
+    img.src = dataUrl;
+  });
 }
 
 export async function omegaRegister(email: string, username: string, password: string): Promise<OmegaProfile> {
@@ -68,7 +118,7 @@ export async function omegaGetProfile(): Promise<OmegaProfile | null> {
   if (!uid) return null;
   const { data: row } = await sb
     .from("profiles")
-    .select("id, username, friend_code")
+    .select("id, username, friend_code, avatar_url")
     .eq("id", uid)
     .maybeSingle();
   return row ? rowToProfile(row) : null;

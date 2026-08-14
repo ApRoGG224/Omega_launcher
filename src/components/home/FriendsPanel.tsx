@@ -202,7 +202,11 @@ export const FriendsPanel = React.memo(({
                               background: online ? "linear-gradient(135deg, #960DF2, #AB3DF5)" : "#2a2a35",
                             }}
                           >
-                            {friend.username.substring(0, 2).toUpperCase()}
+                            {friend.avatar_url ? (
+                              <img src={friend.avatar_url} alt="" style={{ width: "100%", height: "100%", borderRadius: 8, objectFit: "cover" }} />
+                            ) : (
+                              friend.username.substring(0, 2).toUpperCase()
+                            )}
                           </div>
                           <div style={{ minWidth: 0 }}>
                             <div className="friend-name" style={{ fontSize: "0.85rem" }}>{friend.username}</div>
@@ -252,7 +256,11 @@ export const FriendsPanel = React.memo(({
                   <div key={req.id} className="friend-item" style={{ padding: "10px 12px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
                       <div className="friend-avatar" style={{ width: 34, height: 34, fontSize: "0.8rem", background: "#2a2a35" }}>
-                        {req.username.substring(0, 2).toUpperCase()}
+                        {req.avatar_url ? (
+                          <img src={req.avatar_url} alt="" style={{ width: "100%", height: "100%", borderRadius: 8, objectFit: "cover" }} />
+                        ) : (
+                          req.username.substring(0, 2).toUpperCase()
+                        )}
                       </div>
                       <div style={{ minWidth: 0 }}>
                         <div className="friend-name" style={{ fontSize: "0.85rem" }}>{req.username}</div>

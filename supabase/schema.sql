@@ -6,8 +6,12 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   username text not null unique,
   friend_code text not null unique,
+  avatar_url text,
   created_at timestamptz not null default now()
 );
+
+-- Миграция: колонка аватарки (идемпотентно)
+alter table public.profiles add column if not exists avatar_url text;
 
 -- 2. Друзья (заявка -> принятие)
 create table if not exists public.friends (

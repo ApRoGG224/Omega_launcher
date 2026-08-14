@@ -2413,6 +2413,59 @@ input[type="color"]::-webkit-color-swatch {
   height: 14px;
 }
 
+.friends-own-avatar {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(171, 61, 245, 0.4);
+  background: linear-gradient(135deg, #960DF2, #AB3DF5);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: visible;
+  padding: 0;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.friends-own-avatar:hover {
+  box-shadow: 0 0 18px rgba(150, 13, 242, 0.5);
+  transform: translateY(-1px);
+}
+
+.friends-own-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 11px;
+  object-fit: cover;
+}
+
+.friends-avatar-edit {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #14141e;
+  border: 1px solid rgba(171, 61, 245, 0.5);
+  color: #AB3DF5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.friends-avatar-edit svg {
+  width: 10px;
+  height: 10px;
+}
+
 .friends-tab-body {
   margin-top: 24px;
   display: flex;
@@ -2514,6 +2567,13 @@ input[type="color"]::-webkit-color-swatch {
   height: 12px;
   border-radius: 50%;
   border: 2px solid #14141e;
+}
+
+.friend-card-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 11px;
+  object-fit: cover;
 }
 
 .friend-card-info {

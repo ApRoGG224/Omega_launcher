@@ -8,12 +8,16 @@ import {
   sendFriendRequest,
   type FriendEntry,
 } from "../services/friends";
+import { resizeAvatarImage } from "../services/omega";
 import type { OmegaProfile } from "../services/omega";
 import type { OmegaAuthApi } from "./useOmegaAuth";
 
 export interface FriendsApi {
   active: boolean;
   ownCode: string | null;
+  ownUsername: string | null;
+  ownAvatar: string | null;
+  updateOwnAvatar: (file: File) => Promise<void>;
   friends: FriendEntry[];
   requests: FriendEntry[];
   loading: boolean;
@@ -96,9 +100,21 @@ export function useFriends(omega: OmegaAuthApi): FriendsApi {
     [refresh],
   );
 
+  const updateOwnAvatar = useCallback(
+    async (file: File) => {
+      if (!omega.profile) return;
+      const dataUrl = await resizeAvatarImage(file);
+      await omega.updateAvatar(dataUrl);
+    },
+    [omega],
+  );
+
   return {
     active: !!omega.profile,
     ownCode: omega.profile?.friend_code ?? null,
+    ownUsername: omega.profile?.username ?? null,
+    ownAvatar: omega.profile?.avatar_url ?? null,
+    updateOwnAvatar,
     friends,
     requests,
     loading,

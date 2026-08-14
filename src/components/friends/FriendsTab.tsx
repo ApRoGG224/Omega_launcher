@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { IconBox, IconCheck, IconCopy, IconPlay, IconPlus, IconTrash, IconUsers, IconX } from "../../ui/icons";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { IconBox, IconCamera, IconCheck, IconCopy, IconPlay, IconPlus, IconTrash, IconUsers, IconX } from "../../ui/icons";
 import type { FriendsApi } from "../../hooks/useFriends";
 import type { InviteInfo, PresenceApi } from "../../hooks/usePresence";
 import type { ModpackInstance } from "../../types";
@@ -41,6 +41,26 @@ export const FriendsTab = React.memo(({
   const [busyCode, setBusyCode] = useState(false);
   const [joinTarget, setJoinTarget] = useState<JoinTarget | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      if (!file || avatarBusy) return;
+      setAvatarBusy(true);
+      try {
+        await friends.updateOwnAvatar(file);
+        onNotify(t.friendsAvatarUpdated, "success");
+      } catch {
+        onNotify(t.friendsAvatarError, "error");
+      } finally {
+        setAvatarBusy(false);
+      }
+    },
+    [avatarBusy, friends, onNotify, t],
+  );
 
   const onlineCount = useMemo(
     () => friends.friends.filter((f) => presence.presences[f.id]?.status).length,
@@ -160,13 +180,36 @@ export const FriendsTab = React.memo(({
               {onlineCount} {t.friendsOnline}
             </div>
             {friends.ownCode && (
-              <div className="friends-code-chip">
-                <span>{t.friendsMyCode}</span>
-                <code>{friends.ownCode}</code>
-                <button className="friend-code-copy" onClick={() => void copyCode()} title={t.friendsCopied}>
-                  {copied ? <IconCheck /> : <IconCopy />}
+              <>
+                <button
+                  className="friends-own-avatar"
+                  onClick={() => fileInputRef.current?.click()}
+                  title={t.friendsChangeAvatar}
+                >
+                  {friends.ownAvatar ? (
+                    <img src={friends.ownAvatar} alt="" />
+                  ) : (
+                    <span>{friends.ownUsername?.substring(0, 2).toUpperCase() ?? "?"}</span>
+                  )}
+                  <span className="friends-avatar-edit">
+                    <IconCamera />
+                  </span>
                 </button>
-              </div>
+                <div className="friends-code-chip">
+                  <span>{t.friendsMyCode}</span>
+                  <code>{friends.ownCode}</code>
+                  <button className="friend-code-copy" onClick={() => void copyCode()} title={t.friendsCopied}>
+                    {copied ? <IconCheck /> : <IconCopy />}
+                  </button>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleAvatarChange}
+                />
+              </>
             )}
           </div>
         )}
@@ -226,7 +269,11 @@ export const FriendsTab = React.memo(({
                   return (
                     <div key={friend.id} className="friend-card">
                       <div className={`friend-card-avatar ${online ? "online" : ""}`}>
-                        {friend.username.substring(0, 2).toUpperCase()}
+                        {friend.avatar_url ? (
+                          <img src={friend.avatar_url} alt="" />
+                        ) : (
+                          friend.username.substring(0, 2).toUpperCase()
+                        )}
                         <span className="friend-card-dot" style={{ background: online ? "#10b981" : "#6b7280" }} />
                       </div>
                       <div className="friend-card-info">
@@ -278,7 +325,11 @@ export const FriendsTab = React.memo(({
               {friends.requests.map((req) => (
                 <div key={req.id} className="friend-card request">
                   <div className="friend-card-avatar">
-                    {req.username.substring(0, 2).toUpperCase()}
+                    {req.avatar_url ? (
+                      <img src={req.avatar_url} alt="" />
+                    ) : (
+                      req.username.substring(0, 2).toUpperCase()
+                    )}
                   </div>
                   <div className="friend-card-info">
                     <div className="friend-card-name">{req.username}</div>

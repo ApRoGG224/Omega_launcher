@@ -6,6 +6,7 @@ import {
   omegaLogin,
   omegaLogout,
   omegaRegister,
+  updateOmegaAvatar,
   type OmegaProfile,
 } from "../services/omega";
 
@@ -16,6 +17,7 @@ export interface OmegaAuthApi {
   register: (email: string, username: string, password: string) => Promise<OmegaProfile>;
   login: (email: string, password: string) => Promise<OmegaProfile>;
   logout: () => Promise<void>;
+  updateAvatar: (dataUrl: string) => Promise<void>;
 }
 
 export function useOmegaAuth(): OmegaAuthApi {
@@ -66,6 +68,11 @@ export function useOmegaAuth(): OmegaAuthApi {
     setProfile(null);
   }, []);
 
+  const updateAvatar = useCallback(async (dataUrl: string) => {
+    await updateOmegaAvatar(dataUrl);
+    setProfile((prev) => (prev ? { ...prev, avatar_url: dataUrl } : prev));
+  }, []);
+
   return {
     configured: supabaseConfigured,
     loading,
@@ -73,5 +80,6 @@ export function useOmegaAuth(): OmegaAuthApi {
     register,
     login,
     logout,
+    updateAvatar,
   };
 }
