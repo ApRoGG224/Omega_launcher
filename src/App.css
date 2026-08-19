@@ -36,6 +36,73 @@ body {
   overflow: hidden;
 }
 
+@property --border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: true;
+}
+
+@keyframes border-spin {
+  to {
+    --border-angle: 360deg;
+  }
+}
+
+button,
+[class*="-btn"],
+.custom-dropdown-menu,
+.sketch-card,
+.settings-card,
+.global-modal-content,
+.account-modal,
+.create-instance-modal,
+.import-popup,
+.friend-join-modal,
+.console-panel,
+.floating-dock,
+.friend-card,
+.assembly-scroll-card,
+.mod-card,
+.server-item,
+.recent-instance-item {
+  position: relative;
+  transform: translateZ(0);
+}
+
+button::before,
+[class*="-btn"]::before,
+.custom-dropdown-menu::before,
+.sketch-card::before,
+.settings-card::before,
+.global-modal-content::before,
+.account-modal::before,
+.create-instance-modal::before,
+.import-popup::before,
+.friend-join-modal::before,
+.console-panel::before,
+.floating-dock::before,
+.friend-card::before,
+.assembly-scroll-card::before,
+.mod-card::before,
+.server-item::before,
+.recent-instance-item::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: 
+    conic-gradient(from var(--border-angle), transparent 75%, rgba(255, 255, 255, 0.8) 90%, transparent 100%),
+    linear-gradient(0deg, #d8ecf8 0%, #98c0ef 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: border-spin 3s linear infinite;
+  pointer-events: none;
+  z-index: 10;
+  will-change: background;
+}
+
 .app-container,
 .app-container * {
   -webkit-user-select: none;
