@@ -114,13 +114,13 @@ export const FriendsPanel = React.memo(({
           <span className="sketch-card-title">
             <IconUsers /> {t.friendsTitle}
           </span>
-          <span className="user-status" style={{ fontSize: "0.78rem", color: onlineCount > 0 ? "#10b981" : "#8b8b9c" }}>
-            <span className="status-dot" style={{ background: onlineCount > 0 ? "#10b981" : "#6b7280" }} /> {onlineCount} {t.friendsOnline}
+          <span className="user-status" style={{ fontSize: "0.78rem", color: onlineCount > 0 ? "#269684" : "#9da7ba" }}>
+            <span className="status-dot" style={{ background: onlineCount > 0 ? "#269684" : "#9da7ba" }} /> {onlineCount} {t.friendsOnline}
           </span>
         </div>
 
         {!friends.active && (
-          <div style={{ padding: "14px", textAlign: "center", color: "#8b8b9c", fontSize: "0.8rem", background: "rgba(255,255,255,0.04)", borderRadius: 10 }}>
+          <div style={{ padding: "14px", textAlign: "center", color: "#9da7ba", fontSize: "0.8rem", background: "rgba(186, 215, 247, 0.04)", borderRadius: 10 }}>
             {t.friendsNotLoggedIn}
           </div>
         )}
@@ -182,7 +182,7 @@ export const FriendsPanel = React.memo(({
 
                 <div className="friends-list" style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
                   {friends.friends.length === 0 && (
-                    <div style={{ padding: "14px", textAlign: "center", color: "#8b8b9c", fontSize: "0.8rem" }}>
+                    <div style={{ padding: "14px", textAlign: "center", color: "#9da7ba", fontSize: "0.8rem" }}>
                       {t.friendsEmpty}
                     </div>
                   )}
@@ -199,7 +199,7 @@ export const FriendsPanel = React.memo(({
                               width: 34,
                               height: 34,
                               fontSize: "0.8rem",
-                              background: online ? "linear-gradient(135deg, #960DF2, #AB3DF5)" : "#2a2a35",
+                              background: online ? "linear-gradient(135deg, #663af3, #8b5cf6)" : "#2f343e",
                             }}
                           >
                             {friend.avatar_url ? (
@@ -222,8 +222,8 @@ export const FriendsPanel = React.memo(({
                           </div>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <div className="friend-status" style={{ fontSize: "0.72rem", color: online ? "#10b981" : "#8b8b9c" }}>
-                            <span className="status-dot" style={{ width: 6, height: 6, background: online ? "#10b981" : "#6b7280" }} />
+                          <div className="friend-status" style={{ fontSize: "0.72rem", color: online ? "#269684" : "#9da7ba" }}>
+                            <span className="status-dot" style={{ width: 6, height: 6, background: online ? "#269684" : "#9da7ba" }} />
                             {inGame ? t.friendsInGame : online ? t.friendsOnline : t.friendsOffline}
                           </div>
                           {inGame && p?.serverHost && (
@@ -248,14 +248,14 @@ export const FriendsPanel = React.memo(({
             ) : (
               <div className="friends-list" style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
                 {friends.requests.length === 0 && (
-                  <div style={{ padding: "14px", textAlign: "center", color: "#8b8b9c", fontSize: "0.8rem" }}>
+                  <div style={{ padding: "14px", textAlign: "center", color: "#9da7ba", fontSize: "0.8rem" }}>
                     {t.friendsRequestsEmpty}
                   </div>
                 )}
                 {friends.requests.map((req) => (
                   <div key={req.id} className="friend-item" style={{ padding: "10px 12px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
-                      <div className="friend-avatar" style={{ width: 34, height: 34, fontSize: "0.8rem", background: "#2a2a35" }}>
+                      <div className="friend-avatar" style={{ width: 34, height: 34, fontSize: "0.8rem", background: "#2f343e" }}>
                         {req.avatar_url ? (
                           <img src={req.avatar_url} alt="" style={{ width: "100%", height: "100%", borderRadius: 8, objectFit: "cover" }} />
                         ) : (
@@ -306,7 +306,7 @@ export const FriendsPanel = React.memo(({
             </h3>
             <p className="server-launch-hint">{t.friendsJoinTitle}</p>
             {instances.length === 0 ? (
-              <div style={{ color: "#8b8b9c", textAlign: "center", padding: "12px", fontSize: "0.85rem" }}>
+              <div style={{ color: "#9da7ba", textAlign: "center", padding: "12px", fontSize: "0.85rem" }}>
                 {t.friendsNoBuilds}
               </div>
             ) : (
@@ -324,7 +324,7 @@ export const FriendsPanel = React.memo(({
                       <div style={{ fontWeight: 600, fontSize: "0.88rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {inst.name}
                       </div>
-                      <div style={{ fontSize: "0.72rem", color: "#8b8b9c" }}>
+                      <div style={{ fontSize: "0.72rem", color: "#9da7ba" }}>
                         {inst.mcVersion} • {inst.loader}
                       </div>
                     </div>
@@ -334,7 +334,7 @@ export const FriendsPanel = React.memo(({
               </div>
             )}
             <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
-              <button className="play-btn modal-action-btn" style={{ flex: 1, background: "rgba(255,255,255,0.1)", boxShadow: "none" }} onClick={() => setJoinTarget(null)}>
+              <button className="play-btn modal-action-btn" style={{ flex: 1, background: "rgba(186, 215, 247, 0.1)", boxShadow: "none" }} onClick={() => setJoinTarget(null)}>
                 {t.cancel}
               </button>
             </div>

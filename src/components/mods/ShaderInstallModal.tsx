@@ -42,24 +42,24 @@ export const ShaderInstallModal = React.memo(({
       <div className="global-modal-body">
         <button className="modal-item-btn" onClick={() => pick("fabric")}>
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <div style={{ background: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "var(--accent-color)" }}>
+            <div style={{ background: "rgba(186, 215, 247, 0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "var(--accent-color)" }}>
               <IconBox />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px", textAlign: "left" }}>
               <span style={{ fontSize: "1.05rem", fontWeight: "600" }}>Fabric</span>
-              <span style={{ color: "#8b8b9c", fontSize: "0.8rem" }}>{t.irisNote}</span>
+              <span style={{ color: "#9da7ba", fontSize: "0.8rem" }}>{t.irisNote}</span>
             </div>
           </div>
           <div className="modal-item-tag">{t.recommended}</div>
         </button>
         <button className="modal-item-btn" onClick={() => pick("forge")} style={{ animationDelay: "0.05s" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <div style={{ background: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "var(--accent-color)" }}>
+            <div style={{ background: "rgba(186, 215, 247, 0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "var(--accent-color)" }}>
               <IconBox />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px", textAlign: "left" }}>
               <span style={{ fontSize: "1.05rem", fontWeight: "600" }}>Forge</span>
-              <span style={{ color: "#8b8b9c", fontSize: "0.8rem" }}>{t.forgeCompat}</span>
+              <span style={{ color: "#9da7ba", fontSize: "0.8rem" }}>{t.forgeCompat}</span>
             </div>
           </div>
         </button>

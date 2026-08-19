@@ -167,14 +167,10 @@ function App() {
       }}
       onDragStart={(e) => e.preventDefault()}
     >
+
       <main className="main-content">
         <header className="top-bar">
-          <div className="title-area" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div className="sidebar-icon brand" style={{ width: 36, height: 36, marginBottom: 0, borderRadius: 10 }}>
-              <IconBox />
-            </div>
-            <h1 style={{ fontSize: "1.25rem", fontWeight: 700, letterSpacing: "0.5px" }}>Omega Launcher</h1>
-          </div>
+
 
           <div
             className="user-profile"

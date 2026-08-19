@@ -19,8 +19,8 @@ export const ConsolePanel = React.memo(({
   selectedInstance: ModpackInstance | null;
 }) => {
   const { showToast } = useToast();
-  const statusColor = isRunning ? "#10b981" : "#6b7280";
-  const statusGlow = isRunning ? "0 0 6px #10b981" : "none";
+  const statusColor = isRunning ? "#269684" : "#9da7ba";
+  const statusGlow = isRunning ? "0 0 6px #269684" : "none";
 
   const copyLogs = async () => {
     try {
@@ -46,7 +46,7 @@ export const ConsolePanel = React.memo(({
             left: 0,
             right: 0,
             bottom: 0,
-            background: "linear-gradient(180deg, rgba(150,13,242,0.07) 0%, rgba(5,4,8,0.97) 100%)",
+            background: "linear-gradient(180deg, rgba(102, 58, 243, 0.07) 0%, rgba(5, 6, 15, 0.97) 100%)",
             pointerEvents: "none",
             zIndex: 0,
           }}
@@ -57,7 +57,7 @@ export const ConsolePanel = React.memo(({
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", userSelect: "none" }}
             onClick={onToggleConsole}
           >
-            <span style={{ fontWeight: 700, fontSize: "0.8rem", color: "#AB3DF5", display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontWeight: 700, fontSize: "0.8rem", color: "#8b5cf6", display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: statusColor, display: "inline-block", boxShadow: statusGlow }} />
               {isRunning ? t.consoleRunning : t.consoleTitle}
             </span>
@@ -69,9 +69,9 @@ export const ConsolePanel = React.memo(({
                 }}
                 title={t.copyLogs}
                 style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#8b8b9c",
+                  background: "rgba(186, 215, 247, 0.06)",
+                  border: "1px solid rgba(186, 215, 247, 0.1)",
+                  color: "#9da7ba",
                   borderRadius: 6,
                   padding: "2px 8px",
                   fontSize: "0.66rem",
@@ -81,13 +81,13 @@ export const ConsolePanel = React.memo(({
               >
                 📋 {t.copyLogs}
               </button>
-              <span style={{ fontSize: "0.68rem", color: "#4a4a5a", fontFamily: "monospace" }}>
+              <span style={{ fontSize: "0.68rem", color: "#3f4959", fontFamily: "monospace" }}>
                 {selectedInstance ? `${selectedInstance.mcVersion} • ${selectedInstance.loader}` : ""}
               </span>
               <span
                 style={{
                   fontSize: "0.7rem",
-                  color: "#6b7280",
+                  color: "#9da7ba",
                   transform: consoleOpen ? "rotate(0deg)" : "rotate(180deg)",
                   transition: "transform 0.3s",
                   display: "inline-block",
@@ -111,13 +111,13 @@ export const ConsolePanel = React.memo(({
                 marginTop: 10,
                 fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
                 scrollbarWidth: "thin",
-                scrollbarColor: "rgba(171,61,245,0.2) transparent",
+                scrollbarColor: "rgba(139, 92, 246, 0.2) transparent",
               }}
             >
               {logs.length === 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 8 }}>
                   <span style={{ fontSize: "1.3rem" }}>📟</span>
-                  <div style={{ color: "#4a4a5a", fontSize: "0.72rem", textAlign: "center" }}>{t.consoleEmpty}</div>
+                  <div style={{ color: "#3f4959", fontSize: "0.72rem", textAlign: "center" }}>{t.consoleEmpty}</div>
                 </div>
               ) : (
                 logs.slice(-40).map((line, i) => {
@@ -132,7 +132,7 @@ export const ConsolePanel = React.memo(({
                         lineHeight: 1.45,
                         padding: "1px 4px",
                         borderRadius: 3,
-                        color: isError ? "#f87171" : isWarn ? "#fbbf24" : isInfo ? "#60a5fa" : "#6b6b7a",
+                        color: isError ? "#e46d4c" : isWarn ? "#e46d4c" : isInfo ? "#b6d9fc" : "#3f4959",
                         background: isError ? "rgba(248,113,113,0.05)" : "transparent",
                         wordBreak: "break-all",
                       }}

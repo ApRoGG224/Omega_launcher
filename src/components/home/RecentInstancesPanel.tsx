@@ -42,7 +42,7 @@ export const RecentInstancesPanel = React.memo(({
         </div>
         <div className="recent-instances-list recent-instances-fixed" style={{ overflowY: "hidden", flex: 1, minHeight: 0 }}>
           {instances.length === 0 ? (
-            <div style={{ color: "#8b8b9c", textAlign: "center", padding: "15px", fontSize: "0.85rem" }}>
+            <div style={{ color: "#9da7ba", textAlign: "center", padding: "15px", fontSize: "0.85rem" }}>
               {t.noBuildsHome}
             </div>
           ) : (

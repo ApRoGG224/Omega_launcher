@@ -87,7 +87,7 @@ export const InstancesPanel = React.memo(({
       }}
     >
       {installProgress && (
-        <div style={{ background: "rgba(14, 11, 22, 0.85)", border: "1px solid rgba(171, 61, 245, 0.3)", borderRadius: 14, padding: "12px 16px" }}>
+        <div style={{ background: "rgba(5, 6, 15, 0.85)", border: "1px solid rgba(139, 92, 246, 0.3)", borderRadius: 14, padding: "12px 16px" }}>
           <div className="install-progress-label">
             <span>
               {installProgress.step === "mods"
@@ -141,7 +141,7 @@ export const InstancesPanel = React.memo(({
               <div style={{ fontWeight: 600, fontSize: "0.95rem", lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {inst.name}
               </div>
-              <div style={{ fontSize: "0.78rem", color: "#8b8b9c", lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <div style={{ fontSize: "0.78rem", color: "#9da7ba", lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {inst.mcVersion} ({inst.loader})
               </div>
             </div>
@@ -163,8 +163,8 @@ export const InstancesPanel = React.memo(({
           </div>
           <div style={{ flex: 1 }}>
             <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "4px" }}>{selectedInstance.name}</h3>
-            <div style={{ fontSize: "0.85rem", color: "#8b8b9c", marginBottom: "8px" }}>
-              {t.versionLabel} <span style={{ color: "#AB3DF5", fontWeight: 600 }}>{selectedInstance.mcVersion}</span> • {t.loaderLabel}{" "}
+            <div style={{ fontSize: "0.85rem", color: "#9da7ba", marginBottom: "8px" }}>
+              {t.versionLabel} <span style={{ color: "#8b5cf6", fontWeight: 600 }}>{selectedInstance.mcVersion}</span> • {t.loaderLabel}{" "}
               <span style={{ color: "#fff" }}>{selectedInstance.loader}</span>
             </div>
             <div className="mod-chips-container">
@@ -180,21 +180,21 @@ export const InstancesPanel = React.memo(({
             </button>
             <button
               className="play-btn"
-              style={{ background: "rgba(255,255,255,0.08)", boxShadow: "none", fontSize: "0.82rem" }}
+              style={{ background: "rgba(186, 215, 247, 0.08)", boxShadow: "none", fontSize: "0.82rem" }}
               onClick={() => onOpenFolder(selectedInstance.id)}
             >
               <IconFolder /> {t.openFolderShort}
             </button>
             <button
               className="play-btn"
-              style={{ background: "rgba(255,255,255,0.08)", boxShadow: "none", fontSize: "0.82rem" }}
+              style={{ background: "rgba(186, 215, 247, 0.08)", boxShadow: "none", fontSize: "0.82rem" }}
               onClick={() => onEditInstance(selectedInstance.id)}
             >
               🛠️ {t.editBuildBtn}
             </button>
             <button
               className="play-btn"
-              style={{ background: confirmDelete ? "rgba(248,113,113,0.25)" : "rgba(255,255,255,0.05)", boxShadow: "none", fontSize: "0.82rem", color: confirmDelete ? "#f87171" : "#f87171" }}
+              style={{ background: confirmDelete ? "rgba(248,113,113,0.25)" : "rgba(186, 215, 247, 0.05)", boxShadow: "none", fontSize: "0.82rem", color: confirmDelete ? "#e46d4c" : "#e46d4c" }}
               onClick={() => {
                 if (confirmDelete) onDeleteInstance(selectedInstance.id);
                 else setConfirmDelete(true);

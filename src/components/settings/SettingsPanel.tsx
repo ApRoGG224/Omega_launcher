@@ -12,12 +12,12 @@ const VERSION_FILTER_ITEMS = [
 ] as const;
 
 const THEME_PRESETS = [
-  { name: "Omega Purple", hex: "#a855f7" },
-  { name: "Neon Green", hex: "#10b981" },
-  { name: "Cyber Blue", hex: "#3b82f6" },
-  { name: "Crimson Red", hex: "#ef4444" },
-  { name: "Sunset Orange", hex: "#f97316" },
-  { name: "Hot Pink", hex: "#ec4899" },
+  { name: "Void Violet", hex: "#663af3" },
+  { name: "Deep Teal", hex: "#269684" },
+  { name: "Signal Blue", hex: "#027dea" },
+  { name: "Ember Glow", hex: "#e46d4c" },
+  { name: "Blueprint Blue", hex: "#b6d9fc" },
+  { name: "Frost Glow", hex: "#d1e4fa" },
 ];
 
 const SettingsCard = React.memo(({
@@ -140,7 +140,7 @@ export const SettingsPanel = React.memo(({
           </div>
         </SettingsCard>
 
-        <SettingsCard icon={<IconCpu />} iconColor="#3b82f6" title={t.filePathsTitle}>
+        <SettingsCard icon={<IconCpu />} iconColor="#027dea" title={t.filePathsTitle}>
           <div className="input-group">
             <label>{t.javaLabel}</label>
             <div className="input-wrapper">
@@ -183,7 +183,7 @@ export const SettingsPanel = React.memo(({
           </div>
         </SettingsCard>
 
-        <SettingsCard icon={<IconUsers />} iconColor="#10b981" title={t.autoConnect}>
+        <SettingsCard icon={<IconUsers />} iconColor="#269684" title={t.autoConnect}>
           <div className="input-group">
             <label>{t.serverIpLabel}</label>
             <input type="text" className="settings-text-input" placeholder="mc.hypixel.net" value={serverIp} onChange={(e) => setServerIp(e.target.value)} />
@@ -216,7 +216,7 @@ export const SettingsPanel = React.memo(({
           </div>
         </SettingsCard>
 
-        <SettingsCard icon={<IconSettings />} iconColor="#f97316" title={t.languageTitle}>
+        <SettingsCard icon={<IconSettings />} iconColor="#e46d4c" title={t.languageTitle}>
           <div className="settings-lang-row">
             <button
               className={`settings-lang-btn ${language === "ru" ? "active" : ""}`}
@@ -276,7 +276,7 @@ export const SettingsPanel = React.memo(({
           </div>
         </SettingsCard>
 
-        <SettingsCard icon={<IconBox />} iconColor="#ef4444" title={t.closeOnLaunch} subtitle={t.closeOnLaunchDesc}>
+        <SettingsCard icon={<IconBox />} iconColor="#e46d4c" title={t.closeOnLaunch} subtitle={t.closeOnLaunchDesc}>
           <label className="settings-toggle-row">
             <input
               type="checkbox"

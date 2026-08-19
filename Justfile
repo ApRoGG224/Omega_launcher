@@ -32,9 +32,9 @@ build-frontend:
 
 # Поднять patch-версию и закоммитить: just version [major|minor|patch]
 version PART='patch':
-    @node scripts/bump-version.mjs {{PART}}
+    ver := `node scripts/bump-version.mjs {{PART}}`
     git add -A
-    git commit -m "chore: bump version to $(node -e \"console.log(JSON.parse(require('fs').readFileSync('package.json')).version)\")"
+    git commit -m "chore: bump version to {{ver}}"
 
 # Релиз: бамп версии, коммит, пуш + тег (GitHub Actions соберёт и выложит релиз)
 release PART='patch':

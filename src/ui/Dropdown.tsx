@@ -68,7 +68,7 @@ export const Dropdown = React.memo(({
                 margin: "5px",
                 padding: "8px",
                 background: "rgba(0,0,0,0.3)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                border: "1px solid rgba(186, 215, 247, 0.1)",
                 color: "white",
                 borderRadius: "4px",
                 outline: "none",

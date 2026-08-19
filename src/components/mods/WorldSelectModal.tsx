@@ -61,12 +61,12 @@ export const WorldSelectModal = React.memo(({
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <div style={{ background: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "var(--accent-color)" }}>
+                <div style={{ background: "rgba(186, 215, 247, 0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "var(--accent-color)" }}>
                   <IconFolder />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px", textAlign: "left" }}>
                   <span style={{ fontSize: "1.05rem", fontWeight: "600", letterSpacing: "0.3px" }}>{world}</span>
-                  <span style={{ color: "#8b8b9c", fontSize: "0.85rem" }}>saves/{world}</span>
+                  <span style={{ color: "#9da7ba", fontSize: "0.85rem" }}>saves/{world}</span>
                 </div>
               </div>
             </button>
@@ -83,7 +83,7 @@ export const WorldSelectModal = React.memo(({
           </button>
           <button
             className="play-btn"
-            style={{ flex: 1, background: "rgba(255,255,255,0.1)", boxShadow: "none" }}
+            style={{ flex: 1, background: "rgba(186, 215, 247, 0.1)", boxShadow: "none" }}
             onClick={onCancel}
           >
             {t.cancel}

@@ -183,9 +183,9 @@ export const ServersPanel = React.memo(({
                     overflow: "hidden",
                     flexShrink: 0,
                     background: server.status?.online
-                      ? "rgba(16,185,129,0.15)"
-                      : "rgba(107,114,128,0.15)",
-                    color: server.status?.online ? "#10b981" : "#6b7280",
+                      ? "rgba(38, 150, 132, 0.15)"
+                      : "rgba(63, 73, 89, 0.15)",
+                    color: server.status?.online ? "#269684" : "#9da7ba",
                   }}
                 >
                   {server.favicon ? (
@@ -248,7 +248,7 @@ export const ServersPanel = React.memo(({
             </div>
           ))}
           {servers.length === 0 && (
-            <div style={{ fontSize: "0.8rem", color: "#8b8b9c", padding: "12px", textAlign: "center" }}>
+            <div style={{ fontSize: "0.8rem", color: "#9da7ba", padding: "12px", textAlign: "center" }}>
               {t.serversEmpty}
             </div>
           )}
@@ -288,7 +288,7 @@ export const ServersPanel = React.memo(({
               {t.serverChooseBuild}
             </p>
             {instances.length === 0 ? (
-              <div style={{ color: "#8b8b9c", textAlign: "center", padding: "12px", fontSize: "0.85rem" }}>
+              <div style={{ color: "#9da7ba", textAlign: "center", padding: "12px", fontSize: "0.85rem" }}>
                 {t.noBuildsToLaunch}
               </div>
             ) : (
@@ -310,7 +310,7 @@ export const ServersPanel = React.memo(({
                       <div style={{ fontWeight: 600, fontSize: "0.88rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {inst.name}
                       </div>
-                      <div style={{ fontSize: "0.72rem", color: "#8b8b9c" }}>
+                      <div style={{ fontSize: "0.72rem", color: "#9da7ba" }}>
                         {inst.mcVersion} • {inst.loader}
                       </div>
                     </div>
@@ -320,7 +320,7 @@ export const ServersPanel = React.memo(({
               </div>
             )}
             <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
-              <button className="play-btn modal-action-btn" style={{ flex: 1, background: "rgba(255,255,255,0.1)", boxShadow: "none" }} onClick={() => setLaunchServer(null)}>
+              <button className="play-btn modal-action-btn" style={{ flex: 1, background: "rgba(186, 215, 247, 0.1)", boxShadow: "none" }} onClick={() => setLaunchServer(null)}>
                 {t.cancel}
               </button>
             </div>

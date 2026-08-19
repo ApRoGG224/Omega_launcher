@@ -264,7 +264,7 @@ export const ModsPanel = React.memo(({
       </div>
 
       {search.fetchError && (
-        <div style={{ color: "#ef4444", textAlign: "center", padding: "20px" }}>{search.fetchError}</div>
+        <div style={{ color: "#e46d4c", textAlign: "center", padding: "20px" }}>{search.fetchError}</div>
       )}
       {!search.fetchError && (
         <div className="mods-grid" style={{ flex: 1, overflowY: "auto" }} onScroll={handleScroll}>

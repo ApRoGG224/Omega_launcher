@@ -166,7 +166,7 @@ export function useGameSession(
 
   const sliderStyle = useMemo(
     () => ({
-      background: `linear-gradient(to right, var(--accent-color) ${((ram - 1) / 15) * 100}%, rgba(255,255,255,0.1) ${((ram - 1) / 15) * 100}%)`,
+      background: `linear-gradient(to right, var(--accent-color) ${((ram - 1) / 15) * 100}%, rgba(186, 215, 247, 0.1) ${((ram - 1) / 15) * 100}%)`,
     }),
     [ram],
   );

@@ -94,7 +94,7 @@ export const ImportModal = React.memo(({
             zIndex: 2600,
             pointerEvents: "none",
             border: "2px dashed var(--accent-color)",
-            background: "rgba(171, 61, 245, 0.07)",
+            background: "rgba(139, 92, 246, 0.07)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -125,7 +125,7 @@ export const ImportModal = React.memo(({
           {step === "menu" ? (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
               <div className="account-method-card" onClick={() => onSelectStep("mrpack")}>
-                <div className="account-method-icon" style={{ background: "rgba(255,255,255,0.05)", color: "#fff" }}>
+                <div className="account-method-icon" style={{ background: "rgba(186, 215, 247, 0.05)", color: "#fff" }}>
                   <IconBox />
                 </div>
                 <div className="account-method-info">
@@ -135,7 +135,7 @@ export const ImportModal = React.memo(({
               </div>
 
               <div className="account-method-card" onClick={() => onSelectStep("prism")}>
-                <div className="account-method-icon" style={{ background: "rgba(255,255,255,0.05)", color: "#fff" }}>
+                <div className="account-method-icon" style={{ background: "rgba(186, 215, 247, 0.05)", color: "#fff" }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" /><polyline points="12 22 12 12" /><polyline points="22 8.5 12 12" /><polyline points="2 8.5 12 12" /></svg>
                 </div>
                 <div className="account-method-info">
@@ -166,7 +166,7 @@ export const ImportModal = React.memo(({
             </div>
           ) : (
             <div
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 20px", border: "2px dashed rgba(255,255,255,0.15)", borderRadius: "15px", background: "rgba(0,0,0,0.2)" }}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 20px", border: "2px dashed rgba(186, 215, 247, 0.15)", borderRadius: "15px", background: "rgba(0,0,0,0.2)" }}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault();
@@ -181,7 +181,7 @@ export const ImportModal = React.memo(({
                 <polyline points="17 8 12 3 7 8"/>
                 <line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
-              <p style={{ color: "#8b8b9c", textAlign: "center", marginBottom: "20px" }}>
+              <p style={{ color: "#9da7ba", textAlign: "center", marginBottom: "20px" }}>
                 {t.importDropHint} {kindLabel}<br/>{t.importOrClick}
               </p>
 

@@ -176,7 +176,7 @@ export const FriendsTab = React.memo(({
         {friends.active && (
           <div className="friends-header-right">
             <div className="friends-online-badge">
-              <span className="status-dot" style={{ background: onlineCount > 0 ? "#10b981" : "#6b7280" }} />
+              <span className="status-dot" style={{ background: onlineCount > 0 ? "#269684" : "#9da7ba" }} />
               {onlineCount} {t.friendsOnline}
             </div>
             {friends.ownCode && (
@@ -274,7 +274,7 @@ export const FriendsTab = React.memo(({
                         ) : (
                           friend.username.substring(0, 2).toUpperCase()
                         )}
-                        <span className="friend-card-dot" style={{ background: online ? "#10b981" : "#6b7280" }} />
+                        <span className="friend-card-dot" style={{ background: online ? "#269684" : "#9da7ba" }} />
                       </div>
                       <div className="friend-card-info">
                         <div className="friend-card-name">{friend.username}</div>
@@ -371,7 +371,7 @@ export const FriendsTab = React.memo(({
             </h3>
             <p className="server-launch-hint">{t.friendsJoinTitle}</p>
             {instances.length === 0 ? (
-              <div style={{ color: "#8b8b9c", textAlign: "center", padding: "12px", fontSize: "0.85rem" }}>
+              <div style={{ color: "#9da7ba", textAlign: "center", padding: "12px", fontSize: "0.85rem" }}>
                 {t.friendsNoBuilds}
               </div>
             ) : (
@@ -389,7 +389,7 @@ export const FriendsTab = React.memo(({
                       <div style={{ fontWeight: 600, fontSize: "0.88rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {inst.name}
                       </div>
-                      <div style={{ fontSize: "0.72rem", color: "#8b8b9c" }}>
+                      <div style={{ fontSize: "0.72rem", color: "#9da7ba" }}>
                         {inst.mcVersion} • {inst.loader}
                       </div>
                     </div>
@@ -401,7 +401,7 @@ export const FriendsTab = React.memo(({
             <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
               <button
                 className="play-btn modal-action-btn"
-                style={{ flex: 1, background: "rgba(255,255,255,0.1)", boxShadow: "none" }}
+                style={{ flex: 1, background: "rgba(186, 215, 247, 0.1)", boxShadow: "none" }}
                 onClick={() => setJoinTarget(null)}
               >
                 {t.cancel}

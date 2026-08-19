@@ -49,12 +49,12 @@ export const InstallTargetModal = React.memo(({
           instances.map((inst, idx) => (
             <button key={inst.id} onClick={() => onPick(inst.id)} className="modal-item-btn" style={{ animationDelay: `${idx * 0.05}s` }}>
               <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <div style={{ background: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "var(--accent-color)" }}>
+                <div style={{ background: "rgba(186, 215, 247, 0.05)", padding: "10px", borderRadius: "10px", display: "flex", color: "var(--accent-color)" }}>
                   <IconBox />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                   <span style={{ fontSize: "1.05rem", fontWeight: "600", letterSpacing: "0.3px" }}>{inst.name}</span>
-                  <span style={{ color: "#8b8b9c", fontSize: "0.85rem" }}>
+                  <span style={{ color: "#9da7ba", fontSize: "0.85rem" }}>
                     {t.version}: {inst.mcVersion}
                   </span>
                 </div>

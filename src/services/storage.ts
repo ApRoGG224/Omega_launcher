@@ -96,7 +96,7 @@ export function getInitialWindowSize(key: string, fallback?: WindowSize): Window
 export const getStoredLanguage = () => (localStorage.getItem(LANGUAGE_KEY) as "ru" | "en") || "ru";
 export const setStoredLanguage = (lang: string) => localStorage.setItem(LANGUAGE_KEY, lang);
 
-export const getStoredTheme = () => localStorage.getItem(THEME_KEY) || "#a855f7";
+export const getStoredTheme = () => localStorage.getItem(THEME_KEY) || "#663af3";
 export const setStoredTheme = (hex: string) => localStorage.setItem(THEME_KEY, hex);
 
 export const getStoredExportPath = () => localStorage.getItem(EXPORT_PATH_KEY) || "~/Downloads";
