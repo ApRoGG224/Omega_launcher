@@ -2050,15 +2050,16 @@ input[type="color"]::-webkit-color-swatch {
   width: 1400px;
   height: 900px;
   /* Conic gradient stops act as a natural, lag-free blur. 
-     Expanded the angles (110deg to 250deg) to make the light wider. */
+     Expanded the angles (110deg to 250deg) to make the light wider. 
+     Opacities reduced to make the beam darker/subtler. */
   background: conic-gradient(
     at 50% 0%,
     transparent 110deg,
-    rgba(102, 58, 243, 0.05) 130deg,
-    rgba(186, 215, 247, 0.15) 150deg,
-    rgba(220, 235, 255, 0.35) 180deg,
-    rgba(186, 215, 247, 0.15) 210deg,
-    rgba(102, 58, 243, 0.05) 230deg,
+    rgba(102, 58, 243, 0.02) 130deg,
+    rgba(186, 215, 247, 0.05) 150deg,
+    rgba(220, 235, 255, 0.15) 180deg,
+    rgba(186, 215, 247, 0.05) 210deg,
+    rgba(102, 58, 243, 0.02) 230deg,
     transparent 250deg
   );
   /* Radial mask fades it out smoothly towards the bottom and sides */
@@ -2082,30 +2083,11 @@ input[type="color"]::-webkit-color-swatch {
   justify-content: center;
 }
 
-/* Performant alternative to multiple drop-shadows */
-.home-glow-icon::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: rgba(186, 215, 247, 0.1);
-  box-shadow: 
-    0 0 30px 10px rgba(186, 215, 247, 0.5),
-    0 0 60px 20px rgba(102, 58, 243, 0.3);
-  z-index: -1;
-  pointer-events: none;
-}
-
 .home-glow-icon img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  /* Reduced to a single cheap drop-shadow for the sharp core */
-  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+  /* Glow removed from the icon itself so only the beam emits light */
 }
 
 
