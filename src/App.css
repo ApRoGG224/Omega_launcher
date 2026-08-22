@@ -2027,6 +2027,66 @@ input[type="color"]::-webkit-color-swatch {
   min-height: 0;
 }
 
+/* AuthKit-style spotlight: launcher icon + cone radiating downward */
+.home-glow-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.home-glow-overlay::after {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 620px;
+  background: radial-gradient(
+    ellipse 50% 65% at 50% 0%,
+    rgba(209, 228, 250, 0.14) 0%,
+    rgba(186, 215, 247, 0.09) 25%,
+    rgba(102, 58, 243, 0.06) 50%,
+    transparent 75%
+  );
+  pointer-events: none;
+}
+
+.home-glow-icon {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 72px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-glow-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 12px rgba(186, 215, 247, 0.85))
+    drop-shadow(0 0 32px rgba(186, 215, 247, 0.5))
+    drop-shadow(0 0 60px rgba(102, 58, 243, 0.45));
+}
+
+/* Panels wrapper sits above the glow overlay */
+.home-dashboard-panels {
+  position: relative;
+  z-index: 1;
+  display: contents;
+}
+
+
 .floating-dashboard-window {
   min-width: 280px;
   min-height: 180px;

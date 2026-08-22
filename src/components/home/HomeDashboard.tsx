@@ -1,5 +1,5 @@
 import React from "react";
-import type { Language, ModpackInstance } from "../../types";
+import type { ModpackInstance } from "../../types";
 import { RecentInstancesPanel } from "./RecentInstancesPanel";
 import { ServersPanel } from "./ServersPanel";
 import { ConsolePanel } from "./ConsolePanel";
@@ -46,33 +46,40 @@ export const HomeDashboard = React.memo(({
 }) => {
   return (
     <div className="home-sketch-dashboard">
-      <RecentInstancesPanel
-        t={t}
-        instances={instances}
-        selectedInstanceId={selectedInstanceId}
-        onSelectInstance={onSelectInstance}
-        onPlayInstance={onPlayInstance}
-        onCreate={onCreate}
-      />
-      <ServersPanel instances={instances} onLaunch={onServerLaunch} t={t} />
-      <ConsolePanel
-        t={t}
-        logs={logs}
-        isRunning={isRunning}
-        consoleOpen={consoleOpen}
-        onToggleConsole={onToggleConsole}
-        selectedInstance={selectedInstance}
-      />
-      <FriendsPanel
-        t={t}
-        friends={friendsApi}
-        presence={presenceApi}
-        instances={instances}
-        invites={invites}
-        onDismissInvite={onDismissInvite}
-        onLaunch={onServerLaunch}
-        onNotify={onNotify}
-      />
+      <div className="home-glow-overlay" aria-hidden="true">
+        <div className="home-glow-icon">
+          <img src="/icons/128x128.png" alt="" />
+        </div>
+      </div>
+      <div className="home-dashboard-panels">
+        <RecentInstancesPanel
+          t={t}
+          instances={instances}
+          selectedInstanceId={selectedInstanceId}
+          onSelectInstance={onSelectInstance}
+          onPlayInstance={onPlayInstance}
+          onCreate={onCreate}
+        />
+        <ServersPanel instances={instances} onLaunch={onServerLaunch} t={t} />
+        <ConsolePanel
+          t={t}
+          logs={logs}
+          isRunning={isRunning}
+          consoleOpen={consoleOpen}
+          onToggleConsole={onToggleConsole}
+          selectedInstance={selectedInstance}
+        />
+        <FriendsPanel
+          t={t}
+          friends={friendsApi}
+          presence={presenceApi}
+          instances={instances}
+          invites={invites}
+          onDismissInvite={onDismissInvite}
+          onLaunch={onServerLaunch}
+          onNotify={onNotify}
+        />
+      </div>
     </div>
   );
 });
