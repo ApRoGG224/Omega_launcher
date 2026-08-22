@@ -196,6 +196,14 @@ function App() {
         </header>
 
         {activeTab === "home" && (
+          <div className="home-glow-overlay" aria-hidden="true">
+            <div className="home-glow-icon">
+              <img src="/icons/128x128.png" alt="" />
+            </div>
+          </div>
+        )}
+
+        {activeTab === "home" && (
           <HomeDashboard
             t={t}
             instances={instancesApi.visibleInstances}
