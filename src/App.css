@@ -2029,7 +2029,7 @@ input[type="color"]::-webkit-color-swatch {
   z-index: 1;
 }
 
-/* AuthKit-style spotlight: launcher icon at top-center + cone of light downward */
+/* AuthKit-style spotlight: launcher icon + true flashlight beam downward */
 .home-glow-overlay {
   position: absolute;
   top: 0;
@@ -2041,38 +2041,28 @@ input[type="color"]::-webkit-color-swatch {
   overflow: hidden;
 }
 
-.home-glow-overlay::before {
-  content: '';
+.home-glow-beam {
   position: absolute;
-  top: 0;
+  top: 64px;
   left: 50%;
   transform: translateX(-50%);
-  width: 1px;
-  height: 52px;
-  background: linear-gradient(to bottom, rgba(186, 215, 247, 0.0), rgba(186, 215, 247, 0.35));
-}
-
-.home-glow-overlay::after {
-  content: '';
-  position: absolute;
-  top: 48px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1100px;
-  height: 700px;
-  background: radial-gradient(
-    ellipse 48% 70% at 50% 0%,
-    rgba(220, 235, 255, 0.22) 0%,
-    rgba(186, 215, 247, 0.15) 18%,
-    rgba(130, 170, 240, 0.08) 40%,
-    rgba(102, 58, 243, 0.04) 62%,
-    transparent 80%
+  width: 1000px;
+  height: 800px;
+  clip-path: polygon(49.5% 0, 50.5% 0, 100% 100%, 0 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(220, 235, 255, 0.35) 0%,
+    rgba(186, 215, 247, 0.15) 25%,
+    rgba(102, 58, 243, 0.05) 60%,
+    transparent 100%
   );
+  filter: blur(28px);
+  z-index: 0;
 }
 
 .home-glow-icon {
   position: absolute;
-  top: 16px;
+  top: 36px;
   left: 50%;
   transform: translateX(-50%);
   width: 64px;

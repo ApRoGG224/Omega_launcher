@@ -200,6 +200,7 @@ function App() {
             <div className="home-glow-icon">
               <img src="/icons/128x128.png" alt="" />
             </div>
+            <div className="home-glow-beam" />
           </div>
         )}
 
