@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import type { Account, ToastType } from "../types";
 import { loadAccounts, persistAccounts } from "../services/storage";
 import { ipc } from "../services/ipc";
@@ -90,6 +91,22 @@ export function useAccounts(
       cancelled = true;
     };
   }, [syncAccountsToDb]);
+
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    let cancelled = false;
+    listen<string>("auth-log", (event) => {
+      if (cancelled) return;
+      onLog(event.payload);
+    }).then((cleanup) => {
+      if (cancelled) cleanup();
+      else unlisten = cleanup;
+    });
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [onLog]);
 
   const commitAccounts = useCallback(
     (updated: Account[], nextAccount?: Account) => {

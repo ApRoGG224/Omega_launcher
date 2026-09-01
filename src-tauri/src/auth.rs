@@ -3,7 +3,7 @@ use std::error::Error;
 
 use reqwest::header::{ACCEPT, ACCEPT_ENCODING};
 use serde_json::{json, Value};
-use tauri::AppHandle;
+use tauri::{AppHandle, Emitter};
 
 use crate::util::app_data_dir;
 
@@ -16,6 +16,10 @@ fn auth_client() -> Result<reqwest::Client, String> {
         .timeout(std::time::Duration::from_secs(45))
         .build()
         .map_err(|e| format!("Auth client setup failed: {e}"))
+}
+
+fn emit_auth_log(app: &AppHandle, message: &str) {
+    let _ = app.emit("auth-log", message.to_string());
 }
 
 fn format_reqwest_error(context: &str, err: &reqwest::Error) -> String {
@@ -85,6 +89,7 @@ async fn exchange_code(code: &str) -> Result<(String, String, String), String> {
                 ])
         },
         "Token exchange",
+        None,
     )
     .await?;
     let json = json_response(res, "Microsoft token exchange").await?;
@@ -138,6 +143,7 @@ pub async fn try_refresh_cached_token(app: &AppHandle) -> Result<bool, String> {
                 ])
         },
         "Token refresh",
+        None,
     )
     .await?;
     let data = json_response(res, "Token refresh").await?;
@@ -252,13 +258,15 @@ async fn xbox_user_authenticate(client: &reqwest::Client, rps_ticket: &str) -> R
                 }))
         },
         "Xbox auth request",
+        None,
     )
     .await?;
 
     json_response(res, "Xbox auth").await
 }
 
-async fn minecraft_login(xsts_token: &str, uhs: &str) -> Result<(String, String, String), String> {
+async fn minecraft_login(app: &AppHandle, xsts_token: &str, uhs: &str) -> Result<(String, String, String), String> {
+    emit_auth_log(app, "[MS_AUTH]: Requesting Minecraft login...");
     let client = auth_client()?;
     let identity_token = format!("XBL3.0 x={uhs};{xsts_token}");
     let res = send_with_retry(
@@ -270,10 +278,13 @@ async fn minecraft_login(xsts_token: &str, uhs: &str) -> Result<(String, String,
                 .json(&json!({ "identityToken": identity_token }))
         },
         "Minecraft login",
+        Some(app),
     )
     .await?;
+    emit_auth_log(app, "[MS_AUTH]: Minecraft login response received.");
     let json = json_response(res, "Minecraft login").await?;
     let access_token = json.get("access_token").and_then(|v| v.as_str()).ok_or("No Minecraft access token")?.to_string();
+    emit_auth_log(app, "[MS_AUTH]: Requesting Minecraft profile...");
 
     // 4. Profile
     let res = send_with_retry(
@@ -285,8 +296,10 @@ async fn minecraft_login(xsts_token: &str, uhs: &str) -> Result<(String, String,
                 .bearer_auth(&access_token)
         },
         "Profile fetch",
+        Some(app),
     )
     .await?;
+    emit_auth_log(app, "[MS_AUTH]: Minecraft profile response received.");
     let profile = json_response(res, "Minecraft profile").await?;
     let name = profile.get("name").and_then(|v| v.as_str()).ok_or("No profile name")?.to_string();
     let uuid = profile.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
@@ -300,14 +313,24 @@ async fn minecraft_login(xsts_token: &str, uhs: &str) -> Result<(String, String,
 async fn send_with_retry(
     build_request: impl Fn() -> reqwest::RequestBuilder,
     context: &str,
+    app: Option<&AppHandle>,
 ) -> Result<reqwest::Response, String> {
     let mut last_error: Option<reqwest::Error> = None;
     for attempt in 0..3 {
+        if let Some(app) = app {
+            emit_auth_log(app, &format!("[MS_AUTH]: {context} attempt {}...", attempt + 1));
+        }
         match build_request().send().await {
             Ok(res) => return Ok(res),
             Err(e) if e.is_connect() || e.is_timeout() => {
                 last_error = Some(e);
                 if attempt < 2 {
+                    if let Some(app) = app {
+                        emit_auth_log(
+                            app,
+                            &format!("[MS_AUTH]: {context} attempt {} failed, retrying...", attempt + 1),
+                        );
+                    }
                     tokio::time::sleep(std::time::Duration::from_millis(750 * (attempt + 1) as u64)).await;
                     continue;
                 }
@@ -395,7 +418,7 @@ pub async fn login_microsoft(app: AppHandle) -> Result<String, String> {
 
     let (ms_token, refresh_token, expires_in) = exchange_code(&auth_code).await?;
     let (xsts_token, uhs) = xbox_authenticate(&ms_token).await?;
-    let (mc_token, name, uuid) = minecraft_login(&xsts_token, &uhs).await?;
+    let (mc_token, name, uuid) = minecraft_login(&app, &xsts_token, &uhs).await?;
 
     let client_token = uuid::Uuid::new_v4().to_string();
     let auth_json = json!({
