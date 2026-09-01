@@ -10,6 +10,14 @@ use crate::util::app_data_dir;
 const CLIENT_ID: &str = "00000000402b5328";
 const REDIRECT_URI: &str = "https://login.live.com/oauth20_desktop.srf";
 
+fn auth_client() -> Result<reqwest::Client, String> {
+    reqwest::Client::builder()
+        .connect_timeout(std::time::Duration::from_secs(15))
+        .timeout(std::time::Duration::from_secs(45))
+        .build()
+        .map_err(|e| format!("Auth client setup failed: {e}"))
+}
+
 fn format_reqwest_error(context: &str, err: &reqwest::Error) -> String {
     let mut details = Vec::new();
     if err.is_connect() {
@@ -61,21 +69,24 @@ async fn json_response(res: reqwest::Response, context: &str) -> Result<Value, S
 }
 
 async fn exchange_code(code: &str) -> Result<(String, String, String), String> {
-    let client = reqwest::Client::new();
-    let res = client
-        .post("https://login.live.com/oauth20_token.srf")
-        .header(ACCEPT, "application/json")
-        .header(ACCEPT_ENCODING, "identity")
-        .form(&[
-            ("client_id", CLIENT_ID),
-            ("code", code),
-            ("grant_type", "authorization_code"),
-            ("redirect_uri", REDIRECT_URI),
-            ("scope", "XboxLive.signin offline_access"),
-        ])
-        .send()
-        .await
-        .map_err(|e| format_reqwest_error("Token exchange", &e))?;
+    let client = auth_client()?;
+    let res = send_with_retry(
+        || {
+            client
+                .post("https://login.live.com/oauth20_token.srf")
+                .header(ACCEPT, "application/json")
+                .header(ACCEPT_ENCODING, "identity")
+                .form(&[
+                    ("client_id", CLIENT_ID),
+                    ("code", code),
+                    ("grant_type", "authorization_code"),
+                    ("redirect_uri", REDIRECT_URI),
+                    ("scope", "XboxLive.signin offline_access"),
+                ])
+        },
+        "Token exchange",
+    )
+    .await?;
     let json = json_response(res, "Microsoft token exchange").await?;
     let access_token = json.get("access_token").and_then(|v| v.as_str()).ok_or("No access_token in response")?.to_string();
     let refresh_token = json.get("refresh_token").and_then(|v| v.as_str()).unwrap_or("").to_string();
@@ -111,21 +122,24 @@ pub async fn try_refresh_cached_token(app: &AppHandle) -> Result<bool, String> {
         return Ok(false);
     }
 
-    let client = reqwest::Client::new();
-    let res = client
-        .post("https://login.live.com/oauth20_token.srf")
-        .header(ACCEPT, "application/json")
-        .header(ACCEPT_ENCODING, "identity")
-        .form(&[
-            ("client_id", CLIENT_ID),
-            ("refresh_token", refresh_token),
-            ("grant_type", "refresh_token"),
-            ("redirect_uri", REDIRECT_URI),
-            ("scope", "XboxLive.signin offline_access"),
-        ])
-        .send()
-        .await
-        .map_err(|e| format_reqwest_error("Token refresh", &e))?;
+    let client = auth_client()?;
+    let res = send_with_retry(
+        || {
+            client
+                .post("https://login.live.com/oauth20_token.srf")
+                .header(ACCEPT, "application/json")
+                .header(ACCEPT_ENCODING, "identity")
+                .form(&[
+                    ("client_id", CLIENT_ID),
+                    ("refresh_token", refresh_token),
+                    ("grant_type", "refresh_token"),
+                    ("redirect_uri", REDIRECT_URI),
+                    ("scope", "XboxLive.signin offline_access"),
+                ])
+        },
+        "Token refresh",
+    )
+    .await?;
     let data = json_response(res, "Token refresh").await?;
     let access_token = data
         .get("access_token")
@@ -186,7 +200,7 @@ fn write_auth_file(app: &AppHandle, auth_json: &Value) -> Result<(), String> {
 }
 
 async fn xbox_authenticate(ms_access_token: &str) -> Result<(String, String), String> {
-    let client = reqwest::Client::new();
+    let client = auth_client()?;
     // 1. XBL token
     let xbl = xbox_user_authenticate(&client, &format!("d={ms_access_token}")).await?;
     let xbl_token = xbl.get("Token").and_then(|v| v.as_str()).ok_or("No XBL token")?.to_string();
@@ -220,29 +234,32 @@ async fn xbox_authenticate(ms_access_token: &str) -> Result<(String, String), St
 }
 
 async fn xbox_user_authenticate(client: &reqwest::Client, rps_ticket: &str) -> Result<Value, String> {
-    let res = client
-        .post("https://user.auth.xboxlive.com/user/authenticate")
-        .header(ACCEPT, "application/json")
-        .header(ACCEPT_ENCODING, "identity")
-        .header("x-xbl-contract-version", "1")
-        .json(&json!({
-            "Properties": {
-                "AuthMethod": "RPS",
-                "SiteName": "user.auth.xboxlive.com",
-                "RpsTicket": rps_ticket
-            },
-            "RelyingParty": "http://auth.xboxlive.com",
-            "TokenType": "JWT"
-        }))
-        .send()
-        .await
-        .map_err(|e| format_reqwest_error("Xbox auth request", &e))?;
+    let res = send_with_retry(
+        || {
+            client
+                .post("https://user.auth.xboxlive.com/user/authenticate")
+                .header(ACCEPT, "application/json")
+                .header(ACCEPT_ENCODING, "identity")
+                .header("x-xbl-contract-version", "1")
+                .json(&json!({
+                    "Properties": {
+                        "AuthMethod": "RPS",
+                        "SiteName": "user.auth.xboxlive.com",
+                        "RpsTicket": rps_ticket
+                    },
+                    "RelyingParty": "http://auth.xboxlive.com",
+                    "TokenType": "JWT"
+                }))
+        },
+        "Xbox auth request",
+    )
+    .await?;
 
     json_response(res, "Xbox auth").await
 }
 
 async fn minecraft_login(xsts_token: &str, uhs: &str) -> Result<(String, String, String), String> {
-    let client = reqwest::Client::new();
+    let client = auth_client()?;
     let identity_token = format!("XBL3.0 x={uhs};{xsts_token}");
     let res = send_with_retry(
         || {
