@@ -391,6 +391,7 @@ function App() {
           onBack={() => accountsApi.setAccountModalView("list")}
           onSelectAccount={accountsApi.handleSelectAccount}
           onDeleteAccount={accountsApi.handleDeleteAccount}
+          onLogoutCurrentAccount={() => void accountsApi.handleLogoutCurrentAccount()}
           onAddOffline={accountsApi.handleAddOffline}
           onAddMicrosoft={() => void accountsApi.handleAddMicrosoft()}
           onAddOmega={() => void accountsApi.handleAddOmega()}

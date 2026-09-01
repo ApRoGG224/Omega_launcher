@@ -111,6 +111,28 @@ describe("useAccounts", () => {
     expect(onLog).toHaveBeenCalledWith("ok: Steve");
   });
 
+  it("handleLogoutCurrentAccount удаляет текущий Microsoft аккаунт", async () => {
+    mockInvoke.mockImplementation(async (cmd: string) => {
+      if (cmd === "db_load_accounts") return [{ name: "Steve", type: "microsoft" }];
+      if (cmd === "logout_microsoft") return null;
+      return null;
+    });
+
+    const { result } = renderHook(() => useAccounts({}, vi.fn()));
+
+    await waitFor(() => {
+      expect(result.current.account.name).toBe("Steve");
+    });
+
+    await act(async () => {
+      await result.current.handleLogoutCurrentAccount();
+    });
+
+    expect(result.current.account.name).toBe("NightWolf");
+    expect(result.current.savedAccounts.some((a) => a.name === "Steve")).toBe(false);
+    expect(mockInvoke).toHaveBeenCalledWith("logout_microsoft");
+  });
+
   it("сохраняет Microsoft и Omega отдельно при одинаковом нике", async () => {
     const omega = {
       configured: true,

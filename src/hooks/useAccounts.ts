@@ -33,6 +33,7 @@ export interface AccountsApi {
   handleAddMicrosoft: () => Promise<void>;
   handleAddOmega: () => Promise<void>;
   handleDeleteAccount: (acc: Account) => void;
+  handleLogoutCurrentAccount: () => Promise<void>;
 }
 
 export function useAccounts(
@@ -192,6 +193,33 @@ export function useAccounts(
     }
   }, [savedAccounts, account, omegaName]);
 
+  const handleLogoutCurrentAccount = useCallback(async () => {
+    const current = account;
+    const updated = savedAccounts.filter((a) => !sameAccount(a, current));
+
+    if (current.type === "microsoft") {
+      try {
+        await ipc.logoutMicrosoft();
+      } catch {
+        // Ignore cleanup failures and still clear local selection.
+      }
+    }
+
+    if (current.type === "omega" && omega?.profile?.username === current.name) {
+      try {
+        await omega.logout();
+      } catch {
+        // Ignore cleanup failures and still clear local selection.
+      }
+    }
+
+    persistAccounts(updated);
+    syncAccountsToDb(updated);
+    setSavedAccounts(updated);
+    setProfileMenuOpen(false);
+    setAccount(updated[0] || { name: "NightWolf", type: "offline" });
+  }, [account, savedAccounts, omega, syncAccountsToDb]);
+
   return {
     account,
     savedAccounts,
@@ -216,5 +244,6 @@ export function useAccounts(
     handleAddMicrosoft,
     handleAddOmega,
     handleDeleteAccount,
+    handleLogoutCurrentAccount,
   };
 }

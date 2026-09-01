@@ -21,6 +21,10 @@ export const ipc = {
     return invoke<string>("login_microsoft");
   },
 
+  async logoutMicrosoft(): Promise<void> {
+    await invoke("logout_microsoft");
+  },
+
   async launchMinecraft(args: {
     version: string;
     server: string;

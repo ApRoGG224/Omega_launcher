@@ -318,6 +318,7 @@ pub fn run() {
             launch::kill_minecraft,
             download::download_mod,
             download::update_all_mods,
+            auth::logout_microsoft,
             open_folder,
             create_shortcut,
             count_installed_mods,

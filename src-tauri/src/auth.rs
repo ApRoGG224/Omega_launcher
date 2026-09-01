@@ -161,6 +161,16 @@ pub fn read_cached_auth(app: &AppHandle) -> Option<Value> {
     serde_json::from_str(&text).ok()
 }
 
+#[tauri::command]
+pub fn logout_microsoft(app: AppHandle) -> Result<(), String> {
+    let path = app_data_dir(&app).join("ms_auth.json");
+    match std::fs::remove_file(&path) {
+        Ok(_) => Ok(()),
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(err) => Err(err.to_string()),
+    }
+}
+
 fn write_auth_file(app: &AppHandle, auth_json: &Value) -> Result<(), String> {
     let data_dir = app_data_dir(app);
     let path = data_dir.join("ms_auth.json");
@@ -233,26 +243,33 @@ async fn xbox_user_authenticate(client: &reqwest::Client, rps_ticket: &str) -> R
 
 async fn minecraft_login(xsts_token: &str, uhs: &str) -> Result<(String, String, String), String> {
     let client = reqwest::Client::new();
-    let res = client
-        .post("https://api.minecraftservices.com/authentication/login_with_xbox")
-        .header(ACCEPT, "application/json")
-        .header(ACCEPT_ENCODING, "identity")
-        .json(&json!({ "identityToken": format!("XBL3.0 x={uhs};{xsts_token}") }))
-        .send()
-        .await
-        .map_err(|e| format_reqwest_error("Minecraft login", &e))?;
+    let identity_token = format!("XBL3.0 x={uhs};{xsts_token}");
+    let res = send_with_retry(
+        || {
+            client
+                .post("https://api.minecraftservices.com/authentication/login_with_xbox")
+                .header(ACCEPT, "application/json")
+                .header(ACCEPT_ENCODING, "identity")
+                .json(&json!({ "identityToken": identity_token }))
+        },
+        "Minecraft login",
+    )
+    .await?;
     let json = json_response(res, "Minecraft login").await?;
     let access_token = json.get("access_token").and_then(|v| v.as_str()).ok_or("No Minecraft access token")?.to_string();
 
     // 4. Profile
-    let res = client
-        .get("https://api.minecraftservices.com/minecraft/profile")
-        .header(ACCEPT, "application/json")
-        .header(ACCEPT_ENCODING, "identity")
-        .bearer_auth(&access_token)
-        .send()
-        .await
-        .map_err(|e| format_reqwest_error("Profile fetch", &e))?;
+    let res = send_with_retry(
+        || {
+            client
+                .get("https://api.minecraftservices.com/minecraft/profile")
+                .header(ACCEPT, "application/json")
+                .header(ACCEPT_ENCODING, "identity")
+                .bearer_auth(&access_token)
+        },
+        "Profile fetch",
+    )
+    .await?;
     let profile = json_response(res, "Minecraft profile").await?;
     let name = profile.get("name").and_then(|v| v.as_str()).ok_or("No profile name")?.to_string();
     let uuid = profile.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
@@ -261,6 +278,33 @@ async fn minecraft_login(xsts_token: &str, uhs: &str) -> Result<(String, String,
         return Err("This account does not own Minecraft. Game ownership is required.".to_string());
     }
     Ok((access_token, name, uuid))
+}
+
+async fn send_with_retry(
+    build_request: impl Fn() -> reqwest::RequestBuilder,
+    context: &str,
+) -> Result<reqwest::Response, String> {
+    let mut last_error: Option<reqwest::Error> = None;
+    for attempt in 0..3 {
+        match build_request().send().await {
+            Ok(res) => return Ok(res),
+            Err(e) if e.is_connect() || e.is_timeout() => {
+                last_error = Some(e);
+                if attempt < 2 {
+                    tokio::time::sleep(std::time::Duration::from_millis(750 * (attempt + 1) as u64)).await;
+                    continue;
+                }
+            }
+            Err(e) => return Err(format_reqwest_error(context, &e)),
+        }
+        break;
+    }
+
+    let err = last_error.expect("retry loop must set a last error");
+    Err(format!(
+        "{context} failed after 3 attempts: {}",
+        format_reqwest_error(context, &err)
+    ))
 }
 
 #[tauri::command]

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import type { Account } from "../../types";
 import DraggableWindow from "../../ui/DraggableWindow";
-import { IconArrowLeft, IconEye, IconEyeOff, IconMicrosoft, IconPlus, IconTrash, IconUser, IconUsers, IconX } from "../../ui/icons";
+import { IconArrowLeft, IconEye, IconEyeOff, IconLogout, IconMicrosoft, IconPlus, IconTrash, IconUser, IconUsers, IconX } from "../../ui/icons";
 import type { AccountModalView, OmegaFormMode } from "../../hooks/useAccounts";
 
 export const AccountModal = React.memo(({
@@ -24,6 +24,7 @@ export const AccountModal = React.memo(({
   onBack,
   onSelectAccount,
   onDeleteAccount,
+  onLogoutCurrentAccount,
   onAddOffline,
   onAddMicrosoft,
   onAddOmega,
@@ -49,6 +50,7 @@ export const AccountModal = React.memo(({
   onBack: () => void;
   onSelectAccount: (acc: Account) => void;
   onDeleteAccount: (acc: Account) => void;
+  onLogoutCurrentAccount: () => void;
   onAddOffline: () => void;
   onAddMicrosoft: () => void;
   onAddOmega: () => void;
@@ -134,6 +136,39 @@ export const AccountModal = React.memo(({
                   ))}
                 </div>
               )}
+
+              <button
+                onClick={onLogoutCurrentAccount}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  width: "100%",
+                  padding: "11px 14px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(186, 215, 247, 0.08)",
+                  background: "rgba(186, 215, 247, 0.04)",
+                  color: "#cfd7e6",
+                  font: "inherit",
+                  fontSize: "0.86rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(228, 109, 76, 0.34)";
+                  e.currentTarget.style.background = "rgba(228, 109, 76, 0.1)";
+                  e.currentTarget.style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(186, 215, 247, 0.08)";
+                  e.currentTarget.style.background = "rgba(186, 215, 247, 0.04)";
+                  e.currentTarget.style.color = "#cfd7e6";
+                }}
+              >
+                <IconLogout /> {(t as any).logoutAccountBtn}
+              </button>
 
               <div className="account-modal-divider" />
 
