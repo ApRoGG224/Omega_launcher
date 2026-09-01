@@ -48,7 +48,7 @@ export const AccountModal = React.memo(({
   omegaError: string | null;
   onBack: () => void;
   onSelectAccount: (acc: Account) => void;
-  onDeleteAccount: (accName: string) => void;
+  onDeleteAccount: (acc: Account) => void;
   onAddOffline: () => void;
   onAddMicrosoft: () => void;
   onAddOmega: () => void;
@@ -99,8 +99,8 @@ export const AccountModal = React.memo(({
                   <span className="account-list-label">{t.accountsSection}</span>
                   {savedAccounts.map((acc) => (
                     <div
-                      key={acc.name}
-                      className={`account-item ${acc.name === account.name ? "active" : ""}`}
+                      key={`${acc.type}:${acc.name}`}
+                      className={`account-item ${acc.name === account.name && acc.type === account.type ? "active" : ""}`}
                       onClick={() => onSelectAccount(acc)}
                     >
                       <div className={`account-item-avatar ${acc.type}`}>
@@ -108,19 +108,22 @@ export const AccountModal = React.memo(({
                       </div>
                       <div className="account-item-info">
                         <div className="account-item-name">{acc.name}</div>
-                      <div className="account-item-type">
-                        {acc.type === "microsoft" ? "Microsoft" : acc.type === "omega" ? (t as any).omegaAccountTitle : (t as any).offlineAccountTitle}
-                        {acc.name === account.name && (
-                          <span className="account-item-active-badge">{(t as any).activeLabel}</span>
-                        )}
-                      </div>
+                        <div className="account-item-type">
+                          {acc.type === "microsoft" ? "Microsoft" : acc.type === "omega" ? (t as any).omegaAccountTitle : (t as any).offlineAccountTitle}
+                          {(acc.type === "microsoft" || acc.type === "omega") && (
+                            <span className="account-item-connected-badge">{(t as any).connectedLabel}</span>
+                          )}
+                          {acc.name === account.name && acc.type === account.type && (
+                            <span className="account-item-active-badge">{(t as any).activeLabel}</span>
+                          )}
+                        </div>
                       </div>
                       {savedAccounts.length > 1 && (
                         <button
                           className="account-item-delete"
                           onClick={(e) => {
                             e.stopPropagation();
-                            onDeleteAccount(acc.name);
+                            onDeleteAccount(acc);
                           }}
                           title={(t as any).deleteAccountBtn}
                         >

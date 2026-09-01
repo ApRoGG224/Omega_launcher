@@ -221,15 +221,14 @@ pub async fn login_microsoft(app: AppHandle) -> Result<String, String> {
     .on_navigation(move |url| {
         let url_str = url.as_str();
         if url_str.starts_with(REDIRECT_URI) {
-            if let Some(query) = url.query() {
-                for param in query.split('&') {
-                    if let Some(c) = param.strip_prefix("code=") {
-                        if let Ok(mut lock) = code_clone.lock() {
-                            *lock = Some(c.to_string());
-                        }
-                        return false;
-                    }
+            if let Some(auth_code) = url
+                .query_pairs()
+                .find_map(|(key, value)| (key == "code").then(|| value.into_owned()))
+            {
+                if let Ok(mut lock) = code_clone.lock() {
+                    *lock = Some(auth_code);
                 }
+                return false;
             }
             return false;
         }

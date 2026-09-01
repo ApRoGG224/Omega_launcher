@@ -189,7 +189,7 @@ function App() {
             <div className="user-info">
               <span className="user-name">{accountsApi.account.name}</span>
               <span className="user-status">
-                <span className="status-dot" /> {t.onlineStatus}
+                <span className="status-dot" /> {accountsApi.account.type === "offline" ? t.onlineStatus : (t as any).connectedLabel}
               </span>
             </div>
           </div>

@@ -77,7 +77,7 @@ describe("useAccounts", () => {
     expect(result.current.account.name).toBe("Player2");
 
     act(() => {
-      result.current.handleDeleteAccount("Player2");
+      result.current.handleDeleteAccount(player2);
     });
 
     expect(result.current.account.name).toBe("NightWolf");
@@ -109,5 +109,44 @@ describe("useAccounts", () => {
     expect(result.current.account.name).toBe("Steve");
     expect(result.current.account.type).toBe("microsoft");
     expect(onLog).toHaveBeenCalledWith("ok: Steve");
+  });
+
+  it("сохраняет Microsoft и Omega отдельно при одинаковом нике", async () => {
+    const omega = {
+      configured: true,
+      profile: null,
+      loading: false,
+      register: vi.fn(),
+      login: vi.fn().mockResolvedValue({ username: "Steve" }),
+      logout: vi.fn(),
+      updateAvatar: vi.fn(),
+      refreshProfile: vi.fn(),
+    };
+    const t = {
+      logWaitingBrowser: "wait",
+      logSuccessLogin: "ok: ",
+      logLoginError: "err: ",
+      omegaSuccess: "omega: ",
+    };
+    const { result } = renderHook(() => useAccounts(t as any, vi.fn(), omega as any));
+
+    await act(async () => {
+      await result.current.handleAddMicrosoft();
+    });
+    act(() => {
+      result.current.setOmegaEmail("steve@example.com");
+      result.current.setOmegaPassword("secret1");
+    });
+    await act(async () => {
+      await result.current.handleAddOmega();
+    });
+
+    expect(result.current.savedAccounts).toEqual(
+      expect.arrayContaining([
+        { name: "Steve", type: "microsoft" },
+        { name: "Steve", type: "omega" },
+      ]),
+    );
+    expect(result.current.account).toEqual({ name: "Steve", type: "omega" });
   });
 });

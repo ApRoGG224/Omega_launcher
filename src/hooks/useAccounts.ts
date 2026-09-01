@@ -7,6 +7,8 @@ import type { OmegaAuthApi } from "./useOmegaAuth";
 export type AccountModalView = "list" | "method" | "offline" | "omega";
 export type OmegaFormMode = "register" | "login";
 
+const sameAccount = (a: Account, b: Account) => a.name === b.name && a.type === b.type;
+
 export interface AccountsApi {
   account: Account;
   savedAccounts: Account[];
@@ -30,7 +32,7 @@ export interface AccountsApi {
   handleSelectAccount: (acc: Account) => void;
   handleAddMicrosoft: () => Promise<void>;
   handleAddOmega: () => Promise<void>;
-  handleDeleteAccount: (accName: string) => void;
+  handleDeleteAccount: (acc: Account) => void;
 }
 
 export function useAccounts(
@@ -74,7 +76,7 @@ export function useAccounts(
         if (rows.length > 0) {
           const mapped: Account[] = rows.map((r) => ({ name: r.name, type: r.type as Account["type"] }));
           setSavedAccounts(mapped);
-          setAccount((prev) => mapped.find((a) => a.name === prev.name) || mapped[0] || prev);
+          setAccount((prev) => mapped.find((a) => sameAccount(a, prev)) || mapped[0] || prev);
         } else {
           const local = loadAccounts();
           if (local.length > 0) syncAccountsToDb(local);
@@ -100,7 +102,7 @@ export function useAccounts(
 
   const omegaName = omega?.profile?.username;
   useEffect(() => {
-    if (!omegaName || omegaName === dismissedOmega || savedAccounts.some((a) => a.name === omegaName)) return;
+    if (!omegaName || omegaName === dismissedOmega || savedAccounts.some((a) => a.name === omegaName && a.type === "omega")) return;
     const updated: Account[] = [{ name: omegaName, type: "omega" }, ...savedAccounts];
     persistAccounts(updated);
     syncAccountsToDb(updated);
@@ -111,14 +113,14 @@ export function useAccounts(
     const trimmed = newUsernameInput.trim();
     if (trimmed !== "" && /^[a-zA-Z0-9_]{3,16}$/.test(trimmed)) {
       const newAcc: Account = { name: trimmed, type: "offline" };
-      commitAccounts([newAcc, ...savedAccounts.filter((a) => a.name !== trimmed)], newAcc);
+      commitAccounts([newAcc, ...savedAccounts.filter((a) => !sameAccount(a, newAcc))], newAcc);
       setNewUsernameInput("");
       setAccountModalView("list");
     }
   }, [newUsernameInput, savedAccounts, commitAccounts]);
 
   const handleSelectAccount = useCallback((acc: Account) => {
-    commitAccounts([acc, ...savedAccounts.filter((a) => a.name !== acc.name)], acc);
+    commitAccounts([acc, ...savedAccounts.filter((a) => !sameAccount(a, acc))], acc);
     setProfileMenuOpen(false);
   }, [savedAccounts, commitAccounts]);
 
@@ -131,7 +133,7 @@ export function useAccounts(
       if (match && match[1]) {
         const msName = match[1].trim();
         const newAcc: Account = { name: msName, type: "microsoft" };
-        commitAccounts([newAcc, ...savedAccounts.filter((a) => a.name !== msName)], newAcc);
+        commitAccounts([newAcc, ...savedAccounts.filter((a) => !sameAccount(a, newAcc))], newAcc);
         onLog(t.logSuccessLogin + msName);
       } else {
         const errMatch = output.match(/ERROR:(.+)/);
@@ -161,7 +163,7 @@ export function useAccounts(
         omegaName = (await omega.login(omegaEmail.trim(), omegaPassword)).username;
       }
       const newAcc: Account = { name: omegaName, type: "omega" };
-      commitAccounts([newAcc, ...savedAccounts.filter((a) => a.name !== omegaName)], newAcc);
+      commitAccounts([newAcc, ...savedAccounts.filter((a) => !sameAccount(a, newAcc))], newAcc);
       localStorage.removeItem("omega_dismissed_account");
       setDismissedOmega(null);
       setOmegaEmail("");
@@ -177,18 +179,18 @@ export function useAccounts(
     }
   }, [omega, omegaMode, omegaEmail, omegaUsername, omegaPassword, t, savedAccounts, commitAccounts, onLog]);
 
-  const handleDeleteAccount = useCallback((accName: string) => {
-    const updated = savedAccounts.filter((a) => a.name !== accName);
+  const handleDeleteAccount = useCallback((acc: Account) => {
+    const updated = savedAccounts.filter((a) => !sameAccount(a, acc));
     persistAccounts(updated);
     setSavedAccounts(updated);
-    if (updated.length > 0 && account.name === accName) {
+    if (updated.length > 0 && sameAccount(account, acc)) {
       setAccount(updated[0]);
     }
-    if (accName === omegaName) {
-      localStorage.setItem("omega_dismissed_account", accName);
-      setDismissedOmega(accName);
+    if (acc.type === "omega" && acc.name === omegaName) {
+      localStorage.setItem("omega_dismissed_account", acc.name);
+      setDismissedOmega(acc.name);
     }
-  }, [savedAccounts, account.name, omegaName]);
+  }, [savedAccounts, account, omegaName]);
 
   return {
     account,

@@ -830,6 +830,15 @@ input[type="color"]::-webkit-color-swatch {
   font-weight: 600;
 }
 
+.account-item-connected-badge {
+  font-size: 0.65rem;
+  color: #7ee8a2;
+  background: rgba(126, 232, 162, 0.1);
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
 .account-item-delete {
   background: none;
   border: none;
