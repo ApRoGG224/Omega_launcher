@@ -145,23 +145,14 @@ fn write_auth_file(app: &AppHandle, auth_json: &Value) -> Result<(), String> {
 async fn xbox_authenticate(ms_access_token: &str) -> Result<(String, String), String> {
     let client = reqwest::Client::new();
     // 1. XBL token
-    let res = client
-        .post("https://user.auth.xboxlive.com/user/authenticate")
-        .header(ACCEPT, "application/json")
-        .header(ACCEPT_ENCODING, "identity")
-        .json(&json!({
-            "Properties": {
-                "AuthMethod": "OAuth",
-                "SiteName": "user.auth.xboxlive.com",
-                "RpsTicket": format!("d={ms_access_token}")
-            },
-            "RelyingParty": "http://auth.xboxlive.com",
-            "TokenType": "JWT"
-        }))
-        .send()
-        .await
-        .map_err(|e| format!("Xbox auth failed: {e}"))?;
-    let xbl = json_response(res, "Xbox auth").await?;
+    let xbl = match xbox_user_authenticate(&client, &format!("d={ms_access_token}")).await {
+        Ok(xbl) => xbl,
+        Err(prefixed_error) => xbox_user_authenticate(&client, ms_access_token)
+            .await
+            .map_err(|raw_error| {
+                format!("Xbox auth failed with prefixed and raw RpsTicket. prefixed: {prefixed_error}; raw: {raw_error}")
+            })?,
+    };
     let xbl_token = xbl.get("Token").and_then(|v| v.as_str()).ok_or("No XBL token")?.to_string();
 
     // 2. XSTS token
@@ -169,6 +160,7 @@ async fn xbox_authenticate(ms_access_token: &str) -> Result<(String, String), St
         .post("https://xsts.auth.xboxlive.com/xsts/authorize")
         .header(ACCEPT, "application/json")
         .header(ACCEPT_ENCODING, "identity")
+        .header("x-xbl-contract-version", "1")
         .json(&json!({
             "Properties": {
                 "SandboxId": "RETAIL",
@@ -189,6 +181,28 @@ async fn xbox_authenticate(ms_access_token: &str) -> Result<(String, String), St
         .to_string();
 
     Ok((xsts_token, uhs))
+}
+
+async fn xbox_user_authenticate(client: &reqwest::Client, rps_ticket: &str) -> Result<Value, String> {
+    let res = client
+        .post("https://user.auth.xboxlive.com/user/authenticate")
+        .header(ACCEPT, "application/json")
+        .header(ACCEPT_ENCODING, "identity")
+        .header("x-xbl-contract-version", "1")
+        .json(&json!({
+            "Properties": {
+                "AuthMethod": "OAuth",
+                "SiteName": "user.auth.xboxlive.com",
+                "RpsTicket": rps_ticket
+            },
+            "RelyingParty": "http://auth.xboxlive.com",
+            "TokenType": "JWT"
+        }))
+        .send()
+        .await
+        .map_err(|e| format!("Xbox auth request failed: {e}"))?;
+
+    json_response(res, "Xbox auth").await
 }
 
 async fn minecraft_login(xsts_token: &str, uhs: &str) -> Result<(String, String, String), String> {
