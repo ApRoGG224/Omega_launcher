@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 
+use reqwest::header::{ACCEPT, ACCEPT_ENCODING};
 use serde_json::{json, Value};
 use tauri::AppHandle;
 
@@ -8,10 +9,30 @@ use crate::util::app_data_dir;
 const CLIENT_ID: &str = "00000000402b5328";
 const REDIRECT_URI: &str = "https://login.live.com/oauth20_desktop.srf";
 
+async fn json_response(res: reqwest::Response, context: &str) -> Result<Value, String> {
+    let status = res.status();
+    let bytes = res
+        .bytes()
+        .await
+        .map_err(|e| format!("{context} response read failed ({status}): {e}"))?;
+    let body = String::from_utf8_lossy(&bytes);
+
+    if !status.is_success() {
+        return Err(format!("{context} failed ({status}): {body}"));
+    }
+
+    serde_json::from_slice::<Value>(&bytes).map_err(|e| {
+        let preview: String = body.chars().take(500).collect();
+        format!("{context} returned invalid JSON ({status}): {e}; body: {preview}")
+    })
+}
+
 async fn exchange_code(code: &str) -> Result<(String, String, String), String> {
     let client = reqwest::Client::new();
     let res = client
         .post("https://login.live.com/oauth20_token.srf")
+        .header(ACCEPT, "application/json")
+        .header(ACCEPT_ENCODING, "identity")
         .form(&[
             ("client_id", CLIENT_ID),
             ("code", code),
@@ -22,10 +43,7 @@ async fn exchange_code(code: &str) -> Result<(String, String, String), String> {
         .send()
         .await
         .map_err(|e| format!("Token exchange failed: {e}"))?;
-    if !res.status().is_success() {
-        return Err(format!("Microsoft token exchange failed ({}), the code may be expired", res.status()));
-    }
-    let json: Value = res.json().await.map_err(|e| e.to_string())?;
+    let json = json_response(res, "Microsoft token exchange").await?;
     let access_token = json.get("access_token").and_then(|v| v.as_str()).ok_or("No access_token in response")?.to_string();
     let refresh_token = json.get("refresh_token").and_then(|v| v.as_str()).unwrap_or("").to_string();
     let expires_in = json.get("expires_in").and_then(|v| v.as_u64()).unwrap_or(3600);
@@ -63,6 +81,8 @@ pub async fn try_refresh_cached_token(app: &AppHandle) -> Result<bool, String> {
     let client = reqwest::Client::new();
     let res = client
         .post("https://login.live.com/oauth20_token.srf")
+        .header(ACCEPT, "application/json")
+        .header(ACCEPT_ENCODING, "identity")
         .form(&[
             ("client_id", CLIENT_ID),
             ("refresh_token", refresh_token),
@@ -73,10 +93,7 @@ pub async fn try_refresh_cached_token(app: &AppHandle) -> Result<bool, String> {
         .send()
         .await
         .map_err(|e| format!("Token refresh failed: {e}"))?;
-    if !res.status().is_success() {
-        return Err(format!("Token refresh failed ({}), please re-login", res.status()));
-    }
-    let data: Value = res.json().await.map_err(|e| e.to_string())?;
+    let data = json_response(res, "Token refresh").await?;
     let access_token = data
         .get("access_token")
         .and_then(|v| v.as_str())
@@ -130,6 +147,8 @@ async fn xbox_authenticate(ms_access_token: &str) -> Result<(String, String), St
     // 1. XBL token
     let res = client
         .post("https://user.auth.xboxlive.com/user/authenticate")
+        .header(ACCEPT, "application/json")
+        .header(ACCEPT_ENCODING, "identity")
         .json(&json!({
             "Properties": {
                 "AuthMethod": "OAuth",
@@ -142,12 +161,14 @@ async fn xbox_authenticate(ms_access_token: &str) -> Result<(String, String), St
         .send()
         .await
         .map_err(|e| format!("Xbox auth failed: {e}"))?;
-    let xbl: Value = res.json().await.map_err(|e| e.to_string())?;
+    let xbl = json_response(res, "Xbox auth").await?;
     let xbl_token = xbl.get("Token").and_then(|v| v.as_str()).ok_or("No XBL token")?.to_string();
 
     // 2. XSTS token
     let res = client
         .post("https://xsts.auth.xboxlive.com/xsts/authorize")
+        .header(ACCEPT, "application/json")
+        .header(ACCEPT_ENCODING, "identity")
         .json(&json!({
             "Properties": {
                 "SandboxId": "RETAIL",
@@ -159,7 +180,7 @@ async fn xbox_authenticate(ms_access_token: &str) -> Result<(String, String), St
         .send()
         .await
         .map_err(|e| format!("XSTS auth failed: {e}"))?;
-    let xsts: Value = res.json().await.map_err(|e| format!("XSTS error: {e}"))?;
+    let xsts = json_response(res, "XSTS auth").await?;
     let xsts_token = xsts.get("Token").and_then(|v| v.as_str()).ok_or("No XSTS token")?.to_string();
     let uhs = xsts
         .pointer("/DisplayClaims/xui/0/uhs")
@@ -174,21 +195,25 @@ async fn minecraft_login(xsts_token: &str, uhs: &str) -> Result<(String, String,
     let client = reqwest::Client::new();
     let res = client
         .post("https://api.minecraftservices.com/authentication/login_with_xbox")
+        .header(ACCEPT, "application/json")
+        .header(ACCEPT_ENCODING, "identity")
         .json(&json!({ "identityToken": format!("XBL3.0 x={uhs};{xsts_token}") }))
         .send()
         .await
         .map_err(|e| format!("Minecraft login failed: {e}"))?;
-    let json: Value = res.json().await.map_err(|e| e.to_string())?;
+    let json = json_response(res, "Minecraft login").await?;
     let access_token = json.get("access_token").and_then(|v| v.as_str()).ok_or("No Minecraft access token")?.to_string();
 
     // 4. Profile
     let res = client
         .get("https://api.minecraftservices.com/minecraft/profile")
+        .header(ACCEPT, "application/json")
+        .header(ACCEPT_ENCODING, "identity")
         .bearer_auth(&access_token)
         .send()
         .await
         .map_err(|e| format!("Profile fetch failed: {e}"))?;
-    let profile: Value = res.json().await.map_err(|e| e.to_string())?;
+    let profile = json_response(res, "Minecraft profile").await?;
     let name = profile.get("name").and_then(|v| v.as_str()).ok_or("No profile name")?.to_string();
     let uuid = profile.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
 
