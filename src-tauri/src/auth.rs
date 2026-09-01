@@ -145,12 +145,7 @@ fn write_auth_file(app: &AppHandle, auth_json: &Value) -> Result<(), String> {
 async fn xbox_authenticate(ms_access_token: &str) -> Result<(String, String), String> {
     let client = reqwest::Client::new();
     // 1. XBL token
-    let xbl = match xbox_user_authenticate(&client, &format!("d={ms_access_token}")).await {
-        Ok(xbl) => xbl,
-        Err(prefixed_error) => xbox_user_authenticate(&client, ms_access_token)
-            .await
-            .map_err(|raw_error| combine_xbox_auth_errors(prefixed_error, raw_error))?,
-    };
+    let xbl = xbox_user_authenticate(&client, &format!("d={ms_access_token}")).await?;
     let xbl_token = xbl.get("Token").and_then(|v| v.as_str()).ok_or("No XBL token")?.to_string();
 
     // 2. XSTS token
@@ -189,7 +184,7 @@ async fn xbox_user_authenticate(client: &reqwest::Client, rps_ticket: &str) -> R
         .header("x-xbl-contract-version", "1")
         .json(&json!({
             "Properties": {
-                "AuthMethod": "OAuth",
+                "AuthMethod": "RPS",
                 "SiteName": "user.auth.xboxlive.com",
                 "RpsTicket": rps_ticket
             },
@@ -201,24 +196,6 @@ async fn xbox_user_authenticate(client: &reqwest::Client, rps_ticket: &str) -> R
         .map_err(|e| format!("Xbox auth request failed: {e}"))?;
 
     json_response(res, "Xbox auth").await
-}
-
-fn combine_xbox_auth_errors(prefixed_error: String, raw_error: String) -> String {
-    if prefixed_error == raw_error {
-        return raw_error;
-    }
-
-    if raw_error.contains(&prefixed_error) {
-        return raw_error;
-    }
-
-    if prefixed_error.contains(&raw_error) {
-        return prefixed_error;
-    }
-
-    format!(
-        "Xbox auth failed with prefixed and raw RpsTicket. prefixed: {prefixed_error}; raw: {raw_error}"
-    )
 }
 
 async fn minecraft_login(xsts_token: &str, uhs: &str) -> Result<(String, String, String), String> {
@@ -339,22 +316,4 @@ pub async fn login_microsoft(app: AppHandle) -> Result<String, String> {
     write_auth_file(&app, &auth_json)?;
 
     Ok(format!("SUCCESS:{name}"))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::combine_xbox_auth_errors;
-
-    #[test]
-    fn combine_xbox_auth_errors_returns_single_message_for_duplicates() {
-        let err = "Xbox auth failed (400 Bad Request):".to_string();
-        assert_eq!(combine_xbox_auth_errors(err.clone(), err.clone()), err);
-    }
-
-    #[test]
-    fn combine_xbox_auth_errors_prefers_more_specific_message() {
-        let prefixed = "Xbox auth failed (400 Bad Request):".to_string();
-        let raw = "Xbox auth failed with prefixed and raw RpsTicket. prefixed: Xbox auth failed (400 Bad Request):; raw: Xbox auth failed (400 Bad Request):".to_string();
-        assert_eq!(combine_xbox_auth_errors(prefixed, raw.clone()), raw);
-    }
 }
