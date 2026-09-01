@@ -1,4 +1,5 @@
 use std::sync::{Arc, Mutex};
+use std::error::Error;
 
 use reqwest::header::{ACCEPT, ACCEPT_ENCODING};
 use serde_json::{json, Value};
@@ -8,6 +9,38 @@ use crate::util::app_data_dir;
 
 const CLIENT_ID: &str = "00000000402b5328";
 const REDIRECT_URI: &str = "https://login.live.com/oauth20_desktop.srf";
+
+fn format_reqwest_error(context: &str, err: &reqwest::Error) -> String {
+    let mut details = Vec::new();
+    if err.is_connect() {
+        details.push("connect");
+    }
+    if err.is_timeout() {
+        details.push("timeout");
+    }
+    if err.is_request() {
+        details.push("request");
+    }
+    if err.is_body() {
+        details.push("body");
+    }
+    if err.is_decode() {
+        details.push("decode");
+    }
+
+    let kind = if details.is_empty() {
+        "unknown".to_string()
+    } else {
+        details.join(", ")
+    };
+
+    let source = err.source().map(|e| e.to_string()).unwrap_or_default();
+    if source.is_empty() {
+        format!("{context} failed ({kind}): {err}")
+    } else {
+        format!("{context} failed ({kind}): {err}; source: {source}")
+    }
+}
 
 async fn json_response(res: reqwest::Response, context: &str) -> Result<Value, String> {
     let status = res.status();
@@ -42,7 +75,7 @@ async fn exchange_code(code: &str) -> Result<(String, String, String), String> {
         ])
         .send()
         .await
-        .map_err(|e| format!("Token exchange failed: {e}"))?;
+        .map_err(|e| format_reqwest_error("Token exchange", &e))?;
     let json = json_response(res, "Microsoft token exchange").await?;
     let access_token = json.get("access_token").and_then(|v| v.as_str()).ok_or("No access_token in response")?.to_string();
     let refresh_token = json.get("refresh_token").and_then(|v| v.as_str()).unwrap_or("").to_string();
@@ -92,7 +125,7 @@ pub async fn try_refresh_cached_token(app: &AppHandle) -> Result<bool, String> {
         ])
         .send()
         .await
-        .map_err(|e| format!("Token refresh failed: {e}"))?;
+        .map_err(|e| format_reqwest_error("Token refresh", &e))?;
     let data = json_response(res, "Token refresh").await?;
     let access_token = data
         .get("access_token")
@@ -164,7 +197,7 @@ async fn xbox_authenticate(ms_access_token: &str) -> Result<(String, String), St
         }))
         .send()
         .await
-        .map_err(|e| format!("XSTS auth failed: {e}"))?;
+        .map_err(|e| format_reqwest_error("XSTS auth", &e))?;
     let xsts = json_response(res, "XSTS auth").await?;
     let xsts_token = xsts.get("Token").and_then(|v| v.as_str()).ok_or("No XSTS token")?.to_string();
     let uhs = xsts
@@ -193,7 +226,7 @@ async fn xbox_user_authenticate(client: &reqwest::Client, rps_ticket: &str) -> R
         }))
         .send()
         .await
-        .map_err(|e| format!("Xbox auth request failed: {e}"))?;
+        .map_err(|e| format_reqwest_error("Xbox auth request", &e))?;
 
     json_response(res, "Xbox auth").await
 }
@@ -207,7 +240,7 @@ async fn minecraft_login(xsts_token: &str, uhs: &str) -> Result<(String, String,
         .json(&json!({ "identityToken": format!("XBL3.0 x={uhs};{xsts_token}") }))
         .send()
         .await
-        .map_err(|e| format!("Minecraft login failed: {e}"))?;
+        .map_err(|e| format_reqwest_error("Minecraft login", &e))?;
     let json = json_response(res, "Minecraft login").await?;
     let access_token = json.get("access_token").and_then(|v| v.as_str()).ok_or("No Minecraft access token")?.to_string();
 
@@ -219,7 +252,7 @@ async fn minecraft_login(xsts_token: &str, uhs: &str) -> Result<(String, String,
         .bearer_auth(&access_token)
         .send()
         .await
-        .map_err(|e| format!("Profile fetch failed: {e}"))?;
+        .map_err(|e| format_reqwest_error("Profile fetch", &e))?;
     let profile = json_response(res, "Minecraft profile").await?;
     let name = profile.get("name").and_then(|v| v.as_str()).ok_or("No profile name")?.to_string();
     let uuid = profile.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
