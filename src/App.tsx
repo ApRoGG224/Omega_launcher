@@ -44,6 +44,7 @@ function App() {
   const instancesApi = useInstances(game.pushLog, showToast, t);
   instancesApiRef.current = instancesApi;
   const omegaAuth = useOmegaAuth();
+  const omegaConnected = Boolean(omegaAuth.profile);
   const [invites, setInvites] = useState<InviteInfo[]>([]);
   const presenceApi = usePresence(omegaAuth, (invite) => {
     setInvites((prev) =>
@@ -190,6 +191,12 @@ function App() {
               <span className="user-name">{accountsApi.account.name}</span>
               <span className="user-status">
                 <span className="status-dot" /> {accountsApi.account.type === "offline" ? t.onlineStatus : (t as any).connectedLabel}
+                {accountsApi.account.type === "microsoft" && (
+                  <span className={`user-omega-badge ${omegaConnected ? "connected" : "disconnected"}`}>
+                    <span className="user-omega-badge-dot" />
+                    Omega {omegaConnected ? (t as any).connectedLabel : "не подключен"}
+                  </span>
+                )}
               </span>
             </div>
           </div>
@@ -388,6 +395,8 @@ function App() {
           setOmegaPassword={accountsApi.setOmegaPassword}
           omegaBusy={accountsApi.omegaBusy}
           omegaError={accountsApi.omegaError}
+          omegaConnected={omegaConnected}
+          omegaAccountName={omegaAuth.profile?.username ?? null}
           onBack={() => accountsApi.setAccountModalView("list")}
           onSelectAccount={accountsApi.handleSelectAccount}
           onDeleteAccount={accountsApi.handleDeleteAccount}
