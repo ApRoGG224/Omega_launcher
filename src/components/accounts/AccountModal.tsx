@@ -61,6 +61,7 @@ export const AccountModal = React.memo(({
 }) => {
   const nicknameValid = newUsernameInput.trim().length > 0 && /^[a-zA-Z0-9_]{3,16}$/.test(newUsernameInput.trim());
   const [showOmegaPassword, setShowOmegaPassword] = useState(false);
+  const [hoveredOmegaAccount, setHoveredOmegaAccount] = useState(false);
   const omegaSubmitEnabled =
     omegaEmail.trim().length > 0 &&
     omegaPassword.length >= 6 &&
@@ -106,6 +107,12 @@ export const AccountModal = React.memo(({
                       key={`${acc.type}:${acc.name}`}
                       className={`account-item ${acc.name === account.name && acc.type === account.type ? "active" : ""}`}
                       onClick={() => onSelectAccount(acc)}
+                      onMouseEnter={() => {
+                        if (acc.type === "omega") setHoveredOmegaAccount(true);
+                      }}
+                      onMouseLeave={() => {
+                        if (acc.type === "omega") setHoveredOmegaAccount(false);
+                      }}
                     >
                       <div className={`account-item-avatar ${acc.type}`}>
                         {acc.type === "microsoft" ? <IconMicrosoft /> : acc.name.substring(0, 2).toUpperCase()}
@@ -127,6 +134,12 @@ export const AccountModal = React.memo(({
                             </span>
                           )}
                         </div>
+                        {acc.type === "omega" && hoveredOmegaAccount && (
+                          <div className="account-item-omega-hover">
+                            <span className="account-item-omega-hover-title">Omega</span>
+                            <span className="account-item-omega-hover-action">log in</span>
+                          </div>
+                        )}
                       </div>
                       {savedAccounts.length > 1 && (
                         <button

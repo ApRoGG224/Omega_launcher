@@ -868,6 +868,43 @@ input[type="color"]::-webkit-color-swatch {
   flex-shrink: 0;
 }
 
+.account-item {
+  overflow: hidden;
+}
+
+.account-item-omega-hover {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--accent-color-rgb), 0.22);
+  background: rgba(var(--accent-color-rgb), 0.12);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  animation: omegaHoverPop 160ms ease-out;
+}
+
+.account-item-omega-hover-action {
+  color: #d1e4fa;
+  text-transform: lowercase;
+}
+
+@keyframes omegaHoverPop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .account-item-delete {
   background: none;
   border: none;
