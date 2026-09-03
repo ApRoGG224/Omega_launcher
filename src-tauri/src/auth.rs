@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 use std::error::Error;
+use std::net::{IpAddr, SocketAddr};
 
 use reqwest::header::{ACCEPT, ACCEPT_ENCODING};
 use serde_json::{json, Value};
@@ -9,11 +10,18 @@ use crate::util::app_data_dir;
 
 const CLIENT_ID: &str = "00000000402b5328";
 const REDIRECT_URI: &str = "https://login.live.com/oauth20_desktop.srf";
+const MINECRAFT_SERVICES_IPV4: &str = "150.171.109.53";
 
 fn auth_client() -> Result<reqwest::Client, String> {
+    let minecraft_services_ip: IpAddr = MINECRAFT_SERVICES_IPV4
+        .parse()
+        .map_err(|e| format!("Auth host resolution failed: {e}"))?;
+    let minecraft_services_addr = SocketAddr::new(minecraft_services_ip, 443);
+
     reqwest::Client::builder()
         .connect_timeout(std::time::Duration::from_secs(15))
         .timeout(std::time::Duration::from_secs(45))
+        .resolve("api.minecraftservices.com", minecraft_services_addr)
         .build()
         .map_err(|e| format!("Auth client setup failed: {e}"))
 }
