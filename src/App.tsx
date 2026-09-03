@@ -177,7 +177,7 @@ function App() {
             className="user-profile"
             onClick={() => {
               accountsApi.setProfileMenuOpen(true);
-              accountsApi.setAccountModalView("list");
+              accountsApi.setAccountModalView("omega");
             }}
           >
             <div className="avatar">
