@@ -840,39 +840,31 @@ input[type="color"]::-webkit-color-swatch {
   font-weight: 600;
 }
 
-.account-item-omega-badge,
-.user-omega-badge,
-.account-item-expand-status {
+.account-item-omega-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.65rem;
-  padding: 2px 8px;
-  border-radius: 20px;
+  font-size: 0.62rem;
+  padding: 1px 6px;
+  border-radius: 999px;
   font-weight: 600;
 }
 
-.account-item-omega-badge.connected,
-.user-omega-badge.connected,
-.account-item-expand-status.connected {
+.account-item-omega-badge.connected {
   color: #7ee8a2;
   background: rgba(126, 232, 162, 0.1);
 }
 
-.account-item-omega-badge.disconnected,
-.user-omega-badge.disconnected,
-.account-item-expand-status.disconnected {
+.account-item-omega-badge.disconnected {
   color: #f08d7a;
   background: rgba(228, 109, 76, 0.12);
 }
 
-.account-item-omega-dot,
-.user-omega-badge-dot {
-  width: 7px;
-  height: 7px;
+.account-item-omega-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 999px;
   background: currentColor;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.03);
   flex-shrink: 0;
 }
 
@@ -895,84 +887,6 @@ input[type="color"]::-webkit-color-swatch {
 .account-item-delete:hover {
   color: #e46d4c;
   background: rgba(228, 109, 76, 0.1);
-}
-
-.account-item-expand {
-  width: 100%;
-  margin-top: 8px;
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(186, 215, 247, 0.03);
-  border: 1px solid rgba(186, 215, 247, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  animation: accountExpandIn 180ms ease-out;
-}
-
-.account-item-expand-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.account-item-expand-title {
-  font-size: 0.84rem;
-  font-weight: 700;
-  color: #fff;
-}
-
-.account-item-expand-subtitle {
-  margin-top: 3px;
-  font-size: 0.72rem;
-  color: #9da7ba;
-  line-height: 1.35;
-}
-
-.account-item-expand-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.account-item-expand-button {
-  flex: 1;
-  border: 1px solid rgba(186, 215, 247, 0.12);
-  background: rgba(186, 215, 247, 0.04);
-  color: #cfd7e6;
-  border-radius: 10px;
-  padding: 9px 10px;
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.account-item-expand-button:hover {
-  background: rgba(186, 215, 247, 0.08);
-  color: #fff;
-}
-
-.account-item-expand-button.primary {
-  background: rgba(var(--accent-color-rgb), 0.16);
-  border-color: rgba(var(--accent-color-rgb), 0.32);
-  color: #fff;
-}
-
-.account-item-expand-button.primary:hover {
-  background: rgba(var(--accent-color-rgb), 0.24);
-}
-
-@keyframes accountExpandIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Divider */

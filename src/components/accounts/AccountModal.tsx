@@ -22,7 +22,6 @@ export const AccountModal = React.memo(({
   omegaBusy,
   omegaError,
   omegaConnected,
-  omegaAccountName,
   onBack,
   onSelectAccount,
   onDeleteAccount,
@@ -50,7 +49,6 @@ export const AccountModal = React.memo(({
   omegaBusy: boolean;
   omegaError: string | null;
   omegaConnected: boolean;
-  omegaAccountName: string | null;
   onBack: () => void;
   onSelectAccount: (acc: Account) => void;
   onDeleteAccount: (acc: Account) => void;
@@ -63,18 +61,11 @@ export const AccountModal = React.memo(({
 }) => {
   const nicknameValid = newUsernameInput.trim().length > 0 && /^[a-zA-Z0-9_]{3,16}$/.test(newUsernameInput.trim());
   const [showOmegaPassword, setShowOmegaPassword] = useState(false);
-  const [microsoftExpanded, setMicrosoftExpanded] = useState(account.type === "microsoft");
   const omegaSubmitEnabled =
     omegaEmail.trim().length > 0 &&
     omegaPassword.length >= 6 &&
     (omegaMode === "login" || /^[a-zA-Z0-9_]{3,16}$/.test(omegaUsername.trim())) &&
     !omegaBusy;
-
-  React.useEffect(() => {
-    if (account.type === "microsoft") {
-      setMicrosoftExpanded(true);
-    }
-  }, [account.type]);
 
   return (
     <div className="account-modal-overlay profile-modal-overlay" onClick={onClose}>
@@ -114,14 +105,7 @@ export const AccountModal = React.memo(({
                     <div
                       key={`${acc.type}:${acc.name}`}
                       className={`account-item ${acc.name === account.name && acc.type === account.type ? "active" : ""}`}
-                      onClick={() => {
-                        onSelectAccount(acc);
-                        if (acc.type === "microsoft") {
-                          setMicrosoftExpanded((prev) => !prev);
-                        } else {
-                          setMicrosoftExpanded(false);
-                        }
-                      }}
+                      onClick={() => onSelectAccount(acc)}
                     >
                       <div className={`account-item-avatar ${acc.type}`}>
                         {acc.type === "microsoft" ? <IconMicrosoft /> : acc.name.substring(0, 2).toUpperCase()}
@@ -139,7 +123,7 @@ export const AccountModal = React.memo(({
                           {acc.type === "microsoft" && (
                             <span className={`account-item-omega-badge ${omegaConnected ? "connected" : "disconnected"}`}>
                               <span className="account-item-omega-dot" />
-                              Omega {omegaConnected ? (t as any).connectedLabel : "не подключен"}
+                              Ω
                             </span>
                           )}
                         </div>
@@ -155,38 +139,6 @@ export const AccountModal = React.memo(({
                         >
                           <IconTrash />
                         </button>
-                      )}
-                      {acc.type === "microsoft" && microsoftExpanded && acc.name === account.name && acc.type === account.type && (
-                        <div className="account-item-expand" onClick={(e) => e.stopPropagation()}>
-                          <div className="account-item-expand-header">
-                            <div>
-                              <div className="account-item-expand-title">Omega</div>
-                              <div className="account-item-expand-subtitle">
-                                {omegaConnected && omegaAccountName
-                                  ? `Подключен как ${omegaAccountName}`
-                                  : "Войдите в Omega, не выходя из Microsoft"}
-                              </div>
-                            </div>
-                            <span className={`account-item-expand-status ${omegaConnected ? "connected" : "disconnected"}`}>
-                              <span className="account-item-omega-dot" />
-                              {omegaConnected ? (t as any).connectedLabel : "не подключен"}
-                            </span>
-                          </div>
-                          <div className="account-item-expand-actions">
-                            <button
-                              className="account-item-expand-button primary"
-                              onClick={() => onChangeView("omega")}
-                            >
-                              {omegaConnected ? "Сменить Omega" : "Войти в Omega"}
-                            </button>
-                            <button
-                              className="account-item-expand-button"
-                              onClick={() => onChangeView("omega")}
-                            >
-                              {omegaConnected ? "Открыть профиль" : "Добавить Omega"}
-                            </button>
-                          </div>
-                        </div>
                       )}
                     </div>
                   ))}
