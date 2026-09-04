@@ -234,7 +234,10 @@ export const AccountModal = React.memo(({
                 </div>
               </div>
 
-              <div className="account-method-card" onClick={() => onChangeView("omega")}>
+              <div className="account-method-card" onClick={() => {
+                onChangeView("omega");
+                setOmegaMode("register");
+              }}>
                 <div className="account-method-icon omega">
                   <IconUsers />
                 </div>
@@ -400,7 +403,7 @@ export const AccountModal = React.memo(({
               e.currentTarget.style.background = "transparent";
             }}
           >
-            <IconUsers /> Log in with Omega
+            <IconUsers /> {(t as any).omegaRegisterTitle}
           </button>
         </div>
       )}
