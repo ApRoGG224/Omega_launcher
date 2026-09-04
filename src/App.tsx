@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { Language, ModpackInstance } from "./types";
 import { translations } from "./i18n";
-import { IconBox, IconMicrosoft } from "./ui/icons";
+import { IconBox, IconMicrosoft, IconUsers } from "./ui/icons";
 import { FloatingDock } from "./components/navigation/FloatingDock";
 import { CatalogTabs } from "./components/catalog/CatalogTabs";
 import { ToastProvider, useToast } from "./ui/ToastProvider";
@@ -68,6 +68,13 @@ function App() {
   const [customThemeInput, setCustomThemeInput] = useState("");
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [closeOnLaunch, setCloseOnLaunch] = useState(() => getStoredCloseOnLaunch());
+  const [omegaContextMenu, setOmegaContextMenu] = useState<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const handleClick = () => setOmegaContextMenu(null);
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, []);
 
   useEffect(() => {
     if (instancesApi.importing) setImportPopupHidden(false);
@@ -104,6 +111,7 @@ function App() {
       if (accountsApi.profileMenuOpen) accountsApi.setProfileMenuOpen(false);
       if (instancesApi.importModalOpen) instancesApi.setImportModalOpen(false);
       if (instancesApi.editModalOpen) instancesApi.setEditModalOpen(null);
+      setOmegaContextMenu(null);
     };
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
@@ -178,6 +186,10 @@ function App() {
             onClick={() => {
               accountsApi.setProfileMenuOpen(true);
               accountsApi.setAccountModalView("list");
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setOmegaContextMenu({ x: e.clientX, y: e.clientY });
             }}
           >
             <div className="avatar">
@@ -410,6 +422,55 @@ function App() {
           onImport={(kind, path) => void instancesApi.importFromArchive(kind, path)}
           onClose={() => instancesApi.setImportModalOpen(false)}
         />
+      )}
+
+      {omegaContextMenu && (
+        <div
+          style={{
+            position: "fixed",
+            top: omegaContextMenu.y,
+            left: omegaContextMenu.x,
+            background: "rgba(22, 26, 35, 0.95)",
+            border: "1px solid rgba(186, 215, 247, 0.12)",
+            borderRadius: "8px",
+            padding: "4px",
+            zIndex: 9999,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+            backdropFilter: "blur(12px)",
+          }}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <button
+            onClick={() => {
+              accountsApi.setProfileMenuOpen(true);
+              accountsApi.setAccountModalView("omega");
+              accountsApi.setOmegaMode("register");
+              setOmegaContextMenu(null);
+            }}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "#cfd7e6",
+              cursor: "pointer",
+              padding: "8px 12px",
+              fontFamily: "inherit",
+              fontSize: "14px",
+              borderRadius: "4px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              width: "100%",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(186, 215, 247, 0.1)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+            }}
+          >
+            <IconUsers /> Log in with Omega
+          </button>
+        </div>
       )}
 
       <FloatingDock
