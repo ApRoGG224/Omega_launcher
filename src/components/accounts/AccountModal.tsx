@@ -62,6 +62,13 @@ export const AccountModal = React.memo(({
   const nicknameValid = newUsernameInput.trim().length > 0 && /^[a-zA-Z0-9_]{3,16}$/.test(newUsernameInput.trim());
   const [showOmegaPassword, setShowOmegaPassword] = useState(false);
   const [hoveredOmegaAccount, setHoveredOmegaAccount] = useState(false);
+  const [omegaContextMenu, setOmegaContextMenu] = useState<{ x: number; y: number } | null>(null);
+
+  React.useEffect(() => {
+    const handleClick = () => setOmegaContextMenu(null);
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, []);
   const omegaSubmitEnabled =
     omegaEmail.trim().length > 0 &&
     omegaPassword.length >= 6 &&
@@ -112,6 +119,12 @@ export const AccountModal = React.memo(({
                       }}
                       onMouseLeave={() => {
                         if (acc.type === "omega") setHoveredOmegaAccount(false);
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        if (acc.type !== "omega") {
+                          setOmegaContextMenu({ x: e.clientX, y: e.clientY });
+                        }
                       }}
                     >
                       <div className={`account-item-avatar ${acc.type}`}>
@@ -344,6 +357,53 @@ export const AccountModal = React.memo(({
           )}
         </div>
       </DraggableWindow>
+      {omegaContextMenu && (
+        <div
+          style={{
+            position: "fixed",
+            top: omegaContextMenu.y,
+            left: omegaContextMenu.x,
+            background: "rgba(22, 26, 35, 0.95)",
+            border: "1px solid rgba(186, 215, 247, 0.12)",
+            borderRadius: "8px",
+            padding: "4px",
+            zIndex: 9999,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+            backdropFilter: "blur(12px)",
+          }}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <button
+            onClick={() => {
+              onChangeView("omega");
+              setOmegaMode("register");
+              setOmegaContextMenu(null);
+            }}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "#cfd7e6",
+              cursor: "pointer",
+              padding: "8px 12px",
+              fontFamily: "inherit",
+              fontSize: "14px",
+              borderRadius: "4px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              width: "100%",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(186, 215, 247, 0.1)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+            }}
+          >
+            <IconUsers /> Log in with Omega
+          </button>
+        </div>
+      )}
     </div>
   );
 });
