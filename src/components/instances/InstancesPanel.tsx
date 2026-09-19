@@ -74,14 +74,15 @@ export const InstancesPanel = React.memo(({
 
   return (
     <div
+      className="instances-panel-container"
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: "20px",
+        gap: "16px",
         flex: 1,
         minHeight: 0,
-        height: "calc(100vh - 130px)",
-        paddingBottom: "75px",
+        height: "100%",
+        paddingBottom: "90px",
         overflowY: "auto",
         boxSizing: "border-box",
       }}
@@ -114,39 +115,45 @@ export const InstancesPanel = React.memo(({
       </div>
 
       <div className="assemblies-horizontal-list">
-        {visibleInstances.map((inst) => (
-          <div
-            key={inst.id}
-            className={`assembly-scroll-card ${selectedInstanceId === inst.id ? "active" : ""} ${dropTarget === inst.id ? "drop-target" : ""}`}
-            onClick={() => onSelectInstance(inst.id)}
-            onDragOver={(e) => {
-              e.preventDefault();
-              if (dropTarget !== inst.id) setDropTarget(inst.id);
-            }}
-            onDragLeave={() => setDropTarget((c) => (c === inst.id ? null : c))}
-            onDrop={(e) => handleDrop(e, inst.id)}
-          >
-            <div className="recent-inst-icon assembly-card-icon">
-              {inst.icon ? (
-                <img
-                  src={inst.icon.startsWith("data:") || inst.icon.startsWith("http") ? inst.icon : convertFileSrc(inst.icon)}
-                  alt="icon"
-                  style={{ width: 36, height: 36, borderRadius: 8 }}
-                />
-              ) : (
-                <IconBox size={24} />
-              )}
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1, gap: "1px" }}>
-              <div style={{ fontWeight: 600, fontSize: "0.95rem", lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {inst.name}
-              </div>
-              <div style={{ fontSize: "0.78rem", color: "#9da7ba", lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {inst.mcVersion} ({inst.loader})
-              </div>
-            </div>
+        {visibleInstances.length === 0 ? (
+          <div style={{ color: "#9da7ba", padding: "14px 20px", background: "rgba(5,6,15,0.6)", borderRadius: 12, border: "1px solid rgba(139,92,246,0.2)", fontSize: "0.88rem" }}>
+            {t.noBuildsHome || "Сборок пока нет. Создайте первую!"}
           </div>
-        ))}
+        ) : (
+          visibleInstances.map((inst) => (
+            <div
+              key={inst.id}
+              className={`assembly-scroll-card ${selectedInstanceId === inst.id ? "active" : ""} ${dropTarget === inst.id ? "drop-target" : ""}`}
+              onClick={() => onSelectInstance(inst.id)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (dropTarget !== inst.id) setDropTarget(inst.id);
+              }}
+              onDragLeave={() => setDropTarget((c) => (c === inst.id ? null : c))}
+              onDrop={(e) => handleDrop(e, inst.id)}
+            >
+              <div className="recent-inst-icon assembly-card-icon">
+                {inst.icon ? (
+                  <img
+                    src={inst.icon.startsWith("data:") || inst.icon.startsWith("http") ? inst.icon : convertFileSrc(inst.icon)}
+                    alt="icon"
+                    style={{ width: 36, height: 36, borderRadius: 8 }}
+                  />
+                ) : (
+                  <IconBox size={24} />
+                )}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1, gap: "1px" }}>
+                <div style={{ fontWeight: 600, fontSize: "0.95rem", lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {inst.name}
+                </div>
+                <div style={{ fontSize: "0.78rem", color: "#9da7ba", lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {inst.mcVersion} ({inst.loader})
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       <input type="file" ref={fileInputRef} onChange={onIconChange} style={{ display: "none" }} accept="image/*" />
@@ -155,14 +162,14 @@ export const InstancesPanel = React.memo(({
         <div className="assembly-info-card-detail">
           <div
             className="recent-inst-icon"
-            style={{ width: 64, height: 64, borderRadius: 16, cursor: "pointer" }}
+            style={{ width: 64, height: 64, borderRadius: 16, cursor: "pointer", flexShrink: 0 }}
             onClick={() => fileInputRef.current?.click()}
             title={t.changeIconHint}
           >
             {selectedInstance.icon ? <img src={selectedInstance.icon.startsWith("data:") || selectedInstance.icon.startsWith("http") ? selectedInstance.icon : convertFileSrc(selectedInstance.icon)} alt="icon" style={{ width: 44, height: 44, borderRadius: 10 }} /> : <IconBox size={40} />}
           </div>
-          <div style={{ flex: 1 }}>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "4px" }}>{selectedInstance.name}</h3>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedInstance.name}</h3>
             <div style={{ fontSize: "0.85rem", color: "#9da7ba", marginBottom: "8px" }}>
               {t.versionLabel} <span style={{ color: "#8b5cf6", fontWeight: 600 }}>{selectedInstance.mcVersion}</span> • {t.loaderLabel}{" "}
               <span style={{ color: "#fff" }}>{selectedInstance.loader}</span>
@@ -174,27 +181,25 @@ export const InstancesPanel = React.memo(({
               <span className="mod-chip"><span className="mod-chip-dot" /> Iris Shaders</span>
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div className="assembly-detail-actions">
             <button className="play-btn" onClick={onPlay}>
               <IconPlay /> {t.playShort}
             </button>
             <button
-              className="play-btn"
-              style={{ background: "rgba(186, 215, 247, 0.08)", boxShadow: "none", fontSize: "0.82rem" }}
+              className="play-btn secondary-action-btn"
               onClick={() => onOpenFolder(selectedInstance.id)}
             >
               <IconFolder /> {t.openFolderShort}
             </button>
             <button
-              className="play-btn"
-              style={{ background: "rgba(186, 215, 247, 0.08)", boxShadow: "none", fontSize: "0.82rem" }}
+              className="play-btn secondary-action-btn"
               onClick={() => onEditInstance(selectedInstance.id)}
             >
               🛠️ {t.editBuildBtn}
             </button>
             <button
-              className="play-btn"
-              style={{ background: confirmDelete ? "rgba(248,113,113,0.25)" : "rgba(186, 215, 247, 0.05)", boxShadow: "none", fontSize: "0.82rem", color: confirmDelete ? "#e46d4c" : "#e46d4c" }}
+              className="play-btn delete-action-btn"
+              style={{ background: confirmDelete ? "rgba(248,113,113,0.25)" : undefined, color: confirmDelete ? "#e46d4c" : undefined }}
               onClick={() => {
                 if (confirmDelete) onDeleteInstance(selectedInstance.id);
                 else setConfirmDelete(true);
