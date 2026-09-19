@@ -3284,7 +3284,7 @@ input[type="color"]::-webkit-color-swatch {
 .playtime-badge {
   position: fixed;
   right: clamp(12px, 1.8vw, 24px);
-  bottom: clamp(12px, 1.8vh, 18px);
+  bottom: clamp(76px, 11vh, 84px);
   z-index: 1050;
   display: flex;
   align-items: center;
@@ -3731,6 +3731,34 @@ input[type="color"]::-webkit-color-swatch {
   flex-wrap: nowrap;
 }
 
+.assembly-info-main {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+
+.assembly-detail-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(186, 215, 247, 0.05);
+  border: 1px solid rgba(186, 215, 247, 0.1);
+}
+
+.assembly-info-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
 .assembly-detail-actions {
   display: flex;
   flex-direction: column;
@@ -3759,18 +3787,11 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 /* Media Queries for Screen Dimensions Scaling */
-@media (max-width: 900px) {
-  .playtime-badge {
-    bottom: 84px;
-    right: 20px;
-  }
-}
-
-@media (max-width: 800px) {
+@media (max-width: 880px) {
   .assembly-info-card-detail {
-    flex-wrap: wrap;
-    align-items: flex-start;
-    padding: 14px;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
     gap: 14px;
   }
   
@@ -3785,7 +3806,9 @@ input[type="color"]::-webkit-color-swatch {
     height: 34px;
     font-size: 0.78rem;
   }
+}
 
+@media (max-width: 720px) {
   .playtime-badge {
     bottom: 80px;
     right: 50%;

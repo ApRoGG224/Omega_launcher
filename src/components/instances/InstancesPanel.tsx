@@ -160,25 +160,36 @@ export const InstancesPanel = React.memo(({
 
       {selectedInstance && (
         <div className="assembly-info-card-detail">
-          <div
-            className="recent-inst-icon"
-            style={{ width: 64, height: 64, borderRadius: 16, cursor: "pointer", flexShrink: 0 }}
-            onClick={() => fileInputRef.current?.click()}
-            title={t.changeIconHint}
-          >
-            {selectedInstance.icon ? <img src={selectedInstance.icon.startsWith("data:") || selectedInstance.icon.startsWith("http") ? selectedInstance.icon : convertFileSrc(selectedInstance.icon)} alt="icon" style={{ width: 44, height: 44, borderRadius: 10 }} /> : <IconBox size={40} />}
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedInstance.name}</h3>
-            <div style={{ fontSize: "0.85rem", color: "#9da7ba", marginBottom: "8px" }}>
-              {t.versionLabel} <span style={{ color: "#8b5cf6", fontWeight: 600 }}>{selectedInstance.mcVersion}</span> • {t.loaderLabel}{" "}
-              <span style={{ color: "#fff" }}>{selectedInstance.loader}</span>
+          <div className="assembly-info-main">
+            <div
+              className="recent-inst-icon assembly-detail-icon"
+              onClick={() => fileInputRef.current?.click()}
+              title={t.changeIconHint}
+            >
+              {selectedInstance.icon ? (
+                <img
+                  src={selectedInstance.icon.startsWith("data:") || selectedInstance.icon.startsWith("http") ? selectedInstance.icon : convertFileSrc(selectedInstance.icon)}
+                  alt="icon"
+                  style={{ width: 44, height: 44, borderRadius: 10 }}
+                />
+              ) : (
+                <IconBox size={40} />
+              )}
             </div>
-            <div className="mod-chips-container">
-              <span className="mod-chip"><span className="mod-chip-dot" /> {t.installedMods} {modCount}</span>
-              <span className="mod-chip"><span className="mod-chip-dot" /> Fabric API</span>
-              <span className="mod-chip"><span className="mod-chip-dot" /> Sodium (Оптимизация)</span>
-              <span className="mod-chip"><span className="mod-chip-dot" /> Iris Shaders</span>
+            <div className="assembly-info-text">
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {selectedInstance.name}
+              </h3>
+              <div style={{ fontSize: "0.85rem", color: "#9da7ba", marginBottom: "8px" }}>
+                {t.versionLabel} <span style={{ color: "#8b5cf6", fontWeight: 600 }}>{selectedInstance.mcVersion}</span> • {t.loaderLabel}{" "}
+                <span style={{ color: "#fff" }}>{selectedInstance.loader}</span>
+              </div>
+              <div className="mod-chips-container">
+                <span className="mod-chip"><span className="mod-chip-dot" /> {t.installedMods} {modCount}</span>
+                <span className="mod-chip"><span className="mod-chip-dot" /> Fabric API</span>
+                <span className="mod-chip"><span className="mod-chip-dot" /> Sodium (Оптимизация)</span>
+                <span className="mod-chip"><span className="mod-chip-dot" /> Iris Shaders</span>
+              </div>
             </div>
           </div>
           <div className="assembly-detail-actions">
