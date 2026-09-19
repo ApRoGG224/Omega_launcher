@@ -3808,15 +3808,14 @@ input[type="color"]::-webkit-color-swatch {
   }
 }
 
-@media (max-width: 880px) {
+@media (max-width: 1100px) {
   .playtime-badge {
-    font-size: 0.68rem;
-    padding: 4px 10px;
-    max-width: 30vw;
+    bottom: 84px;
+    right: 20px;
   }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 750px) {
   .playtime-badge {
     bottom: 80px;
     right: 50%;
