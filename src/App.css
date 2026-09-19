@@ -3280,24 +3280,25 @@ input[type="color"]::-webkit-color-swatch {
   100% { margin-left: 100%; }
 }
 
-/* Play time / last launch badge (matching floating dock design & auto-scaling) */
+/* Play time / last launch badge (centered perfectly above floating dock) */
 .playtime-badge {
   position: fixed;
-  right: clamp(14px, 2vw, 24px);
-  bottom: clamp(14px, 2vh, 22px);
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: clamp(72px, 10.5vh, 80px);
   z-index: 1050;
   display: flex;
   align-items: center;
-  gap: clamp(4px, 0.8vw, 8px);
-  padding: clamp(5px, 0.9vh, 9px) clamp(10px, 1.4vw, 16px);
+  gap: clamp(5px, 0.8vw, 10px);
+  padding: clamp(4px, 0.8vh, 8px) clamp(12px, 1.6vw, 20px);
   border-radius: 999px;
   background: rgba(5, 6, 15, 0.94);
   backdrop-filter: blur(25px);
   border: 1px solid rgba(139, 92, 246, 0.35);
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.9), 0 0 20px rgba(102, 58, 243, 0.2);
-  font-size: clamp(0.62rem, 0.82vw, 0.76rem);
+  font-size: clamp(0.64rem, 0.85vw, 0.78rem);
   color: #9da7ba;
-  max-width: 42vw;
+  max-width: 92vw;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3805,22 +3806,6 @@ input[type="color"]::-webkit-color-swatch {
   .assembly-detail-actions .play-btn {
     height: 34px;
     font-size: 0.78rem;
-  }
-}
-
-@media (max-width: 1100px) {
-  .playtime-badge {
-    bottom: 84px;
-    right: 20px;
-  }
-}
-
-@media (max-width: 750px) {
-  .playtime-badge {
-    bottom: 80px;
-    right: 50%;
-    transform: translateX(50%);
-    max-width: 92vw;
   }
 }
 
