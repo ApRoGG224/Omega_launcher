@@ -3280,28 +3280,29 @@ input[type="color"]::-webkit-color-swatch {
   100% { margin-left: 100%; }
 }
 
-/* Play time / last launch badge (bottom-right corner, positioned above floating dock) */
+/* Play time / last launch badge (matching floating dock design & auto-scaling) */
 .playtime-badge {
   position: fixed;
-  right: max(16px, 2vw);
-  bottom: clamp(75px, 12vh, 86px);
+  right: clamp(12px, 1.8vw, 24px);
+  bottom: clamp(12px, 1.8vh, 18px);
   z-index: 1050;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: clamp(6px, 1vh, 8px) clamp(10px, 1.5vw, 14px);
+  gap: clamp(5px, 0.8vw, 10px);
+  padding: clamp(5px, 0.9vh, 9px) clamp(10px, 1.4vw, 18px);
   border-radius: 999px;
-  background: rgba(5, 6, 15, 0.92);
-  backdrop-filter: blur(16px);
+  background: rgba(5, 6, 15, 0.94);
+  backdrop-filter: blur(25px);
   border: 1px solid rgba(139, 92, 246, 0.35);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
-  font-size: clamp(0.68rem, 0.95vw, 0.78rem);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.9), 0 0 20px rgba(102, 58, 243, 0.2);
+  font-size: clamp(0.62rem, 0.85vw, 0.78rem);
   color: #9da7ba;
   max-width: 46vw;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   animation: import-popup-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .playtime-badge b {
@@ -3310,10 +3311,10 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .playtime-badge-dot {
-  width: 8px;
-  height: 8px;
+  width: clamp(6px, 0.6vw, 8px);
+  height: clamp(6px, 0.6vw, 8px);
   border-radius: 50%;
-  flex: 0 0 8px;
+  flex: 0 0 clamp(6px, 0.6vw, 8px);
   background: linear-gradient(135deg, #8b5cf6, #8b5cf6);
   box-shadow: 0 0 8px rgba(139, 92, 246, 0.8);
   animation: badge-pulse 1.8s ease-in-out infinite;
@@ -3640,30 +3641,6 @@ input[type="color"]::-webkit-color-swatch {
 /* -------------------------------------------------------------
    RESPONSIVE AUTO-SCALING & WINDOW RESIZING SYSTEM
    ------------------------------------------------------------- */
-
-/* Play time / last launch badge */
-.playtime-badge {
-  position: fixed;
-  right: 24px;
-  bottom: 18px;
-  z-index: 1050;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(5, 6, 15, 0.92);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(139, 92, 246, 0.35);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
-  font-size: 0.78rem;
-  color: #9da7ba;
-  max-width: 46vw;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  animation: import-popup-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
 
 /* Button Auto-Scaling & Fluid Dimensions */
 .play-btn {
