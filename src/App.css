@@ -2011,6 +2011,7 @@ input[type="color"]::-webkit-color-swatch {
   justify-content: center;
   font-size: 1.1rem;
   transition: all 0.25s ease;
+  overflow: hidden;
 }
 
 .dock-label {
