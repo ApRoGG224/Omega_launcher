@@ -3280,7 +3280,7 @@ input[type="color"]::-webkit-color-swatch {
   100% { margin-left: 100%; }
 }
 
-/* Play time / last launch badge (level with floating dock, compact size) */
+/* Play time / last launch badge (level with floating dock, compact width) */
 .playtime-badge {
   position: fixed;
   right: clamp(12px, 1.5vw, 20px);
@@ -3289,15 +3289,15 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 999px;
   background: rgba(5, 6, 15, 0.94);
   backdrop-filter: blur(25px);
   border: 1px solid rgba(139, 92, 246, 0.35);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8), 0 0 14px rgba(102, 58, 243, 0.2);
-  font-size: clamp(0.6rem, 0.75vw, 0.7rem);
+  font-size: clamp(0.6rem, 0.78vw, 0.72rem);
   color: #9da7ba;
-  max-width: 38vw;
+  max-width: clamp(180px, 22vw, 300px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
