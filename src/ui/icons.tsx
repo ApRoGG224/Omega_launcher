@@ -1,7 +1,38 @@
 import React from "react";
 
 export const IconHome = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>);
-export const IconBox = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>);
+export const IconBox = React.memo(({ size = 20 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+    {/* Top face (Grass) */}
+    <path d="M16 2 L29 9.5 L16 17 L3 9.5 Z" fill="#88D038" />
+    <path d="M16 2 L29 9.5 L16 17 L3 9.5 Z" fill="url(#grassGradient)" opacity="0.4" />
+    {/* Top face highlights */}
+    <path d="M16 3.5 L26.5 9.5 L16 15.5 L5.5 9.5 Z" fill="#9AE347" opacity="0.6" />
+    
+    {/* Left face (Dirt with grass top) */}
+    <path d="M3 9.5 L16 17 V30 L3 22.5 Z" fill="#86522D" />
+    {/* Left face grass hanging edge */}
+    <path d="M3 9.5 L16 17 V20.5 L13 18.8 L13 17 L10 15.3 L10 17.5 L7 15.8 L7 14 L3 11.7 Z" fill="#5E9624" />
+    <path d="M3 9.5 L16 17 V19.5 L13 17.8 L13 16 L10 14.3 L10 16.5 L7 14.8 L7 13 L3 10.7 Z" fill="#76BA2A" />
+
+    {/* Right face (Darker dirt with grass top) */}
+    <path d="M16 17 L29 9.5 V22.5 L16 30 Z" fill="#653D1F" />
+    {/* Right face grass hanging edge */}
+    <path d="M16 17 L29 9.5 V11.7 L25 14 L25 15.8 L22 17.5 L22 15.3 L19 17 L19 18.8 Z" fill="#47731B" />
+    <path d="M16 17 L29 9.5 V10.7 L25 13 L25 14.8 L22 16.5 L22 14.3 L19 16 L19 17.8 Z" fill="#5E9624" />
+
+    {/* Dirt pixel details */}
+    <rect x="7" y="20" width="2" height="2" fill="#A4683A" opacity="0.7" transform="rotate(-30 7 20)" />
+    <rect x="21" y="21" width="2" height="2" fill="#4B2C14" opacity="0.7" transform="rotate(30 21 21)" />
+    
+    <defs>
+      <linearGradient id="grassGradient" x1="16" y1="2" x2="16" y2="17" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#FFFFFF" />
+        <stop offset="100%" stopColor="#47731B" />
+      </linearGradient>
+    </defs>
+  </svg>
+));
 export const IconUsers = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>);
 export const IconUser = React.memo(() => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>);
 export const IconSettings = React.memo(() => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>);

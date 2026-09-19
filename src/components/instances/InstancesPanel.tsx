@@ -134,7 +134,7 @@ export const InstancesPanel = React.memo(({
                   style={{ width: 36, height: 36, borderRadius: 8 }}
                 />
               ) : (
-                <IconBox />
+                <IconBox size={24} />
               )}
             </div>
             <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1, gap: "1px" }}>
@@ -159,7 +159,7 @@ export const InstancesPanel = React.memo(({
             onClick={() => fileInputRef.current?.click()}
             title={t.changeIconHint}
           >
-            {selectedInstance.icon ? <img src={selectedInstance.icon.startsWith("data:") || selectedInstance.icon.startsWith("http") ? selectedInstance.icon : convertFileSrc(selectedInstance.icon)} alt="icon" style={{ width: 44, height: 44, borderRadius: 10 }} /> : <IconBox />}
+            {selectedInstance.icon ? <img src={selectedInstance.icon.startsWith("data:") || selectedInstance.icon.startsWith("http") ? selectedInstance.icon : convertFileSrc(selectedInstance.icon)} alt="icon" style={{ width: 44, height: 44, borderRadius: 10 }} /> : <IconBox size={40} />}
           </div>
           <div style={{ flex: 1 }}>
             <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "4px" }}>{selectedInstance.name}</h3>
