@@ -3637,11 +3637,39 @@ input[type="color"]::-webkit-color-swatch {
    RESPONSIVE AUTO-SCALING & WINDOW RESIZING SYSTEM
    ------------------------------------------------------------- */
 
+/* -------------------------------------------------------------
+   RESPONSIVE AUTO-SCALING & WINDOW RESIZING SYSTEM
+   ------------------------------------------------------------- */
+
+/* Play time / last launch badge */
+.playtime-badge {
+  position: fixed;
+  right: 24px;
+  bottom: 18px;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(5, 6, 15, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  font-size: 0.78rem;
+  color: #9da7ba;
+  max-width: 46vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: import-popup-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Button Auto-Scaling & Fluid Dimensions */
 .play-btn {
-  font-size: clamp(0.72rem, 1.1vw, 0.95rem);
-  padding: 0 clamp(10px, 1.8vw, 36px);
-  height: clamp(28px, 4.2vh, 44px);
+  font-size: clamp(0.75rem, 1vw, 0.92rem);
+  padding: 0 clamp(14px, 1.5vw, 32px);
+  height: clamp(32px, 3.8vh, 42px);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -3652,63 +3680,56 @@ input[type="color"]::-webkit-color-swatch {
 
 /* Floating Dock Auto-Scaling */
 .dock-wrapper {
-  bottom: clamp(8px, 1.8vh, 16px);
+  bottom: 16px;
   max-width: 95vw;
 }
 
 .floating-dock {
-  gap: clamp(6px, 1.8vw, 20px);
-  padding: clamp(4px, 1vh, 8px) clamp(10px, 2.2vw, 26px);
+  gap: clamp(8px, 1.5vw, 20px);
+  padding: 8px clamp(12px, 2vw, 26px);
   border-radius: 30px;
 }
 
 .dock-btn {
-  min-width: clamp(40px, 6.5vw, 64px);
-  gap: clamp(2px, 0.5vh, 4px);
+  min-width: clamp(48px, 5.5vw, 64px);
+  gap: 4px;
 }
 
 .dock-icon-circle {
-  width: clamp(28px, 4vw, 40px);
-  height: clamp(28px, 4vw, 40px);
-  font-size: clamp(0.85rem, 1.1vw, 1.1rem);
-}
-
-.dock-icon-circle svg {
-  width: clamp(15px, 1.8vw, 20px);
-  height: clamp(15px, 1.8vw, 20px);
+  width: clamp(32px, 3.5vw, 40px);
+  height: clamp(32px, 3.5vw, 40px);
+  font-size: clamp(0.9rem, 1.1vw, 1.1rem);
 }
 
 .dock-label {
-  font-size: clamp(0.58rem, 0.88vw, 0.72rem);
+  font-size: clamp(0.62rem, 0.85vw, 0.72rem);
 }
 
 .rhombus-play-btn {
-  width: clamp(38px, 5.2vw, 48px);
-  height: clamp(38px, 5.2vw, 48px);
-}
-
-.rhombus-play-btn .play-icon-inner svg {
-  width: clamp(16px, 2.2vw, 22px);
-  height: clamp(16px, 2.2vw, 22px);
+  width: clamp(40px, 4.5vw, 48px);
+  height: clamp(40px, 4.5vw, 48px);
 }
 
 /* Assemblies Panel ("Ваши сборки") Responsive Layout */
 .instances-panel-container {
   display: flex;
   flex-direction: column;
-  gap: clamp(10px, 2vh, 20px);
+  gap: 16px;
   flex: 1;
   min-height: 0;
   height: 100%;
-  padding-bottom: clamp(75px, 12vh, 95px);
+  padding-bottom: 95px;
   overflow-y: auto;
   box-sizing: border-box;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .assemblies-horizontal-list {
   display: flex;
   flex-direction: row;
-  gap: clamp(8px, 1.5vw, 16px);
+  gap: 16px;
   align-items: flex-start;
   overflow-x: auto;
   overflow-y: hidden;
@@ -3718,46 +3739,62 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .assembly-scroll-card {
-  width: clamp(180px, 25vw, 280px);
-  padding: clamp(8px, 1.2vh, 12px) clamp(10px, 1.5vw, 14px);
+  width: 260px;
+  max-width: 100%;
+  padding: 10px 14px;
 }
 
 .assembly-info-card-detail {
-  padding: clamp(12px, 2vh, 20px);
-  margin-top: clamp(8px, 1.5vh, 20px);
+  padding: 20px;
+  margin-top: 16px;
   display: flex;
-  gap: clamp(10px, 2vw, 20px);
+  gap: 20px;
   align-items: center;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  flex-wrap: nowrap;
 }
 
 .assembly-detail-actions {
   display: flex;
   flex-direction: column;
-  gap: clamp(6px, 1vh, 10px);
+  gap: 8px;
+  width: 210px;
   flex-shrink: 0;
+}
+
+.assembly-detail-actions .play-btn {
+  width: 100%;
 }
 
 .assembly-detail-actions .secondary-action-btn {
   background: rgba(186, 215, 247, 0.08);
   box-shadow: none;
-  font-size: clamp(0.72rem, 1vw, 0.82rem);
+  font-size: 0.82rem;
+  height: 36px;
 }
 
 .assembly-detail-actions .delete-action-btn {
   background: rgba(186, 215, 247, 0.05);
   box-shadow: none;
-  font-size: clamp(0.72rem, 1vw, 0.82rem);
+  font-size: 0.82rem;
+  height: 36px;
   color: #e46d4c;
 }
 
 /* Media Queries for Screen Dimensions Scaling */
-@media (max-width: 850px), (max-height: 700px) {
+@media (max-width: 900px) {
+  .playtime-badge {
+    bottom: 84px;
+    right: 20px;
+  }
+}
+
+@media (max-width: 800px) {
   .assembly-info-card-detail {
+    flex-wrap: wrap;
     align-items: flex-start;
-    padding: 12px 14px;
-    margin-top: 10px;
-    gap: 12px;
+    padding: 14px;
+    gap: 14px;
   }
   
   .assembly-detail-actions {
@@ -3768,35 +3805,34 @@ input[type="color"]::-webkit-color-swatch {
   }
   
   .assembly-detail-actions .play-btn {
-    padding: 0 10px;
-    height: 32px;
+    height: 34px;
     font-size: 0.78rem;
   }
-}
 
-@media (max-width: 720px) {
   .playtime-badge {
-    bottom: 76px;
+    bottom: 80px;
     right: 50%;
     transform: translateX(50%);
     max-width: 92vw;
   }
 }
 
-@media (max-height: 600px) {
+@media (max-height: 620px) {
   .main-content {
-    padding-bottom: 70px !important;
+    padding-bottom: 75px !important;
   }
   
-  .home-sketch-dashboard,
-  .instances-panel-container {
-    height: auto !important;
-    max-height: calc(100vh - 80px);
+  .assembly-info-card-detail {
+    padding: 12px 14px;
+    margin-top: 8px;
   }
 
-  .assembly-info-card-detail {
-    padding: 10px 12px;
-    margin-top: 6px;
+  .assembly-detail-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    width: 100%;
+    gap: 6px;
   }
 }
+
 
