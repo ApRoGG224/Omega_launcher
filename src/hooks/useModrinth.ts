@@ -40,9 +40,12 @@ export function useModrinthSearch(
 
   // Guards against out-of-order responses when the language, filters, or query change quickly.
   const requestSeqRef = useRef(0);
+  const cancelTranslationsRef = useRef<(() => void) | null>(null);
 
   const searchMods = useCallback(async (isLoadMore = false) => {
     const seq = ++requestSeqRef.current;
+    cancelTranslationsRef.current?.();
+    cancelTranslationsRef.current = null;
     setLoading(true);
     try {
       const currentOffset = isLoadMore ? offset + LIMIT : 0;
@@ -69,20 +72,39 @@ export function useModrinthSearch(
 
       // Translate descriptions in the background if language is 'ru'.
       if (hits.length > 0 && language === "ru") {
-        hits.forEach((hit) => {
-          ipc
-            .translateText(hit.description, "ru")
-            .then((translatedDesc) => {
-              if (seq !== requestSeqRef.current) return;
-              if (translatedDesc && typeof translatedDesc === "string" && translatedDesc !== hit.description) {
-                setMods((prev) =>
-                  prev.map((m) =>
-                    m.project_id === hit.project_id ? { ...m, description: translatedDesc } : m,
-                  ),
-                );
-              }
-            })
-            .catch(() => {});
+        let cancelled = false;
+        const cancelTranslations = () => {
+          cancelled = true;
+        };
+        cancelTranslationsRef.current = cancelTranslations;
+        void Promise.all(
+          hits.map(async (hit) => {
+            if (cancelled || seq !== requestSeqRef.current) return null;
+            try {
+              const translatedDesc = await ipc.translateText(hit.description, "ru");
+              if (cancelled || seq !== requestSeqRef.current) return null;
+              return translatedDesc && translatedDesc !== hit.description
+                ? [hit.project_id, translatedDesc] as const
+                : null;
+            } catch {
+              return null;
+            }
+          }),
+        ).then((translations) => {
+          if (cancelled || seq !== requestSeqRef.current) return;
+          const translatedById = new Map(
+            translations.filter((item): item is readonly [string, string] => item !== null),
+          );
+          if (translatedById.size === 0) return;
+          setMods((prev) =>
+            prev.map((mod) => {
+              const description = translatedById.get(mod.project_id);
+              return description ? { ...mod, description } : mod;
+            }),
+          );
+          if (cancelTranslationsRef.current === cancelTranslations) {
+            cancelTranslationsRef.current = null;
+          }
         });
       }
     } catch (e) {
@@ -96,6 +118,12 @@ export function useModrinthSearch(
       }
     }
   }, [query, projectType, mcVersion, modLoader, sortBy, language, offset, t]);
+
+  useEffect(() => () => {
+    requestSeqRef.current += 1;
+    cancelTranslationsRef.current?.();
+    cancelTranslationsRef.current = null;
+  }, []);
 
   useEffect(() => {
     searchMods(false);

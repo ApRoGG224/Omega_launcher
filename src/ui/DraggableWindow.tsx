@@ -85,10 +85,14 @@ const DraggableWindow = React.memo(({
     };
 
     // Run after first paint and layout settle so measurements are reliable.
-    const raf = requestAnimationFrame(() => setTimeout(clampToViewport, 50));
+    let clampTimeout: ReturnType<typeof setTimeout> | null = null;
+    const raf = requestAnimationFrame(() => {
+      clampTimeout = setTimeout(clampToViewport, 50);
+    });
     window.addEventListener("resize", clampToViewport);
     return () => {
       cancelAnimationFrame(raf);
+      if (clampTimeout !== null) clearTimeout(clampTimeout);
       window.removeEventListener("resize", clampToViewport);
     };
   }, [size]);

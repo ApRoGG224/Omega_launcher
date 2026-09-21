@@ -26,6 +26,7 @@ export const AccountModal = React.memo(({
   onSelectAccount,
   onDeleteAccount,
   onLogoutCurrentAccount,
+  onLogoutOmega,
   onAddOffline,
   onAddMicrosoft,
   onAddOmega,
@@ -53,6 +54,7 @@ export const AccountModal = React.memo(({
   onSelectAccount: (acc: Account) => void;
   onDeleteAccount: (acc: Account) => void;
   onLogoutCurrentAccount: () => void;
+  onLogoutOmega: () => void;
   onAddOffline: () => void;
   onAddMicrosoft: () => void;
   onAddOmega: () => void;
@@ -61,7 +63,6 @@ export const AccountModal = React.memo(({
 }) => {
   const nicknameValid = newUsernameInput.trim().length > 0 && /^[a-zA-Z0-9_]{3,16}$/.test(newUsernameInput.trim());
   const [showOmegaPassword, setShowOmegaPassword] = useState(false);
-  const [hoveredOmegaAccount, setHoveredOmegaAccount] = useState(false);
   const [omegaContextMenu, setOmegaContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   React.useEffect(() => {
@@ -76,7 +77,17 @@ export const AccountModal = React.memo(({
     !omegaBusy;
 
   return (
-    <div className="account-modal-overlay profile-modal-overlay" onClick={onClose}>
+    <div
+      className="account-modal-overlay profile-modal-overlay"
+      onClick={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (omegaContextMenu) {
+          setOmegaContextMenu(null);
+          return;
+        }
+        onClose();
+      }}
+    >
       <DraggableWindow
         storageKey="omega:profile-window"
         className="account-modal draggable-window"
@@ -109,17 +120,11 @@ export const AccountModal = React.memo(({
               {savedAccounts.length > 0 && (
                 <div className="account-list-section">
                   <span className="account-list-label">{t.accountsSection}</span>
-                  {savedAccounts.map((acc) => (
+                  {savedAccounts.filter((acc) => acc.type !== "omega").map((acc) => (
                     <div
                       key={`${acc.type}:${acc.name}`}
                       className={`account-item ${acc.name === account.name && acc.type === account.type ? "active" : ""}`}
                       onClick={() => onSelectAccount(acc)}
-                      onMouseEnter={() => {
-                        if (acc.type === "omega") setHoveredOmegaAccount(true);
-                      }}
-                      onMouseLeave={() => {
-                        if (acc.type === "omega") setHoveredOmegaAccount(false);
-                      }}
                       onContextMenu={(e) => {
                         e.preventDefault();
                         if (acc.type !== "omega") {
@@ -147,12 +152,6 @@ export const AccountModal = React.memo(({
                             </span>
                           )}
                         </div>
-                        {acc.type === "omega" && hoveredOmegaAccount && (
-                          <div className="account-item-omega-hover">
-                            <span className="account-item-omega-hover-title">Omega</span>
-                            <span className="account-item-omega-hover-action">log in</span>
-                          </div>
-                        )}
                       </div>
                       {savedAccounts.length > 1 && (
                         <button
@@ -374,12 +373,16 @@ export const AccountModal = React.memo(({
             boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
             backdropFilter: "blur(12px)",
           }}
+          onClick={(e) => e.stopPropagation()}
           onContextMenu={(e) => e.preventDefault()}
         >
           <button
             onClick={() => {
-              onChangeView("omega");
-              setOmegaMode("register");
+              if (omegaConnected) onLogoutOmega();
+              else {
+                onChangeView("omega");
+                setOmegaMode("register");
+              }
               setOmegaContextMenu(null);
             }}
             style={{
@@ -403,7 +406,7 @@ export const AccountModal = React.memo(({
               e.currentTarget.style.background = "transparent";
             }}
           >
-            <IconUsers /> {(t as any).omegaRegisterTitle}
+            <IconUsers /> {omegaConnected ? "Выйти из Omega" : (t as any).omegaRegisterTitle}
           </button>
         </div>
       )}

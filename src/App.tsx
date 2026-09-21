@@ -394,6 +394,7 @@ function App() {
           onSelectAccount={accountsApi.handleSelectAccount}
           onDeleteAccount={accountsApi.handleDeleteAccount}
           onLogoutCurrentAccount={() => void accountsApi.handleLogoutCurrentAccount()}
+          onLogoutOmega={() => void omegaAuth.logout()}
           onAddOffline={accountsApi.handleAddOffline}
           onAddMicrosoft={() => void accountsApi.handleAddMicrosoft()}
           onAddOmega={() => void accountsApi.handleAddOmega()}

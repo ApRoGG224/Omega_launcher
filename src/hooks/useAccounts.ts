@@ -77,8 +77,10 @@ export function useAccounts(
         if (cancelled) return;
         if (rows.length > 0) {
           const mapped: Account[] = rows.map((r) => ({ name: r.name, type: r.type as Account["type"] }));
-          setSavedAccounts(mapped);
-          setAccount((prev) => mapped.find((a) => sameAccount(a, prev)) || mapped[0] || prev);
+          const local = loadAccounts();
+          const merged = [...mapped, ...local.filter((localAccount) => !mapped.some((dbAccount) => sameAccount(dbAccount, localAccount)))];
+          setSavedAccounts(merged);
+          setAccount((prev) => merged.find((a) => sameAccount(a, prev)) || merged[0] || prev);
         } else {
           const local = loadAccounts();
           if (local.length > 0) syncAccountsToDb(local);

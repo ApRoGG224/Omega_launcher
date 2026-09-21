@@ -584,6 +584,7 @@ input[type="color"]::-webkit-color-swatch {
   justify-content: space-between;
   align-items: flex-start;
   position: relative;
+  margin-bottom: 10px;
 }
 .title-area h1 {
   font-size: 2.5rem;
@@ -673,6 +674,8 @@ input[type="color"]::-webkit-color-swatch {
   border: 1px solid rgba(186, 215, 247, 0.08);
   border-radius: 20px;
   width: 420px;
+  min-width: min(420px, 90vw);
+  min-height: min(520px, 80vh);
   max-width: 90vw;
   max-height: 80vh;
   overflow-y: auto;
@@ -681,7 +684,8 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .account-modal.draggable-window {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 @keyframes modalSlideIn {
@@ -1852,7 +1856,6 @@ input[type="color"]::-webkit-color-swatch {
 .mod-card:hover {
   background: rgba(186, 215, 247, 0.05);
   border-color: rgba(var(--accent-color-rgb), 0.3);
-  transform: translateY(-2px);
 }
 
 .mod-header {
@@ -2257,7 +2260,7 @@ input[type="color"]::-webkit-color-swatch {
 .recent-instance-item:hover, .recent-instance-item.selected {
   background: rgba(102, 58, 243, 0.18);
   border-color: rgba(139, 92, 246, 0.5);
-  box-shadow: 0 4px 16px rgba(102, 58, 243, 0.25);
+  box-shadow: 0 0 7px rgba(102, 58, 246, 0.2);
 }
 
 .recent-inst-info {
@@ -3089,8 +3092,7 @@ input[type="color"]::-webkit-color-swatch {
 .assembly-scroll-card:hover, .assembly-scroll-card.active {
   background: rgba(102, 58, 243, 0.22);
   border-color: #8b5cf6;
-  transform: translateX(4px);
-  box-shadow: 0 10px 25px rgba(102, 58, 243, 0.3);
+  box-shadow: 0 0 8px rgba(102, 58, 243, 0.22);
 }
 
 .assembly-scroll-card.drop-target {
@@ -3598,7 +3600,8 @@ input[type="color"]::-webkit-color-swatch {
 /* Mod Preview Chips for Assembly Info Card */
 .mod-chips-container {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   gap: 8px;
   margin-top: 8px;
 }
@@ -3614,10 +3617,11 @@ input[type="color"]::-webkit-color-swatch {
   align-items: center;
   gap: 6px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .mod-chips-container .mod-chip:first-child {
-  min-width: 152px;
+  min-width: 165px;
   justify-content: center;
 }
 
@@ -3729,6 +3733,8 @@ input[type="color"]::-webkit-color-swatch {
   align-items: center;
   justify-content: space-between;
   flex-wrap: nowrap;
+  min-height: 150px;
+  box-sizing: border-box;
 }
 
 .assembly-info-main {
@@ -3825,5 +3831,3 @@ input[type="color"]::-webkit-color-swatch {
     gap: 6px;
   }
 }
-
-
