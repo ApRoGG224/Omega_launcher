@@ -78,8 +78,7 @@ input[type="color"]::-webkit-color-swatch {
 /* Sidebar */
 .sidebar {
   width: 70px;
-  background: rgba(16, 19, 27, 0.8);
-  backdrop-filter: blur(20px);
+  background: rgba(16, 19, 27, 0.95);
   border-right: 1px solid rgba(186, 215, 247, 0.05);
   display: flex;
   flex-direction: column;
@@ -234,7 +233,6 @@ input[type="color"]::-webkit-color-swatch {
   font-size: 0.9rem;
   cursor: pointer;
   transition: 0.2s;
-  backdrop-filter: blur(10px);
 }
 
 .create-instance-btn:hover {
@@ -245,7 +243,6 @@ input[type="color"]::-webkit-color-swatch {
 .create-modal {
   position: relative;
   background: rgba(24, 27, 36, 0.98);
-  backdrop-filter: blur(15px);
   border: 1px solid rgba(186, 215, 247, 0.15);
   padding: 20px;
   border-radius: 12px;
@@ -592,8 +589,7 @@ input[type="color"]::-webkit-color-swatch {
 .user-profile {
   display: flex;
   align-items: center;
-  background: rgba(24, 27, 36, 0.6);
-  backdrop-filter: blur(10px);
+  background: rgba(24, 27, 36, 0.9);
   border: 1px solid rgba(186, 215, 247, 0.05);
   padding: 6px 12px 6px 6px;
   border-radius: 30px;
@@ -642,8 +638,7 @@ input[type="color"]::-webkit-color-swatch {
 .account-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.75);
   z-index: 999;
   display: flex;
   align-items: flex-start;
@@ -1181,10 +1176,9 @@ input[type="color"]::-webkit-color-swatch {
   top: calc(100% + 5px);
   left: 0;
   width: 100%;
-  background: rgba(24, 27, 36, 0.95);
+  background: rgba(24, 27, 36, 0.98);
   border: 1px solid rgba(186, 215, 247, 0.1);
   border-radius: 8px;
-  backdrop-filter: blur(10px);
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -1223,8 +1217,7 @@ input[type="color"]::-webkit-color-swatch {
 /* Console */
 .console-panel {
   flex: 1;
-  background: rgba(5, 6, 15, 0.8);
-  backdrop-filter: blur(20px);
+  background: rgba(5, 6, 15, 0.95);
   border: 1px solid rgba(186, 215, 247, 0.05);
   border-radius: 12px;
   height: 200px;
@@ -1330,8 +1323,7 @@ input[type="color"]::-webkit-color-swatch {
 /* Settings Panel */
 .settings-panel {
   flex: 1;
-  background: rgba(16, 19, 27, 0.6);
-  backdrop-filter: blur(20px);
+  background: rgba(16, 19, 27, 0.95);
   border: 1px solid rgba(186, 215, 247, 0.05);
   border-radius: 16px;
   padding: 30px;
@@ -1415,8 +1407,7 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .settings-card {
-  background: rgba(5, 6, 15, 0.75);
-  backdrop-filter: blur(15px);
+  background: rgba(5, 6, 15, 0.9);
   border: 1px solid rgba(139, 92, 246, 0.2);
   border-radius: 18px;
   padding: 18px;
@@ -1722,8 +1713,7 @@ input[type="color"]::-webkit-color-swatch {
   max-width: 90%;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 30px 60px -15px rgba(0,0,0,0.8), 0 0 40px rgba(var(--accent-color-rgb), 0.2) inset;
-  backdrop-filter: blur(20px);
+  box-shadow: 0 30px 60px -15px rgba(0,0,0,0.8);
   z-index: 9999;
   animation: slideDownModal 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
@@ -1953,12 +1943,11 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   align-items: center;
   gap: 20px;
-  background: rgba(5, 6, 15, 0.94);
-  backdrop-filter: blur(25px);
+  background: rgba(8, 10, 20, 0.97);
   padding: 8px 26px;
   border-radius: 30px;
   border: 1px solid rgba(139, 92, 246, 0.35);
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.9), 0 0 20px rgba(102, 58, 243, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
   animation: dockOpacityFade 0.25s ease;
 }
 
@@ -1971,7 +1960,7 @@ input[type="color"]::-webkit-color-swatch {
   border: none;
   color: #9da7ba;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: color 0.12s ease;
   position: relative;
   min-width: 64px;
 }
@@ -1987,7 +1976,7 @@ input[type="color"]::-webkit-color-swatch {
 .dock-btn.active .dock-icon-circle {
   background: rgba(102, 58, 243, 0.25);
   border-color: #8b5cf6;
-  box-shadow: 0 0 14px rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
   color: #ffffff;
 }
 
@@ -2001,7 +1990,7 @@ input[type="color"]::-webkit-color-swatch {
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
-  transition: all 0.25s ease;
+  transition: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
   overflow: hidden;
 }
 
@@ -2174,8 +2163,7 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .sketch-card {
-  background: rgba(5, 6, 15, 0.75);
-  backdrop-filter: blur(15px);
+  background: rgba(10, 12, 22, 0.95);
   border: 1px solid rgba(139, 92, 246, 0.2);
   border-radius: 18px;
   padding: 16px;
@@ -2502,8 +2490,7 @@ input[type="color"]::-webkit-color-swatch {
 /* Friends tab (dock entry at the bottom) */
 .friends-tab {
   flex: 1;
-  background: rgba(16, 19, 27, 0.6);
-  backdrop-filter: blur(20px);
+  background: rgba(16, 19, 27, 0.95);
   border: 1px solid rgba(186, 215, 247, 0.05);
   border-radius: 16px;
   padding: 30px;
@@ -3119,8 +3106,7 @@ input[type="color"]::-webkit-color-swatch {
   z-index: 2800;
   width: 340px;
   max-width: calc(100vw - 40px);
-  background: rgba(5, 6, 15, 0.92);
-  backdrop-filter: blur(20px);
+  background: rgba(5, 6, 15, 0.98);
   border: 1px solid rgba(139, 92, 246, 0.4);
   border-radius: 16px;
   padding: 14px 16px;
@@ -3277,8 +3263,7 @@ input[type="color"]::-webkit-color-swatch {
   gap: 6px;
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(5, 6, 15, 0.94);
-  backdrop-filter: blur(25px);
+  background: rgba(5, 6, 15, 0.98);
   border: 1px solid rgba(139, 92, 246, 0.35);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8), 0 0 14px rgba(102, 58, 243, 0.2);
   font-size: clamp(0.66rem, 0.82vw, 0.76rem);
@@ -3316,8 +3301,7 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .assembly-info-card-detail {
-  background: rgba(5, 6, 15, 0.85);
-  backdrop-filter: blur(20px);
+  background: rgba(5, 6, 15, 0.95);
   border: 1px solid rgba(139, 92, 246, 0.3);
   border-radius: 18px;
   padding: 20px;
