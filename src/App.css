@@ -485,10 +485,6 @@ input[type="color"]::-webkit-color-swatch {
   padding: 12px 14px;
 }
 
-.create-modal .account-method-card:hover {
-  transform: translateY(-2px);
-}
-
 .create-action-btn {
   display: flex;
   align-items: center;
@@ -507,10 +503,6 @@ input[type="color"]::-webkit-color-swatch {
   font: inherit;
   min-width: 0;
   will-change: transform;
-}
-
-.create-action-btn:hover {
-  transform: translateY(-3px);
 }
 
 .create-action-btn .account-method-icon {
@@ -958,7 +950,6 @@ input[type="color"]::-webkit-color-swatch {
 .account-method-card:hover {
   background: linear-gradient(90deg, rgba(var(--accent-color-rgb), 0.1), rgba(var(--accent-color-rgb), 0.03));
   border-color: rgba(var(--accent-color-rgb), 0.3);
-  transform: translateY(-2px);
   box-shadow: 0 8px 20px -8px rgba(var(--accent-color-rgb), 0.25);
 }
 
@@ -1150,7 +1141,6 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .account-add-btn:hover {
-  transform: translateY(-2px);
   box-shadow: 0 8px 20px -6px rgba(var(--accent-color-rgb), 0.5);
 }
 
@@ -1317,7 +1307,6 @@ input[type="color"]::-webkit-color-swatch {
 }
 .play-btn:hover {
   background: #4c2bd6;
-  transform: translateY(-2px);
 }
 .stats-row {
   display: flex;
@@ -1989,7 +1978,6 @@ input[type="color"]::-webkit-color-swatch {
 
 .dock-btn:hover {
   color: #ffffff;
-  transform: translateY(-2px);
 }
 
 .dock-btn.active {
@@ -2205,7 +2193,6 @@ input[type="color"]::-webkit-color-swatch {
     0 12px 35px rgba(0, 0, 0, 0.6),
     0 0 30px rgba(186, 215, 247, 0.15),
     inset 0 0 20px rgba(186, 215, 247, 0.05);
-  transform: translateY(-4px);
 }
 
 .sketch-card-header {
@@ -2639,7 +2626,6 @@ input[type="color"]::-webkit-color-swatch {
 
 .friends-own-avatar:hover {
   box-shadow: 0 0 18px rgba(102, 58, 243, 0.5);
-  transform: translateY(-1px);
 }
 
 .friends-own-avatar img {
@@ -2740,7 +2726,6 @@ input[type="color"]::-webkit-color-swatch {
 .friend-card:hover {
   background: rgba(47, 52, 62, 0.55);
   border-color: rgba(139, 92, 246, 0.25);
-  transform: translateY(-2px);
   box-shadow: 0 10px 24px -12px rgba(102, 58, 243, 0.3);
 }
 
@@ -3029,7 +3014,6 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .friends-login-btn:hover {
-  transform: translateY(-2px);
   box-shadow: 0 12px 28px -10px rgba(102, 58, 243, 0.7);
 }
 
