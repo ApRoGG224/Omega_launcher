@@ -210,7 +210,7 @@ export const translations = {
     tabTextures: "Текстуры",
     tabShaders: "Шейдеры",
     tabDatapacks: "Датапаки",
-    tabCatalog: "Каталог",
+    tabCatalog: "Сборки",
 
     // Импорт
     importFromPrism: "Импорт из Prism Launcher",
@@ -508,7 +508,7 @@ export const translations = {
     tabTextures: "Textures",
     tabShaders: "Shaders",
     tabDatapacks: "Datapacks",
-    tabCatalog: "Catalog",
+    tabCatalog: "Modpacks",
 
     // Import
     importFromPrism: "Import from Prism Launcher",
