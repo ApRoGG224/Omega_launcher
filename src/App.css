@@ -1940,14 +1940,14 @@ input[type="color"]::-webkit-color-swatch {
 /* Floating Bottom Navigation Bar */
 .dock-wrapper {
   position: fixed;
-  bottom: 16px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .dock-home {
@@ -1963,13 +1963,13 @@ input[type="color"]::-webkit-color-swatch {
 .floating-dock {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   background: rgba(5, 6, 15, 0.94);
   backdrop-filter: blur(25px);
-  padding: 8px 26px;
-  border-radius: 30px;
+  padding: 6px 22px;
+  border-radius: 26px;
   border: 1px solid rgba(139, 92, 246, 0.35);
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.9), 0 0 20px rgba(102, 58, 243, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 18px rgba(102, 58, 243, 0.2);
   animation: dockOpacityFade 0.25s ease;
 }
 
@@ -1977,14 +1977,14 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   background: transparent;
   border: none;
   color: #9da7ba;
   cursor: pointer;
   transition: all 0.25s ease;
   position: relative;
-  min-width: 64px;
+  min-width: 56px;
 }
 
 .dock-btn:hover {
@@ -2004,21 +2004,26 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .dock-icon-circle {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: rgba(186, 215, 247, 0.05);
   border: 1px solid rgba(186, 215, 247, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1rem;
   transition: all 0.25s ease;
   overflow: hidden;
 }
 
+.dock-icon-circle svg {
+  width: 18px;
+  height: 18px;
+}
+
 .dock-label {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.3px;
 }
@@ -2028,26 +2033,26 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   position: relative;
-  top: -10px;
-  margin: 0 4px;
+  top: -7px;
+  margin: 0 3px;
 }
 
 .dock-version-badge {
   background: linear-gradient(90deg, #663af3, #8b5cf6);
   color: #fff;
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 10px;
+  padding: 2px 7px;
+  border-radius: 9px;
   box-shadow: 0 0 10px rgba(102, 58, 243, 0.6);
   letter-spacing: 0.5px;
   transition: opacity 0.2s ease;
 }
 
 .dock-version-slot {
-  height: 18px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2059,15 +2064,15 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .rhombus-play-btn {
-  width: 48px;
-  height: 48px;
+  width: 43px;
+  height: 43px;
   background: linear-gradient(135deg, #663af3 0%, #8b5cf6 100%);
   transform: rotate(45deg);
-  border-radius: 12px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 20px rgba(102, 58, 243, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 18px rgba(102, 58, 243, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.3);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid rgba(255, 255, 255, 0.4);
@@ -3661,34 +3666,34 @@ input[type="color"]::-webkit-color-swatch {
 
 /* Floating Dock Auto-Scaling */
 .dock-wrapper {
-  bottom: 16px;
+  bottom: 12px;
   max-width: 95vw;
 }
 
 .floating-dock {
-  gap: clamp(8px, 1.5vw, 20px);
-  padding: 8px clamp(12px, 2vw, 26px);
-  border-radius: 30px;
+  gap: clamp(8px, 1.4vw, 16px);
+  padding: 6px clamp(12px, 1.8vw, 22px);
+  border-radius: 26px;
 }
 
 .dock-btn {
-  min-width: clamp(48px, 5.5vw, 64px);
-  gap: 4px;
+  min-width: clamp(44px, 4.8vw, 56px);
+  gap: 3px;
 }
 
 .dock-icon-circle {
-  width: clamp(32px, 3.5vw, 40px);
-  height: clamp(32px, 3.5vw, 40px);
-  font-size: clamp(0.9rem, 1.1vw, 1.1rem);
+  width: clamp(28px, 3.2vw, 36px);
+  height: clamp(28px, 3.2vw, 36px);
+  font-size: clamp(0.85rem, 1.05vw, 1rem);
 }
 
 .dock-label {
-  font-size: clamp(0.62rem, 0.85vw, 0.72rem);
+  font-size: clamp(0.60rem, 0.78vw, 0.68rem);
 }
 
 .rhombus-play-btn {
-  width: clamp(40px, 4.5vw, 48px);
-  height: clamp(40px, 4.5vw, 48px);
+  width: clamp(36px, 4vw, 43px);
+  height: clamp(36px, 4vw, 43px);
 }
 
 /* Assemblies Panel ("Ваши сборки") Responsive Layout */

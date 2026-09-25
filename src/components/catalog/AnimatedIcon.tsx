@@ -9,7 +9,7 @@ export function AnimatedIcon({ images, interval = 3000 }: { images: string[]; in
   }, [images.length, interval]);
   const currentFailed = failed.has(images[currentIndex]);
   return (
-    <div style={{ position: "relative", width: "22px", height: "22px", margin: "0 auto" }}>
+    <div style={{ position: "relative", width: "20px", height: "20px", margin: "0 auto" }}>
       {currentFailed ? (
         <div
           style={{
