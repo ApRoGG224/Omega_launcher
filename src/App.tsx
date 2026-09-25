@@ -170,31 +170,31 @@ function App() {
     >
 
       <main className="main-content">
-        <header className="top-bar">
-
-
-          <div
-            className="user-profile"
-            onClick={() => {
-              accountsApi.setProfileMenuOpen(true);
-              accountsApi.setAccountModalView("list");
-            }}
-          >
-            <div className="avatar">
-              {accountsApi.account.type === "microsoft" ? (
-                <IconMicrosoft />
-              ) : (
-                accountsApi.account.name.substring(0, 2).toUpperCase()
-              )}
+        {activeTab === "home" && (
+          <header className="top-bar">
+            <div
+              className="user-profile"
+              onClick={() => {
+                accountsApi.setProfileMenuOpen(true);
+                accountsApi.setAccountModalView("list");
+              }}
+            >
+              <div className="avatar">
+                {accountsApi.account.type === "microsoft" ? (
+                  <IconMicrosoft />
+                ) : (
+                  accountsApi.account.name.substring(0, 2).toUpperCase()
+                )}
+              </div>
+              <div className="user-info">
+                <span className="user-name">{accountsApi.account.name}</span>
+                <span className="user-status">
+                  <span className="status-dot" /> {accountsApi.account.type === "offline" ? t.onlineStatus : (t as any).connectedLabel}
+                </span>
+              </div>
             </div>
-            <div className="user-info">
-              <span className="user-name">{accountsApi.account.name}</span>
-              <span className="user-status">
-                <span className="status-dot" /> {accountsApi.account.type === "offline" ? t.onlineStatus : (t as any).connectedLabel}
-              </span>
-            </div>
-          </div>
-        </header>
+          </header>
+        )}
 
         {activeTab === "home" && (
           <div className="home-glow-overlay" aria-hidden="true">
