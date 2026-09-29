@@ -38,6 +38,7 @@ export const FriendsTab = React.memo(({
   const [tab, setTab] = useState<"friends" | "requests">("friends");
   const [codeInput, setCodeInput] = useState("");
   const [copied, setCopied] = useState(false);
+  const [codeVisible, setCodeVisible] = useState(false);
   const [busyCode, setBusyCode] = useState(false);
   const [joinTarget, setJoinTarget] = useState<JoinTarget | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -197,7 +198,15 @@ export const FriendsTab = React.memo(({
                 </button>
                 <div className="friends-code-chip">
                   <span>{t.friendsMyCode}</span>
-                  <code>{friends.ownCode}</code>
+                  <button
+                    className={`friend-code-reveal${codeVisible ? " is-visible" : ""}`}
+                    type="button"
+                    aria-pressed={codeVisible}
+                    aria-label={codeVisible ? t.friendsHideCode : t.friendsShowCode}
+                    onClick={() => setCodeVisible((visible) => !visible)}
+                  >
+                    <code>{friends.ownCode}</code>
+                  </button>
                   <button className="friend-code-copy" onClick={() => void copyCode()} title={t.friendsCopied}>
                     {copied ? <IconCheck /> : <IconCopy />}
                   </button>

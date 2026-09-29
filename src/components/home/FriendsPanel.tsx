@@ -37,6 +37,7 @@ export const FriendsPanel = React.memo(({
   const [tab, setTab] = useState<"friends" | "requests">("friends");
   const [codeInput, setCodeInput] = useState("");
   const [copied, setCopied] = useState(false);
+  const [codeVisible, setCodeVisible] = useState(false);
   const [joinTarget, setJoinTarget] = useState<JoinTarget | null>(null);
   const [busyCode, setBusyCode] = useState(false);
 
@@ -158,7 +159,19 @@ export const FriendsPanel = React.memo(({
 
             <div className="friends-my-code">
               <span>{t.friendsMyCode}:</span>
-              <code>{friends.ownCode ?? "—"}</code>
+              {friends.ownCode ? (
+                <button
+                  className={`friend-code-reveal${codeVisible ? " is-visible" : ""}`}
+                  type="button"
+                  aria-pressed={codeVisible}
+                  aria-label={codeVisible ? t.friendsHideCode : t.friendsShowCode}
+                  onClick={() => setCodeVisible((visible) => !visible)}
+                >
+                  <code>{friends.ownCode}</code>
+                </button>
+              ) : (
+                <code>—</code>
+              )}
               {friends.ownCode && (
                 <button className="friend-action-btn" onClick={() => void copyCode()} title={t.friendsCopied}>
                   {copied ? <IconCheck /> : <IconCopy />}
