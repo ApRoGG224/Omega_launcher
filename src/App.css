@@ -2191,6 +2191,11 @@ input[type="color"]::-webkit-color-swatch {
   padding-bottom: 10px;
 }
 
+.floating-dashboard-window .sketch-card-header > .play-btn {
+  box-shadow: none;
+  filter: drop-shadow(0 3px 8px rgba(var(--accent-color-rgb), 0.65));
+}
+
 .sketch-card-title {
   font-size: 1.05rem;
   font-weight: 700;
