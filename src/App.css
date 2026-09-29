@@ -2036,33 +2036,35 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .rhombus-play-btn {
-  width: 48px;
+  position: relative;
+  width: 54px;
   height: 48px;
-  background: linear-gradient(135deg, #663af3 0%, #8b5cf6 100%);
-  transform: rotate(45deg);
-  border-radius: 12px;
+  background: transparent;
+  transform: none;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 20px rgba(102, 58, 243, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 1px rgba(186, 215, 247, 0.28);
   cursor: pointer;
-  transition: transform 0.08s ease, box-shadow 0.08s ease;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: box-shadow 0.16s ease, border-color 0.16s ease;
+  border: 1px solid rgba(186, 215, 247, 0.62);
   outline: none;
 }
 
 .rhombus-play-btn:hover {
-  transform: rotate(45deg) scale(1.1);
-  box-shadow: 0 0 30px rgba(139, 92, 246, 0.95);
+  border-color: rgba(216, 236, 248, 0.92);
+  box-shadow: 0 0 0 1px rgba(186, 215, 247, 0.16), 0 0 12px rgba(186, 215, 247, 0.16);
 }
 
 .rhombus-play-btn:active {
-  transform: rotate(45deg) scale(0.96);
+  box-shadow: 0 0 0 1px rgba(216, 236, 248, 0.34);
 }
 
 .rhombus-play-btn .play-icon-inner {
-  transform: rotate(-45deg);
-  color: #ffffff;
+  position: relative;
+  z-index: 1;
+  color: #d8ecf8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3693,8 +3695,9 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .rhombus-play-btn {
-  width: clamp(40px, 4.5vw, 48px);
-  height: clamp(40px, 4.5vw, 48px);
+  width: clamp(50px, 4.8vw, 56px);
+  height: clamp(44px, 4.4vw, 50px);
+  border-radius: 16px;
 }
 
 /* Assemblies Panel ("Ваши сборки") Responsive Layout */
