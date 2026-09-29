@@ -31,7 +31,7 @@ export const RecentInstancesPanel = React.memo(({
       defaultPosition={{ x: 100, y: 94 }}
       defaultSize={{ width: 340, height: 330 }}
     >
-      <div className="floating-dashboard-content" style={{ flex: 1, overflow: "hidden", minHeight: 0 }}>
+      <div className="floating-dashboard-content" style={{ flex: 1, overflow: "visible", minHeight: 0 }}>
         <div className="sketch-card-header draggable-window-handle">
           <span className="sketch-card-title">
             <IconBox /> {t.recentTitle}
