@@ -1,8 +1,7 @@
 import React from "react";
-import { HexColorPicker } from "react-colorful";
 import type { Language, VersionFilterState } from "../../types";
 import { ipc } from "../../services/ipc";
-import { IconBox, IconCpu, IconFolder, IconSettings, IconUsers } from "../../ui/icons";
+import { IconBox, IconCpu, IconDownload, IconFolder, IconSettings, IconUsers } from "../../ui/icons";
 
 const VERSION_FILTER_ITEMS = [
   { key: "release", icon: "📦", labelKey: "versionRelease", descKey: "versionReleaseDesc" },
@@ -10,15 +9,6 @@ const VERSION_FILTER_ITEMS = [
   { key: "old_beta", icon: "🏗️", labelKey: "versionBeta", descKey: "versionBetaDesc" },
   { key: "old_alpha", icon: "🏚️", labelKey: "versionAlpha", descKey: "versionAlphaDesc" },
 ] as const;
-
-const THEME_PRESETS = [
-  { name: "Void Violet", hex: "#663af3" },
-  { name: "Deep Teal", hex: "#269684" },
-  { name: "Signal Blue", hex: "#027dea" },
-  { name: "Ember Glow", hex: "#e46d4c" },
-  { name: "Blueprint Blue", hex: "#b6d9fc" },
-  { name: "Frost Glow", hex: "#d1e4fa" },
-];
 
 const SettingsCard = React.memo(({
   icon,
@@ -67,18 +57,13 @@ export const SettingsPanel = React.memo(({
   setJavaPath,
   gamePath,
   setGamePath,
-  themeHex,
-  applyTheme,
-  customThemeInput,
-  setCustomThemeInput,
-  showColorPicker,
-  setShowColorPicker,
   versionFilters,
   currentVersionsList,
   toggleVersionFilter,
   manifestError,
   closeOnLaunch,
   setCloseOnLaunch,
+  onOpenStore,
 }: {
   t: any;
   language: Language;
@@ -94,18 +79,13 @@ export const SettingsPanel = React.memo(({
   setJavaPath: (v: string) => void;
   gamePath: string;
   setGamePath: (v: string) => void;
-  themeHex: string;
-  applyTheme: (hex: string) => void;
-  customThemeInput: string;
-  setCustomThemeInput: (v: string) => void;
-  showColorPicker: boolean;
-  setShowColorPicker: (v: boolean) => void;
   versionFilters: VersionFilterState;
   currentVersionsList: string[];
   toggleVersionFilter: (key: keyof VersionFilterState, checked: boolean) => void;
   manifestError: boolean;
   closeOnLaunch: boolean;
   setCloseOnLaunch: (v: boolean) => void;
+  onOpenStore: () => void;
 }) => {
   const [javaDetectMsg, setJavaDetectMsg] = React.useState<string | null>(null);
 
@@ -233,47 +213,11 @@ export const SettingsPanel = React.memo(({
           </div>
         </SettingsCard>
 
-        <SettingsCard icon={<IconBox />} iconColor="var(--accent-color)" title={t.themeTitle} className="settings-card-wide">
-          <div className="settings-theme-presets">
-            {THEME_PRESETS.map((theme) => (
-              <button
-                key={theme.name}
-                className={`settings-theme-btn ${themeHex === theme.hex ? "active" : ""}`}
-                style={{ borderColor: themeHex === theme.hex ? theme.hex : undefined, background: themeHex === theme.hex ? `${theme.hex}22` : undefined }}
-                onClick={() => applyTheme(theme.hex)}
-              >
-                <div className="settings-theme-dot" style={{ background: theme.hex, boxShadow: `0 0 10px ${theme.hex}` }} />
-                {theme.name}
-              </button>
-            ))}
-          </div>
-
-          <div className="settings-theme-custom">
-            <label>{t.customThemeTitle}</label>
-            <div className="settings-theme-custom-row">
-              <div
-                className="settings-theme-swatch"
-                onClick={() => setShowColorPicker(!showColorPicker)}
-                style={{ background: customThemeInput || themeHex }}
-              />
-              <span className="settings-theme-hex">{customThemeInput || themeHex}</span>
-
-              {showColorPicker && (
-                <div style={{ position: "relative" }}>
-                  <div style={{ position: "fixed", inset: 0 }} onClick={() => setShowColorPicker(false)} />
-                  <div style={{ position: "relative" }}>
-                    <HexColorPicker
-                      color={customThemeInput || themeHex}
-                      onChange={(newColor) => {
-                        setCustomThemeInput(newColor);
-                        applyTheme(newColor);
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+        <SettingsCard icon={<IconBox />} iconColor="var(--accent-color)" title={t.launcherStoreTitle} subtitle={t.launcherStoreDesc} className="settings-card-wide">
+          <button className="settings-store-btn" onClick={onOpenStore}>
+            <IconDownload />
+            <span>{t.launcherStoreButton}</span>
+          </button>
         </SettingsCard>
 
         <SettingsCard icon={<IconBox />} iconColor="#e46d4c" title={t.closeOnLaunch} subtitle={t.closeOnLaunchDesc}>

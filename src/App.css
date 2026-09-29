@@ -1542,6 +1542,27 @@ input[type="color"]::-webkit-color-swatch {
   font-weight: 700;
 }
 
+.settings-store-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(186, 215, 247, 0.24);
+  border-radius: 12px;
+  background: rgba(186, 215, 247, 0.05);
+  color: #d8ecf8;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.settings-store-btn:hover {
+  border-color: rgba(186, 215, 247, 0.55);
+  background: rgba(186, 215, 247, 0.1);
+}
+
 .settings-theme-presets { display: flex; gap: 10px; flex-wrap: wrap; }
 
 .settings-theme-btn {

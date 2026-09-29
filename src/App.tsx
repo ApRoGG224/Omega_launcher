@@ -65,8 +65,6 @@ function App() {
   const [newLoader, setNewLoader] = useState("Fabric");
 
   const [themeHex, setThemeHex] = useState(() => getStoredTheme());
-  const [customThemeInput, setCustomThemeInput] = useState("");
-  const [showColorPicker, setShowColorPicker] = useState(false);
   const [closeOnLaunch, setCloseOnLaunch] = useState(() => getStoredCloseOnLaunch());
 
   useEffect(() => {
@@ -314,12 +312,6 @@ function App() {
             setJavaPath={game.setJavaPath}
             gamePath={game.gamePath}
             setGamePath={game.setGamePath}
-            themeHex={themeHex}
-            applyTheme={applyTheme}
-            customThemeInput={customThemeInput}
-            setCustomThemeInput={setCustomThemeInput}
-            showColorPicker={showColorPicker}
-            setShowColorPicker={setShowColorPicker}
             versionFilters={versionFilters}
             currentVersionsList={currentVersionsList}
             toggleVersionFilter={toggleVersionFilter}
@@ -329,6 +321,7 @@ function App() {
               setCloseOnLaunch(v);
               setStoredCloseOnLaunch(v);
             }}
+            onOpenStore={() => setActiveTab("catalog")}
           />
         )}
 
