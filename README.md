@@ -1,49 +1,56 @@
-# Tauri + React + Typescript
+# Omega Launcher
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+Omega Launcher is a desktop Minecraft launcher built with Tauri 2, Rust, React, TypeScript, and Vite. The interface is available in Russian and English and supports customizable accent colors.
 
-## Recommended IDE Setup
+## Features
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- Create and manage separate Minecraft instances with configurable game versions, mod loaders, memory, and instance icons.
+- Launch Minecraft with Microsoft or offline accounts, automatically install the required Java runtime, and view live game logs.
+- Browse Modrinth projects and install or update mods, resource packs, shaders, data packs, and modpacks.
+- Import instances from Prism Launcher, CurseForge, Modrinth `.mrpack`, and Omega `.omega` archives; export supported modpack formats.
+- Save multiplayer servers, check server status and player counts, and launch an instance directly to a server.
+- Sign in to an Omega account to use profiles, friend codes, friend requests, online status, and join-game invitations.
+- Arrange and resize dashboard panels, including recent instances, servers, friends, and the game console.
+- Configure launcher language, accent color, and whether the launcher closes after the game starts.
 
-## Миграции Supabase
+## Project Structure
 
-Схема базы управляется миграциями в [`supabase/migrations/`](supabase/migrations/) (нумерованные SQL-файлы, применяются раннером по порядку).
+- `src/` contains the React and TypeScript interface, shared styles, translations, hooks, and frontend services.
+- `src-tauri/` contains the Rust backend, native Tauri configuration, Minecraft installation and launch logic, and platform assets.
+- `supabase/migrations/` contains the versioned database schema for Omega accounts and friends.
+- `docs/` contains implementation notes and technical documentation.
 
-```bash
-just migration            # применить новые миграции
-just migration-status     # показать статус
-just migration-new name   # создать новую миграцию
-just migration-import     # пометить текущие файлы как применённые
-                          # (только если схема уже была внесена вручную)
-```
-
-Требуется:
-
-- проект на [supabase.com](https://supabase.com);
-- `.env` с `VITE_SUPABASE_URL` и личным токеном `SUPABASE_ACCESS_TOKEN`(создаётся в https://supabase.com/dashboard/account/tokens);
-- установленный `just` (https://github.com/casey/just).
-
-Новые правки БД добавляйте только через новые файлы миграций (не редактируйте применённые).
-
-## Релизы
+## Development
 
 ```bash
-just version              # поднять patch-версию и закоммитить
-just version minor        # поднять minor-версию
-just release              # бамп + пуш + тег vX.Y.Z (CI соберёт и выложит релиз)
+npm install
+npm run dev
 ```
 
-Только что закоммитьте тег: при пуше тега `v*` GitHub Actions собирает приложение для Windows/Linux/macOS и создаёт черновик Release, откуда пользователи могут скачать установщик.
+`npm run dev` starts the Vite development server. For a production frontend build, run:
 
-## Настройка Supabase (вручную, без just)
+```bash
+npm run build
+```
 
-1. Создайте проект на [supabase.com](https://supabase.com) (бесплатный план).
-2. В **SQL Editor** выполните `supabase/migrations/0001_init.sql` и `0002_avatar_url.sql`.
-3. Скопируйте `.env.example` в `.env` и заполните:
-   - `VITE_SUPABASE_URL` — Project URL (Settings → API)
-   - `VITE_SUPABASE_ANON_KEY` — anon public key (Settings → API)
-4. Аутентификация: в **Authentication → Providers** включите **Email** (Sign in with email). Для тестов отключите **Confirm email** (Authentication → Sign In / Up), чтобы сессия выдавалась сразу после регистрации.
-5. Для реальной проверки системы друзей нужно два аккаунта — регистрация доступна прямо из лаунчера (окно аккаунтов → «Omega»).
+Run the Rust checks from `src-tauri/`:
 
-`.env` с ключами не коммитится (в `.gitignore`); anon key безопасен для клиентского использования благодаря RLS.
+```bash
+cargo check
+```
+
+## Omega Accounts and Database
+
+Cloud account and friend features use Supabase Authentication, Postgres, and Realtime. Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env` to enable them. Apply schema changes through new numbered SQL files in `supabase/migrations/`; do not edit migrations that have already been applied.
+
+Migration helpers require `just` and `SUPABASE_ACCESS_TOKEN`:
+
+```bash
+just migration
+just migration-status
+just migration-new descriptive_name
+```
+
+## Releases
+
+Release automation builds installers for Windows, Linux, and macOS when a `v*` tag is pushed. See the `justfile` for version and release commands.

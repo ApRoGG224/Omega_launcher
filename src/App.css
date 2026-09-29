@@ -2150,7 +2150,7 @@ input[type="color"]::-webkit-color-swatch {
 .floating-dashboard-window {
   min-width: 280px;
   min-height: 180px;
-  overflow: hidden;
+  overflow: visible;
   padding: 16px;
 }
 
@@ -2208,7 +2208,9 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .recent-instances-fixed {
-  overflow: hidden;
+  overflow: visible;
+  padding: 4px;
+  margin: -4px;
 }
 
 .recent-instances-fixed .recent-instance-item {
