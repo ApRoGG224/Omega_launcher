@@ -105,3 +105,7 @@ export const setStoredExportPath = (path: string) => localStorage.setItem(EXPORT
 export const CLOSE_ON_LAUNCH_KEY = "closeLauncherOnLaunch";
 export const getStoredCloseOnLaunch = () => localStorage.getItem(CLOSE_ON_LAUNCH_KEY) === "true";
 export const setStoredCloseOnLaunch = (value: boolean) => localStorage.setItem(CLOSE_ON_LAUNCH_KEY, String(value));
+
+export const FULLSCREEN_ON_START_KEY = "fullscreenOnStart";
+export const getStoredFullscreenOnStart = () => localStorage.getItem(FULLSCREEN_ON_START_KEY) === "true";
+export const setStoredFullscreenOnStart = (value: boolean) => localStorage.setItem(FULLSCREEN_ON_START_KEY, String(value));

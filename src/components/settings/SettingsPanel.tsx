@@ -69,6 +69,8 @@ export const SettingsPanel = React.memo(({
   manifestError,
   closeOnLaunch,
   setCloseOnLaunch,
+  fullscreenOnStart,
+  setFullscreenOnStart,
   onOpenStore,
 }: {
   t: any;
@@ -91,6 +93,8 @@ export const SettingsPanel = React.memo(({
   manifestError: boolean;
   closeOnLaunch: boolean;
   setCloseOnLaunch: (v: boolean) => void;
+  fullscreenOnStart: boolean;
+  setFullscreenOnStart: (v: boolean) => void;
   onOpenStore: () => void;
 }) => {
   const [javaDetectMsg, setJavaDetectMsg] = React.useState<string | null>(null);
@@ -257,11 +261,18 @@ export const SettingsPanel = React.memo(({
             aside={<span className={`settings-rewrite-live-pill ${closeOnLaunch ? "enabled" : ""}`}>{closeOnLaunch ? t.on : t.off}</span>}
           >
             <div className="settings-rewrite-session-row">
-              <label className="settings-rewrite-switch-label">
-                <input type="checkbox" checked={closeOnLaunch} onChange={(e) => setCloseOnLaunch(e.target.checked)} />
-                <span className="settings-rewrite-switch" aria-hidden="true"><span /></span>
-                <span><strong>{isRussian ? "Закрывать после запуска" : "Close after launch"}</strong><small>{isRussian ? "Освободить место на экране после старта игры" : "Clear the launcher from the screen after the game starts"}</small></span>
-              </label>
+              <div className="settings-rewrite-session-options">
+                <label className="settings-rewrite-switch-label">
+                  <input type="checkbox" checked={closeOnLaunch} onChange={(e) => setCloseOnLaunch(e.target.checked)} />
+                  <span className="settings-rewrite-switch" aria-hidden="true"><span /></span>
+                  <span><strong>{isRussian ? "Закрывать после запуска" : "Close after launch"}</strong><small>{isRussian ? "Освободить место на экране после старта игры" : "Clear the launcher from the screen after the game starts"}</small></span>
+                </label>
+                <label className="settings-rewrite-switch-label">
+                  <input type="checkbox" checked={fullscreenOnStart} onChange={(e) => setFullscreenOnStart(e.target.checked)} />
+                  <span className="settings-rewrite-switch" aria-hidden="true"><span /></span>
+                  <span><strong>{t.fullscreenOnStart}</strong><small>{t.fullscreenOnStartDesc}</small></span>
+                </label>
+              </div>
               <button className="settings-rewrite-store-button" type="button" onClick={onOpenStore}><span>{t.launcherStoreButton}</span><IconDownload /></button>
             </div>
           </SettingsSection>

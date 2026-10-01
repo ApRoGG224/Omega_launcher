@@ -4348,6 +4348,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .settings-rewrite-warning { margin-bottom: 9px; padding: 8px 10px; border: 1px solid rgba(228, 109, 76, 0.25); border-radius: 8px; background: rgba(228, 109, 76, 0.08); color: #ffc09e; font-size: 0.66rem; line-height: 1.35; }
 .settings-rewrite-session-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.settings-rewrite-session-options { display: flex; min-width: 0; flex-direction: column; gap: 10px; }
 .settings-rewrite-switch-label { display: flex; align-items: center; min-height: 48px; gap: 11px; cursor: pointer; }
 .settings-rewrite-switch-label input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .settings-rewrite-switch-label:focus-within .settings-rewrite-switch { outline: 2px solid var(--accent-color); outline-offset: 3px; }

@@ -12,7 +12,6 @@ import { useFriends } from "./hooks/useFriends";
 import { usePresence, type InviteInfo } from "./hooks/usePresence";
 import { useVersions } from "./hooks/useVersions";
 import { useGameSession } from "./hooks/useGameSession";
-import { getStoredLanguage, getStoredTheme, setStoredLanguage, setStoredTheme, getStoredCloseOnLaunch, setStoredCloseOnLaunch } from "./services/storage";
 import { ipc } from "./services/ipc";
 import { HomeDashboard } from "./components/home/HomeDashboard";
 import { CreateInstanceModal } from "./components/home/CreateInstanceModal";
@@ -23,7 +22,11 @@ import { ImportProgressPopup } from "./components/instances/ImportProgressPopup"
 import { AccountModal } from "./components/accounts/AccountModal";
 import { FriendsTab } from "./components/friends/FriendsTab";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getStoredFullscreenOnStart, getStoredLanguage, getStoredTheme, setStoredFullscreenOnStart, setStoredLanguage, setStoredTheme, getStoredCloseOnLaunch, setStoredCloseOnLaunch } from "./services/storage";
 import "./App.css";
+
+const launcherWindow = getCurrentWindow();
 
 function App() {
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
@@ -66,6 +69,13 @@ function App() {
 
   const [themeHex, setThemeHex] = useState(() => getStoredTheme());
   const [closeOnLaunch, setCloseOnLaunch] = useState(() => getStoredCloseOnLaunch());
+  const [fullscreenOnStart, setFullscreenOnStart] = useState(() => getStoredFullscreenOnStart());
+
+  useEffect(() => {
+    void launcherWindow.setFullscreen(fullscreenOnStart).catch((error) => {
+      console.warn("Unable to change launcher fullscreen state", error);
+    });
+  }, [fullscreenOnStart]);
 
   useEffect(() => {
     if (instancesApi.importing) setImportPopupHidden(false);
@@ -320,6 +330,11 @@ function App() {
             setCloseOnLaunch={(v) => {
               setCloseOnLaunch(v);
               setStoredCloseOnLaunch(v);
+            }}
+            fullscreenOnStart={fullscreenOnStart}
+            setFullscreenOnStart={(v) => {
+              setFullscreenOnStart(v);
+              setStoredFullscreenOnStart(v);
             }}
             onOpenStore={() => setActiveTab("catalog")}
           />
