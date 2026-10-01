@@ -3736,30 +3736,30 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .floating-dock {
-  gap: clamp(8px, 1.5vw, 20px);
-  padding: 5px clamp(12px, 2vw, 24px);
-  border-radius: 26px;
+  gap: clamp(5px, 0.8vw, 11px);
+  padding: 4px clamp(8px, 1.2vw, 14px);
+  border-radius: 20px;
 }
 
 .dock-btn {
-  min-width: clamp(48px, 5.5vw, 64px);
-  gap: 4px;
+  min-width: clamp(40px, 4vw, 52px);
+  gap: 3px;
 }
 
 .dock-icon-circle {
-  width: clamp(32px, 3.5vw, 40px);
-  height: clamp(32px, 3.5vw, 40px);
-  font-size: clamp(0.9rem, 1.1vw, 1.1rem);
+  width: clamp(28px, 2.8vw, 34px);
+  height: clamp(28px, 2.8vw, 34px);
+  font-size: clamp(0.8rem, 0.95vw, 0.95rem);
 }
 
 .dock-label {
-  font-size: clamp(0.62rem, 0.85vw, 0.72rem);
+  font-size: clamp(0.56rem, 0.7vw, 0.64rem);
 }
 
 .rhombus-play-btn {
-  width: clamp(50px, 4.8vw, 56px);
-  height: clamp(44px, 4.4vw, 50px);
-  border-radius: 16px;
+  width: clamp(42px, 4vw, 48px);
+  height: clamp(38px, 3.8vw, 44px);
+  border-radius: 12px;
 }
 
 /* Assemblies Panel ("Ваши сборки") Responsive Layout */
