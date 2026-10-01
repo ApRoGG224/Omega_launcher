@@ -18,30 +18,33 @@ const VERSION_FILTER_ITEMS = [
   { key: "old_alpha", icon: <IconFolder />, labelKey: "versionAlpha", descKey: "versionAlphaDesc" },
 ] as const;
 
-const SettingsZone = React.memo(({
+const SettingsSection = React.memo(({
+  id,
   icon,
   iconColor,
   title,
   description,
-  className,
+  aside,
   children,
 }: {
+  id: string;
   icon: React.ReactNode;
   iconColor?: string;
   title: React.ReactNode;
   description: React.ReactNode;
-  className?: string;
+  aside?: React.ReactNode;
   children: React.ReactNode;
 }) => (
-  <section className={`settings-zone${className ? ` ${className}` : ""}`}>
-    <div className="settings-zone-header">
-      <div className="settings-zone-icon" style={iconColor ? { color: iconColor } : undefined}>{icon}</div>
-      <div>
+  <section id={id} className="settings-rewrite-section">
+    <div className="settings-rewrite-section-head">
+      <div className="settings-rewrite-section-icon" style={iconColor ? { color: iconColor } : undefined}>{icon}</div>
+      <div className="settings-rewrite-section-copy">
         <h3>{title}</h3>
         <p>{description}</p>
       </div>
+      {aside && <div className="settings-rewrite-section-aside">{aside}</div>}
     </div>
-    <div className="settings-zone-body">{children}</div>
+    <div className="settings-rewrite-section-content">{children}</div>
   </section>
 ));
 
@@ -91,6 +94,7 @@ export const SettingsPanel = React.memo(({
   onOpenStore: () => void;
 }) => {
   const [javaDetectMsg, setJavaDetectMsg] = React.useState<string | null>(null);
+  const isRussian = language === "ru";
 
   const detectJava = async () => {
     try {
@@ -107,180 +111,160 @@ export const SettingsPanel = React.memo(({
   };
 
   return (
-    <div className="settings-panel settings-control-center">
-      <header className="settings-hero">
-        <div className="settings-hero-copy">
-          <div className="settings-hero-mark" aria-hidden="true"><IconSettings /></div>
+    <div className="settings-panel settings-rewrite">
+      <header className="settings-rewrite-header">
+        <div className="settings-rewrite-heading">
+          <div className="settings-rewrite-emblem" aria-hidden="true"><IconSettings /></div>
           <div>
             <h2>{t.sidebarSettings}</h2>
             <p>{t.settingsSubtitle}</p>
           </div>
         </div>
-        <div className="settings-hero-state">
-          <span className="settings-state-dot" />
-          <span>{language === "ru" ? "Локальный профиль" : "Local profile"}</span>
+        <div className="settings-rewrite-status">
+          <span className="settings-rewrite-status-dot" />
+          <span>{isRussian ? "Локальный профиль" : "Local profile"}</span>
         </div>
       </header>
 
-      <div className="settings-control-layout">
-        <aside className="settings-profile-rail" aria-label={language === "ru" ? "Сводка профиля" : "Profile summary"}>
-          <div className="settings-profile-badge"><IconBox /></div>
-          <div className="settings-profile-title">Omega Launcher</div>
-          <p className="settings-profile-copy">
-            {language === "ru" ? "Профиль запуска Minecraft" : "Minecraft launch profile"}
-          </p>
-
-          <div className="settings-profile-stats">
-            <div className="settings-profile-stat">
-              <strong>{ram}<small> GB</small></strong>
-              <span>{t.ram}</span>
-            </div>
-            <div className="settings-profile-stat">
-              <strong>{currentVersionsList.length}</strong>
-              <span>{t.version}</span>
-            </div>
-            <div className="settings-profile-stat">
-              <strong>{closeOnLaunch ? t.on : t.off}</strong>
-              <span>{t.closeOnLaunch}</span>
+      <div className="settings-rewrite-layout">
+        <aside className="settings-rewrite-sidebar" aria-label={isRussian ? "Разделы настроек" : "Settings sections"}>
+          <div className="settings-rewrite-sidebar-brand">
+            <div className="settings-rewrite-sidebar-logo"><IconBox /></div>
+            <div>
+              <strong>OMEGA</strong>
+              <span>LAUNCHER</span>
             </div>
           </div>
 
-          <div className="settings-profile-divider" />
-          <div className="settings-profile-note">
-            <span className="settings-note-dot" />
-            <span>{language === "ru" ? "Изменения применяются сразу" : "Changes apply instantly"}</span>
+          <nav className="settings-rewrite-nav">
+            <span className="settings-rewrite-nav-label">{isRussian ? "Конфигурация" : "Configuration"}</span>
+            <a href="#settings-files"><IconFolder /><span>{isRussian ? "Пути игры" : "Game paths"}</span></a>
+            <a href="#settings-runtime"><IconCpu /><span>{isRussian ? "Производительность" : "Performance"}</span></a>
+            <a href="#settings-library"><IconBox /><span>{isRussian ? "Библиотека версий" : "Version library"}</span></a>
+            <a href="#settings-session"><IconSettings /><span>{isRussian ? "Поведение запуска" : "Launch behavior"}</span></a>
+          </nav>
+
+          <div className="settings-rewrite-sidebar-summary">
+            <span>{isRussian ? "Текущий профиль" : "Current profile"}</span>
+            <div><strong>{ram}<small> GB</small></strong><em>{t.ram}</em></div>
+            <div><strong>{currentVersionsList.length}</strong><em>{t.version}</em></div>
+            <div><strong>{closeOnLaunch ? t.on : t.off}</strong><em>{t.closeOnLaunch}</em></div>
           </div>
         </aside>
 
-        <main className="settings-control-content">
-          <SettingsZone
+        <main className="settings-rewrite-main">
+          <SettingsSection
+            id="settings-files"
             icon={<IconFolder />}
             title={t.filePathsTitle}
-            description={language === "ru" ? "Где лаунчер хранит и запускает игру" : "Where the launcher stores and starts the game"}
-            className="settings-zone-paths"
+            description={isRussian ? "Источники и каталоги, которые использует лаунчер" : "Sources and directories used by the launcher"}
+            aside={<span className="settings-rewrite-section-tag">FILES</span>}
           >
-            <div className="settings-field-grid">
-              <div className="settings-field settings-field-wide">
+            <div className="settings-rewrite-fields">
+              <div className="settings-rewrite-field settings-rewrite-field-wide">
                 <label htmlFor="settings-export-path">{t.settingsExportPath}</label>
-                <div className="settings-input-shell">
+                <div className="settings-rewrite-input">
                   <input id="settings-export-path" type="text" value={exportPath} onChange={(e) => setExportPath(e.target.value)} />
-                  <button className="settings-input-action" type="button" title={t.openFolderShort} aria-label={t.openFolderShort} onClick={() => void ipc.openPath(exportPath)}>
-                    <IconFolder />
-                  </button>
+                  <button type="button" title={t.openFolderShort} aria-label={t.openFolderShort} onClick={() => void ipc.openPath(exportPath)}><IconFolder /></button>
                 </div>
               </div>
-
-              <div className="settings-field">
+              <div className="settings-rewrite-field">
                 <label htmlFor="settings-java-path">{t.javaLabel}</label>
-                <div className="settings-input-shell">
+                <div className="settings-rewrite-input">
                   <input id="settings-java-path" type="text" value={javaPath} onChange={(e) => setJavaPath(e.target.value)} />
-                  <button className="settings-input-action" type="button" title={t.javaAutoDetect} aria-label={t.javaAutoDetect} onClick={() => void detectJava()}>
-                    <IconSearch />
-                  </button>
-                  <button className="settings-input-action" type="button" title={t.openFolderShort} aria-label={t.openFolderShort} onClick={() => void ipc.openPath(javaPath)}>
-                    <IconFolder />
-                  </button>
+                  <button type="button" title={t.javaAutoDetect} aria-label={t.javaAutoDetect} onClick={() => void detectJava()}><IconSearch /></button>
+                  <button type="button" title={t.openFolderShort} aria-label={t.openFolderShort} onClick={() => void ipc.openPath(javaPath)}><IconFolder /></button>
                 </div>
-                {javaDetectMsg && <div className="settings-inline-message" aria-live="polite">{javaDetectMsg}</div>}
+                {javaDetectMsg && <div className="settings-rewrite-message" aria-live="polite">{javaDetectMsg}</div>}
               </div>
-
-              <div className="settings-field">
+              <div className="settings-rewrite-field">
                 <label htmlFor="settings-game-path">{t.gameFolder}</label>
-                <div className="settings-input-shell">
+                <div className="settings-rewrite-input">
                   <input id="settings-game-path" type="text" value={gamePath} onChange={(e) => setGamePath(e.target.value)} />
-                  <button className="settings-input-action" type="button" title={t.openFolderShort} aria-label={t.openFolderShort} onClick={() => void ipc.openPath(gamePath)}>
-                    <IconFolder />
-                  </button>
+                  <button type="button" title={t.openFolderShort} aria-label={t.openFolderShort} onClick={() => void ipc.openPath(gamePath)}><IconFolder /></button>
                 </div>
               </div>
             </div>
-          </SettingsZone>
+          </SettingsSection>
 
-          <div className="settings-zone-pair">
-            <SettingsZone
-              icon={<IconCpu />}
-              iconColor="#8d7cff"
-              title={t.ramSettingsTitle}
-              description={t.ramSettingsDesc}
-              className="settings-zone-memory"
-            >
-              <div className="settings-memory-readout"><strong>{ram}</strong><span>GB allocated</span></div>
-              <input type="range" min="1" max="16" value={ram} onChange={(e) => setRam(parseInt(e.target.value))} className="settings-range" style={sliderStyle} aria-label={t.ramSettingsTitle} />
-              <div className="settings-range-scale"><span>1G</span><span>4G</span><span>8G</span><span>12G</span><span>16G</span></div>
-            </SettingsZone>
-
-            <SettingsZone
-              icon={<IconUsers />}
-              iconColor="#5fd0b2"
-              title={t.autoConnect}
-              description={language === "ru" ? "Сервер для быстрого подключения" : "Server for quick connection"}
-              className="settings-zone-network"
-            >
-              <div className="settings-field">
-                <label htmlFor="settings-server-ip">{t.serverIpLabel}</label>
-                <input id="settings-server-ip" type="text" className="settings-plain-input" placeholder="mc.hypixel.net" value={serverIp} onChange={(e) => setServerIp(e.target.value)} />
+          <SettingsSection
+            id="settings-runtime"
+            icon={<IconCpu />}
+            iconColor="#9a8dff"
+            title={t.ramSettingsTitle}
+            description={isRussian ? "Сколько ресурсов выделять Java при запуске" : "How much memory Java receives at launch"}
+            aside={<strong className="settings-rewrite-big-value">{ram}<small> GB</small></strong>}
+          >
+            <div className="settings-rewrite-runtime-row">
+              <div className="settings-rewrite-range-wrap">
+                <input type="range" min="1" max="16" value={ram} onChange={(e) => setRam(parseInt(e.target.value))} className="settings-rewrite-range" style={sliderStyle} aria-label={t.ramSettingsTitle} />
+                <div className="settings-rewrite-range-labels"><span>1G</span><span>4G</span><span>8G</span><span>12G</span><span>16G</span></div>
               </div>
-              <div className="settings-field-hint">{language === "ru" ? "Оставьте пустым для обычного запуска" : "Leave empty for a normal launch"}</div>
-            </SettingsZone>
-          </div>
+              <div className="settings-rewrite-runtime-note">
+                <span>{isRussian ? "Рекомендуется" : "Recommended"}</span>
+                <strong>4–8 GB</strong>
+              </div>
+            </div>
+          </SettingsSection>
 
-          <SettingsZone
+          <SettingsSection
+            id="settings-network"
+            icon={<IconUsers />}
+            iconColor="#61d6b5"
+            title={t.autoConnect}
+            description={isRussian ? "Необязательный сервер для быстрого подключения" : "Optional server for quick connection"}
+            aside={<span className="settings-rewrite-section-tag">OPTIONAL</span>}
+          >
+            <div className="settings-rewrite-inline-field">
+              <label htmlFor="settings-server-ip">{t.serverIpLabel}</label>
+              <input id="settings-server-ip" type="text" placeholder="mc.hypixel.net" value={serverIp} onChange={(e) => setServerIp(e.target.value)} />
+            </div>
+          </SettingsSection>
+
+          <SettingsSection
+            id="settings-library"
             icon={<IconBox />}
             title={t.settingsVersionTypes}
             description={<>{t.settingsShownVersions} {currentVersionsList.length}</>}
-            className="settings-zone-library"
+            aside={<span className="settings-rewrite-count">{currentVersionsList.length} {isRussian ? "доступно" : "available"}</span>}
           >
-            {manifestError && <div className="settings-warning">{t.settingsManifestError}</div>}
-            <div className="settings-version-options">
+            {manifestError && <div className="settings-rewrite-warning">{t.settingsManifestError}</div>}
+            <div className="settings-rewrite-version-list">
               {VERSION_FILTER_ITEMS.map((item) => (
-                <label key={item.key} className={`settings-version-option ${versionFilters[item.key] ? "active" : ""}`}>
+                <label key={item.key} className={`settings-rewrite-version-row ${versionFilters[item.key] ? "active" : ""}`}>
                   <input type="checkbox" checked={versionFilters[item.key]} onChange={(e) => toggleVersionFilter(item.key, e.target.checked)} />
-                  <span className="settings-version-option-icon">{item.icon}</span>
-                  <span className="settings-version-option-copy">
-                    <strong>{t[item.labelKey]}</strong>
-                    <small>{t[item.descKey]}</small>
-                  </span>
-                  <span className="settings-checkmark" aria-hidden="true" />
+                  <span className="settings-rewrite-version-icon">{item.icon}</span>
+                  <span className="settings-rewrite-version-copy"><strong>{t[item.labelKey]}</strong><small>{t[item.descKey]}</small></span>
+                  <span className="settings-rewrite-check" aria-hidden="true" />
                 </label>
               ))}
             </div>
-            <div className="settings-language-control">
-              <span>{t.languageTitle}</span>
-              <div className="settings-language-options">
-                <button type="button" className={language === "ru" ? "active" : ""} onClick={() => changeLanguage("ru")}><span>RU</span> Русский</button>
-                <button type="button" className={language === "en" ? "active" : ""} onClick={() => changeLanguage("en")}><span>EN</span> English</button>
+            <div className="settings-rewrite-language-row">
+              <div><strong>{t.languageTitle}</strong><span>{isRussian ? "Язык интерфейса лаунчера" : "Launcher interface language"}</span></div>
+              <div className="settings-rewrite-language-buttons">
+                <button type="button" className={language === "ru" ? "active" : ""} onClick={() => changeLanguage("ru")}><b>RU</b> Русский</button>
+                <button type="button" className={language === "en" ? "active" : ""} onClick={() => changeLanguage("en")}><b>EN</b> English</button>
               </div>
             </div>
-          </SettingsZone>
+          </SettingsSection>
 
-          <div className="settings-zone-pair settings-zone-pair-last">
-            <SettingsZone
-              icon={<IconSettings />}
-              iconColor="#ff9a70"
-              title={t.closeOnLaunch}
-              description={t.closeOnLaunchDesc}
-              className="settings-zone-session"
-            >
-              <label className="settings-switch-row">
+          <SettingsSection
+            id="settings-session"
+            icon={<IconSettings />}
+            iconColor="#ff9a70"
+            title={t.closeOnLaunch}
+            description={t.closeOnLaunchDesc}
+            aside={<span className={`settings-rewrite-live-pill ${closeOnLaunch ? "enabled" : ""}`}>{closeOnLaunch ? t.on : t.off}</span>}
+          >
+            <div className="settings-rewrite-session-row">
+              <label className="settings-rewrite-switch-label">
                 <input type="checkbox" checked={closeOnLaunch} onChange={(e) => setCloseOnLaunch(e.target.checked)} />
-                <span className="settings-switch" aria-hidden="true"><span /></span>
-                <span className="settings-switch-copy"><strong>{closeOnLaunch ? t.on : t.off}</strong><small>{language === "ru" ? "Закрывать лаунчер после запуска" : "Close launcher after starting"}</small></span>
+                <span className="settings-rewrite-switch" aria-hidden="true"><span /></span>
+                <span><strong>{isRussian ? "Закрывать после запуска" : "Close after launch"}</strong><small>{isRussian ? "Освободить место на экране после старта игры" : "Clear the launcher from the screen after the game starts"}</small></span>
               </label>
-            </SettingsZone>
-
-            <SettingsZone
-              icon={<IconDownload />}
-              iconColor="#f0b76a"
-              title={t.launcherStoreTitle}
-              description={t.launcherStoreDesc}
-              className="settings-zone-store"
-            >
-              <button className="settings-store-cta" type="button" onClick={onOpenStore}>
-                <span>{t.launcherStoreButton}</span>
-                <IconDownload />
-              </button>
-            </SettingsZone>
-          </div>
+              <button className="settings-rewrite-store-button" type="button" onClick={onOpenStore}><span>{t.launcherStoreButton}</span><IconDownload /></button>
+            </div>
+          </SettingsSection>
         </main>
       </div>
     </div>
