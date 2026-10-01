@@ -4365,3 +4365,63 @@ input[type="color"]::-webkit-color-swatch {
   .settings-rewrite-session-row { align-items: flex-start; flex-direction: column; }
   .settings-rewrite-store-button { width: 100%; }
 }
+
+/* The dock is fixed globally; settings gets its own protected viewport. */
+.main-content:has(.settings-rewrite) {
+  padding-bottom: 180px !important;
+}
+
+.settings-rewrite {
+  flex: 1 1 auto;
+  height: auto;
+  max-height: 100%;
+  min-height: 0;
+}
+
+.settings-rewrite-sidebar-summary div {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: baseline;
+}
+
+.settings-rewrite-sidebar-summary em {
+  min-width: 0;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-height: 800px) {
+  .settings-rewrite {
+    gap: 12px;
+    padding-top: 8px;
+  }
+
+  .settings-rewrite-header {
+    padding-bottom: 10px;
+  }
+
+  .settings-rewrite-section-head {
+    padding-top: 10px;
+    padding-bottom: 9px;
+  }
+
+  .settings-rewrite-section-content {
+    padding-top: 10px;
+    padding-bottom: 12px;
+  }
+
+  .settings-rewrite-main {
+    gap: 9px;
+  }
+
+  .settings-rewrite-sidebar {
+    min-height: 0;
+  }
+
+  .settings-rewrite-sidebar-summary {
+    gap: 6px;
+    margin-top: 18px;
+  }
+}
