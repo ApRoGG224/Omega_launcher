@@ -29,6 +29,32 @@
   padding: 0;
 }
 
+/* Instant hover highlighting without animation for weak PCs */
+button,
+a,
+[role="button"],
+.dock-btn,
+.dock-icon-circle,
+.rhombus-play-btn,
+.sub-tab-btn,
+.sidebar-icon,
+.sketch-card,
+.mod-card,
+.friend-card,
+.server-item,
+.account-item,
+.desktop-icon,
+.user-profile,
+.create-action-btn,
+.account-method-card,
+.account-add-btn,
+.play-btn,
+.folder-btn,
+.custom-dropdown-btn,
+.custom-dropdown-item {
+  transition: none !important;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background: #05060f;
@@ -2214,11 +2240,6 @@ input[type="color"]::-webkit-color-swatch {
   padding-bottom: 10px;
 }
 
-.floating-dashboard-window .sketch-card-header > .play-btn {
-  box-shadow: none;
-  filter: drop-shadow(0 3px 8px rgba(var(--accent-color-rgb), 0.65));
-}
-
 .sketch-card-title {
   font-size: 1.05rem;
   font-weight: 700;
@@ -4366,15 +4387,15 @@ input[type="color"]::-webkit-color-swatch {
   .settings-rewrite-store-button { width: 100%; }
 }
 
-/* The dock is fixed globally; settings gets its own protected viewport. */
+/* The dock is fixed globally; settings uses the full viewport and keeps its own safe area. */
 .main-content:has(.settings-rewrite) {
-  padding-bottom: 180px !important;
+  padding-bottom: 0 !important;
 }
 
 .settings-rewrite {
   flex: 1 1 auto;
   height: auto;
-  max-height: 100%;
+  max-height: none;
   min-height: 0;
 }
 
