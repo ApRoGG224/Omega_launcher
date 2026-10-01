@@ -1,7 +1,15 @@
 import React from "react";
 import type { Language, VersionFilterState } from "../../types";
 import { ipc } from "../../services/ipc";
-import { IconBox, IconCpu, IconDownload, IconFolder, IconSearch, IconSettings, IconUsers } from "../../ui/icons";
+import {
+  IconBox,
+  IconCpu,
+  IconDownload,
+  IconFolder,
+  IconSearch,
+  IconSettings,
+  IconUsers,
+} from "../../ui/icons";
 
 const VERSION_FILTER_ITEMS = [
   { key: "release", icon: <IconBox />, labelKey: "versionRelease", descKey: "versionReleaseDesc" },
@@ -10,36 +18,31 @@ const VERSION_FILTER_ITEMS = [
   { key: "old_alpha", icon: <IconFolder />, labelKey: "versionAlpha", descKey: "versionAlphaDesc" },
 ] as const;
 
-const SettingsCard = React.memo(({
+const SettingsZone = React.memo(({
   icon,
   iconColor,
   title,
-  subtitle,
-  value,
+  description,
   className,
   children,
 }: {
   icon: React.ReactNode;
   iconColor?: string;
   title: React.ReactNode;
-  subtitle?: React.ReactNode;
-  value?: React.ReactNode;
+  description: React.ReactNode;
   className?: string;
   children: React.ReactNode;
 }) => (
-  <div className={`settings-card${className ? ` ${className}` : ""}`}>
-    <div className="settings-card-header">
-      <div className="settings-card-title">
-        <div className="settings-card-icon" style={iconColor ? { color: iconColor } : undefined}>{icon}</div>
-        <div className="settings-card-heading">
-          <div className="settings-card-name">{title}</div>
-          {subtitle && <div className="settings-card-sub">{subtitle}</div>}
-        </div>
+  <section className={`settings-zone${className ? ` ${className}` : ""}`}>
+    <div className="settings-zone-header">
+      <div className="settings-zone-icon" style={iconColor ? { color: iconColor } : undefined}>{icon}</div>
+      <div>
+        <h3>{title}</h3>
+        <p>{description}</p>
       </div>
-      {value && <div className="settings-card-value">{value}</div>}
     </div>
-    <div className="settings-card-body">{children}</div>
-  </div>
+    <div className="settings-zone-body">{children}</div>
+  </section>
 ));
 
 export const SettingsPanel = React.memo(({
@@ -104,145 +107,181 @@ export const SettingsPanel = React.memo(({
   };
 
   return (
-    <div className="settings-panel settings-panel-sketch">
-      <div className="settings-header">
-        <div>
-          <h2>{t.sidebarSettings}</h2>
-          <p>{t.settingsSubtitle}</p>
+    <div className="settings-panel settings-control-center">
+      <header className="settings-hero">
+        <div className="settings-hero-copy">
+          <div className="settings-hero-mark" aria-hidden="true"><IconSettings /></div>
+          <div>
+            <h2>{t.sidebarSettings}</h2>
+            <p>{t.settingsSubtitle}</p>
+          </div>
         </div>
-        <div className="settings-header-status">
-          <span className="settings-header-status-dot" />
-          <span>{language === "ru" ? "Локальные настройки" : "Local settings"}</span>
+        <div className="settings-hero-state">
+          <span className="settings-state-dot" />
+          <span>{language === "ru" ? "Локальный профиль" : "Local profile"}</span>
         </div>
-      </div>
+      </header>
 
-      <div className="settings-grid">
-        <SettingsCard icon={<IconFolder />} iconColor="var(--accent-color)" title={t.settingsExportPath} className="settings-card-export">
-          <div className="input-wrapper">
-            <label className="sr-only" htmlFor="settings-export-path">{t.settingsExportPath}</label>
-            <input id="settings-export-path" type="text" value={exportPath} onChange={(e) => setExportPath(e.target.value)} />
-            <button className="folder-btn" type="button" title={t.openFolderShort} aria-label={t.openFolderShort} onClick={() => void ipc.openPath(exportPath)}>
-              <IconFolder />
-            </button>
-          </div>
-        </SettingsCard>
+      <div className="settings-control-layout">
+        <aside className="settings-profile-rail" aria-label={language === "ru" ? "Сводка профиля" : "Profile summary"}>
+          <div className="settings-profile-badge"><IconBox /></div>
+          <div className="settings-profile-title">Omega Launcher</div>
+          <p className="settings-profile-copy">
+            {language === "ru" ? "Профиль запуска Minecraft" : "Minecraft launch profile"}
+          </p>
 
-        <SettingsCard icon={<IconCpu />} iconColor="#027dea" title={t.filePathsTitle} className="settings-card-paths">
-          <div className="input-group">
-            <label htmlFor="settings-java-path">{t.javaLabel}</label>
-            <div className="input-wrapper">
-              <input id="settings-java-path" type="text" value={javaPath} onChange={(e) => setJavaPath(e.target.value)} />
-              <button className="folder-btn" type="button" title={t.javaAutoDetect} aria-label={t.javaAutoDetect} onClick={() => void detectJava()}>
-                <IconSearch />
-              </button>
-              <button className="folder-btn" type="button" title={t.openFolderShort} aria-label={t.openFolderShort} onClick={() => void ipc.openPath(javaPath)}><IconFolder /></button>
+          <div className="settings-profile-stats">
+            <div className="settings-profile-stat">
+              <strong>{ram}<small> GB</small></strong>
+              <span>{t.ram}</span>
             </div>
-            {javaDetectMsg && <div className="settings-java-msg" aria-live="polite">{javaDetectMsg}</div>}
-          </div>
-
-          <div className="input-group">
-            <label htmlFor="settings-game-path">{t.gameFolder}</label>
-            <div className="input-wrapper">
-              <input id="settings-game-path" type="text" value={gamePath} onChange={(e) => setGamePath(e.target.value)} />
-              <button className="folder-btn" type="button" title={t.openFolderShort} aria-label={t.openFolderShort} onClick={() => void ipc.openPath(gamePath)}><IconFolder /></button>
+            <div className="settings-profile-stat">
+              <strong>{currentVersionsList.length}</strong>
+              <span>{t.version}</span>
+            </div>
+            <div className="settings-profile-stat">
+              <strong>{closeOnLaunch ? t.on : t.off}</strong>
+              <span>{t.closeOnLaunch}</span>
             </div>
           </div>
-        </SettingsCard>
 
-        <SettingsCard
-          icon={<IconCpu />}
-          title={t.ramSettingsTitle}
-          subtitle={t.ramSettingsDesc}
-          value={<>{ram} <span>GB</span></>}
-          className="settings-card-memory"
-        >
-          <div className="slider-container">
-            <input type="range" min="1" max="16" value={ram} onChange={(e) => setRam(parseInt(e.target.value))} className="slider" style={sliderStyle} />
-            <div className="slider-marks">
-              <span>1G</span>
-              <span>2G</span>
-              <span style={ram === 4 ? { color: "var(--accent-color)" } : {}}>4G</span>
-              <span>6G</span>
-              <span>8G</span>
-              <span>10G</span>
-              <span>12G</span>
-              <span>16G</span>
+          <div className="settings-profile-divider" />
+          <div className="settings-profile-note">
+            <span className="settings-note-dot" />
+            <span>{language === "ru" ? "Изменения применяются сразу" : "Changes apply instantly"}</span>
+          </div>
+        </aside>
+
+        <main className="settings-control-content">
+          <SettingsZone
+            icon={<IconFolder />}
+            title={t.filePathsTitle}
+            description={language === "ru" ? "Где лаунчер хранит и запускает игру" : "Where the launcher stores and starts the game"}
+            className="settings-zone-paths"
+          >
+            <div className="settings-field-grid">
+              <div className="settings-field settings-field-wide">
+                <label htmlFor="settings-export-path">{t.settingsExportPath}</label>
+                <div className="settings-input-shell">
+                  <input id="settings-export-path" type="text" value={exportPath} onChange={(e) => setExportPath(e.target.value)} />
+                  <button className="settings-input-action" type="button" title={t.openFolderShort} aria-label={t.openFolderShort} onClick={() => void ipc.openPath(exportPath)}>
+                    <IconFolder />
+                  </button>
+                </div>
+              </div>
+
+              <div className="settings-field">
+                <label htmlFor="settings-java-path">{t.javaLabel}</label>
+                <div className="settings-input-shell">
+                  <input id="settings-java-path" type="text" value={javaPath} onChange={(e) => setJavaPath(e.target.value)} />
+                  <button className="settings-input-action" type="button" title={t.javaAutoDetect} aria-label={t.javaAutoDetect} onClick={() => void detectJava()}>
+                    <IconSearch />
+                  </button>
+                  <button className="settings-input-action" type="button" title={t.openFolderShort} aria-label={t.openFolderShort} onClick={() => void ipc.openPath(javaPath)}>
+                    <IconFolder />
+                  </button>
+                </div>
+                {javaDetectMsg && <div className="settings-inline-message" aria-live="polite">{javaDetectMsg}</div>}
+              </div>
+
+              <div className="settings-field">
+                <label htmlFor="settings-game-path">{t.gameFolder}</label>
+                <div className="settings-input-shell">
+                  <input id="settings-game-path" type="text" value={gamePath} onChange={(e) => setGamePath(e.target.value)} />
+                  <button className="settings-input-action" type="button" title={t.openFolderShort} aria-label={t.openFolderShort} onClick={() => void ipc.openPath(gamePath)}>
+                    <IconFolder />
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </SettingsCard>
+          </SettingsZone>
 
-        <SettingsCard icon={<IconUsers />} iconColor="#269684" title={t.autoConnect} className="settings-card-network">
-          <div className="input-group">
-            <label htmlFor="settings-server-ip">{t.serverIpLabel}</label>
-            <input id="settings-server-ip" type="text" className="settings-text-input" placeholder="mc.hypixel.net" value={serverIp} onChange={(e) => setServerIp(e.target.value)} />
-          </div>
-        </SettingsCard>
+          <div className="settings-zone-pair">
+            <SettingsZone
+              icon={<IconCpu />}
+              iconColor="#8d7cff"
+              title={t.ramSettingsTitle}
+              description={t.ramSettingsDesc}
+              className="settings-zone-memory"
+            >
+              <div className="settings-memory-readout"><strong>{ram}</strong><span>GB allocated</span></div>
+              <input type="range" min="1" max="16" value={ram} onChange={(e) => setRam(parseInt(e.target.value))} className="settings-range" style={sliderStyle} aria-label={t.ramSettingsTitle} />
+              <div className="settings-range-scale"><span>1G</span><span>4G</span><span>8G</span><span>12G</span><span>16G</span></div>
+            </SettingsZone>
 
-        <SettingsCard
-          icon={<IconBox />}
-          iconColor="var(--accent-color)"
-          title={t.settingsVersionTypes}
-          subtitle={<>{t.settingsShownVersions} {currentVersionsList.length}</>}
-          className="settings-card-versions"
-        >
-          {manifestError && <div className="settings-manifest-warn">{t.settingsManifestError}</div>}
-          <div className="settings-version-grid">
-            {VERSION_FILTER_ITEMS.map((item) => (
-              <label
-                key={item.key}
-                className={`settings-version-item ${versionFilters[item.key] ? "active" : ""}`}
-              >
-                <input
-                  type="checkbox"
-                  checked={versionFilters[item.key]}
-                  onChange={(e) => toggleVersionFilter(item.key, e.target.checked)}
-                />
-                <span className="settings-version-icon">{item.icon}</span>
-                <span className="settings-version-label">{t[item.labelKey]}</span>
-                <span className="settings-version-desc">{t[item.descKey]}</span>
+            <SettingsZone
+              icon={<IconUsers />}
+              iconColor="#5fd0b2"
+              title={t.autoConnect}
+              description={language === "ru" ? "Сервер для быстрого подключения" : "Server for quick connection"}
+              className="settings-zone-network"
+            >
+              <div className="settings-field">
+                <label htmlFor="settings-server-ip">{t.serverIpLabel}</label>
+                <input id="settings-server-ip" type="text" className="settings-plain-input" placeholder="mc.hypixel.net" value={serverIp} onChange={(e) => setServerIp(e.target.value)} />
+              </div>
+              <div className="settings-field-hint">{language === "ru" ? "Оставьте пустым для обычного запуска" : "Leave empty for a normal launch"}</div>
+            </SettingsZone>
+          </div>
+
+          <SettingsZone
+            icon={<IconBox />}
+            title={t.settingsVersionTypes}
+            description={<>{t.settingsShownVersions} {currentVersionsList.length}</>}
+            className="settings-zone-library"
+          >
+            {manifestError && <div className="settings-warning">{t.settingsManifestError}</div>}
+            <div className="settings-version-options">
+              {VERSION_FILTER_ITEMS.map((item) => (
+                <label key={item.key} className={`settings-version-option ${versionFilters[item.key] ? "active" : ""}`}>
+                  <input type="checkbox" checked={versionFilters[item.key]} onChange={(e) => toggleVersionFilter(item.key, e.target.checked)} />
+                  <span className="settings-version-option-icon">{item.icon}</span>
+                  <span className="settings-version-option-copy">
+                    <strong>{t[item.labelKey]}</strong>
+                    <small>{t[item.descKey]}</small>
+                  </span>
+                  <span className="settings-checkmark" aria-hidden="true" />
+                </label>
+              ))}
+            </div>
+            <div className="settings-language-control">
+              <span>{t.languageTitle}</span>
+              <div className="settings-language-options">
+                <button type="button" className={language === "ru" ? "active" : ""} onClick={() => changeLanguage("ru")}><span>RU</span> Русский</button>
+                <button type="button" className={language === "en" ? "active" : ""} onClick={() => changeLanguage("en")}><span>EN</span> English</button>
+              </div>
+            </div>
+          </SettingsZone>
+
+          <div className="settings-zone-pair settings-zone-pair-last">
+            <SettingsZone
+              icon={<IconSettings />}
+              iconColor="#ff9a70"
+              title={t.closeOnLaunch}
+              description={t.closeOnLaunchDesc}
+              className="settings-zone-session"
+            >
+              <label className="settings-switch-row">
+                <input type="checkbox" checked={closeOnLaunch} onChange={(e) => setCloseOnLaunch(e.target.checked)} />
+                <span className="settings-switch" aria-hidden="true"><span /></span>
+                <span className="settings-switch-copy"><strong>{closeOnLaunch ? t.on : t.off}</strong><small>{language === "ru" ? "Закрывать лаунчер после запуска" : "Close launcher after starting"}</small></span>
               </label>
-            ))}
-          </div>
-        </SettingsCard>
+            </SettingsZone>
 
-        <SettingsCard icon={<IconSettings />} iconColor="#e46d4c" title={t.languageTitle} className="settings-card-language">
-          <div className="settings-lang-row">
-            <button
-              className={`settings-lang-btn ${language === "ru" ? "active" : ""}`}
-              onClick={() => changeLanguage("ru")}
+            <SettingsZone
+              icon={<IconDownload />}
+              iconColor="#f0b76a"
+              title={t.launcherStoreTitle}
+              description={t.launcherStoreDesc}
+              className="settings-zone-store"
             >
-              <span className="settings-lang-code">RU</span> Русский
-            </button>
-            <button
-              className={`settings-lang-btn ${language === "en" ? "active" : ""}`}
-              onClick={() => changeLanguage("en")}
-            >
-              <span className="settings-lang-code">EN</span> English
-            </button>
+              <button className="settings-store-cta" type="button" onClick={onOpenStore}>
+                <span>{t.launcherStoreButton}</span>
+                <IconDownload />
+              </button>
+            </SettingsZone>
           </div>
-        </SettingsCard>
-
-        <SettingsCard icon={<IconBox />} iconColor="var(--accent-color)" title={t.launcherStoreTitle} subtitle={t.launcherStoreDesc} className="settings-card-wide settings-card-store">
-          <button className="settings-store-btn" onClick={onOpenStore}>
-            <IconDownload />
-            <span>{t.launcherStoreButton}</span>
-          </button>
-        </SettingsCard>
-
-        <SettingsCard icon={<IconBox />} iconColor="#e46d4c" title={t.closeOnLaunch} subtitle={t.closeOnLaunchDesc} className="settings-card-launch">
-          <label className="settings-toggle-row">
-            <input
-              type="checkbox"
-              className="settings-toggle"
-              checked={closeOnLaunch}
-              onChange={(e) => setCloseOnLaunch(e.target.checked)}
-            />
-            <span className="settings-toggle-track">
-              <span className="settings-toggle-thumb" />
-            </span>
-            <span className="settings-toggle-label">{closeOnLaunch ? t.on : t.off}</span>
-          </label>
-        </SettingsCard>
+        </main>
       </div>
     </div>
   );
