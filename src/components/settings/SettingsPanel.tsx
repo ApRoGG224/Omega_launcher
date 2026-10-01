@@ -112,7 +112,7 @@ export const SettingsPanel = React.memo(({
         </div>
         <div className="settings-header-status">
           <span className="settings-header-status-dot" />
-          <span>{language === "ru" ? "Профиль сохранён" : "Profile synced"}</span>
+          <span>{language === "ru" ? "Локальные настройки" : "Local settings"}</span>
         </div>
       </div>
 
