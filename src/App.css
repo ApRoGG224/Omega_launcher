@@ -1996,6 +1996,26 @@ input[type="color"]::-webkit-color-swatch {
   border: 1px solid rgba(139, 92, 246, 0.35);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
   animation: dockOpacityFade 0.25s ease;
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease;
+  will-change: transform;
+}
+
+.dock-settings-hidden .floating-dock {
+  transform: translateY(calc(100% - 14px));
+  opacity: 0.86;
+}
+
+.dock-settings-hidden:hover .floating-dock,
+.dock-settings-hidden:focus-within .floating-dock {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-dock {
+    animation: none;
+    transition: none;
+  }
 }
 
 .dock-btn {
