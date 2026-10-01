@@ -2000,13 +2000,13 @@ input[type="color"]::-webkit-color-swatch {
   will-change: transform;
 }
 
-.dock-settings-hidden .floating-dock {
+.dock-auto-hidden .floating-dock {
   transform: translateY(calc(100% - 14px));
   opacity: 0.86;
 }
 
-.dock-settings-hidden:hover .floating-dock,
-.dock-settings-hidden:focus-within .floating-dock {
+.dock-auto-hidden:hover .floating-dock,
+.dock-auto-hidden:focus-within .floating-dock {
   transform: translateY(0);
   opacity: 1;
 }
@@ -3736,29 +3736,29 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .floating-dock {
-  gap: clamp(5px, 0.8vw, 11px);
-  padding: 4px clamp(8px, 1.2vw, 14px);
+  gap: clamp(4px, 0.65vw, 9px);
+  padding: 3px clamp(7px, 1vw, 12px);
   border-radius: 20px;
 }
 
 .dock-btn {
-  min-width: clamp(40px, 4vw, 52px);
+  min-width: clamp(38px, 3.6vw, 48px);
   gap: 3px;
 }
 
 .dock-icon-circle {
-  width: clamp(28px, 2.8vw, 34px);
-  height: clamp(28px, 2.8vw, 34px);
+  width: clamp(27px, 2.6vw, 32px);
+  height: clamp(27px, 2.6vw, 32px);
   font-size: clamp(0.8rem, 0.95vw, 0.95rem);
 }
 
 .dock-label {
-  font-size: clamp(0.56rem, 0.7vw, 0.64rem);
+  font-size: clamp(0.55rem, 0.66vw, 0.61rem);
 }
 
 .rhombus-play-btn {
-  width: clamp(42px, 4vw, 48px);
-  height: clamp(38px, 3.8vw, 44px);
+  width: clamp(40px, 3.7vw, 45px);
+  height: clamp(36px, 3.5vw, 41px);
   border-radius: 12px;
 }
 
@@ -3908,7 +3908,7 @@ input[type="color"]::-webkit-color-swatch {
    Navigation-led operator console. Scoped to the settings route only.
    ------------------------------------------------------------- */
 .settings-rewrite {
-  width: min(100%, 1240px);
+  width: 100%;
   height: calc(100vh - 92px);
   min-height: 0;
   align-self: center;
@@ -4408,9 +4408,13 @@ input[type="color"]::-webkit-color-swatch {
   .settings-rewrite-store-button { width: 100%; }
 }
 
-/* The dock is fixed globally; settings uses the full viewport and keeps its own safe area. */
-.main-content:has(.settings-rewrite) {
+/* Inner pages use the full viewport while the dock stays tucked below the edge. */
+.main-content-route {
   padding-bottom: 0 !important;
+}
+
+.main-content-route .instances-panel-container {
+  padding-bottom: 24px !important;
 }
 
 .settings-rewrite {

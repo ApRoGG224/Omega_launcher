@@ -177,7 +177,7 @@ function App() {
       onDragStart={(e) => e.preventDefault()}
     >
 
-      <main className="main-content">
+      <main className={`main-content ${activeTab !== "home" ? "main-content-route" : ""}`}>
         {activeTab === "home" && (
           <header className="top-bar">
             <div

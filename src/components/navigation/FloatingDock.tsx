@@ -19,10 +19,10 @@ type Props = {
 
 export function FloatingDock(props: Props) {
   const { activeTab, isHome, isRunning, selectedVersionLabel, onHome, onCatalog, onModpacks, onSettings, onFriends, onPlay, onStop, t } = props;
-  const isSettings = activeTab === "settings";
+  const shouldAutoHideDock = activeTab !== "home";
 
   return (
-    <div className={`dock-wrapper ${isHome ? "dock-home" : "dock-overlay"} ${isSettings ? "dock-settings-hidden" : ""}`}>
+    <div className={`dock-wrapper ${isHome ? "dock-home" : "dock-overlay"} ${shouldAutoHideDock ? "dock-auto-hidden" : ""}`}>
       <div className="floating-dock">
         <button className={`dock-btn ${["mods", "resourcepacks", "shaders", "datapacks"].includes(activeTab) ? "active" : ""}`} onClick={onCatalog} title={t.dockCatalog}>
           <div className="dock-icon-circle"><AnimatedIcon images={MOD_ICONS} interval={2500} /></div>
@@ -40,7 +40,7 @@ export function FloatingDock(props: Props) {
             <div className="play-icon-inner">{isHome ? (isRunning ? <IconX /> : <IconPlay />) : <IconHome />}</div>
           </button>
         </div>
-        <button className={`dock-btn ${isSettings ? "active" : ""}`} onClick={(event) => { onSettings(); event.currentTarget.blur(); }} title={t.dockSettings}>
+        <button className={`dock-btn ${activeTab === "settings" ? "active" : ""}`} onClick={(event) => { onSettings(); event.currentTarget.blur(); }} title={t.dockSettings}>
           <div className="dock-icon-circle"><IconSettings /></div>
           <span className="dock-label">{t.dockSettings}</span>
         </button>
