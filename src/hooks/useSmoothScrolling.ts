@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
 type ScrollMotion = {
+  position: number;
   target: number;
   frame: number | null;
 };
@@ -42,14 +43,16 @@ export function useSmoothScrolling() {
       const motion = motions.get(element);
       if (!motion) return;
 
-      const distance = motion.target - element.scrollTop;
+      const distance = motion.target - motion.position;
       if (Math.abs(distance) < 0.5) {
-        element.scrollTop = motion.target;
+        motion.position = motion.target;
+        element.scrollTop = motion.position;
         motions.delete(element);
         return;
       }
 
-      element.scrollTop += distance * 0.18;
+      motion.position += distance * 0.2;
+      element.scrollTop = motion.position;
       motion.frame = window.requestAnimationFrame(() => animate(element));
     };
 
@@ -68,7 +71,11 @@ export function useSmoothScrolling() {
           : 1;
       const delta = Math.max(-180, Math.min(180, event.deltaY * multiplier));
       const maxScroll = scrollable.scrollHeight - scrollable.clientHeight;
-      const motion = motions.get(scrollable) ?? { target: scrollable.scrollTop, frame: null };
+      const motion = motions.get(scrollable) ?? {
+        position: scrollable.scrollTop,
+        target: scrollable.scrollTop,
+        frame: null,
+      };
       motion.target = Math.max(0, Math.min(maxScroll, motion.target + delta));
       motions.set(scrollable, motion);
 
