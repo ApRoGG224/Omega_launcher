@@ -5,6 +5,50 @@ const ACCOUNTS_KEY = "savedNicknames";
 const LANGUAGE_KEY = "launcherLang";
 export const EXPORT_PATH_KEY = "exportPath";
 const THEME_KEY = "omegaTheme";
+const LAUNCHER_WINDOW_STATE_KEY = "omega:launcher-window-state";
+
+export type LauncherWindowState = {
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  maximized: boolean;
+};
+
+export function getStoredLauncherWindowState(): LauncherWindowState | undefined {
+  const saved = localStorage.getItem(LAUNCHER_WINDOW_STATE_KEY);
+  if (!saved) return undefined;
+
+  try {
+    const parsed = JSON.parse(saved);
+    if (
+      typeof parsed?.width === "number" && Number.isFinite(parsed.width) && parsed.width > 0 &&
+      typeof parsed?.height === "number" && Number.isFinite(parsed.height) && parsed.height > 0 &&
+      typeof parsed?.x === "number" && Number.isFinite(parsed.x) &&
+      typeof parsed?.y === "number" && Number.isFinite(parsed.y)
+    ) {
+      return {
+        width: parsed.width,
+        height: parsed.height,
+        x: parsed.x,
+        y: parsed.y,
+        maximized: parsed.maximized === true,
+      };
+    }
+  } catch {
+    // Ignore malformed state and use the default window geometry.
+  }
+
+  return undefined;
+}
+
+export function setStoredLauncherWindowState(state: LauncherWindowState) {
+  try {
+    localStorage.setItem(LAUNCHER_WINDOW_STATE_KEY, JSON.stringify(state));
+  } catch (error) {
+    console.error("Failed to persist launcher window state", error);
+  }
+}
 
 export function loadInstances(): ModpackInstance[] {
   const saved = localStorage.getItem(INSTANCES_KEY);

@@ -22,8 +22,8 @@ import { ImportProgressPopup } from "./components/instances/ImportProgressPopup"
 import { AccountModal } from "./components/accounts/AccountModal";
 import { FriendsTab } from "./components/friends/FriendsTab";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { getStoredFullscreenOnStart, getStoredLanguage, getStoredTheme, setStoredFullscreenOnStart, setStoredLanguage, setStoredTheme, getStoredCloseOnLaunch, setStoredCloseOnLaunch } from "./services/storage";
+import { getCurrentWindow, PhysicalPosition, PhysicalSize } from "@tauri-apps/api/window";
+import { getStoredFullscreenOnStart, getStoredLanguage, getStoredTheme, setStoredFullscreenOnStart, setStoredLanguage, setStoredTheme, getStoredCloseOnLaunch, setStoredCloseOnLaunch, getStoredLauncherWindowState, setStoredLauncherWindowState } from "./services/storage";
 import "./App.css";
 
 const launcherWindow = getCurrentWindow();
@@ -76,6 +76,78 @@ function App() {
       console.warn("Unable to change launcher fullscreen state", error);
     });
   }, [fullscreenOnStart]);
+
+  useEffect(() => {
+    const storedState = getStoredLauncherWindowState();
+    let disposed = false;
+    let persistRequest = 0;
+    const unlistenCallbacks: Array<() => void> = [];
+
+    const persistWindowState = async () => {
+      const requestId = ++persistRequest;
+      try {
+        const [isFullscreen, isMaximized, size, position] = await Promise.all([
+          launcherWindow.isFullscreen(),
+          launcherWindow.isMaximized(),
+          launcherWindow.outerSize(),
+          launcherWindow.outerPosition(),
+        ]);
+
+        // Fullscreen dimensions describe the monitor, not the user's normal window.
+        if (isFullscreen) return;
+        if (requestId !== persistRequest) return;
+
+        const previousState = getStoredLauncherWindowState();
+        setStoredLauncherWindowState({
+          width: isMaximized && previousState ? previousState.width : size.width,
+          height: isMaximized && previousState ? previousState.height : size.height,
+          x: isMaximized && previousState ? previousState.x : position.x,
+          y: isMaximized && previousState ? previousState.y : position.y,
+          maximized: isMaximized,
+        });
+      } catch (error) {
+        console.warn("Unable to save launcher window state", error);
+      }
+    };
+
+    const restoreWindowState = async () => {
+      try {
+        // Fullscreen-on-start intentionally takes precedence over the saved normal size.
+        if (storedState && !fullscreenOnStart) {
+          await launcherWindow.setSize(new PhysicalSize(storedState.width, storedState.height));
+          await launcherWindow.setPosition(new PhysicalPosition(storedState.x, storedState.y));
+          if (storedState.maximized) await launcherWindow.maximize();
+        }
+
+        if (disposed) return;
+
+        const unlistenResized = await launcherWindow.onResized(() => {
+          void persistWindowState();
+        });
+        const unlistenMoved = await launcherWindow.onMoved(() => {
+          void persistWindowState();
+        });
+        const unlistenCloseRequested = await launcherWindow.onCloseRequested(() => persistWindowState());
+
+        if (disposed) {
+          unlistenResized();
+          unlistenMoved();
+          unlistenCloseRequested();
+          return;
+        }
+
+        unlistenCallbacks.push(unlistenResized, unlistenMoved, unlistenCloseRequested);
+      } catch (error) {
+        console.warn("Unable to restore launcher window state", error);
+      }
+    };
+
+    void restoreWindowState();
+    return () => {
+      disposed = true;
+      unlistenCallbacks.forEach((unlisten) => unlisten());
+    };
+  }, []);
 
   useEffect(() => {
     if (instancesApi.importing) setImportPopupHidden(false);
