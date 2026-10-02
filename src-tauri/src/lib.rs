@@ -377,7 +377,12 @@ async fn translate_text(text: String, target_lang: String) -> Result<String, Str
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    // Keep the WebKitGTK crash workaround for NVIDIA, but allow hardware
+    // compositing on Intel/AMD so scrolling can follow the display refresh rate.
+    #[cfg(target_os = "linux")]
+    if std::path::Path::new("/proc/driver/nvidia/version").exists() {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
