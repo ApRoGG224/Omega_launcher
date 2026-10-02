@@ -12,7 +12,6 @@ import { useFriends } from "./hooks/useFriends";
 import { usePresence, type InviteInfo } from "./hooks/usePresence";
 import { useVersions } from "./hooks/useVersions";
 import { useGameSession } from "./hooks/useGameSession";
-import { useSmoothScrolling } from "./hooks/useSmoothScrolling";
 import { ipc } from "./services/ipc";
 import { HomeDashboard } from "./components/home/HomeDashboard";
 import { CreateInstanceModal } from "./components/home/CreateInstanceModal";
@@ -30,8 +29,6 @@ import "./App.css";
 const launcherWindow = getCurrentWindow();
 
 function App() {
-  useSmoothScrolling();
-
   const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = translations[language];
   const { showToast } = useToast();
