@@ -62,6 +62,20 @@ body {
   overflow: hidden;
 }
 
+.main-content,
+.settings-rewrite,
+.instances-panel-container,
+.mods-grid,
+.console-content,
+.account-modal,
+.friends-list,
+.server-launch-list,
+.custom-dropdown-menu,
+.mod-chips-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
 .app-container,
 .app-container * {
   -webkit-user-select: none;
