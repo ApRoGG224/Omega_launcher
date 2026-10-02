@@ -78,6 +78,22 @@ function App() {
   }, [fullscreenOnStart]);
 
   useEffect(() => {
+    const handleFullscreenShortcut = (event: KeyboardEvent) => {
+      if (event.key !== "F11") return;
+      event.preventDefault();
+
+      void launcherWindow.isFullscreen()
+        .then((isFullscreen) => launcherWindow.setFullscreen(!isFullscreen))
+        .catch((error) => {
+          console.warn("Unable to toggle launcher fullscreen state", error);
+        });
+    };
+
+    window.addEventListener("keydown", handleFullscreenShortcut);
+    return () => window.removeEventListener("keydown", handleFullscreenShortcut);
+  }, []);
+
+  useEffect(() => {
     if (instancesApi.importing) setImportPopupHidden(false);
   }, [instancesApi.importing]);
 
