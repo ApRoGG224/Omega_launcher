@@ -189,6 +189,49 @@ pub fn read_cached_auth(app: &AppHandle) -> Option<Value> {
     serde_json::from_str(&text).ok()
 }
 
+/// Returns the official skin texture URL for the cached Microsoft account.
+/// The access token stays in Rust and is never exposed to the frontend.
+#[tauri::command]
+pub async fn get_microsoft_skin(app: AppHandle, username: String) -> Result<Option<String>, String> {
+    let auth = read_cached_auth(&app).ok_or("Microsoft account is not cached")?;
+    let cached_name = auth.get("name").and_then(|value| value.as_str()).unwrap_or("");
+    if cached_name != username {
+        return Err("Cached Microsoft account does not match the selected account".to_string());
+    }
+
+    let access_token = auth
+        .get("access_token")
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+        .ok_or("Microsoft access token is missing")?;
+    let client = auth_client()?;
+    let response = send_with_retry(
+        || {
+            client
+                .get("https://api.minecraftservices.com/minecraft/profile")
+                .header(ACCEPT, "application/json")
+                .header(ACCEPT_ENCODING, "identity")
+                .bearer_auth(access_token)
+        },
+        "Microsoft skin profile",
+        Some(&app),
+    )
+    .await?;
+    let profile = json_response(response, "Microsoft skin profile").await?;
+
+    Ok(profile
+        .get("skins")
+        .and_then(|value| value.as_array())
+        .and_then(|skins| {
+            skins.iter().find_map(|skin| {
+                skin.get("url")
+                    .and_then(|value| value.as_str())
+                    .filter(|url| !url.is_empty())
+                    .map(|url| url.replacen("http://", "https://", 1))
+            })
+        }))
+}
+
 #[tauri::command]
 pub fn logout_microsoft(app: AppHandle) -> Result<(), String> {
     let path = app_data_dir(&app).join("ms_auth.json");

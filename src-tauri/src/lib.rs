@@ -393,6 +393,7 @@ pub fn run() {
             get_local_ip,
             launch::launch_minecraft,
             auth::login_microsoft,
+            auth::get_microsoft_skin,
             launch::kill_minecraft,
             download::download_mod,
             download::update_all_mods,

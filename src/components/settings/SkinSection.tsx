@@ -40,6 +40,8 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
   const stageRef = React.useRef<HTMLDivElement | null>(null);
   const viewerRef = React.useRef<SkinViewer | null>(null);
   const [localSkin, setLocalSkin] = React.useState<string | null>(() => readLocalSkin(account));
+  const [microsoftSkin, setMicrosoftSkin] = React.useState<string | null>(null);
+  const [microsoftSkinState, setMicrosoftSkinState] = React.useState<"loading" | "ready" | "error">("loading");
   const [skinStatus, setSkinStatus] = React.useState<"loading" | "ready" | "error">("loading");
   const [skinError, setSkinError] = React.useState(false);
 
@@ -47,14 +49,34 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
     () => `https://skinsystem.ely.by/skins/${encodeURIComponent(account.name)}.png?version=2`,
     [account.name],
   );
-  const currentSkin = localSkin || remoteSkin;
   const isMicrosoft = account.type === "microsoft";
+  const currentSkin = localSkin || (isMicrosoft ? microsoftSkin : remoteSkin);
 
   React.useEffect(() => {
     setLocalSkin(readLocalSkin(account));
+    setMicrosoftSkin(null);
+    setMicrosoftSkinState(isMicrosoft ? "loading" : "ready");
     setSkinStatus("loading");
     setSkinError(false);
-  }, [account.name, account.type]);
+
+    if (!isMicrosoft) return;
+
+    let cancelled = false;
+    void ipc.getMicrosoftSkin(account.name).then(
+      (skin) => {
+        if (cancelled) return;
+        setMicrosoftSkin(skin);
+        setMicrosoftSkinState(skin ? "ready" : "error");
+      },
+      () => {
+        if (!cancelled) setMicrosoftSkinState("error");
+      },
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [account.name, account.type, isMicrosoft]);
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -101,6 +123,12 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
     const viewer = viewerRef.current;
     if (!viewer) return;
 
+    if (!currentSkin) {
+      setSkinStatus(microsoftSkinState === "loading" ? "loading" : "error");
+      setSkinError(microsoftSkinState === "error");
+      return;
+    }
+
     let cancelled = false;
     setSkinStatus("loading");
     setSkinError(false);
@@ -119,7 +147,7 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
     return () => {
       cancelled = true;
     };
-  }, [currentSkin]);
+  }, [currentSkin, microsoftSkinState]);
 
   const handleSkinFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -152,8 +180,16 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
         <canvas ref={canvasRef} aria-label={isRussian ? "Просмотр скина" : "Skin preview"} />
         <div className={`skin-viewer-state ${skinStatus}`} aria-live="polite">
           {skinStatus === "loading" && (isRussian ? "Загрузка скина…" : "Loading skin…")}
-          {skinStatus === "ready" && (localSkin ? (isRussian ? "Локальный предпросмотр" : "Local preview") : "Ely.by")}
-          {skinStatus === "error" && (isRussian ? "Скин не найден" : "Skin not found")}
+          {skinStatus === "ready" &&
+            (localSkin
+              ? (isRussian ? "Локальный предпросмотр" : "Local preview")
+              : isMicrosoft
+                ? "Microsoft"
+                : "Ely.by")}
+          {skinStatus === "error" &&
+            (isMicrosoft
+              ? (isRussian ? "Официальный скин не загрузился" : "Official skin could not be loaded")
+              : (isRussian ? "Скин Ely.by не найден" : "Ely.by skin not found"))}
         </div>
         <span className="skin-viewer-hint">{isRussian ? "Перетаскивай мышью, чтобы вращать" : "Drag to rotate"}</span>
       </div>
@@ -168,8 +204,8 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
         <p className="skin-description">
           {isMicrosoft
             ? (isRussian
-              ? "Скин Microsoft загружается через Ely.by. Для офлайн-аккаунта используется скин по его нику."
-              : "The Microsoft skin is loaded through Ely.by. Offline accounts use the skin assigned to their nickname.")
+              ? "Скин Microsoft загружается из официального профиля Minecraft."
+              : "The Microsoft skin is loaded from the official Minecraft profile.")
             : (isRussian
               ? "Для этого аккаунта используется система скинов Ely.by. Открой сайт, чтобы изменить скин."
               : "This account uses the Ely.by skin system. Open the site to change the skin.")}
@@ -196,8 +232,12 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
         {skinError && (
           <p className="skin-error" role="status">
             {isRussian
-              ? "Проверь PNG 64×64 или 128×128 и доступ к skinsystem.ely.by."
-              : "Use a 64×64 or 128×128 PNG and check access to skinsystem.ely.by."}
+              ? (isMicrosoft
+                ? "Не удалось получить официальный профиль Minecraft. Перелогинься в Microsoft и открой настройки снова."
+                : "Проверь PNG 64×64 или 128×128 и доступ к skinsystem.ely.by.")
+              : (isMicrosoft
+                ? "The official Minecraft profile could not be loaded. Sign in to Microsoft again and reopen settings."
+                : "Use a 64×64 or 128×128 PNG and check access to skinsystem.ely.by.")}
           </p>
         )}
       </div>

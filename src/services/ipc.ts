@@ -25,6 +25,10 @@ export const ipc = {
     await invoke("logout_microsoft");
   },
 
+  async getMicrosoftSkin(username: string): Promise<string | null> {
+    return invoke<string | null>("get_microsoft_skin", { username });
+  },
+
   async launchMinecraft(args: {
     version: string;
     server: string;
