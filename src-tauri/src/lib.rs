@@ -1,6 +1,8 @@
 use std::io::Read;
+use std::path::{Path, PathBuf};
 use flate2::read::GzDecoder;
-use tauri::{AppHandle, Manager};
+use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, WebviewWindow, WindowEvent};
 
 mod auth;
 mod cache;
@@ -13,6 +15,81 @@ mod launch;
 mod network;
 mod util;
 mod validate;
+
+const LAUNCHER_WINDOW_STATE_FILE: &str = "launcher-window-state.json";
+
+#[derive(Debug, Deserialize, Serialize)]
+struct LauncherWindowState {
+    width: u32,
+    height: u32,
+    x: i32,
+    y: i32,
+    maximized: bool,
+}
+
+fn launcher_window_state_path(app: &AppHandle) -> PathBuf {
+    app.path()
+        .app_config_dir()
+        .or_else(|_| app.path().app_data_dir())
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .join(LAUNCHER_WINDOW_STATE_FILE)
+}
+
+fn read_launcher_window_state(path: &Path) -> Option<LauncherWindowState> {
+    let contents = std::fs::read_to_string(path).ok()?;
+    serde_json::from_str(&contents).ok()
+}
+
+fn save_launcher_window_state<R: tauri::Runtime>(window: &WebviewWindow<R>, path: &Path) {
+    if window.is_fullscreen().unwrap_or(false) {
+        return;
+    }
+
+    let Ok(size) = window.outer_size() else { return };
+    let Ok(position) = window.outer_position() else { return };
+    let maximized = window.is_maximized().unwrap_or(false);
+    let previous = read_launcher_window_state(path);
+    let state = LauncherWindowState {
+        width: if maximized { previous.as_ref().map_or(size.width, |item| item.width) } else { size.width },
+        height: if maximized { previous.as_ref().map_or(size.height, |item| item.height) } else { size.height },
+        x: if maximized { previous.as_ref().map_or(position.x, |item| item.x) } else { position.x },
+        y: if maximized { previous.as_ref().map_or(position.y, |item| item.y) } else { position.y },
+        maximized,
+    };
+
+    let Ok(contents) = serde_json::to_vec_pretty(&state) else { return };
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let temporary_path = path.with_extension("json.tmp");
+    if std::fs::write(&temporary_path, contents).is_ok() {
+        let _ = std::fs::remove_file(path);
+        let _ = std::fs::rename(temporary_path, path);
+    }
+}
+
+fn restore_launcher_window_state<R: tauri::Runtime>(window: &WebviewWindow<R>, path: &Path) {
+    let Some(state) = read_launcher_window_state(path) else { return };
+
+    let _ = window.set_size(PhysicalSize::new(state.width, state.height));
+    let _ = window.set_position(PhysicalPosition::new(state.x, state.y));
+    if state.maximized {
+        let _ = window.maximize();
+    }
+}
+
+fn setup_launcher_window(app: &AppHandle) {
+    let Some(window) = app.get_webview_window("main") else { return };
+    let state_path = launcher_window_state_path(app);
+
+    restore_launcher_window_state(&window, &state_path);
+
+    window.clone().on_window_event(move |event| {
+        if matches!(event, WindowEvent::Resized(_) | WindowEvent::Moved(_) | WindowEvent::CloseRequested { .. }) {
+            save_launcher_window_state(&window, &state_path);
+        }
+    });
+}
 
 fn get_data_dir(app: &AppHandle) -> String {
     let mut path = app.path().app_data_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
@@ -307,6 +384,7 @@ pub fn run() {
         .setup(|app| {
             let conn = db::init(app.handle())?;
             app.manage(db::Db(std::sync::Mutex::new(conn)));
+            setup_launcher_window(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
