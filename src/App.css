@@ -4256,8 +4256,7 @@ input[type="color"]::-webkit-color-swatch {
   touch-action: none;
 }
 
-.skin-viewer-state,
-.skin-viewer-hint {
+.skin-viewer-state {
   position: absolute;
   pointer-events: none;
   border: 1px solid rgba(186, 215, 247, 0.13);
@@ -4271,7 +4270,6 @@ input[type="color"]::-webkit-color-swatch {
 .skin-viewer-state { top: 11px; left: 11px; padding: 5px 8px; }
 .skin-viewer-state.ready { border-color: rgba(95, 208, 178, 0.28); color: #9cdccc; }
 .skin-viewer-state.error { border-color: rgba(228, 109, 76, 0.28); color: #ffc09e; }
-.skin-viewer-hint { right: 11px; bottom: 10px; padding: 5px 8px; color: #7d88a1; }
 
 .skin-controls {
   display: flex;

@@ -191,7 +191,6 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
               ? (isRussian ? "Официальный скин не загрузился" : "Official skin could not be loaded")
               : (isRussian ? "Скин Ely.by не найден" : "Ely.by skin not found"))}
         </div>
-        <span className="skin-viewer-hint">{isRussian ? "Перетаскивай мышью, чтобы вращать" : "Drag to rotate"}</span>
       </div>
 
       <div className="skin-controls">
