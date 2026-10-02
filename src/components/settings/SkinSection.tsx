@@ -93,7 +93,7 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
         enableControls: true,
       });
       viewer.controls.enablePan = false;
-      viewer.controls.enableZoom = false;
+      viewer.controls.enableZoom = true;
       viewer.controls.enableRotate = true;
       viewer.autoRotate = true;
       viewer.autoRotateSpeed = 0.55;
