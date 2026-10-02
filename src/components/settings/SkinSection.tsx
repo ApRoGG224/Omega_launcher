@@ -93,7 +93,7 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
         enableControls: true,
       });
       viewer.controls.enablePan = false;
-      viewer.controls.enableZoom = true;
+      viewer.controls.enableZoom = false;
       viewer.controls.enableRotate = true;
       viewer.controls.enableDamping = true;
       viewer.controls.dampingFactor = 0.08;
@@ -102,6 +102,14 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
       viewer.autoRotateSpeed = 0.25;
       viewer.animation = new IdleAnimation();
       viewerRef.current = viewer;
+
+      const handleWheel = (event: WheelEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const zoomFactor = Math.exp(-event.deltaY * 0.0015);
+        viewer.zoom = Math.min(1.6, Math.max(0.55, viewer.zoom * zoomFactor));
+      };
+      canvas.addEventListener("wheel", handleWheel, { passive: false });
 
       const resize = () => {
         viewer.setSize(Math.max(stage.clientWidth, 240), Math.max(stage.clientHeight, 300));
@@ -113,6 +121,7 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
 
       return () => {
         observer?.disconnect();
+        canvas.removeEventListener("wheel", handleWheel);
         viewer.dispose();
         viewerRef.current = null;
       };
