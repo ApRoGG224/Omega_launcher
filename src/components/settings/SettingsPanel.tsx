@@ -1,6 +1,7 @@
 import React from "react";
-import type { Language, VersionFilterState } from "../../types";
+import type { Account, Language, VersionFilterState } from "../../types";
 import { ipc } from "../../services/ipc";
+import { SkinSection } from "./SkinSection";
 import {
   IconBox,
   IconCpu,
@@ -50,6 +51,7 @@ const SettingsSection = React.memo(({
 
 export const SettingsPanel = React.memo(({
   t,
+  account,
   language,
   changeLanguage,
   exportPath,
@@ -74,6 +76,7 @@ export const SettingsPanel = React.memo(({
   onOpenStore,
 }: {
   t: any;
+  account: Account;
   language: Language;
   changeLanguage: (lang: Language) => void;
   exportPath: string;
@@ -142,6 +145,7 @@ export const SettingsPanel = React.memo(({
 
           <nav className="settings-rewrite-nav">
             <span className="settings-rewrite-nav-label">{isRussian ? "Конфигурация" : "Configuration"}</span>
+            <a href="#settings-skin"><IconUsers /><span>{isRussian ? "Скин" : "Skin"}</span></a>
             <a href="#settings-files"><IconFolder /><span>{isRussian ? "Пути игры" : "Game paths"}</span></a>
             <a href="#settings-runtime"><IconCpu /><span>{isRussian ? "Производительность" : "Performance"}</span></a>
             <a href="#settings-library"><IconBox /><span>{isRussian ? "Библиотека версий" : "Version library"}</span></a>
@@ -157,6 +161,17 @@ export const SettingsPanel = React.memo(({
         </aside>
 
         <main className="settings-rewrite-main">
+          <SettingsSection
+            id="settings-skin"
+            icon={<IconUsers />}
+            iconColor="#61d6b5"
+            title={isRussian ? "Скин персонажа" : "Character skin"}
+            description={isRussian ? "Просмотр и источник скина для текущего аккаунта" : "Preview and skin source for the current account"}
+            aside={<span className="settings-rewrite-section-tag">{account.type === "microsoft" ? "MICROSOFT" : "ELY.BY"}</span>}
+          >
+            <SkinSection account={account} language={language} />
+          </SettingsSection>
+
           <SettingsSection
             id="settings-files"
             icon={<IconFolder />}

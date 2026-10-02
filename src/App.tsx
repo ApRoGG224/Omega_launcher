@@ -322,6 +322,7 @@ function App() {
         {activeTab === "settings" && (
           <SettingsPanel
             t={t}
+            account={accountsApi.account}
             language={language}
             changeLanguage={changeLanguage}
             exportPath={instancesApi.exportPath}
