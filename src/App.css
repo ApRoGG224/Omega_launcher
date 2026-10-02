@@ -4239,16 +4239,6 @@ input[type="color"]::-webkit-color-swatch {
   box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.24), 0 13px 28px rgba(0, 0, 0, 0.14);
 }
 
-.skin-viewer-stage::before {
-  position: absolute;
-  right: 12%;
-  bottom: 13%;
-  left: 12%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(145, 151, 255, 0.38), transparent);
-  content: "";
-}
-
 .skin-viewer-stage canvas {
   display: block;
   width: 100%;
