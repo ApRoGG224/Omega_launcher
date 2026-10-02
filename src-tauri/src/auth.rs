@@ -155,7 +155,7 @@ pub async fn try_refresh_cached_token(app: &AppHandle) -> Result<bool, String> {
     )
     .await?;
     let data = json_response(res, "Token refresh").await?;
-    let access_token = data
+    let microsoft_access_token = data
         .get("access_token")
         .and_then(|v| v.as_str())
         .ok_or("No access_token in refresh response")?
@@ -167,8 +167,15 @@ pub async fn try_refresh_cached_token(app: &AppHandle) -> Result<bool, String> {
         .unwrap_or_else(|| refresh_token.to_string());
     let expires_in = data.get("expires_in").and_then(|v| v.as_u64()).unwrap_or(3600);
 
+    // The refresh endpoint returns a Microsoft token, while Minecraft profile
+    // and launch APIs require a fresh Minecraft token obtained through Xbox.
+    let (xsts_token, uhs) = xbox_authenticate(&microsoft_access_token).await?;
+    let (minecraft_access_token, name, uuid) = minecraft_login(app, &xsts_token, &uhs).await?;
+
     let mut updated = json;
-    updated["access_token"] = Value::String(access_token);
+    updated["access_token"] = Value::String(minecraft_access_token);
+    updated["name"] = Value::String(name);
+    updated["uuid"] = Value::String(uuid);
     updated["refresh_token"] = Value::String(new_refresh);
     updated["expires_on"] = Value::Number(serde_json::Number::from(now_unix() + expires_in as u64));
     write_auth_file(app, &updated)?;
@@ -193,6 +200,9 @@ pub fn read_cached_auth(app: &AppHandle) -> Option<Value> {
 /// The access token stays in Rust and is never exposed to the frontend.
 #[tauri::command]
 pub async fn get_microsoft_skin(app: AppHandle, username: String) -> Result<Option<String>, String> {
+    // The cached Minecraft token is short-lived. Refresh it before querying
+    // the profile so the preview also works after a long launcher restart.
+    try_refresh_cached_token(&app).await?;
     let auth = read_cached_auth(&app).ok_or("Microsoft account is not cached")?;
     let cached_name = auth.get("name").and_then(|value| value.as_str()).unwrap_or("");
     if cached_name != username {
