@@ -17,8 +17,7 @@
     "@tauri-apps/plugin-opener": "^2",
     "react": "^19.1.0",
     "react-colorful": "^5.7.0",
-    "react-dom": "^19.1.0",
-    "skinview3d": "^3.4.2"
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

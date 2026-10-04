@@ -1,5 +1,4 @@
 import React from "react";
-import { SkinViewer } from "skinview3d";
 import type { Account, Language } from "../../types";
 import { ipc } from "../../services/ipc";
 import { IconCamera, IconDownload } from "../../ui/icons";
@@ -34,11 +33,22 @@ function removeLocalSkin(account: Account) {
   }
 }
 
+const skinCubeFaces = ["front", "back", "right", "left", "top", "bottom"] as const;
+
+function SkinCube({ className }: { className: string }) {
+  return (
+    <div className={`skin-css-cube ${className}`}>
+      {skinCubeFaces.map((face) => <span className={`skin-css-face skin-css-face-${face}`} key={face} />)}
+    </div>
+  );
+}
+
 export const SkinSection = React.memo(({ account, language }: { account: Account; language: Language }) => {
   const isRussian = language === "ru";
-  const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
-  const stageRef = React.useRef<HTMLDivElement | null>(null);
-  const viewerRef = React.useRef<SkinViewer | null>(null);
+  const modelRef = React.useRef<HTMLDivElement | null>(null);
+  const dragRef = React.useRef<{ pointerId: number; x: number; y: number; rotationX: number; rotationY: number } | null>(null);
+  const rotationRef = React.useRef({ x: -8, y: -28 });
+  const zoomRef = React.useRef(1);
   const [localSkin, setLocalSkin] = React.useState<string | null>(() => readLocalSkin(account));
   const [microsoftSkin, setMicrosoftSkin] = React.useState<string | null>(null);
   const [microsoftSkinState, setMicrosoftSkinState] = React.useState<"loading" | "ready" | "error">("loading");
@@ -79,110 +89,51 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
   }, [account.name, account.type, isMicrosoft]);
 
   React.useEffect(() => {
-    const canvas = canvasRef.current;
-    const stage = stageRef.current;
-    if (!canvas || !stage) return;
-
-    let viewer: SkinViewer;
-    try {
-      viewer = new SkinViewer({
-        canvas,
-        width: Math.max(stage.clientWidth, 240),
-        height: Math.max(stage.clientHeight, 300),
-        background: 0x080b16,
-        enableControls: true,
-        // Keep the preview at one device-independent pixel and render only on demand.
-        pixelRatio: 1,
-        renderPaused: true,
-      });
-      viewer.controls.enablePan = false;
-      viewer.controls.enableZoom = false;
-      viewer.controls.enableRotate = true;
-      viewer.controls.enableDamping = false;
-      viewer.controls.autoRotate = false;
-      viewer.controls.rotateSpeed = 0.45;
-      viewer.autoRotate = false;
-      viewer.animation = null;
-      viewerRef.current = viewer;
-
-      const resumeForInteraction = () => {
-        viewer.renderPaused = false;
-      };
-      const pauseWhenIdle = () => {
-        viewer.renderPaused = true;
-        viewer.render();
-      };
-      canvas.addEventListener("pointerdown", resumeForInteraction);
-      canvas.addEventListener("pointerup", pauseWhenIdle);
-      canvas.addEventListener("pointercancel", pauseWhenIdle);
-      canvas.addEventListener("lostpointercapture", pauseWhenIdle);
-
-      const handleWheel = (event: WheelEvent) => {
-        event.preventDefault();
-        event.stopPropagation();
-        const zoomFactor = Math.exp(-event.deltaY * 0.0015);
-        viewer.zoom = Math.min(1.6, Math.max(0.55, viewer.zoom * zoomFactor));
-        viewer.render();
-      };
-      canvas.addEventListener("wheel", handleWheel, { passive: false });
-
-      const resize = () => {
-        viewer.setSize(Math.max(stage.clientWidth, 240), Math.max(stage.clientHeight, 300));
-      };
-      resize();
-      pauseWhenIdle();
-
-      const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(resize);
-      observer?.observe(stage);
-
-      return () => {
-        observer?.disconnect();
-        canvas.removeEventListener("wheel", handleWheel);
-        canvas.removeEventListener("pointerdown", resumeForInteraction);
-        canvas.removeEventListener("pointerup", pauseWhenIdle);
-        canvas.removeEventListener("pointercancel", pauseWhenIdle);
-        canvas.removeEventListener("lostpointercapture", pauseWhenIdle);
-        viewer.dispose();
-        viewerRef.current = null;
-      };
-    } catch {
-      setSkinStatus("error");
-      setSkinError(true);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    const viewer = viewerRef.current;
-    if (!viewer) return;
-
     if (!currentSkin) {
       setSkinStatus(microsoftSkinState === "loading" ? "loading" : "error");
       setSkinError(microsoftSkinState === "error");
       return;
     }
 
-    let cancelled = false;
     setSkinStatus("loading");
     setSkinError(false);
-    void viewer.loadSkin(currentSkin, { model: "auto-detect" }).then(
-      () => {
-        if (!cancelled) {
-          viewer.render();
-          setSkinStatus("ready");
-        }
-      },
-      () => {
-        if (!cancelled) {
-          setSkinStatus("error");
-          setSkinError(true);
-        }
-      },
-    );
-
-    return () => {
-      cancelled = true;
-    };
   }, [currentSkin, microsoftSkinState]);
+
+  const updateModelTransform = () => {
+    if (!modelRef.current) return;
+    const { x, y } = rotationRef.current;
+    modelRef.current.style.transform = `rotateX(${x}deg) rotateY(${y}deg) scale(${8 * zoomRef.current})`;
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragRef.current = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      rotationX: rotationRef.current.x,
+      rotationY: rotationRef.current.y,
+    };
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    rotationRef.current.x = Math.max(-32, Math.min(28, drag.rotationX - (event.clientY - drag.y) * 0.45));
+    rotationRef.current.y = drag.rotationY + (event.clientX - drag.x) * 0.55;
+    updateModelTransform();
+  };
+
+  const stopDragging = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (dragRef.current?.pointerId === event.pointerId) dragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+
+  const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    zoomRef.current = Math.max(0.78, Math.min(1.25, zoomRef.current * Math.exp(-event.deltaY * 0.0015)));
+    updateModelTransform();
+  };
 
   const handleSkinFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -211,8 +162,37 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
 
   return (
     <div className="skin-section-content">
-      <div className="skin-viewer-stage" ref={stageRef}>
-        <canvas ref={canvasRef} aria-label={isRussian ? "Просмотр скина" : "Skin preview"} />
+      <div
+        className="skin-viewer-stage skin-css-stage"
+        style={{ "--skin-texture": currentSkin ? `url("${currentSkin}")` : "none" } as React.CSSProperties}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={stopDragging}
+        onPointerCancel={stopDragging}
+        onWheel={handleWheel}
+        aria-label={isRussian ? "Просмотр скина" : "Skin preview"}
+      >
+        {currentSkin && (
+          <img
+            className="skin-texture-preload"
+            src={currentSkin}
+            alt=""
+            aria-hidden="true"
+            onLoad={() => setSkinStatus("ready")}
+            onError={() => {
+              setSkinStatus("error");
+              setSkinError(true);
+            }}
+          />
+        )}
+        <div className="skin-css-model" ref={modelRef}>
+          <SkinCube className="skin-css-head" />
+          <SkinCube className="skin-css-body" />
+          <SkinCube className="skin-css-right-arm" />
+          <SkinCube className="skin-css-left-arm" />
+          <SkinCube className="skin-css-right-leg" />
+          <SkinCube className="skin-css-left-leg" />
+        </div>
         <div className={`skin-viewer-state ${skinStatus}`} aria-live="polite">
           {skinStatus === "loading" && (isRussian ? "Загрузка скина…" : "Loading skin…")}
           {skinStatus === "ready" &&

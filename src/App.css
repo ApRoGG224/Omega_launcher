@@ -4270,12 +4270,72 @@ input[type="color"]::-webkit-color-swatch {
   box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.24), 0 13px 28px rgba(0, 0, 0, 0.14);
 }
 
-.skin-viewer-stage canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-  touch-action: none;
+.skin-css-stage { perspective: 900px; cursor: grab; touch-action: none; }
+.skin-css-stage:active { cursor: grabbing; }
+.skin-css-model {
+  position: absolute;
+  inset: 0;
+  transform: rotateX(-8deg) rotateY(-28deg) scale(8);
+  transform-style: preserve-3d;
+  will-change: transform;
 }
+.skin-css-cube {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--cube-w);
+  height: var(--cube-h);
+  transform: translate3d(calc(-50% + var(--cube-x)), calc(-50% + var(--cube-y)), var(--cube-z));
+  transform-style: preserve-3d;
+}
+.skin-css-face {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+  border: 0.35px solid rgba(0, 0, 0, 0.15);
+  background-image: var(--skin-texture);
+  background-repeat: no-repeat;
+  background-size: 512px 512px;
+  image-rendering: pixelated;
+  backface-visibility: hidden;
+}
+.skin-css-face-front,
+.skin-css-face-back { width: var(--cube-w); height: var(--cube-h); }
+.skin-css-face-front { transform: translateZ(calc(var(--cube-d) / 2)); background-position: var(--front-pos); }
+.skin-css-face-back { transform: rotateY(180deg) translateZ(calc(var(--cube-d) / 2)); background-position: var(--back-pos); }
+.skin-css-face-right,
+.skin-css-face-left { top: 0; width: var(--cube-d); height: var(--cube-h); }
+.skin-css-face-right { left: calc((var(--cube-w) - var(--cube-d)) / 2); transform: rotateY(90deg) translateZ(calc(var(--cube-w) / 2)); background-position: var(--right-pos); }
+.skin-css-face-left { left: calc((var(--cube-w) - var(--cube-d)) / 2); transform: rotateY(-90deg) translateZ(calc(var(--cube-w) / 2)); background-position: var(--left-pos); }
+.skin-css-face-top,
+.skin-css-face-bottom { left: 0; width: var(--cube-w); height: var(--cube-d); }
+.skin-css-face-top { top: calc((var(--cube-h) - var(--cube-d)) / 2); transform: rotateX(90deg) translateZ(calc(var(--cube-h) / 2)); background-position: var(--top-pos); }
+.skin-css-face-bottom { top: calc((var(--cube-h) - var(--cube-d)) / 2); transform: rotateX(-90deg) translateZ(calc(var(--cube-h) / 2)); background-position: var(--bottom-pos); }
+.skin-css-head {
+  --cube-w: 8px; --cube-h: 8px; --cube-d: 8px; --cube-x: 0px; --cube-y: -10px; --cube-z: 0px;
+  --front-pos: -64px -64px; --back-pos: -192px -64px; --right-pos: -128px -64px; --left-pos: 0 -64px; --top-pos: -64px 0; --bottom-pos: -128px 0;
+}
+.skin-css-body {
+  --cube-w: 8px; --cube-h: 12px; --cube-d: 4px; --cube-x: 0px; --cube-y: 0px; --cube-z: 0px;
+  --front-pos: -160px -160px; --back-pos: -256px -160px; --right-pos: -224px -160px; --left-pos: -128px -160px; --top-pos: -160px -128px; --bottom-pos: -224px -224px;
+}
+.skin-css-right-arm {
+  --cube-w: 4px; --cube-h: 12px; --cube-d: 4px; --cube-x: 6px; --cube-y: 0px; --cube-z: 0px;
+  --front-pos: -352px -160px; --back-pos: -416px -160px; --right-pos: -384px -160px; --left-pos: -320px -160px; --top-pos: -352px -128px; --bottom-pos: -384px -224px;
+}
+.skin-css-left-arm {
+  --cube-w: 4px; --cube-h: 12px; --cube-d: 4px; --cube-x: -6px; --cube-y: 0px; --cube-z: 0px;
+  --front-pos: -288px -416px; --back-pos: -352px -416px; --right-pos: -320px -416px; --left-pos: -256px -416px; --top-pos: -288px -384px; --bottom-pos: -320px -480px;
+}
+.skin-css-right-leg {
+  --cube-w: 4px; --cube-h: 12px; --cube-d: 4px; --cube-x: 2px; --cube-y: 12px; --cube-z: 0px;
+  --front-pos: -32px -160px; --back-pos: -96px -160px; --right-pos: -64px -160px; --left-pos: 0 -160px; --top-pos: -32px -128px; --bottom-pos: -64px -224px;
+}
+.skin-css-left-leg {
+  --cube-w: 4px; --cube-h: 12px; --cube-d: 4px; --cube-x: -2px; --cube-y: 12px; --cube-z: 0px;
+  --front-pos: -160px -416px; --back-pos: -224px -416px; --right-pos: -192px -416px; --left-pos: -128px -416px; --top-pos: -160px -384px; --bottom-pos: -192px -480px;
+}
+.skin-texture-preload { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
 .skin-viewer-state {
   position: absolute;
