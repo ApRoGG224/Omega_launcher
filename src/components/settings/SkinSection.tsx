@@ -102,11 +102,24 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
       viewer.animation = null;
       viewerRef.current = viewer;
 
+      const resumeForInteraction = () => {
+        viewer.renderPaused = false;
+      };
+      const pauseWhenIdle = () => {
+        viewer.renderPaused = true;
+        viewer.render();
+      };
+      canvas.addEventListener("pointerdown", resumeForInteraction);
+      canvas.addEventListener("pointerup", pauseWhenIdle);
+      canvas.addEventListener("pointercancel", pauseWhenIdle);
+      canvas.addEventListener("lostpointercapture", pauseWhenIdle);
+
       const handleWheel = (event: WheelEvent) => {
         event.preventDefault();
         event.stopPropagation();
         const zoomFactor = Math.exp(-event.deltaY * 0.0015);
         viewer.zoom = Math.min(1.6, Math.max(0.55, viewer.zoom * zoomFactor));
+        viewer.render();
       };
       canvas.addEventListener("wheel", handleWheel, { passive: false });
 
@@ -114,6 +127,7 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
         viewer.setSize(Math.max(stage.clientWidth, 240), Math.max(stage.clientHeight, 300));
       };
       resize();
+      pauseWhenIdle();
 
       const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(resize);
       observer?.observe(stage);
@@ -121,6 +135,10 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
       return () => {
         observer?.disconnect();
         canvas.removeEventListener("wheel", handleWheel);
+        canvas.removeEventListener("pointerdown", resumeForInteraction);
+        canvas.removeEventListener("pointerup", pauseWhenIdle);
+        canvas.removeEventListener("pointercancel", pauseWhenIdle);
+        canvas.removeEventListener("lostpointercapture", pauseWhenIdle);
         viewer.dispose();
         viewerRef.current = null;
       };
@@ -145,7 +163,10 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
     setSkinError(false);
     void viewer.loadSkin(currentSkin, { model: "auto-detect" }).then(
       () => {
-        if (!cancelled) setSkinStatus("ready");
+        if (!cancelled) {
+          viewer.render();
+          setSkinStatus("ready");
+        }
       },
       () => {
         if (!cancelled) {
