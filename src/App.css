@@ -4573,13 +4573,6 @@ input[type="color"]::-webkit-color-swatch {
   height: 70px;
 }
 
-.dock-wrapper.dock-auto-hidden .floating-dock {
-  width: 100%;
-  box-sizing: border-box;
-  justify-content: space-evenly;
-  border-radius: 14px 14px 0 0;
-}
-
 .settings-rewrite {
   flex: 1 1 auto;
   height: auto;
