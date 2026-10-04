@@ -19,6 +19,10 @@ const VERSION_FILTER_ITEMS = [
   { key: "old_alpha", icon: <IconFolder />, labelKey: "versionAlpha", descKey: "versionAlphaDesc" },
 ] as const;
 
+const RAM_MIN = 1;
+const RAM_MAX = 16;
+const RAM_MARKS = [1, 4, 8, 12, 16];
+
 const SettingsSection = React.memo(({
   id,
   icon,
@@ -216,8 +220,20 @@ export const SettingsPanel = React.memo(({
           >
             <div className="settings-rewrite-runtime-row">
               <div className="settings-rewrite-range-wrap">
-                <input type="range" min="1" max="16" value={ram} onChange={(e) => setRam(parseInt(e.target.value))} className="settings-rewrite-range" style={sliderStyle} aria-label={t.ramSettingsTitle} />
-                <div className="settings-rewrite-range-labels"><span>1G</span><span>4G</span><span>8G</span><span>12G</span><span>16G</span></div>
+                <input type="range" min={RAM_MIN} max={RAM_MAX} value={ram} onChange={(e) => setRam(parseInt(e.target.value))} className="settings-rewrite-range" style={sliderStyle} aria-label={t.ramSettingsTitle} />
+                <div className="settings-rewrite-range-labels">
+                  {RAM_MARKS.map((mark) => (
+                    <span
+                      key={mark}
+                      style={{
+                        left: `${((mark - RAM_MIN) / (RAM_MAX - RAM_MIN)) * 100}%`,
+                        transform: mark === RAM_MIN ? "translateX(0)" : mark === RAM_MAX ? "translateX(-100%)" : "translateX(-50%)",
+                      }}
+                    >
+                      {mark}G
+                    </span>
+                  ))}
+                </div>
               </div>
               <div className="settings-rewrite-runtime-note">
                 <span>{isRussian ? "Рекомендуется" : "Recommended"}</span>

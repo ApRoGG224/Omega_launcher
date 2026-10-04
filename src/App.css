@@ -4399,7 +4399,8 @@ input[type="color"]::-webkit-color-swatch {
   background: #fff;
   box-shadow: 0 0 0 4px rgba(var(--accent-color-rgb), 0.14), 0 3px 10px rgba(0, 0, 0, 0.32);
 }
-.settings-rewrite-range-labels { display: flex; justify-content: space-between; margin-top: 9px; color: #606b84; font-size: 0.6rem; font-variant-numeric: tabular-nums; }
+.settings-rewrite-range-labels { position: relative; height: 12px; margin-top: 9px; color: #606b84; font-size: 0.6rem; font-variant-numeric: tabular-nums; }
+.settings-rewrite-range-labels span { position: absolute; top: 0; white-space: nowrap; }
 .settings-rewrite-runtime-note { padding-left: 15px; border-left: 1px solid rgba(186, 215, 247, 0.1); }
 .settings-rewrite-runtime-note span { display: block; color: #7d88a1; font-size: 0.62rem; }
 .settings-rewrite-runtime-note strong { display: block; margin-top: 4px; color: #c3bcff; font-size: 0.92rem; }
