@@ -95,10 +95,11 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
       viewer.controls.enablePan = false;
       viewer.controls.enableZoom = false;
       viewer.controls.enableRotate = true;
-      viewer.controls.enableDamping = true;
-      viewer.controls.dampingFactor = 0.08;
+      viewer.controls.enableDamping = false;
+      viewer.controls.autoRotate = false;
       viewer.controls.rotateSpeed = 0.45;
       viewer.autoRotate = false;
+      viewer.animation = null;
       viewerRef.current = viewer;
 
       const handleWheel = (event: WheelEvent) => {
