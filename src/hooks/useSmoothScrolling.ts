@@ -6,6 +6,9 @@ type PendingScroll = {
 };
 
 function getScrollableElement(target: EventTarget | null, delta: number, pending: Map<HTMLElement, PendingScroll>) {
+  const targetElement = target instanceof HTMLElement ? target : target instanceof Element ? target : null;
+  if (targetElement?.closest(".settings-rewrite")) return null;
+
   let element = target instanceof HTMLElement ? target : target instanceof Element ? target.parentElement : null;
 
   while (element && element !== document.body) {
