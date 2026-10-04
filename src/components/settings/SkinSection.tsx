@@ -91,6 +91,9 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
         height: Math.max(stage.clientHeight, 300),
         background: 0x080b16,
         enableControls: true,
+        // Keep the preview at one device-independent pixel and render only on demand.
+        pixelRatio: 1,
+        renderPaused: true,
       });
       viewer.controls.enablePan = false;
       viewer.controls.enableZoom = false;
