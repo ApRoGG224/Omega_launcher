@@ -1,5 +1,5 @@
 import React from "react";
-import { IdleAnimation, SkinViewer } from "skinview3d";
+import { SkinViewer } from "skinview3d";
 import type { Account, Language } from "../../types";
 import { ipc } from "../../services/ipc";
 import { IconCamera, IconDownload } from "../../ui/icons";
@@ -98,9 +98,7 @@ export const SkinSection = React.memo(({ account, language }: { account: Account
       viewer.controls.enableDamping = true;
       viewer.controls.dampingFactor = 0.08;
       viewer.controls.rotateSpeed = 0.45;
-      viewer.autoRotate = true;
-      viewer.autoRotateSpeed = 0.25;
-      viewer.animation = new IdleAnimation();
+      viewer.autoRotate = false;
       viewerRef.current = viewer;
 
       const handleWheel = (event: WheelEvent) => {
