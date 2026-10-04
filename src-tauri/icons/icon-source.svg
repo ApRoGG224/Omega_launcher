@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="background" x1="112" y1="80" x2="896" y2="944" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1B1640"/>
+      <stop offset="0.48" stop-color="#0F1227"/>
+      <stop offset="1" stop-color="#070A15"/>
+    </linearGradient>
+    <linearGradient id="violetOrbit" x1="244" y1="170" x2="816" y2="770" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B5A7FF"/>
+      <stop offset="0.42" stop-color="#855CFF"/>
+      <stop offset="1" stop-color="#5A35E8"/>
+    </linearGradient>
+    <linearGradient id="cyanOrbit" x1="722" y1="828" x2="214" y2="270" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#62D9FF"/>
+      <stop offset="0.5" stop-color="#38B9E8"/>
+      <stop offset="1" stop-color="#7862FF"/>
+    </linearGradient>
+    <radialGradient id="ambient" cx="0" cy="0" r="1" gradientTransform="translate(510 470) rotate(90) scale(430)">
+      <stop stop-color="#775BFF" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#775BFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="28" y="28" width="968" height="968" rx="236" fill="url(#background)"/>
+  <rect x="29.5" y="29.5" width="965" height="965" rx="234.5" stroke="#8A71FF" stroke-opacity="0.34" stroke-width="3"/>
+  <rect x="58" y="58" width="908" height="908" rx="210" fill="url(#ambient)"/>
+
+  <g filter="url(#softGlow)" opacity="0.3">
+    <path d="M286 348C371 220 543 177 677 251C754 294 801 370 806 452" stroke="#9B86FF" stroke-width="92" stroke-linecap="round"/>
+    <path d="M738 676C653 804 481 847 347 773C270 730 223 654 218 572" stroke="#4DD2F5" stroke-width="92" stroke-linecap="round"/>
+  </g>
+
+  <path d="M286 348C371 220 543 177 677 251C754 294 801 370 806 452" stroke="url(#violetOrbit)" stroke-width="76" stroke-linecap="round"/>
+  <path d="M738 676C653 804 481 847 347 773C270 730 223 654 218 572" stroke="url(#cyanOrbit)" stroke-width="76" stroke-linecap="round"/>
+
+  <circle cx="611" cy="390" r="62" fill="#11142B" stroke="#A99BFF" stroke-width="16"/>
+  <circle cx="611" cy="390" r="27" fill="#E2DEFF"/>
+  <circle cx="413" cy="634" r="62" fill="#11142B" stroke="#58D5F7" stroke-width="16"/>
+  <circle cx="413" cy="634" r="27" fill="#D9F8FF"/>
+</svg>
