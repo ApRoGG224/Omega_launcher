@@ -143,10 +143,6 @@ export const SettingsPanel = React.memo(({
 
       <div className="settings-rewrite-layout">
         <aside className="settings-rewrite-sidebar" aria-label={isRussian ? "Разделы настроек" : "Settings sections"}>
-          <div className="settings-rewrite-sidebar-brand">
-            <div className="settings-rewrite-sidebar-logo"><IconLayers /></div>
-          </div>
-
           <nav className="settings-rewrite-nav">
             <span className="settings-rewrite-nav-label">{isRussian ? "Конфигурация" : "Configuration"}</span>
             <a href="#settings-skin"><IconUsers /><span>{isRussian ? "Скин" : "Skin"}</span></a>
