@@ -3948,8 +3948,8 @@ input[type="color"]::-webkit-color-swatch {
   border-radius: 0;
   gap: 20px;
   overflow-y: auto;
-  scroll-behavior: auto;
-  will-change: auto;
+  scroll-behavior: smooth;
+  will-change: scroll-position;
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--accent-color-rgb), 0.42) transparent;
 }
