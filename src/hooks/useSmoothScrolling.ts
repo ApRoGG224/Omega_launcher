@@ -5,6 +5,21 @@ type PendingScroll = {
   frame: number | null;
 };
 
+function animateScroll(element: HTMLElement, pending: Map<HTMLElement, PendingScroll>) {
+  const motion = pending.get(element);
+  if (!motion) return;
+
+  const distance = motion.target - element.scrollTop;
+  if (Math.abs(distance) < 0.5) {
+    element.scrollTop = motion.target;
+    motion.frame = null;
+    return;
+  }
+
+  element.scrollTop += distance * 0.24;
+  motion.frame = window.requestAnimationFrame(() => animateScroll(element, pending));
+}
+
 function getScrollableElement(target: EventTarget | null, delta: number, pending: Map<HTMLElement, PendingScroll>) {
   const targetElement = target instanceof HTMLElement ? target : target instanceof Element ? target : null;
 
@@ -47,16 +62,12 @@ export function useSmoothScrolling() {
       const delta = Math.max(-240, Math.min(240, event.deltaY * multiplier));
       const maxScroll = scrollable.scrollHeight - scrollable.clientHeight;
       const motion = pending.get(scrollable) ?? { target: scrollable.scrollTop, frame: null };
+      if (motion.frame === null) motion.target = scrollable.scrollTop;
       motion.target = Math.max(0, Math.min(maxScroll, motion.target + delta));
       pending.set(scrollable, motion);
 
       if (motion.frame !== null) return;
-      motion.frame = window.requestAnimationFrame(() => {
-        const next = pending.get(scrollable);
-        if (!next) return;
-        next.frame = null;
-        scrollable.scrollTo({ top: next.target, behavior: "smooth" });
-      });
+      motion.frame = window.requestAnimationFrame(() => animateScroll(scrollable, pending));
     };
 
     document.addEventListener("wheel", handleWheel, { passive: false });
