@@ -3,20 +3,24 @@ import type { Account, Language, VersionFilterState } from "../../types";
 import { ipc } from "../../services/ipc";
 import { SkinSection } from "./SkinSection";
 import {
-  IconBox,
   IconCpu,
   IconDownload,
+  IconFlask,
   IconFolder,
+  IconHistory,
+  IconLayers,
   IconSearch,
   IconSettings,
+  IconSparkles,
+  IconTag,
   IconUsers,
 } from "../../ui/icons";
 
 const VERSION_FILTER_ITEMS = [
-  { key: "release", icon: <IconBox />, labelKey: "versionRelease", descKey: "versionReleaseDesc" },
-  { key: "snapshot", icon: <IconCpu />, labelKey: "versionSnapshot", descKey: "versionSnapshotDesc" },
-  { key: "old_beta", icon: <IconSettings />, labelKey: "versionBeta", descKey: "versionBetaDesc" },
-  { key: "old_alpha", icon: <IconFolder />, labelKey: "versionAlpha", descKey: "versionAlphaDesc" },
+  { key: "release", icon: <IconTag />, labelKey: "versionRelease", descKey: "versionReleaseDesc" },
+  { key: "snapshot", icon: <IconSparkles />, labelKey: "versionSnapshot", descKey: "versionSnapshotDesc" },
+  { key: "old_beta", icon: <IconFlask />, labelKey: "versionBeta", descKey: "versionBetaDesc" },
+  { key: "old_alpha", icon: <IconHistory />, labelKey: "versionAlpha", descKey: "versionAlphaDesc" },
 ] as const;
 
 const RAM_MIN = 1;
@@ -140,7 +144,7 @@ export const SettingsPanel = React.memo(({
       <div className="settings-rewrite-layout">
         <aside className="settings-rewrite-sidebar" aria-label={isRussian ? "Разделы настроек" : "Settings sections"}>
           <div className="settings-rewrite-sidebar-brand">
-            <div className="settings-rewrite-sidebar-logo"><IconBox /></div>
+            <div className="settings-rewrite-sidebar-logo"><IconLayers /></div>
             <div>
               <strong>OMEGA</strong>
               <span>LAUNCHER</span>
@@ -152,7 +156,7 @@ export const SettingsPanel = React.memo(({
             <a href="#settings-skin"><IconUsers /><span>{isRussian ? "Скин" : "Skin"}</span></a>
             <a href="#settings-files"><IconFolder /><span>{isRussian ? "Пути игры" : "Game paths"}</span></a>
             <a href="#settings-runtime"><IconCpu /><span>{isRussian ? "Производительность" : "Performance"}</span></a>
-            <a href="#settings-library"><IconBox /><span>{isRussian ? "Библиотека версий" : "Version library"}</span></a>
+            <a href="#settings-library"><IconLayers /><span>{isRussian ? "Библиотека версий" : "Version library"}</span></a>
             <a href="#settings-session"><IconSettings /><span>{isRussian ? "Поведение запуска" : "Launch behavior"}</span></a>
           </nav>
 
@@ -258,7 +262,7 @@ export const SettingsPanel = React.memo(({
 
           <SettingsSection
             id="settings-library"
-            icon={<IconBox />}
+            icon={<IconLayers />}
             title={t.settingsVersionTypes}
             description={<>{t.settingsShownVersions} {currentVersionsList.length}</>}
             aside={<span className="settings-rewrite-count">{currentVersionsList.length} {isRussian ? "доступно" : "available"}</span>}
