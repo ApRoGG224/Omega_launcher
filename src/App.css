@@ -4251,150 +4251,6 @@ input[type="color"]::-webkit-color-swatch {
 
 .settings-rewrite-section-content { padding: 15px 16px 17px; }
 
-.skin-section-content {
-  display: grid;
-  grid-template-columns: minmax(230px, 320px) minmax(0, 1fr);
-  gap: 18px;
-  align-items: stretch;
-}
-
-.skin-viewer-stage {
-  position: relative;
-  min-height: 318px;
-  overflow: hidden;
-  border: 1px solid rgba(var(--accent-color-rgb), 0.28);
-  border-radius: 14px;
-  background:
-    radial-gradient(circle at 50% 20%, rgba(var(--accent-color-rgb), 0.2), transparent 52%),
-    linear-gradient(145deg, rgba(18, 23, 47, 0.96), rgba(5, 7, 18, 0.98));
-  box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.24), 0 13px 28px rgba(0, 0, 0, 0.14);
-}
-
-.skin-css-stage { perspective: 900px; cursor: grab; touch-action: none; }
-.skin-css-stage:active { cursor: grabbing; }
-.skin-css-model {
-  position: absolute;
-  inset: 0;
-  transform: rotateX(-8deg) rotateY(-28deg) scale(8);
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-.skin-css-cube {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--cube-w);
-  height: var(--cube-h);
-  transform: translate3d(calc(-50% + var(--cube-x)), calc(-50% + var(--cube-y)), var(--cube-z));
-  transform-style: preserve-3d;
-}
-.skin-css-face {
-  position: absolute;
-  display: block;
-  box-sizing: border-box;
-  border: 0.35px solid rgba(0, 0, 0, 0.15);
-  background-image: var(--skin-texture);
-  background-repeat: no-repeat;
-  background-size: 512px 512px;
-  image-rendering: pixelated;
-  backface-visibility: hidden;
-}
-.skin-css-face-front,
-.skin-css-face-back { width: var(--cube-w); height: var(--cube-h); }
-.skin-css-face-front { transform: translateZ(calc(var(--cube-d) / 2)); background-position: var(--front-pos); }
-.skin-css-face-back { transform: rotateY(180deg) translateZ(calc(var(--cube-d) / 2)); background-position: var(--back-pos); }
-.skin-css-face-right,
-.skin-css-face-left { top: 0; width: var(--cube-d); height: var(--cube-h); }
-.skin-css-face-right { left: calc((var(--cube-w) - var(--cube-d)) / 2); transform: rotateY(90deg) translateZ(calc(var(--cube-w) / 2)); background-position: var(--right-pos); }
-.skin-css-face-left { left: calc((var(--cube-w) - var(--cube-d)) / 2); transform: rotateY(-90deg) translateZ(calc(var(--cube-w) / 2)); background-position: var(--left-pos); }
-.skin-css-face-top,
-.skin-css-face-bottom { left: 0; width: var(--cube-w); height: var(--cube-d); }
-.skin-css-face-top { top: calc((var(--cube-h) - var(--cube-d)) / 2); transform: rotateX(90deg) translateZ(calc(var(--cube-h) / 2)); background-position: var(--top-pos); }
-.skin-css-face-bottom { top: calc((var(--cube-h) - var(--cube-d)) / 2); transform: rotateX(-90deg) translateZ(calc(var(--cube-h) / 2)); background-position: var(--bottom-pos); }
-.skin-css-head {
-  --cube-w: 8px; --cube-h: 8px; --cube-d: 8px; --cube-x: 0px; --cube-y: -10px; --cube-z: 0px;
-  --front-pos: -64px -64px; --back-pos: -192px -64px; --right-pos: -128px -64px; --left-pos: 0 -64px; --top-pos: -64px 0; --bottom-pos: -128px 0;
-}
-.skin-css-body {
-  --cube-w: 8px; --cube-h: 12px; --cube-d: 4px; --cube-x: 0px; --cube-y: 0px; --cube-z: 0px;
-  --front-pos: -160px -160px; --back-pos: -256px -160px; --right-pos: -224px -160px; --left-pos: -128px -160px; --top-pos: -160px -128px; --bottom-pos: -224px -224px;
-}
-.skin-css-right-arm {
-  --cube-w: 4px; --cube-h: 12px; --cube-d: 4px; --cube-x: 6px; --cube-y: 0px; --cube-z: 0px;
-  --front-pos: -352px -160px; --back-pos: -416px -160px; --right-pos: -384px -160px; --left-pos: -320px -160px; --top-pos: -352px -128px; --bottom-pos: -384px -224px;
-}
-.skin-css-left-arm {
-  --cube-w: 4px; --cube-h: 12px; --cube-d: 4px; --cube-x: -6px; --cube-y: 0px; --cube-z: 0px;
-  --front-pos: -288px -416px; --back-pos: -352px -416px; --right-pos: -320px -416px; --left-pos: -256px -416px; --top-pos: -288px -384px; --bottom-pos: -320px -480px;
-}
-.skin-css-right-leg {
-  --cube-w: 4px; --cube-h: 12px; --cube-d: 4px; --cube-x: 2px; --cube-y: 12px; --cube-z: 0px;
-  --front-pos: -32px -160px; --back-pos: -96px -160px; --right-pos: -64px -160px; --left-pos: 0 -160px; --top-pos: -32px -128px; --bottom-pos: -64px -224px;
-}
-.skin-css-left-leg {
-  --cube-w: 4px; --cube-h: 12px; --cube-d: 4px; --cube-x: -2px; --cube-y: 12px; --cube-z: 0px;
-  --front-pos: -160px -416px; --back-pos: -224px -416px; --right-pos: -192px -416px; --left-pos: -128px -416px; --top-pos: -160px -384px; --bottom-pos: -192px -480px;
-}
-.skin-texture-preload { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-
-.skin-viewer-state {
-  position: absolute;
-  pointer-events: none;
-  border: 1px solid rgba(186, 215, 247, 0.13);
-  border-radius: 999px;
-  background: rgba(5, 7, 18, 0.67);
-  color: #9ea8c2;
-  font-size: 0.58rem;
-  letter-spacing: 0.02em;
-}
-
-.skin-viewer-state { top: 11px; left: 11px; padding: 5px 8px; }
-.skin-viewer-state.ready { border-color: rgba(95, 208, 178, 0.28); color: #9cdccc; }
-.skin-viewer-state.error { border-color: rgba(228, 109, 76, 0.28); color: #ffc09e; }
-
-.skin-controls {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 14px;
-  padding: 4px 3px;
-}
-
-.skin-account-card { display: flex; min-width: 0; flex-direction: column; gap: 5px; }
-.skin-account-card span { color: #7d88a1; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; }
-.skin-account-card strong { overflow: hidden; color: #f1f2ff; font-size: 1.04rem; text-overflow: ellipsis; white-space: nowrap; }
-.skin-account-card small { color: #9f96f0; font-size: 0.64rem; }
-.skin-description { max-width: 470px; margin: 0; color: #8994ad; font-size: 0.7rem; line-height: 1.55; }
-
-.skin-actions { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
-.skin-action-button {
-  display: inline-flex;
-  min-height: 36px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 12px;
-  border: 1px solid rgba(186, 215, 247, 0.16);
-  border-radius: 9px;
-  background: rgba(186, 215, 247, 0.045);
-  color: #b8c1d9;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.67rem;
-  font-weight: 700;
-  transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease;
-}
-.skin-action-button:hover,
-.skin-action-button:focus-visible { border-color: rgba(var(--accent-color-rgb), 0.55); background: rgba(var(--accent-color-rgb), 0.13); color: #fff; transform: translateY(-1px); }
-.skin-action-button-primary { border-color: rgba(var(--accent-color-rgb), 0.42); background: rgba(var(--accent-color-rgb), 0.13); color: #d6d1ff; }
-.skin-action-button input { display: none; }
-.skin-reset-button { padding: 0; border: 0; background: transparent; color: #9188dd; cursor: pointer; font: inherit; font-size: 0.64rem; }
-.skin-reset-button:hover,
-.skin-reset-button:focus-visible { color: #d5d0ff; text-decoration: underline; }
-.skin-error { margin: 0; color: #ffb398; font-size: 0.64rem; line-height: 1.4; }
-
 .settings-rewrite-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4571,10 +4427,6 @@ input[type="color"]::-webkit-color-swatch {
   .settings-rewrite-field-wide { grid-column: auto; }
   .settings-rewrite-inline-field { align-items: stretch; flex-direction: column; gap: 8px; }
   .settings-rewrite-inline-field > label { width: auto; }
-  .skin-section-content { grid-template-columns: minmax(190px, 0.9fr) minmax(0, 1fr); gap: 13px; }
-  .skin-viewer-stage { min-height: 285px; }
-  .skin-actions { flex-direction: column; align-items: stretch; }
-  .skin-action-button { width: 100%; }
 }
 
 @media (max-width: 520px) {
@@ -4586,9 +4438,6 @@ input[type="color"]::-webkit-color-swatch {
   .settings-rewrite-language-row,
   .settings-rewrite-session-row { align-items: flex-start; flex-direction: column; }
   .settings-rewrite-store-button { width: 100%; }
-  .skin-section-content { grid-template-columns: 1fr; }
-  .skin-viewer-stage { min-height: 300px; }
-  .skin-controls { padding-inline: 2px; }
 }
 
 /* Inner pages use the full viewport while the dock stays tucked below the edge. */
