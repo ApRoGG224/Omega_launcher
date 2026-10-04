@@ -1,62 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
   <defs>
-    <linearGradient id="glassBody" x1="334" y1="190" x2="692" y2="752" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFFFF" stop-opacity="0.78"/>
-      <stop offset="0.2" stop-color="#CFC7FF" stop-opacity="0.48"/>
-      <stop offset="0.55" stop-color="#8065FF" stop-opacity="0.4"/>
-      <stop offset="0.82" stop-color="#54D5F5" stop-opacity="0.58"/>
-      <stop offset="1" stop-color="#F2FFFF" stop-opacity="0.72"/>
+    <linearGradient id="omegaGradient" x1="512" y1="166" x2="512" y2="752" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BCAFFF"/>
+      <stop offset="0.45" stop-color="#744BFF"/>
+      <stop offset="1" stop-color="#22C9EA"/>
     </linearGradient>
-    <linearGradient id="glassEdge" x1="328" y1="188" x2="700" y2="744" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFFFF" stop-opacity="0.95"/>
-      <stop offset="0.28" stop-color="#D7D0FF" stop-opacity="0.4"/>
-      <stop offset="0.7" stop-color="#4ECAEF" stop-opacity="0.5"/>
-      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.9"/>
+    <linearGradient id="coreGradient" x1="470" y1="430" x2="554" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4F1FF"/>
+      <stop offset="0.5" stop-color="#A18DFF"/>
+      <stop offset="1" stop-color="#37D5F0"/>
     </linearGradient>
-    <linearGradient id="specular" x1="308" y1="226" x2="630" y2="550" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFFFF" stop-opacity="0.95"/>
-      <stop offset="0.36" stop-color="#FFFFFF" stop-opacity="0.42"/>
-      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
-    </linearGradient>
-    <filter id="glassGlow" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="26" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
   </defs>
 
   <path
-    d="M230 760V684H318C282 628 264 565 264 494C264 313 374 184 512 184C650 184 760 313 760 494C760 565 742 628 706 684H794V760"
-    stroke="#7A62FF"
-    stroke-width="126"
+    d="M202 746L304 670C278 615 264 554 264 486C264 306 374 174 512 174C650 174 760 306 760 486C760 554 746 615 720 670L822 746"
+    stroke="#321B9D"
+    stroke-width="116"
     stroke-linecap="round"
     stroke-linejoin="round"
-    opacity="0.28"
-    filter="url(#glassGlow)"
+    opacity="0.72"
   />
   <path
-    d="M230 760V684H318C282 628 264 565 264 494C264 313 374 184 512 184C650 184 760 313 760 494C760 565 742 628 706 684H794V760"
-    stroke="url(#glassBody)"
-    stroke-width="104"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-  <path
-    d="M230 760V684H318C282 628 264 565 264 494C264 313 374 184 512 184C650 184 760 313 760 494C760 565 742 628 706 684H794V760"
-    stroke="url(#glassEdge)"
-    stroke-width="76"
+    d="M202 746L304 670C278 615 264 554 264 486C264 306 374 174 512 174C650 174 760 306 760 486C760 554 746 615 720 670L822 746"
+    stroke="url(#omegaGradient)"
+    stroke-width="88"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
   <path
-    d="M316 492C316 356 401 266 512 266C623 266 708 356 708 492"
-    stroke="url(#specular)"
-    stroke-width="15"
-    stroke-linecap="round"
-    opacity="0.86"
+    d="M512 426L566 480L512 534L458 480L512 426Z"
+    fill="url(#coreGradient)"
   />
-  <path d="M250 735V684H310" stroke="#FFFFFF" stroke-opacity="0.68" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M714 684H774V735" stroke="#FFFFFF" stroke-opacity="0.46" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path
+    d="M512 444L548 480L512 516L476 480L512 444Z"
+    fill="#FFFFFF"
+    fill-opacity="0.22"
+  />
 </svg>
