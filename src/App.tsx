@@ -226,7 +226,7 @@ function App() {
         {activeTab === "home" && (
           <div className="home-glow-overlay" aria-hidden="true">
             <div className="home-glow-icon">
-              <img src="/icons/128x128.png" alt="" />
+              <img src="/icons/128x128.png?v=2" alt="" />
             </div>
             <div className="home-glow-beam" />
           </div>
