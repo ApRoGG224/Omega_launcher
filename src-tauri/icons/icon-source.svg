@@ -1,27 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
   <defs>
-    <linearGradient id="violetOrbit" x1="244" y1="170" x2="816" y2="770" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#B5A7FF"/>
+    <linearGradient id="omegaGradient" x1="512" y1="180" x2="512" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C9C0FF"/>
       <stop offset="0.42" stop-color="#855CFF"/>
-      <stop offset="1" stop-color="#5A35E8"/>
+      <stop offset="1" stop-color="#42CFF2"/>
     </linearGradient>
-    <linearGradient id="cyanOrbit" x1="722" y1="828" x2="214" y2="270" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#62D9FF"/>
-      <stop offset="0.5" stop-color="#38B9E8"/>
-      <stop offset="1" stop-color="#7862FF"/>
+    <linearGradient id="omegaHighlight" x1="340" y1="236" x2="692" y2="690" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.65"/>
+      <stop offset="0.45" stop-color="#D8D0FF" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
-    <radialGradient id="violetNode" cx="0" cy="0" r="1" gradientTransform="translate(590 364) rotate(135) scale(98)">
-      <stop stop-color="#F1EEFF"/>
-      <stop offset="0.32" stop-color="#B5A7FF"/>
-      <stop offset="1" stop-color="#7049F4"/>
-    </radialGradient>
-    <radialGradient id="cyanNode" cx="0" cy="0" r="1" gradientTransform="translate(392 608) rotate(135) scale(98)">
-      <stop stop-color="#E8FCFF"/>
-      <stop offset="0.32" stop-color="#62D9FF"/>
-      <stop offset="1" stop-color="#2AAEDC"/>
-    </radialGradient>
-    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="18" result="blur"/>
+    <filter id="omegaGlow" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="22" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -29,16 +19,27 @@
     </filter>
   </defs>
 
-  <g filter="url(#softGlow)" opacity="0.3">
-    <path d="M286 348C371 220 543 177 677 251C754 294 801 370 806 452" stroke="#9B86FF" stroke-width="86" stroke-linecap="round"/>
-    <path d="M738 676C653 804 481 847 347 773C270 730 223 654 218 572" stroke="#4DD2F5" stroke-width="86" stroke-linecap="round"/>
-  </g>
-
-  <path d="M286 348C371 220 543 177 677 251C754 294 801 370 806 452" stroke="url(#violetOrbit)" stroke-width="72" stroke-linecap="round"/>
-  <path d="M738 676C653 804 481 847 347 773C270 730 223 654 218 572" stroke="url(#cyanOrbit)" stroke-width="72" stroke-linecap="round"/>
-
-  <circle cx="611" cy="390" r="52" fill="url(#violetNode)"/>
-  <circle cx="611" cy="390" r="18" fill="#FFFFFF" fill-opacity="0.9"/>
-  <circle cx="413" cy="634" r="52" fill="url(#cyanNode)"/>
-  <circle cx="413" cy="634" r="18" fill="#FFFFFF" fill-opacity="0.9"/>
+  <path
+    d="M230 760V684H318C282 628 264 565 264 494C264 313 374 184 512 184C650 184 760 313 760 494C760 565 742 628 706 684H794V760"
+    stroke="#795AFF"
+    stroke-width="102"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    opacity="0.32"
+    filter="url(#omegaGlow)"
+  />
+  <path
+    d="M230 760V684H318C282 628 264 565 264 494C264 313 374 184 512 184C650 184 760 313 760 494C760 565 742 628 706 684H794V760"
+    stroke="url(#omegaGradient)"
+    stroke-width="82"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M316 492C316 356 401 266 512 266C623 266 708 356 708 492"
+    stroke="url(#omegaHighlight)"
+    stroke-width="11"
+    stroke-linecap="round"
+    opacity="0.7"
+  />
 </svg>
