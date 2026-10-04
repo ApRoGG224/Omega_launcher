@@ -24,11 +24,11 @@ export function FloatingDock(props: Props) {
   return (
     <div className={`dock-wrapper ${isHome ? "dock-home" : "dock-overlay"} ${shouldAutoHideDock ? "dock-auto-hidden" : ""}`}>
       <div className="floating-dock">
-        <button className={`dock-btn ${["mods", "resourcepacks", "shaders", "datapacks"].includes(activeTab) ? "active" : ""}`} onClick={onCatalog} title={t.dockCatalog}>
+        <button className={`dock-btn ${["mods", "resourcepacks", "shaders", "datapacks"].includes(activeTab) ? "active" : ""}`} onClick={(event) => { onCatalog(); event.currentTarget.blur(); }} title={t.dockCatalog}>
           <div className="dock-icon-circle"><AnimatedIcon images={MOD_ICONS} interval={2500} /></div>
           <span className="dock-label">{t.dockCatalog}</span>
         </button>
-        <button className={`dock-btn ${activeTab === "modpacks" ? "active" : ""}`} onClick={onModpacks} title={t.dockPacks}>
+        <button className={`dock-btn ${activeTab === "modpacks" ? "active" : ""}`} onClick={(event) => { onModpacks(); event.currentTarget.blur(); }} title={t.dockPacks}>
           <div className="dock-icon-circle"><AnimatedIcon images={MODPACK_ICONS} interval={3100} /></div>
           <span className="dock-label">{t.dockPacks}</span>
         </button>
@@ -44,7 +44,7 @@ export function FloatingDock(props: Props) {
           <div className="dock-icon-circle"><IconSettings /></div>
           <span className="dock-label">{t.dockSettings}</span>
         </button>
-        <button className={`dock-btn ${activeTab === "friends" ? "active" : ""}`} onClick={onFriends} title={t.dockFriends}>
+        <button className={`dock-btn ${activeTab === "friends" ? "active" : ""}`} onClick={(event) => { onFriends(); event.currentTarget.blur(); }} title={t.dockFriends}>
           <div className="dock-icon-circle"><IconUsers /></div>
           <span className="dock-label">{t.dockFriends}</span>
         </button>

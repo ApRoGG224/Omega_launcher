@@ -2003,6 +2003,24 @@ input[type="color"]::-webkit-color-swatch {
   pointer-events: auto;
 }
 
+.dock-auto-hidden {
+  height: 12px;
+  justify-content: flex-end;
+}
+
+.dock-auto-hidden::after {
+  position: absolute;
+  right: 50%;
+  bottom: 3px;
+  width: 54px;
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(var(--accent-color-rgb), 0.55);
+  content: "";
+  transform: translateX(50%);
+  pointer-events: none;
+}
+
 .floating-dock {
   display: flex;
   align-items: center;
@@ -2018,14 +2036,21 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .dock-auto-hidden .floating-dock {
-  transform: translateY(calc(100% - 14px));
-  opacity: 0.86;
+  transform: translateY(calc(100% - 4px));
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dock-auto-hidden:hover,
+.dock-auto-hidden:focus-within {
+  height: 70px;
 }
 
 .dock-auto-hidden:hover .floating-dock,
 .dock-auto-hidden:focus-within .floating-dock {
   transform: translateY(0);
   opacity: 1;
+  pointer-events: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
