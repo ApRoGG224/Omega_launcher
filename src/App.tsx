@@ -463,7 +463,7 @@ function App() {
         onClose={() => setImportPopupHidden(true)}
       />
 
-      {instancesApi.selectedInstance && (
+      {activeTab === "home" && instancesApi.selectedInstance && (
         <div className="playtime-badge">
           <span className="playtime-badge-dot" />
           <span>
