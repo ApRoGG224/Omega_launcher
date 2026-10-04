@@ -4548,11 +4548,6 @@ input[type="color"]::-webkit-color-swatch {
   max-width: none;
   height: 12px;
   transform: none;
-  box-sizing: border-box;
-  border: 1px solid rgba(186, 215, 247, 0.08);
-  border-bottom: 0;
-  border-radius: 14px 14px 0 0;
-  background: rgba(186, 215, 247, 0.04);
 }
 
 .dock-wrapper.dock-auto-hidden:hover,
