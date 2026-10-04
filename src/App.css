@@ -4553,6 +4553,26 @@ input[type="color"]::-webkit-color-swatch {
   padding-bottom: 24px !important;
 }
 
+/* The hidden dock rail follows the same gutters as the catalog tabs. */
+.dock-wrapper.dock-auto-hidden {
+  left: 30px;
+  right: 30px;
+  width: auto;
+  max-width: none;
+  height: 12px;
+  transform: none;
+  box-sizing: border-box;
+  border: 1px solid rgba(186, 215, 247, 0.08);
+  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
+  background: rgba(186, 215, 247, 0.04);
+}
+
+.dock-wrapper.dock-auto-hidden:hover,
+.dock-wrapper.dock-auto-hidden:focus-within {
+  height: 70px;
+}
+
 .settings-rewrite {
   flex: 1 1 auto;
   height: auto;
