@@ -4,6 +4,54 @@ import { searchModrinth, fetchProjectVersions } from "../services/api";
 import { ipc } from "../services/ipc";
 
 const LIMIT = 24;
+const TRANSLATION_CONCURRENCY = 2;
+const TRANSLATION_CACHE_LIMIT = 256;
+
+const translationCache = new Map<string, string>();
+
+async function translateDescriptions(
+  hits: ModrinthHit[],
+  targetLang: string,
+  isCancelled: () => boolean,
+): Promise<Map<string, string>> {
+  const candidates = hits.filter((hit) => hit.description.trim().length > 0);
+  const translatedById = new Map<string, string>();
+  let nextIndex = 0;
+
+  const worker = async () => {
+    while (nextIndex < candidates.length) {
+      if (isCancelled()) return;
+      const hit = candidates[nextIndex];
+      nextIndex += 1;
+      const cacheKey = `${targetLang}:${hit.description}`;
+      const cached = translationCache.get(cacheKey);
+
+      if (cached !== undefined) {
+        if (cached !== hit.description) translatedById.set(hit.project_id, cached);
+        continue;
+      }
+
+      try {
+        const translated = await ipc.translateText(hit.description, targetLang);
+        translationCache.set(cacheKey, translated);
+        if (translationCache.size > TRANSLATION_CACHE_LIMIT) {
+          const oldestKey = translationCache.keys().next().value;
+          if (oldestKey) translationCache.delete(oldestKey);
+        }
+        if (!isCancelled() && translated !== hit.description) {
+          translatedById.set(hit.project_id, translated);
+        }
+      } catch {
+        // Keep the original description when translation is unavailable.
+      }
+    }
+  };
+
+  await Promise.all(
+    Array.from({ length: Math.min(TRANSLATION_CONCURRENCY, candidates.length) }, () => worker()),
+  );
+  return translatedById;
+}
 
 export interface ModrinthSearchApi {
   query: string;
@@ -77,24 +125,8 @@ export function useModrinthSearch(
           cancelled = true;
         };
         cancelTranslationsRef.current = cancelTranslations;
-        void Promise.all(
-          hits.map(async (hit) => {
-            if (cancelled || seq !== requestSeqRef.current) return null;
-            try {
-              const translatedDesc = await ipc.translateText(hit.description, "ru");
-              if (cancelled || seq !== requestSeqRef.current) return null;
-              return translatedDesc && translatedDesc !== hit.description
-                ? [hit.project_id, translatedDesc] as const
-                : null;
-            } catch {
-              return null;
-            }
-          }),
-        ).then((translations) => {
+        void translateDescriptions(hits, "ru", () => cancelled || seq !== requestSeqRef.current).then((translatedById) => {
           if (cancelled || seq !== requestSeqRef.current) return;
-          const translatedById = new Map(
-            translations.filter((item): item is readonly [string, string] => item !== null),
-          );
           if (translatedById.size === 0) return;
           setMods((prev) =>
             prev.map((mod) => {

@@ -12,7 +12,7 @@ export const ModCard = React.memo(({
   mod: ModrinthHit;
   t: any;
   onInstall: (projectId: string) => void;
-  onDragStart?: (e: React.DragEvent) => void;
+  onDragStart?: (e: React.DragEvent, mod: ModrinthHit) => void;
 }) => {
   const downloads =
     mod.downloads >= 1000000
@@ -22,7 +22,7 @@ export const ModCard = React.memo(({
         : mod.downloads;
 
   return (
-    <div className="mod-card" draggable={!!onDragStart} onDragStart={onDragStart}>
+    <div className="mod-card" draggable={!!onDragStart} onDragStart={onDragStart ? (event) => onDragStart(event, mod) : undefined}>
       <div className="mod-header">
         <CachedImage
           src={mod.icon_url || "https://cdn.modrinth.com/favicon.ico"}

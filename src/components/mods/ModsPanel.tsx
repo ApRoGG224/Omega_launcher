@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import type { ModpackInstance, ProjectType } from "../../types";
+import type { ModpackInstance, ModrinthHit, ProjectType } from "../../types";
 import { useModrinthSearch } from "../../hooks/useModrinth";
 import { ipc } from "../../services/ipc";
 import { useToast } from "../../ui/ToastProvider";
@@ -51,7 +51,7 @@ export const ModsPanel = React.memo(({
     showToast(message, type);
   }, [showToast]);
 
-  const handleInstallClick = (projectId: string) => {
+  const handleInstallClick = useCallback((projectId: string) => {
     if (projectType === "modpack") {
       const mod = search.mods.find((m) => m.project_id === projectId);
       if (mod && onCreateModpack) {
@@ -67,14 +67,22 @@ export const ModsPanel = React.memo(({
       return;
     }
     setInstallModalOpen(projectId);
-  };
+  }, [onCreateModpack, projectType, search.mcVersion, search.mods]);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const bottom = e.currentTarget.scrollHeight - e.currentTarget.scrollTop <= e.currentTarget.clientHeight + 50;
     if (bottom && !search.loading && search.mods.length >= 24) {
       void search.searchMods(true);
     }
-  };
+  }, [search.loading, search.mods.length, search.searchMods]);
+
+  const handleDragStart = useCallback((event: React.DragEvent, mod: ModrinthHit) => {
+    event.dataTransfer.setData(
+      "application/x-omega-mod",
+      JSON.stringify({ projectId: mod.project_id, projectType: mod.project_type || "mod" }),
+    );
+    event.dataTransfer.effectAllowed = "copy";
+  }, []);
 
   const confirmInstall = async (instanceId: string) => {
     const inst = instances.find((i) => i.id === instanceId);
@@ -274,13 +282,7 @@ export const ModsPanel = React.memo(({
               mod={mod}
               t={t}
               onInstall={handleInstallClick}
-              onDragStart={(e) => {
-                e.dataTransfer.setData(
-                  "application/x-omega-mod",
-                  JSON.stringify({ projectId: mod.project_id, projectType: mod.project_type || "mod" }),
-                );
-                e.dataTransfer.effectAllowed = "copy";
-              }}
+              onDragStart={handleDragStart}
             />
           ))}
           {search.loading && (
