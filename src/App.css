@@ -4039,7 +4039,7 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   min-height: 400px;
   flex-direction: column;
-  padding: 15px 13px;
+  padding: 8px 13px 15px;
   border: 1px solid rgba(186, 215, 247, 0.11);
   border-radius: 14px;
   background: rgba(11, 14, 26, 0.76);
@@ -4084,7 +4084,7 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  padding-top: 18px;
+  padding-top: 5px;
 }
 
 .settings-rewrite-nav-label {
