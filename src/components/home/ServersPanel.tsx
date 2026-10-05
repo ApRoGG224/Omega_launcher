@@ -4,11 +4,13 @@ import DraggableWindow from "../../ui/DraggableWindow";
 import { ipc } from "../../services/ipc";
 import type { ServerInfo, ServerRow } from "../../services/ipc";
 import type { ModpackInstance } from "../../types";
-import { IconBox, IconPlay } from "../../ui/icons";
+import { IconBox, IconGlobe, IconPlay, IconPlus, IconX } from "../../ui/icons";
 
 const resolveIcon = (icon: string | undefined) => {
   if (!icon) return undefined;
-  return icon.startsWith("data:") || icon.startsWith("http") ? icon : convertFileSrc(icon);
+  return icon.startsWith("data:") || icon.startsWith("http")
+    ? icon
+    : convertFileSrc(icon);
 };
 
 interface ServerWithStatus extends ServerRow {
@@ -19,314 +21,402 @@ interface ServerWithStatus extends ServerRow {
 
 const PING_INTERVAL_MS = 60_000;
 
-export const ServersPanel = React.memo(({
-  instances,
-  onLaunch,
-  t,
-}: {
-  instances: ModpackInstance[];
-  onLaunch: (instanceId: string, serverHostPort: string) => void;
-  t: any;
-}) => {
-  const [servers, setServers] = useState<ServerWithStatus[]>([]);
-  const [newHost, setNewHost] = useState("");
-  const [newName, setNewName] = useState("");
-  const [launchServer, setLaunchServer] = useState<ServerWithStatus | null>(null);
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  const refresh = useCallback(async () => {
-    try {
-      const rows = await ipc.dbLoadServers();
-      if (!mountedRef.current) return;
-      setServers((prev) => {
-        const merged: ServerWithStatus[] = rows.map((row) => {
-          const existing = prev.find(
-            (p) => p.host === row.host && p.port === row.port,
-          );
-          return {
-            ...row,
-            status: existing?.status ?? null,
-            checking: false,
-            favicon: row.favicon ?? existing?.status?.favicon ?? null,
-          };
-        });
-        return merged;
-      });
-    } catch {
-      // Tauri backend unavailable
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  const ping = useCallback(async (host: string, port: number) => {
-    if (!mountedRef.current) return;
-    setServers((prev) =>
-      prev.map((s) =>
-        s.host === host && s.port === port ? { ...s, checking: true } : s,
-      ),
+export const ServersPanel = React.memo(
+  ({
+    instances,
+    onLaunch,
+    t,
+  }: {
+    instances: ModpackInstance[];
+    onLaunch: (instanceId: string, serverHostPort: string) => void;
+    t: any;
+  }) => {
+    const [servers, setServers] = useState<ServerWithStatus[]>([]);
+    const [newHost, setNewHost] = useState("");
+    const [newName, setNewName] = useState("");
+    const [launchServer, setLaunchServer] = useState<ServerWithStatus | null>(
+      null,
     );
-    let result: ServerInfo | null = null;
-    try {
-      result = await ipc.pingServer(host, port);
-    } catch {
-      result = null;
-    }
-    if (!mountedRef.current) return;
-    if (result?.favicon) {
-      void ipc.dbSaveServerFavicon(host, port, result.favicon).catch(() => {});
-    }
-    setServers((prev) =>
-      prev.map((s) =>
-        s.host === host && s.port === port
-          ? {
-              ...s,
+    const mountedRef = useRef(true);
+
+    useEffect(() => {
+      mountedRef.current = true;
+      return () => {
+        mountedRef.current = false;
+      };
+    }, []);
+
+    const refresh = useCallback(async () => {
+      try {
+        const rows = await ipc.dbLoadServers();
+        if (!mountedRef.current) return;
+        setServers((prev) => {
+          const merged: ServerWithStatus[] = rows.map((row) => {
+            const existing = prev.find(
+              (p) => p.host === row.host && p.port === row.port,
+            );
+            return {
+              ...row,
+              status: existing?.status ?? null,
               checking: false,
-              status: result,
-              favicon: result?.favicon ?? s.favicon,
-            }
-          : s,
-      ),
+              favicon: row.favicon ?? existing?.status?.favicon ?? null,
+            };
+          });
+          return merged;
+        });
+      } catch {
+        // Tauri backend unavailable
+      }
+    }, []);
+
+    useEffect(() => {
+      void refresh();
+    }, [refresh]);
+
+    const ping = useCallback(async (host: string, port: number) => {
+      if (!mountedRef.current) return;
+      setServers((prev) =>
+        prev.map((s) =>
+          s.host === host && s.port === port ? { ...s, checking: true } : s,
+        ),
+      );
+      let result: ServerInfo | null = null;
+      try {
+        result = await ipc.pingServer(host, port);
+      } catch {
+        result = null;
+      }
+      if (!mountedRef.current) return;
+      if (result?.favicon) {
+        void ipc
+          .dbSaveServerFavicon(host, port, result.favicon)
+          .catch(() => {});
+      }
+      setServers((prev) =>
+        prev.map((s) =>
+          s.host === host && s.port === port
+            ? {
+                ...s,
+                checking: false,
+                status: result,
+                favicon: result?.favicon ?? s.favicon,
+              }
+            : s,
+        ),
+      );
+    }, []);
+
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        for (const s of servers) {
+          if (s.status === null && !s.checking) void ping(s.host, s.port);
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }, [servers, ping]);
+
+    // Periodic re-ping to keep online/offline status fresh.
+    useEffect(() => {
+      const interval = setInterval(() => {
+        for (const s of servers) {
+          if (!s.checking) void ping(s.host, s.port);
+        }
+      }, PING_INTERVAL_MS);
+      return () => clearInterval(interval);
+    }, [servers, ping]);
+
+    const addServer = useCallback(async () => {
+      const host = newHost.trim();
+      if (!host) return;
+      const hasPort = host.match(/^(.*):(\d+)$/);
+      const pureHost = hasPort ? hasPort[1] : host;
+      const port = hasPort ? parseInt(hasPort[2]) : 25565;
+      const row: ServerRow = {
+        host: pureHost,
+        port,
+        name: newName.trim() || pureHost,
+      };
+      setNewHost("");
+      setNewName("");
+      try {
+        await ipc.dbSaveServer(row);
+        await refresh();
+      } catch {
+        // offline fallback
+      }
+    }, [newHost, newName, refresh]);
+
+    const removeServer = useCallback(async (host: string, port: number) => {
+      setServers((prev) =>
+        prev.filter((s) => !(s.host === host && s.port === port)),
+      );
+      try {
+        await ipc.dbDeleteServer(host, port);
+      } catch {
+        // offline fallback
+      }
+    }, []);
+
+    const openLaunchModal = useCallback((server: ServerWithStatus) => {
+      setLaunchServer(server);
+    }, []);
+
+    const chooseInstance = useCallback(
+      (instanceId: string) => {
+        if (!launchServer) return;
+        const hostPort = `${launchServer.host}:${launchServer.port}`;
+        setLaunchServer(null);
+        onLaunch(instanceId, hostPort);
+      },
+      [launchServer, onLaunch],
     );
-  }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      for (const s of servers) {
-        if (s.status === null && !s.checking) void ping(s.host, s.port);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [servers, ping]);
-
-  // Periodic re-ping to keep online/offline status fresh.
-  useEffect(() => {
-    const interval = setInterval(() => {
-      for (const s of servers) {
-        if (!s.checking) void ping(s.host, s.port);
-      }
-    }, PING_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [servers, ping]);
-
-  const addServer = useCallback(async () => {
-    const host = newHost.trim();
-    if (!host) return;
-    const hasPort = host.match(/^(.*):(\d+)$/);
-    const pureHost = hasPort ? hasPort[1] : host;
-    const port = hasPort ? parseInt(hasPort[2]) : 25565;
-    const row: ServerRow = { host: pureHost, port, name: newName.trim() || pureHost };
-    setNewHost("");
-    setNewName("");
-    try {
-      await ipc.dbSaveServer(row);
-      await refresh();
-    } catch {
-      // offline fallback
-    }
-  }, [newHost, newName, refresh]);
-
-  const removeServer = useCallback(async (host: string, port: number) => {
-    setServers((prev) => prev.filter((s) => !(s.host === host && s.port === port)));
-    try {
-      await ipc.dbDeleteServer(host, port);
-    } catch {
-      // offline fallback
-    }
-  }, []);
-
-  const openLaunchModal = useCallback((server: ServerWithStatus) => {
-    setLaunchServer(server);
-  }, []);
-
-  const chooseInstance = useCallback(
-    (instanceId: string) => {
-      if (!launchServer) return;
-      const hostPort = `${launchServer.host}:${launchServer.port}`;
-      setLaunchServer(null);
-      onLaunch(instanceId, hostPort);
-    },
-    [launchServer, onLaunch],
-  );
-
-  return (
-    <DraggableWindow
-      storageKey="omega:servers-panel"
-      className="sketch-card floating-dashboard-window draggable-window"
-      defaultPosition={{ x: 100, y: 442 }}
-      defaultSize={{ width: 340, height: 350 }}
-    >
-      <div className="floating-dashboard-content" style={{ flex: 1, overflow: "hidden", minHeight: 0 }}>
-        <div className="sketch-card-header draggable-window-handle">
-          <span className="sketch-card-title">{`🌐 ${t.serversTitle}`}</span>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", overflowY: "auto", flex: 1, minHeight: 0 }}>
-          {servers.map((server) => (
-            <div key={`${server.host}:${server.port}`} className="server-item" style={{ padding: "8px 12px", flexShrink: 0 }}>
-              <div className="server-info-left" style={{ gap: "10px" }}>
-                <div
-                  className="server-icon-badge"
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 8,
-                    fontSize: "0.9rem",
-                    overflow: "hidden",
-                    flexShrink: 0,
-                    background: server.status?.online
-                      ? "rgba(38, 150, 132, 0.15)"
-                      : "rgba(63, 73, 89, 0.15)",
-                    color: server.status?.online ? "#269684" : "#9da7ba",
-                  }}
-                >
-                  {server.favicon ? (
-                    <img
-                      src={server.favicon}
-                      alt={server.name}
-                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                    />
-                  ) : server.checking ? (
-                    "…"
-                  ) : server.status?.online ? (
-                    "●"
-                  ) : (
-                    "○"
-                  )}
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div className="server-name" style={{ fontSize: "0.85rem" }}>
-                    {server.name}
-                  </div>
-                  <div className="server-ip" style={{ fontSize: "0.72rem" }}>
-                    {server.host}:{server.port}
-                  </div>
-                </div>
+    return (
+      <DraggableWindow
+        storageKey="omega:servers-panel"
+        className="sketch-card floating-dashboard-window draggable-window"
+        defaultPosition={{ x: 36, y: 402 }}
+        defaultSize={{ width: 350, height: 320 }}
+      >
+        <div
+          className="floating-dashboard-content"
+          style={{ flex: 1, overflow: "hidden", minHeight: 0 }}
+        >
+          <div className="sketch-card-header draggable-window-handle">
+            <div className="sketch-card-header-left">
+              <div className="settings-rewrite-section-icon">
+                <IconGlobe size={16} />
               </div>
-              <div className="server-item-actions">
-                <span
-                  className="server-players-tag"
-                  style={{ fontSize: "0.7rem", padding: "2px 8px" }}
-                >
-                  {server.checking
-                    ? "…"
-                    : server.status?.online
-                      ? `${server.status.playersOnline}/${server.status.playersMax} · ${server.status.latencyMs}ms`
-                      : server.status
-                        ? t.serverOffline
-                        : "—"}
-                </span>
-                <button
-                  className="server-launch-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openLaunchModal(server);
-                  }}
-                  disabled={!server.status?.online}
-                >
-                  <IconPlay /> {t.serverLaunch}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void removeServer(server.host, server.port);
-                  }}
-                  className="server-remove-btn"
-                  title={t.serverDelete}
-                >
-                  ✕
-                </button>
+              <div>
+                <span className="sketch-card-title">{t.serversTitle}</span>
+                <span className="sketch-card-subtitle">{t.serversDesc}</span>
               </div>
             </div>
-          ))}
-          {servers.length === 0 && (
-            <div style={{ fontSize: "0.8rem", color: "#9da7ba", padding: "12px", textAlign: "center" }}>
-              {t.serversEmpty}
-            </div>
-          )}
-        </div>
-        <div className="server-add-row">
-          <input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder={t.serverNamePh}
-          />
-          <input
-            value={newHost}
-            onChange={(e) => setNewHost(e.target.value)}
-            placeholder={t.serverHostPh}
-            onKeyDown={(e) => e.key === "Enter" && void addServer()}
-          />
-          <button onClick={() => void addServer()} className="mod-install-btn" style={{ flexShrink: 0 }}>
-            +
-          </button>
-        </div>
-      </div>
-
-      {launchServer && (
-        <div className="account-modal-overlay" onClick={() => setLaunchServer(null)}>
-          <DraggableWindow
-            storageKey="omega:server-launch-modal"
-            className="create-modal server-launch-modal draggable-window"
-            defaultPosition={{ x: 140, y: 160 }}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              overflowY: "auto",
+              flex: 1,
+              minHeight: 0,
+            }}
           >
-            <h3>
-              {t.serverLaunchTitle}{" "}
-              <span style={{ color: "var(--accent-color)" }}>
-                {launchServer.host}:{launchServer.port}
-              </span>
-            </h3>
-            <p className="server-launch-hint">
-              {t.serverChooseBuild}
-            </p>
-            {instances.length === 0 ? (
-              <div style={{ color: "#9da7ba", textAlign: "center", padding: "12px", fontSize: "0.85rem" }}>
-                {t.noBuildsToLaunch}
-              </div>
-            ) : (
-              <div className="server-launch-list">
-                {instances.map((inst) => (
+            {servers.map((server) => (
+              <div
+                key={`${server.host}:${server.port}`}
+                className="server-item"
+                style={{ padding: "8px 12px", flexShrink: 0 }}
+              >
+                <div className="server-info-left" style={{ gap: "10px" }}>
                   <div
-                    key={inst.id}
-                    className="server-launch-instance"
-                    onClick={() => chooseInstance(inst.id)}
+                    className="server-icon-badge"
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 8,
+                      fontSize: "0.9rem",
+                      overflow: "hidden",
+                      flexShrink: 0,
+                      background: server.status?.online
+                        ? "rgba(38, 150, 132, 0.15)"
+                        : "rgba(63, 73, 89, 0.15)",
+                      color: server.status?.online ? "#269684" : "#9da7ba",
+                    }}
                   >
-                    <div className="recent-inst-icon" style={{ width: 32, height: 32, borderRadius: 8 }}>
-                      {inst.icon ? (
-                        <img src={resolveIcon(inst.icon)} alt="icon" style={{ width: 24, height: 24, borderRadius: 6 }} />
-                      ) : (
-                        <IconBox />
-                      )}
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontWeight: 600, fontSize: "0.88rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {inst.name}
-                      </div>
-                      <div style={{ fontSize: "0.72rem", color: "#9da7ba" }}>
-                        {inst.mcVersion} • {inst.loader}
-                      </div>
-                    </div>
-                    <IconPlay />
+                    {server.favicon ? (
+                      <img
+                        src={server.favicon}
+                        alt={server.name}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
+                        }}
+                      />
+                    ) : server.checking ? (
+                      "…"
+                    ) : server.status?.online ? (
+                      "●"
+                    ) : (
+                      "○"
+                    )}
                   </div>
-                ))}
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      className="server-name"
+                      style={{ fontSize: "0.85rem" }}
+                    >
+                      {server.name}
+                    </div>
+                    <div className="server-ip" style={{ fontSize: "0.72rem" }}>
+                      {server.host}:{server.port}
+                    </div>
+                  </div>
+                </div>
+                <div className="server-item-actions">
+                  <span
+                    className="server-players-tag"
+                    style={{ fontSize: "0.7rem", padding: "2px 8px" }}
+                  >
+                    {server.checking
+                      ? "…"
+                      : server.status?.online
+                        ? `${server.status.playersOnline}/${server.status.playersMax} · ${server.status.latencyMs}ms`
+                        : server.status
+                          ? t.serverOffline
+                          : "—"}
+                  </span>
+                  <button
+                    className="server-launch-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openLaunchModal(server);
+                    }}
+                    disabled={!server.status?.online}
+                    title={t.serverLaunch}
+                  >
+                    <IconPlay /> <span>{t.serverLaunch}</span>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void removeServer(server.host, server.port);
+                    }}
+                    className="server-remove-btn"
+                    title={t.serverDelete}
+                  >
+                    <IconX />
+                  </button>
+                </div>
+              </div>
+            ))}
+            {servers.length === 0 && (
+              <div
+                style={{
+                  fontSize: "0.8rem",
+                  color: "#9da7ba",
+                  padding: "16px 12px",
+                  textAlign: "center",
+                }}
+              >
+                {t.serversEmpty}
               </div>
             )}
-            <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
-              <button className="play-btn modal-action-btn" style={{ flex: 1, background: "rgba(186, 215, 247, 0.1)", boxShadow: "none" }} onClick={() => setLaunchServer(null)}>
-                {t.cancel}
-              </button>
-            </div>
-          </DraggableWindow>
+          </div>
+          <div className="server-add-row">
+            <input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder={t.serverNamePh}
+            />
+            <input
+              value={newHost}
+              onChange={(e) => setNewHost(e.target.value)}
+              placeholder={t.serverHostPh}
+              onKeyDown={(e) => e.key === "Enter" && void addServer()}
+            />
+            <button
+              onClick={() => void addServer()}
+              className="mod-install-btn"
+              style={{ flexShrink: 0 }}
+              title={t.addBtn}
+            >
+              <IconPlus size={14} />
+            </button>
+          </div>
         </div>
-      )}
-    </DraggableWindow>
-  );
-});
+
+        {launchServer && (
+          <div
+            className="account-modal-overlay"
+            onClick={() => setLaunchServer(null)}
+          >
+            <DraggableWindow
+              storageKey="omega:server-launch-modal"
+              className="create-modal server-launch-modal draggable-window"
+              defaultPosition={{ x: 140, y: 160 }}
+            >
+              <h3>
+                {t.serverLaunchTitle}{" "}
+                <span style={{ color: "var(--accent-color)" }}>
+                  {launchServer.host}:{launchServer.port}
+                </span>
+              </h3>
+              <p className="server-launch-hint">{t.serverChooseBuild}</p>
+              {instances.length === 0 ? (
+                <div
+                  style={{
+                    color: "#9da7ba",
+                    textAlign: "center",
+                    padding: "12px",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  {t.noBuildsToLaunch}
+                </div>
+              ) : (
+                <div className="server-launch-list">
+                  {instances.map((inst) => (
+                    <div
+                      key={inst.id}
+                      className="server-launch-instance"
+                      onClick={() => chooseInstance(inst.id)}
+                    >
+                      <div
+                        className="recent-inst-icon"
+                        style={{ width: 32, height: 32, borderRadius: 8 }}
+                      >
+                        {inst.icon ? (
+                          <img
+                            src={resolveIcon(inst.icon)}
+                            alt="icon"
+                            style={{ width: 24, height: 24, borderRadius: 6 }}
+                          />
+                        ) : (
+                          <IconBox />
+                        )}
+                      </div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "0.88rem",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {inst.name}
+                        </div>
+                        <div style={{ fontSize: "0.72rem", color: "#9da7ba" }}>
+                          {inst.mcVersion} • {inst.loader}
+                        </div>
+                      </div>
+                      <IconPlay />
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
+                <button
+                  className="play-btn modal-action-btn"
+                  style={{
+                    flex: 1,
+                    background: "rgba(186, 215, 247, 0.1)",
+                    boxShadow: "none",
+                  }}
+                  onClick={() => setLaunchServer(null)}
+                >
+                  {t.cancel}
+                </button>
+              </div>
+            </DraggableWindow>
+          </div>
+        )}
+      </DraggableWindow>
+    );
+  },
+);

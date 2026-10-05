@@ -4,12 +4,12 @@ export const translations = {
     sidebarMods: "Моды",
     sidebarAccounts: "Аккаунты",
     sidebarSettings: "Настройки",
-    
+
     accountsTitle: "Управление аккаунтами",
     accountsSubtitle: "Добавьте ваши Minecraft аккаунты",
     loginMicrosoft: "Войти через Microsoft",
     offlineNickname: "Оффлайн никнейм...",
-    
+
     modsTitle: "Менеджер модов",
     modsSubtitle: "Поиск и установка из базы Modrinth",
     searchModPlaceholder: "Найти мод для",
@@ -19,12 +19,13 @@ export const translations = {
     downloadBtn: "Скачать",
     byAuthor: "от",
     installTo: "Выберите сборку",
-    noInstances: "Нет созданных сборок. Сначала создайте сборку на главном экране!",
+    noInstances:
+      "Нет созданных сборок. Сначала создайте сборку на главном экране!",
     cancel: "Отмена",
     modAlreadyInstalled: "Этот мод уже установлен в сборку!",
     modInstallSuccess: "Мод успешно скачан и установлен в сборку!",
     modInstallError: "Ошибка при скачивании мода: ",
-    
+
     createInstance: "Создать сборку",
     createBtn: "Создать",
     playBtn: "ИГРАТЬ",
@@ -35,7 +36,7 @@ export const translations = {
     ram: "RAM",
     unknown: "Неизвестно",
     version: "Версия",
-    
+
     settingsTitle: "Настройки",
     settingsSubtitle: "Конфигурация лаунчера",
     autoConnect: "Автоподключение",
@@ -50,7 +51,7 @@ export const translations = {
     filePathsTitle: "Пути к файлам",
     gameFolder: "ПАПКА ИГРЫ (.MINECRAFT)",
     languageTitle: "Язык интерфейса",
-    
+
     // Новые строки
     anyVersion: "Любая",
     anyLoader: "Любой",
@@ -60,7 +61,7 @@ export const translations = {
     sortNewest: "Новые",
     sortUpdated: "Обновлённые",
     javaLabel: "JAVA (JDK)",
-    
+
     // Новые элементы UI
     accountsSection: "АККАУНТЫ",
     loginMicrosoftBtn: "Войти через Microsoft",
@@ -84,7 +85,8 @@ export const translations = {
     omegaSubmitRegister: "Создать аккаунт",
     omegaShowPassword: "Показать пароль",
     omegaHidePassword: "Скрыть пароль",
-    omegaNotConfigured: "Omega не настроен: добавьте ключи Supabase в .env (см. README)",
+    omegaNotConfigured:
+      "Omega не настроен: добавьте ключи Supabase в .env (см. README)",
     omegaLoginError: "Не удалось выполнить вход. Проверьте данные",
     omegaSuccess: "Аккаунт Omega добавлен: ",
     addOfflineTitle: "Добавить оффлайн аккаунт",
@@ -101,7 +103,7 @@ export const translations = {
     newInstNamePlaceholder: "Название (напр. My Modpack)",
     importBtn: "Импорт",
     importBtnDesc: "Перенести сборку из Prism, CurseForge или Modrinth",
-    
+
     // Логи
     logWaitingBrowser: "[MS_AUTH]: Ожидание входа в браузере...",
     logSuccessLogin: "[MS_AUTH]: Успешный вход как ",
@@ -120,7 +122,7 @@ export const translations = {
     onlineStatus: "Онлайн",
     recentTitle: "Последние сборки",
     createShort: "Создать",
-    noBuildsHome: "Нет сборок. Нажмите \"+ Создать\"!",
+    noBuildsHome: 'Нет сборок. Нажмите "+ Создать"!',
     serversTitle: "Сервера",
     serversEmpty: "Добавьте сервер, чтобы играть со своими",
     serverNamePh: "Название",
@@ -136,12 +138,14 @@ export const translations = {
     consoleEmpty: "Запустите сборку, чтобы увидеть логи",
     friendsTitle: "Друзья",
     friendsTabTitle: "Друзья",
-    friendsTabSubtitle: "Играйте вместе: онлайн-статус, приглашения и вход на сервер",
+    friendsTabSubtitle:
+      "Играйте вместе: онлайн-статус, приглашения и вход на сервер",
     friendsOnline: "онлайн",
     friendsAdd: "Добавить друга",
     friendsTabFriends: "Друзья",
     friendsTabRequests: "Заявки",
-    friendsNotLoggedIn: "Войдите в Omega (Аккаунты), чтобы видеть друзей и играть вместе",
+    friendsNotLoggedIn:
+      "Войдите в Omega (Аккаунты), чтобы видеть друзей и играть вместе",
     friendsMyCode: "Мой код",
     friendsCopied: "Код скопирован!",
     friendsShowCode: "Показать код",
@@ -191,7 +195,8 @@ export const translations = {
     deleteBuild: "Удалить",
     confirmDelete: "Точно удалить?",
     importTitle: "Импорт сборки",
-    importChooseLauncher: "Выберите лаунчер, из которого нужно перенести сборку",
+    importChooseLauncher:
+      "Выберите лаунчер, из которого нужно перенести сборку",
     importPickArchive: "Выберите или перетащите архив сборки",
     importFrom: "Импорт из",
     importDropHint: "Перетащите сюда архив от",
@@ -221,7 +226,8 @@ export const translations = {
     importFromPrism: "Импорт из Prism Launcher",
     importFromCurseforge: "Импорт из CurseForge",
     importFromMrpack: "Импорт .mrpack",
-    importBadPath: "Не удалось получить путь файла. Используйте кнопку 'Выбрать файл'.",
+    importBadPath:
+      "Не удалось получить путь файла. Используйте кнопку 'Выбрать файл'.",
     importFilePickFailed: "Ошибка выбора файла",
 
     // Моды / ресурспаки / датапаки / шейдеры
@@ -231,7 +237,8 @@ export const translations = {
     datapackInstallSuccess: "Датапак успешно скачан в выбранный мир!",
     datapackAlreadyInstalled: "Датапак уже установлен в этот мир",
     datapackInstallError: "Ошибка при установке датапака: ",
-    shaderInstallSuccessFabric: "Шейдер успешно скачан для Fabric (Iris установлен автоматически)!",
+    shaderInstallSuccessFabric:
+      "Шейдер успешно скачан для Fabric (Iris установлен автоматически)!",
     shaderInstallSuccessForge: "Шейдер успешно скачан для Forge!",
     shaderAlreadyInstalled: "Шейдер уже установлен в эту сборку",
     shaderInstallError: "Ошибка при установке шейдера: ",
@@ -279,8 +286,10 @@ export const translations = {
     // Настройки
     settingsExportPath: "Папка для экспорта сборок",
     settingsVersionTypes: "Отображаемые версии Minecraft",
-    settingsVersionTypesDesc: "Выберите, какие типы версий показывать в списках. Можно комбинировать.",
-    settingsManifestError: "Не удалось обновить список версий — используются кэшированные данные.",
+    settingsVersionTypesDesc:
+      "Выберите, какие типы версий показывать в списках. Можно комбинировать.",
+    settingsManifestError:
+      "Не удалось обновить список версий — используются кэшированные данные.",
     settingsShownVersions: "Показано версий:",
     versionRelease: "Релизы",
     versionReleaseDesc: "Стабильные версии (1.21.4, 1.20.1...)",
@@ -302,19 +311,27 @@ export const translations = {
     off: "Выкл.",
     copyLogs: "Копировать логи",
     copyLogsDone: "Логи скопированы",
-    copyLogsFailed: "Не удалось скопировать логи"
+    copyLogsFailed: "Не удалось скопировать логи",
+    tagStyle: "СТИЛЬ",
+    tagFiles: "ФАЙЛЫ",
+    tagOptional: "ОПЦИОНАЛЬНО",
+    omegaLogoutBtn: "Выйти из Omega",
+    editLoaderPlaceholder: "Fabric / Forge / NeoForge / Vanilla",
+    myBuildsDesc: "Управление вашими установленными сборками и модами",
+    serversDesc: "Список серверов для быстрого входа",
+    recentDesc: "Быстрый запуск недавних сборок",
   },
   en: {
     sidebarHome: "Home",
     sidebarMods: "Mods",
     sidebarAccounts: "Accounts",
     sidebarSettings: "Settings",
-    
+
     accountsTitle: "Account Management",
     accountsSubtitle: "Add your Minecraft accounts",
     loginMicrosoft: "Login with Microsoft",
     offlineNickname: "Offline nickname...",
-    
+
     modsTitle: "Mod Manager",
     modsSubtitle: "Search and install from Modrinth",
     searchModPlaceholder: "Search mod for",
@@ -324,12 +341,13 @@ export const translations = {
     downloadBtn: "Download",
     byAuthor: "by",
     installTo: "Select instance",
-    noInstances: "No instances created. Create an instance on the home screen first!",
+    noInstances:
+      "No instances created. Create an instance on the home screen first!",
     cancel: "Cancel",
     modAlreadyInstalled: "This mod is already installed in the instance!",
     modInstallSuccess: "Mod successfully downloaded and installed!",
     modInstallError: "Error downloading mod: ",
-    
+
     createInstance: "Create Instance",
     createBtn: "Create",
     playBtn: "PLAY",
@@ -340,7 +358,7 @@ export const translations = {
     ram: "RAM",
     unknown: "Unknown",
     version: "Version",
-    
+
     settingsTitle: "Settings",
     settingsSubtitle: "Launcher configuration",
     autoConnect: "Auto Connect",
@@ -355,7 +373,7 @@ export const translations = {
     filePathsTitle: "File Paths",
     gameFolder: "GAME FOLDER (.MINECRAFT)",
     languageTitle: "Interface Language",
-    
+
     // New strings
     anyVersion: "Any",
     anyLoader: "Any",
@@ -365,7 +383,7 @@ export const translations = {
     sortNewest: "Newest",
     sortUpdated: "Recently Updated",
     javaLabel: "JAVA (JDK)",
-    
+
     // New UI elements
     accountsSection: "ACCOUNTS",
     loginMicrosoftBtn: "Login with Microsoft",
@@ -389,7 +407,8 @@ export const translations = {
     omegaSubmitRegister: "Create account",
     omegaShowPassword: "Show password",
     omegaHidePassword: "Hide password",
-    omegaNotConfigured: "Omega is not configured: add Supabase keys to .env (see README)",
+    omegaNotConfigured:
+      "Omega is not configured: add Supabase keys to .env (see README)",
     omegaLoginError: "Sign-in failed. Check your details",
     omegaSuccess: "Omega account added: ",
     addOfflineTitle: "Add Offline Account",
@@ -406,7 +425,7 @@ export const translations = {
     newInstNamePlaceholder: "Name (e.g., My Modpack)",
     importBtn: "Import",
     importBtnDesc: "Transfer an instance from Prism, CurseForge or Modrinth",
-    
+
     // Logs
     logWaitingBrowser: "[MS_AUTH]: Waiting for browser login...",
     logSuccessLogin: "[MS_AUTH]: Logged in successfully as ",
@@ -414,7 +433,8 @@ export const translations = {
     logUnknownError: "Unknown error",
     logStartingMc: "Starting Minecraft...",
     logKillingMc: "[main/INFO]: Killing Minecraft process...",
-    alertNoInstance: "Please select or create an instance on the desktop first!",
+    alertNoInstance:
+      "Please select or create an instance on the desktop first!",
 
     // Bugfix i18n: dock, home, instances, modals
     dockCatalog: "Catalog",
@@ -425,7 +445,7 @@ export const translations = {
     onlineStatus: "Online",
     recentTitle: "Recent Instances",
     createShort: "Create",
-    noBuildsHome: "No instances. Click \"+ Create\"!",
+    noBuildsHome: 'No instances. Click "+ Create"!',
     serversTitle: "Servers",
     serversEmpty: "Add a server to play with your friends",
     serverNamePh: "Name",
@@ -446,7 +466,8 @@ export const translations = {
     friendsAdd: "Add friend",
     friendsTabFriends: "Friends",
     friendsTabRequests: "Requests",
-    friendsNotLoggedIn: "Sign in to Omega (Accounts) to see friends and play together",
+    friendsNotLoggedIn:
+      "Sign in to Omega (Accounts) to see friends and play together",
     friendsMyCode: "My code",
     friendsCopied: "Code copied!",
     friendsShowCode: "Show code",
@@ -530,13 +551,18 @@ export const translations = {
     importFilePickFailed: "File selection error",
 
     // Mods / resource packs / datapacks / shaders
-    modInstallSuccessRes: "Resource pack successfully downloaded and installed!",
-    modAlreadyInstalledRes: "This resource pack is already installed in the instance",
+    modInstallSuccessRes:
+      "Resource pack successfully downloaded and installed!",
+    modAlreadyInstalledRes:
+      "This resource pack is already installed in the instance",
     modInstallErrorRes: "Error installing resource pack: ",
-    datapackInstallSuccess: "Datapack successfully installed into the selected world!",
-    datapackAlreadyInstalled: "This datapack is already installed in this world",
+    datapackInstallSuccess:
+      "Datapack successfully installed into the selected world!",
+    datapackAlreadyInstalled:
+      "This datapack is already installed in this world",
     datapackInstallError: "Error installing datapack: ",
-    shaderInstallSuccessFabric: "Shader downloaded for Fabric (Iris installed automatically)!",
+    shaderInstallSuccessFabric:
+      "Shader downloaded for Fabric (Iris installed automatically)!",
     shaderInstallSuccessForge: "Shader successfully downloaded for Forge!",
     shaderAlreadyInstalled: "This shader is already installed in the instance",
     shaderInstallError: "Error installing shader: ",
@@ -584,8 +610,10 @@ export const translations = {
     // Settings
     settingsExportPath: "Export folder for instances",
     settingsVersionTypes: "Displayed Minecraft versions",
-    settingsVersionTypesDesc: "Choose which version types to show in the lists. They can be combined.",
-    settingsManifestError: "Failed to update the version list — cached data is used.",
+    settingsVersionTypesDesc:
+      "Choose which version types to show in the lists. They can be combined.",
+    settingsManifestError:
+      "Failed to update the version list — cached data is used.",
     settingsShownVersions: "Versions shown:",
     versionRelease: "Releases",
     versionReleaseDesc: "Stable versions (1.21.4, 1.20.1...)",
@@ -607,8 +635,16 @@ export const translations = {
     off: "Off",
     copyLogs: "Copy logs",
     copyLogsDone: "Logs copied",
-    copyLogsFailed: "Failed to copy logs"
-  }
+    copyLogsFailed: "Failed to copy logs",
+    tagStyle: "STYLE",
+    tagFiles: "FILES",
+    tagOptional: "OPTIONAL",
+    omegaLogoutBtn: "Sign out of Omega",
+    editLoaderPlaceholder: "Fabric / Forge / NeoForge / Vanilla",
+    myBuildsDesc: "Manage your installed instances and mods",
+    serversDesc: "Servers list for quick join",
+    recentDesc: "Quick launch of recent instances",
+  },
 };
 
-export type Language = 'ru' | 'en';
+export type Language = "ru" | "en";

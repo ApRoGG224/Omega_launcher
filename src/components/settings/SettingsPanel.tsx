@@ -644,7 +644,9 @@ export const SettingsPanel = React.memo(
                     : "Manage player skins, capes and launcher color theme"
                 }
                 aside={
-                  <span className="settings-rewrite-section-tag">STYLE</span>
+                  <span className="settings-rewrite-section-tag">
+                    {isRussian ? "СТИЛЬ" : "STYLE"}
+                  </span>
                 }
               >
                 <div className="settings-custom-grid">
@@ -959,7 +961,9 @@ export const SettingsPanel = React.memo(
                     : "Sources and directories used by the launcher"
                 }
                 aside={
-                  <span className="settings-rewrite-section-tag">FILES</span>
+                  <span className="settings-rewrite-section-tag">
+                    {isRussian ? "ФАЙЛЫ" : "FILES"}
+                  </span>
                 }
               >
                 <div className="settings-rewrite-fields">
@@ -1111,7 +1115,9 @@ export const SettingsPanel = React.memo(
                     : "Optional server for quick connection"
                 }
                 aside={
-                  <span className="settings-rewrite-section-tag">OPTIONAL</span>
+                  <span className="settings-rewrite-section-tag">
+                    {isRussian ? "ОПЦИОНАЛЬНО" : "OPTIONAL"}
+                  </span>
                 }
               >
                 <div className="settings-rewrite-inline-field">

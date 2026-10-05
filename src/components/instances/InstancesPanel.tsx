@@ -1,7 +1,14 @@
 import React from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import type { ModpackInstance } from "../../types";
-import { IconBox, IconFolder, IconPlay, IconPlus } from "../../ui/icons";
+import {
+  IconBox,
+  IconEdit,
+  IconFolder,
+  IconPlay,
+  IconPlus,
+  IconTrash,
+} from "../../ui/icons";
 import { EditModal } from "./InstanceModals";
 
 export interface InstanceModalsState {
@@ -123,19 +130,24 @@ export const InstancesPanel = React.memo(
         )}
 
         <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
+          className="settings-rewrite-header"
+          style={{ marginBottom: "8px" }}
         >
-          <h2>{t.myBuilds}</h2>
+          <div className="settings-rewrite-heading">
+            <div className="settings-rewrite-emblem">
+              <IconBox size={20} />
+            </div>
+            <div>
+              <h2>{t.myBuilds}</h2>
+              <p>{t.myBuildsDesc}</p>
+            </div>
+          </div>
           <button
             className="play-btn"
-            style={{ height: "36px", fontSize: "0.85rem" }}
+            style={{ height: "38px", fontSize: "0.82rem", padding: "0 16px" }}
             onClick={onCreate}
           >
-            <IconPlus /> {t.createBuild}
+            <IconPlus size={16} /> <span>{t.createBuild}</span>
           </button>
         </div>
 
@@ -291,32 +303,30 @@ export const InstancesPanel = React.memo(
                     {modCount}
                   </span>
                   <span className="mod-chip">
-                    <span className="mod-chip-dot" /> Fabric API
+                    <span className="mod-chip-dot" /> {selectedInstance.loader}
                   </span>
                   <span className="mod-chip">
-                    <span className="mod-chip-dot" /> Sodium (Оптимизация)
-                  </span>
-                  <span className="mod-chip">
-                    <span className="mod-chip-dot" /> Iris Shaders
+                    <span className="mod-chip-dot" />{" "}
+                    {selectedInstance.mcVersion}
                   </span>
                 </div>
               </div>
             </div>
             <div className="assembly-detail-actions">
               <button className="play-btn" onClick={onPlay}>
-                <IconPlay /> {t.playShort}
+                <IconPlay /> <span>{t.playShort}</span>
               </button>
               <button
                 className="play-btn secondary-action-btn"
                 onClick={() => onOpenFolder(selectedInstance.id)}
               >
-                <IconFolder /> {t.openFolderShort}
+                <IconFolder /> <span>{t.openFolderShort}</span>
               </button>
               <button
                 className="play-btn secondary-action-btn"
                 onClick={() => onEditInstance(selectedInstance.id)}
               >
-                🛠️ {t.editBuildBtn}
+                <IconEdit size={14} /> <span>{t.editBuildBtn}</span>
               </button>
               <button
                 className="play-btn delete-action-btn"
@@ -331,7 +341,8 @@ export const InstancesPanel = React.memo(
                   else setConfirmDelete(true);
                 }}
               >
-                🗑️ {confirmDelete ? t.confirmDelete : t.deleteBuild}
+                <IconTrash size={14} />{" "}
+                <span>{confirmDelete ? t.confirmDelete : t.deleteBuild}</span>
               </button>
             </div>
           </div>

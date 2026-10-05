@@ -2,6 +2,7 @@ import React from "react";
 import type { ModpackInstance } from "../../types";
 import DraggableWindow from "../../ui/DraggableWindow";
 import { useToast } from "../../ui/ToastProvider";
+import { IconCopy, IconTerminal } from "../../ui/icons";
 
 export const ConsolePanel = React.memo(
   ({
@@ -20,8 +21,8 @@ export const ConsolePanel = React.memo(
     selectedInstance: ModpackInstance | null;
   }) => {
     const { showToast } = useToast();
-    const statusColor = isRunning ? "#269684" : "#9da7ba";
-    const statusGlow = isRunning ? "0 0 6px #269684" : "none";
+    const statusColor = isRunning ? "#5fd0b2" : "#7e8ba6";
+    const statusGlow = isRunning ? "0 0 8px rgba(95, 208, 178, 0.6)" : "none";
 
     const copyLogs = async () => {
       try {
@@ -36,8 +37,8 @@ export const ConsolePanel = React.memo(
       <DraggableWindow
         storageKey="omega:console-panel"
         className="sketch-card floating-dashboard-window draggable-window"
-        defaultPosition={{ x: 462, y: 430 }}
-        defaultSize={{ width: 560, height: 310 }}
+        defaultPosition={{ x: 402, y: 402 }}
+        defaultSize={{ width: 500, height: 320 }}
       >
         <div
           style={{
@@ -45,183 +46,126 @@ export const ConsolePanel = React.memo(
             padding: 0,
             position: "relative",
             height: "100%",
-            transition: "height 0.3s cubic-bezier(0.4,0,0.2,1)",
-            flexShrink: 0,
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           <div
+            className="sketch-card-header draggable-window-handle"
             style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background:
-                "linear-gradient(180deg, rgba(102, 58, 243, 0.07) 0%, rgba(5, 6, 15, 0.97) 100%)",
-              pointerEvents: "none",
-              zIndex: 0,
+              cursor: "pointer",
+              userSelect: "none",
             }}
-          />
-          <div
-            style={{
-              position: "relative",
-              zIndex: 1,
-              padding: "12px 14px",
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-            }}
+            onClick={onToggleConsole}
           >
-            <div
-              className="draggable-window-handle"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                cursor: "pointer",
-                userSelect: "none",
-              }}
-              onClick={onToggleConsole}
-            >
-              <span
-                style={{
-                  fontWeight: 700,
-                  fontSize: "0.8rem",
-                  color: "var(--accent-color)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}
-              >
-                <span
-                  style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: "50%",
-                    background: statusColor,
-                    display: "inline-block",
-                    boxShadow: statusGlow,
-                  }}
-                />
-                {isRunning ? t.consoleRunning : t.consoleTitle}
-              </span>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void copyLogs();
-                  }}
-                  title={t.copyLogs}
-                  style={{
-                    background: "rgba(186, 215, 247, 0.06)",
-                    border: "1px solid rgba(186, 215, 247, 0.1)",
-                    color: "#9da7ba",
-                    borderRadius: 6,
-                    padding: "2px 8px",
-                    fontSize: "0.66rem",
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                  }}
-                >
-                  📋 {t.copyLogs}
-                </button>
-                <span
-                  style={{
-                    fontSize: "0.68rem",
-                    color: "#3f4959",
-                    fontFamily: "monospace",
-                  }}
-                >
+            <div className="sketch-card-header-left">
+              <div className="settings-rewrite-section-icon">
+                <IconTerminal size={16} />
+              </div>
+              <div>
+                <span className="sketch-card-title">
+                  <span
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: "50%",
+                      background: statusColor,
+                      display: "inline-block",
+                      boxShadow: statusGlow,
+                      marginRight: 6,
+                    }}
+                  />
+                  {isRunning ? t.consoleRunning : t.consoleTitle}
+                </span>
+                <span className="sketch-card-subtitle">
                   {selectedInstance
                     ? `${selectedInstance.mcVersion} • ${selectedInstance.loader}`
-                    : ""}
-                </span>
-                <span
-                  style={{
-                    fontSize: "0.7rem",
-                    color: "#9da7ba",
-                    transform: consoleOpen ? "rotate(0deg)" : "rotate(180deg)",
-                    transition: "transform 0.3s",
-                    display: "inline-block",
-                    lineHeight: 1,
-                  }}
-                >
-                  ▲
+                    : t.consoleTitle}
                 </span>
               </div>
             </div>
-
-            {consoleOpen && (
-              <div
-                className="copyable-console"
-                style={{
-                  flex: 1,
-                  overflowY: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
-                  marginTop: 10,
-                  fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                  scrollbarWidth: "thin",
-                  scrollbarColor: "rgba(139, 92, 246, 0.2) transparent",
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void copyLogs();
                 }}
+                title={t.copyLogs}
+                className="panel-header-btn"
               >
-                {logs.length === 0 ? (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      height: "100%",
-                      gap: 8,
-                    }}
-                  >
-                    <span style={{ fontSize: "1.3rem" }}>📟</span>
+                <IconCopy size={13} /> <span>{t.copyLogs}</span>
+              </button>
+            </div>
+          </div>
+
+          {consoleOpen && (
+            <div
+              className="copyable-console"
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "2px",
+                padding: "8px 10px",
+                marginTop: 8,
+                background: "rgba(4, 6, 13, 0.64)",
+                border: "1px solid rgba(186, 215, 247, 0.08)",
+                borderRadius: "9px",
+                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                scrollbarWidth: "thin",
+              }}
+            >
+              {logs.length === 0 ? (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    gap: 8,
+                    color: "#7e8ba6",
+                  }}
+                >
+                  <IconTerminal size={26} />
+                  <div style={{ fontSize: "0.75rem", textAlign: "center" }}>
+                    {t.consoleEmpty}
+                  </div>
+                </div>
+              ) : (
+                logs.slice(-40).map((line, i) => {
+                  const isError = /error|exception|failed/i.test(line);
+                  const isWarn = /warn/i.test(line);
+                  const isInfo = /\[info\]/i.test(line);
+                  return (
                     <div
+                      key={i}
                       style={{
-                        color: "#3f4959",
-                        fontSize: "0.72rem",
-                        textAlign: "center",
+                        fontSize: "0.65rem",
+                        lineHeight: 1.45,
+                        padding: "1px 4px",
+                        borderRadius: 3,
+                        color: isError
+                          ? "#e46d4c"
+                          : isWarn
+                            ? "#e46d4c"
+                            : isInfo
+                              ? "#b6d9fc"
+                              : "#3f4959",
+                        background: isError
+                          ? "rgba(248,113,113,0.05)"
+                          : "transparent",
+                        wordBreak: "break-all",
                       }}
                     >
-                      {t.consoleEmpty}
+                      {line}
                     </div>
-                  </div>
-                ) : (
-                  logs.slice(-40).map((line, i) => {
-                    const isError = /error|exception|failed/i.test(line);
-                    const isWarn = /warn/i.test(line);
-                    const isInfo = /\[info\]/i.test(line);
-                    return (
-                      <div
-                        key={i}
-                        style={{
-                          fontSize: "0.65rem",
-                          lineHeight: 1.45,
-                          padding: "1px 4px",
-                          borderRadius: 3,
-                          color: isError
-                            ? "#e46d4c"
-                            : isWarn
-                              ? "#e46d4c"
-                              : isInfo
-                                ? "#b6d9fc"
-                                : "#3f4959",
-                          background: isError
-                            ? "rgba(248,113,113,0.05)"
-                            : "transparent",
-                          wordBreak: "break-all",
-                        }}
-                      >
-                        {line}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            )}
-          </div>
+                  );
+                })
+              )}
+            </div>
+          )}
         </div>
       </DraggableWindow>
     );

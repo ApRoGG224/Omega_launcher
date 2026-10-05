@@ -123,8 +123,8 @@ export const FriendsPanel = React.memo(
       <DraggableWindow
         storageKey="omega:friends-panel"
         className="sketch-card floating-dashboard-window draggable-window"
-        defaultPosition={{ x: Math.max(100, window.innerWidth - 370), y: 94 }}
-        defaultSize={{ width: 340, height: 648 }}
+        defaultPosition={{ x: Math.max(100, window.innerWidth - 386), y: 76 }}
+        defaultSize={{ width: 350, height: 646 }}
       >
         <div
           style={{
@@ -137,22 +137,32 @@ export const FriendsPanel = React.memo(
           }}
         >
           <div className="sketch-card-header draggable-window-handle">
-            <span className="sketch-card-title">
-              <IconUsers /> {t.friendsTitle}
-            </span>
-            <span
-              className="user-status"
-              style={{
-                fontSize: "0.78rem",
-                color: onlineCount > 0 ? "#269684" : "#9da7ba",
-              }}
-            >
+            <div className="sketch-card-header-left">
+              <div className="settings-rewrite-section-icon">
+                <IconUsers size={16} />
+              </div>
+              <div>
+                <span className="sketch-card-title">{t.friendsTitle}</span>
+                <span className="sketch-card-subtitle">
+                  {t.friendsTabSubtitle}
+                </span>
+              </div>
+            </div>
+            <div className="settings-rewrite-status">
               <span
-                className="status-dot"
-                style={{ background: onlineCount > 0 ? "#269684" : "#9da7ba" }}
-              />{" "}
-              {onlineCount} {t.friendsOnline}
-            </span>
+                className="settings-rewrite-status-dot"
+                style={{
+                  background: onlineCount > 0 ? "#5fd0b2" : "#7e8ba6",
+                  boxShadow:
+                    onlineCount > 0
+                      ? "0 0 8px rgba(95, 208, 178, 0.45)"
+                      : "none",
+                }}
+              />
+              <span>
+                {onlineCount} {t.friendsOnline}
+              </span>
+            </div>
           </div>
 
           {!friends.active && (

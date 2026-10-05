@@ -1,14 +1,67 @@
-import { AnimatedIcon } from "./AnimatedIcon";
-import { MOD_ICONS, RESOURCEPACK_ICONS, SHADER_ICONS, DATAPACK_ICONS, MODPACK_ICONS } from "./catalogAssets";
+import {
+  IconBox,
+  IconCpu,
+  IconFolder,
+  IconPalette,
+  IconSparkles,
+} from "../../ui/icons";
 
-export function CatalogTabs({ t, activeTab, setActiveTab }: { t: any; activeTab: string; setActiveTab: (tab: string) => void }) {
+export function CatalogTabs({
+  t,
+  activeTab,
+  setActiveTab,
+}: {
+  t: any;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}) {
   return (
     <div className="store-sub-tabs">
-      <button className={`sub-tab-btn ${activeTab === "mods" ? "active" : ""}`} onClick={() => setActiveTab("mods")}><div style={{ display: "flex", alignItems: "center", gap: "8px" }}><AnimatedIcon images={MOD_ICONS} interval={2500} /> {t.tabMods}</div></button>
-      <button className={`sub-tab-btn ${activeTab === "resourcepacks" ? "active" : ""}`} onClick={() => setActiveTab("resourcepacks")}><div style={{ display: "flex", alignItems: "center", gap: "8px" }}><AnimatedIcon images={RESOURCEPACK_ICONS} interval={2800} /> {t.tabTextures}</div></button>
-      <button className={`sub-tab-btn ${activeTab === "shaders" ? "active" : ""}`} onClick={() => setActiveTab("shaders")}><div style={{ display: "flex", alignItems: "center", gap: "8px" }}><AnimatedIcon images={SHADER_ICONS} interval={2900} /> {t.tabShaders}</div></button>
-      <button className={`sub-tab-btn ${activeTab === "datapacks" ? "active" : ""}`} onClick={() => setActiveTab("datapacks")}><div style={{ display: "flex", alignItems: "center", gap: "8px" }}><AnimatedIcon images={DATAPACK_ICONS} interval={2600} /> {t.tabDatapacks}</div></button>
-      <button className={`sub-tab-btn ${activeTab === "catalog" ? "active" : ""}`} onClick={() => setActiveTab("catalog")}><div style={{ display: "flex", alignItems: "center", gap: "8px" }}><AnimatedIcon images={MODPACK_ICONS} interval={2700} /> {t.tabCatalog}</div></button>
+      <button
+        className={`sub-tab-btn ${activeTab === "mods" ? "active" : ""}`}
+        onClick={() => setActiveTab("mods")}
+      >
+        <span className="sub-tab-content">
+          <IconCpu size={16} />
+          <span>{t.tabMods}</span>
+        </span>
+      </button>
+      <button
+        className={`sub-tab-btn ${activeTab === "resourcepacks" ? "active" : ""}`}
+        onClick={() => setActiveTab("resourcepacks")}
+      >
+        <span className="sub-tab-content">
+          <IconPalette size={16} />
+          <span>{t.tabTextures}</span>
+        </span>
+      </button>
+      <button
+        className={`sub-tab-btn ${activeTab === "shaders" ? "active" : ""}`}
+        onClick={() => setActiveTab("shaders")}
+      >
+        <span className="sub-tab-content">
+          <IconSparkles size={16} />
+          <span>{t.tabShaders}</span>
+        </span>
+      </button>
+      <button
+        className={`sub-tab-btn ${activeTab === "datapacks" ? "active" : ""}`}
+        onClick={() => setActiveTab("datapacks")}
+      >
+        <span className="sub-tab-content">
+          <IconFolder size={16} />
+          <span>{t.tabDatapacks}</span>
+        </span>
+      </button>
+      <button
+        className={`sub-tab-btn ${activeTab === "catalog" ? "active" : ""}`}
+        onClick={() => setActiveTab("catalog")}
+      >
+        <span className="sub-tab-content">
+          <IconBox size={16} />
+          <span>{t.tabCatalog}</span>
+        </span>
+      </button>
     </div>
   );
 }
