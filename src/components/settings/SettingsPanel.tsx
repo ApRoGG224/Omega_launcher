@@ -47,7 +47,7 @@ export const NEON_THEMES: readonly NeonTheme[] = [
   {
     id: "omega",
     name: "Omega Violet",
-    nameRu: "Omega Violet",
+    nameRu: "Омега Фиолетовый",
     accent: "#6344d4",
     rgb: "99, 68, 212",
     light: "#7c5edc",
@@ -56,7 +56,7 @@ export const NEON_THEMES: readonly NeonTheme[] = [
   {
     id: "cyber",
     name: "Cyber Cyan",
-    nameRu: "Cyber Cyan",
+    nameRu: "Кибер Голубой",
     accent: "#00d2ff",
     rgb: "0, 210, 255",
     light: "#38bdf8",
@@ -65,7 +65,7 @@ export const NEON_THEMES: readonly NeonTheme[] = [
   {
     id: "emerald",
     name: "Emerald Green",
-    nameRu: "Emerald Green",
+    nameRu: "Изумрудно-зеленый",
     accent: "#10b981",
     rgb: "16, 185, 129",
     light: "#34d399",
@@ -74,7 +74,7 @@ export const NEON_THEMES: readonly NeonTheme[] = [
   {
     id: "crimson",
     name: "Crimson Neon",
-    nameRu: "Crimson Neon",
+    nameRu: "Малиновый Неон",
     accent: "#ff2a5f",
     rgb: "255, 42, 95",
     light: "#ff5983",
