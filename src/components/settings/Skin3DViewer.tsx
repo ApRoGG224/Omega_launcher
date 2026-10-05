@@ -11,7 +11,7 @@ export const FALLBACK_STEVE_SKIN = "https://minotar.net/skin/MHF_Steve";
 export interface Skin3DViewerProps {
   skinUrl?: string | null;
   capeUrl?: string | null;
-  model?: "default" | "slim";
+  model?: "default" | "slim" | "auto-detect";
   width?: number;
   height?: number;
   animation?: "idle" | "walk" | "run" | "none";
@@ -21,9 +21,9 @@ export interface Skin3DViewerProps {
 export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
   skinUrl,
   capeUrl,
-  model = "default",
-  width = 180,
-  height = 190,
+  model = "auto-detect",
+  width = 230,
+  height = 250,
   animation = "idle",
   loading = false,
 }) => {
@@ -34,13 +34,32 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
     if (!canvasRef.current) return;
 
     const initialSkin = skinUrl || FALLBACK_STEVE_SKIN;
+    const initialModel =
+      model === "slim"
+        ? "slim"
+        : model === "default"
+          ? "default"
+          : "auto-detect";
     const viewer = new SkinViewer({
       canvas: canvasRef.current,
       width,
       height,
       skin: initialSkin,
-      model: model === "slim" ? "slim" : "default",
+      model: initialModel,
     });
+
+    // Prevent transparent pixels in skin layer 1 from rendering as black artifacts/stripes
+    const skinAny = viewer.playerObject.skin as any;
+    if (skinAny?.layer1Material) {
+      skinAny.layer1Material.alphaTest = 0.5;
+      skinAny.layer1Material.transparent = true;
+      skinAny.layer1Material.needsUpdate = true;
+    }
+    if (skinAny?.layer1MaterialBiased) {
+      skinAny.layer1MaterialBiased.alphaTest = 0.5;
+      skinAny.layer1MaterialBiased.transparent = true;
+      skinAny.layer1MaterialBiased.needsUpdate = true;
+    }
 
     viewer.controls.enableRotate = true;
     viewer.controls.enableZoom = true;
@@ -70,9 +89,15 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
     if (!viewer) return;
 
     const targetSkin = skinUrl || FALLBACK_STEVE_SKIN;
+    const targetModel =
+      model === "slim"
+        ? "slim"
+        : model === "default"
+          ? "default"
+          : "auto-detect";
     viewer
       .loadSkin(targetSkin, {
-        model: model === "slim" ? "slim" : "default",
+        model: targetModel,
       })
       .catch(() => {
         if (targetSkin !== FALLBACK_STEVE_SKIN) {

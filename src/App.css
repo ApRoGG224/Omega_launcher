@@ -5386,7 +5386,7 @@ input[type="color"]::-webkit-color-swatch {
    ------------------------------------------------------------- */
 .settings-custom-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
   gap: 12px;
   align-items: stretch;
 }
@@ -5517,8 +5517,8 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .settings-custom-3d-box {
-  width: 180px;
-  height: 190px;
+  width: 230px;
+  height: 250px;
   border-radius: 12px;
   background: radial-gradient(
     circle at center,

@@ -256,8 +256,10 @@ export const SettingsPanel = React.memo(
     >(() => {
       return (localStorage.getItem("omega:skinSource") as any) || "ely";
     });
-    const [skinModel, setSkinModel] = React.useState<"classic" | "slim">(() => {
-      return (localStorage.getItem("omega:skinModel") as any) || "classic";
+    const [skinModel, setSkinModel] = React.useState<
+      "auto" | "classic" | "slim"
+    >(() => {
+      return (localStorage.getItem("omega:skinModel") as any) || "auto";
     });
     const [customSkinUrl, setCustomSkinUrl] = React.useState<string | null>(
       () => {
@@ -275,16 +277,6 @@ export const SettingsPanel = React.memo(
     const [currentTheme, setCurrentTheme] = React.useState<string>(() => {
       return localStorage.getItem("omega:theme") || "omega";
     });
-
-    const [playerNickname, setPlayerNickname] = React.useState<string>(() => {
-      return account?.name || "Steve";
-    });
-
-    React.useEffect(() => {
-      if (account?.name) {
-        setPlayerNickname(account.name);
-      }
-    }, [account?.name]);
 
     const [viewerAnimation, setViewerAnimation] = React.useState<
       "idle" | "walk" | "none"
@@ -305,7 +297,7 @@ export const SettingsPanel = React.memo(
       }, 250);
 
       const resolveSkin = async () => {
-        const name = (playerNickname || account?.name || "Steve").trim();
+        const name = (account?.name || "Steve").trim();
         if (skinSource === "custom") {
           if (!cancelled) {
             setActive3dSkinUrl(customSkinUrl);
@@ -349,9 +341,6 @@ export const SettingsPanel = React.memo(
               const data = await res.json();
               if (data?.SKIN?.url && !cancelled) {
                 const url = data.SKIN.url.replace(/^http:\/\//, "https://");
-                const detectedModel =
-                  data.SKIN.metadata?.model === "slim" ? "slim" : "classic";
-                setSkinModel(detectedModel);
                 setActive3dSkinUrl(url);
                 if (data?.CAPE?.url && capeEnabled) {
                   setActive3dCapeUrl(
@@ -384,14 +373,7 @@ export const SettingsPanel = React.memo(
         cancelled = true;
         clearTimeout(timer);
       };
-    }, [
-      skinSource,
-      playerNickname,
-      account?.name,
-      customSkinUrl,
-      customCapeUrl,
-      capeEnabled,
-    ]);
+    }, [skinSource, account?.name, customSkinUrl, customCapeUrl, capeEnabled]);
 
     React.useEffect(() => {
       const saved = localStorage.getItem("omega:theme") || "omega";
@@ -603,6 +585,16 @@ export const SettingsPanel = React.memo(
                         <div className="settings-custom-pill-group">
                           <button
                             type="button"
+                            className={skinModel === "auto" ? "active" : ""}
+                            onClick={() => {
+                              setSkinModel("auto");
+                              localStorage.setItem("omega:skinModel", "auto");
+                            }}
+                          >
+                            {isRussian ? "Авто" : "Auto"}
+                          </button>
+                          <button
+                            type="button"
                             className={skinModel === "classic" ? "active" : ""}
                             onClick={() => {
                               setSkinModel("classic");
@@ -682,28 +674,6 @@ export const SettingsPanel = React.memo(
                           </span>
                         </label>
                       </div>
-
-                      <div className="settings-custom-row">
-                        <label>
-                          {isRussian ? "Никнейм игрока" : "Player nickname"}
-                        </label>
-                        <div
-                          className="settings-rewrite-input"
-                          style={{ maxWidth: "160px" }}
-                        >
-                          <input
-                            type="text"
-                            value={playerNickname}
-                            placeholder={account?.name || "Steve"}
-                            onChange={(e) => setPlayerNickname(e.target.value)}
-                            style={{
-                              minHeight: "28px",
-                              padding: "4px 8px",
-                              fontSize: "0.72rem",
-                            }}
-                          />
-                        </div>
-                      </div>
                     </div>
                   </div>
 
@@ -712,9 +682,15 @@ export const SettingsPanel = React.memo(
                       <Skin3DViewer
                         skinUrl={active3dSkinUrl}
                         capeUrl={capeEnabled ? active3dCapeUrl : null}
-                        model={skinModel === "slim" ? "slim" : "default"}
-                        width={180}
-                        height={190}
+                        model={
+                          skinModel === "auto"
+                            ? "auto-detect"
+                            : skinModel === "slim"
+                              ? "slim"
+                              : "default"
+                        }
+                        width={230}
+                        height={250}
                         animation={viewerAnimation}
                         loading={skinLoading}
                       />
@@ -749,28 +725,6 @@ export const SettingsPanel = React.memo(
                           ? "Вращай мышью • Масштаб колесом"
                           : "Drag to rotate • Wheel to zoom"}
                       </span>
-                    </div>
-
-                    <div className="settings-custom-preview-meta">
-                      <strong>
-                        {skinSource === "custom"
-                          ? isRussian
-                            ? "Пользовательский PNG"
-                            : "Custom PNG file"
-                          : skinSource === "ely"
-                            ? `Ely.by: ${playerNickname || account?.name || "Steve"}`
-                            : `Microsoft: ${playerNickname || account?.name || "Steve"}`}
-                      </strong>
-                      <small>
-                        {skinModel === "classic"
-                          ? "Classic Steve (4px)"
-                          : "Slim Alex (3px)"}
-                        {capeEnabled
-                          ? isRussian
-                            ? " • С плащом"
-                            : " • With cape"
-                          : ""}
-                      </small>
                     </div>
 
                     {skinSource === "custom" &&
