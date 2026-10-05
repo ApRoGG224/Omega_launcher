@@ -8,12 +8,75 @@ import {
   IconFolder,
   IconHistory,
   IconLayers,
+  IconPalette,
   IconSearch,
   IconSettings,
+  IconShirt,
   IconSparkles,
   IconTag,
   IconUsers,
 } from "../../ui/icons";
+
+export const LAUNCHER_THEMES = [
+  {
+    id: "omega",
+    name: "Omega Violet",
+    accent: "#663af3",
+    rgb: "102, 58, 243",
+    light: "#8b5cf6",
+    dark: "#4c2bd6",
+  },
+  {
+    id: "cyber",
+    name: "Cyber Cyan",
+    accent: "#00d2ff",
+    rgb: "0, 210, 255",
+    light: "#38bdf8",
+    dark: "#0284c7",
+  },
+  {
+    id: "emerald",
+    name: "Emerald Green",
+    accent: "#10b981",
+    rgb: "16, 185, 129",
+    light: "#34d399",
+    dark: "#059669",
+  },
+  {
+    id: "sunset",
+    name: "Sunset Orange",
+    accent: "#ff6b4a",
+    rgb: "255, 107, 74",
+    light: "#fb923c",
+    dark: "#ea580c",
+  },
+  {
+    id: "rose",
+    name: "Rose Neon",
+    accent: "#f43f5e",
+    rgb: "244, 63, 94",
+    light: "#fb7185",
+    dark: "#e11d48",
+  },
+  {
+    id: "gold",
+    name: "Electric Gold",
+    accent: "#f59e0b",
+    rgb: "245, 158, 11",
+    light: "#fbbf24",
+    dark: "#d97706",
+  },
+] as const;
+
+export function applyLauncherTheme(themeId: string) {
+  const t =
+    LAUNCHER_THEMES.find((th) => th.id === themeId) ?? LAUNCHER_THEMES[0];
+  document.documentElement.style.setProperty("--accent-color", t.accent);
+  document.documentElement.style.setProperty("--accent-color-rgb", t.rgb);
+  document.documentElement.style.setProperty("--accent-color-light", t.light);
+  document.documentElement.style.setProperty("--accent-color-dark", t.dark);
+  localStorage.setItem("omega:theme", t.id);
+}
 
 const VERSION_FILTER_ITEMS = [
   {
@@ -83,7 +146,8 @@ const SettingsSection = React.memo(
   ),
 );
 
-type SettingsTab = "files" | "runtime" | "network" | "library" | "session";
+type SettingsTab =
+  "customization" | "files" | "runtime" | "network" | "library" | "session";
 
 const SETTINGS_TABS: Array<{
   id: SettingsTab;
@@ -91,6 +155,12 @@ const SETTINGS_TABS: Array<{
   labelKeyRu: string;
   labelKeyEn: string;
 }> = [
+  {
+    id: "customization",
+    icon: <IconPalette />,
+    labelKeyRu: "Кастомизация",
+    labelKeyEn: "Customization",
+  },
   {
     id: "files",
     icon: <IconFolder />,
@@ -176,7 +246,85 @@ export const SettingsPanel = React.memo(
     setFullscreenOnStart: (v: boolean) => void;
     onOpenStore: () => void;
   }) => {
-    const [activeTab, setActiveTab] = React.useState<SettingsTab>("files");
+    const [activeTab, setActiveTab] =
+      React.useState<SettingsTab>("customization");
+    const [skinSource, setSkinSource] = React.useState<
+      "ely" | "microsoft" | "custom"
+    >(() => {
+      return (localStorage.getItem("omega:skinSource") as any) || "ely";
+    });
+    const [skinModel, setSkinModel] = React.useState<"classic" | "slim">(() => {
+      return (localStorage.getItem("omega:skinModel") as any) || "classic";
+    });
+    const [customSkinUrl, setCustomSkinUrl] = React.useState<string | null>(
+      () => {
+        return localStorage.getItem("omega:customSkin") || null;
+      },
+    );
+    const [capeEnabled, setCapeEnabled] = React.useState<boolean>(() => {
+      return localStorage.getItem("omega:capeEnabled") === "true";
+    });
+    const [customCapeUrl, setCustomCapeUrl] = React.useState<string | null>(
+      () => {
+        return localStorage.getItem("omega:customCape") || null;
+      },
+    );
+    const [currentTheme, setCurrentTheme] = React.useState<string>(() => {
+      return localStorage.getItem("omega:theme") || "omega";
+    });
+
+    React.useEffect(() => {
+      const saved = localStorage.getItem("omega:theme") || "omega";
+      applyLauncherTheme(saved);
+    }, []);
+
+    const handleSelectTheme = (themeId: string) => {
+      setCurrentTheme(themeId);
+      applyLauncherTheme(themeId);
+    };
+
+    const handleSkinUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        setCustomSkinUrl(dataUrl);
+        setSkinSource("custom");
+        localStorage.setItem("omega:customSkin", dataUrl);
+        localStorage.setItem("omega:skinSource", "custom");
+      };
+      reader.readAsDataURL(file);
+    };
+
+    const handleCapeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        setCustomCapeUrl(dataUrl);
+        setCapeEnabled(true);
+        localStorage.setItem("omega:customCape", dataUrl);
+        localStorage.setItem("omega:capeEnabled", "true");
+      };
+      reader.readAsDataURL(file);
+    };
+
+    const handleResetSkin = () => {
+      setCustomSkinUrl(null);
+      setSkinSource("ely");
+      localStorage.removeItem("omega:customSkin");
+      localStorage.setItem("omega:skinSource", "ely");
+    };
+
+    const handleResetCape = () => {
+      setCustomCapeUrl(null);
+      setCapeEnabled(false);
+      localStorage.removeItem("omega:customCape");
+      localStorage.setItem("omega:capeEnabled", "false");
+    };
+
     const [javaDetectMsg, setJavaDetectMsg] = React.useState<string | null>(
       null,
     );
@@ -257,6 +405,252 @@ export const SettingsPanel = React.memo(
           </aside>
 
           <main className="settings-rewrite-main">
+            {activeTab === "customization" && (
+              <SettingsSection
+                id="settings-customization"
+                icon={<IconPalette />}
+                iconColor="#b388ff"
+                title={isRussian ? "Кастомизация" : "Customization"}
+                description={
+                  isRussian
+                    ? "Управление скинами, плащами и цветовой темой лаунчера"
+                    : "Manage player skins, capes and launcher color theme"
+                }
+                aside={
+                  <span className="settings-rewrite-section-tag">STYLE</span>
+                }
+              >
+                <div className="settings-custom-grid">
+                  <div className="settings-custom-card">
+                    <div className="settings-custom-card-title">
+                      <IconShirt />
+                      <span>
+                        {isRussian
+                          ? "Гардероб (Скин и Плащ)"
+                          : "Wardrobe (Skin & Cape)"}
+                      </span>
+                    </div>
+
+                    <div className="settings-custom-controls">
+                      <div className="settings-custom-row">
+                        <label>
+                          {isRussian ? "Сервис скина" : "Skin service"}
+                        </label>
+                        <div className="settings-custom-pill-group">
+                          <button
+                            type="button"
+                            className={skinSource === "ely" ? "active" : ""}
+                            onClick={() => {
+                              setSkinSource("ely");
+                              localStorage.setItem("omega:skinSource", "ely");
+                            }}
+                          >
+                            Ely.by
+                          </button>
+                          <button
+                            type="button"
+                            className={
+                              skinSource === "microsoft" ? "active" : ""
+                            }
+                            onClick={() => {
+                              setSkinSource("microsoft");
+                              localStorage.setItem(
+                                "omega:skinSource",
+                                "microsoft",
+                              );
+                            }}
+                          >
+                            Microsoft
+                          </button>
+                          <button
+                            type="button"
+                            className={skinSource === "custom" ? "active" : ""}
+                            onClick={() => {
+                              setSkinSource("custom");
+                              localStorage.setItem(
+                                "omega:skinSource",
+                                "custom",
+                              );
+                            }}
+                          >
+                            {isRussian ? "Свой PNG" : "Custom"}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="settings-custom-row">
+                        <label>{isRussian ? "Модель" : "Model"}</label>
+                        <div className="settings-custom-pill-group">
+                          <button
+                            type="button"
+                            className={skinModel === "classic" ? "active" : ""}
+                            onClick={() => {
+                              setSkinModel("classic");
+                              localStorage.setItem(
+                                "omega:skinModel",
+                                "classic",
+                              );
+                            }}
+                          >
+                            Steve (4px)
+                          </button>
+                          <button
+                            type="button"
+                            className={skinModel === "slim" ? "active" : ""}
+                            onClick={() => {
+                              setSkinModel("slim");
+                              localStorage.setItem("omega:skinModel", "slim");
+                            }}
+                          >
+                            Alex (3px)
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="settings-custom-actions">
+                        <label className="settings-custom-upload-btn">
+                          <input
+                            type="file"
+                            accept="image/png"
+                            onChange={handleSkinUpload}
+                            style={{ display: "none" }}
+                          />
+                          <span>
+                            {isRussian
+                              ? "Загрузить скин (.png)"
+                              : "Upload skin (.png)"}
+                          </span>
+                        </label>
+                        <label className="settings-custom-upload-btn">
+                          <input
+                            type="file"
+                            accept="image/png"
+                            onChange={handleCapeUpload}
+                            style={{ display: "none" }}
+                          />
+                          <span>
+                            {isRussian
+                              ? "Загрузить плащ (.png)"
+                              : "Upload cape (.png)"}
+                          </span>
+                        </label>
+                        <label
+                          className="settings-rewrite-switch-label"
+                          style={{ minHeight: "auto", margin: 0 }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={capeEnabled}
+                            onChange={(e) => {
+                              setCapeEnabled(e.target.checked);
+                              localStorage.setItem(
+                                "omega:capeEnabled",
+                                String(e.target.checked),
+                              );
+                            }}
+                          />
+                          <span
+                            className="settings-rewrite-switch"
+                            aria-hidden="true"
+                          >
+                            <span />
+                          </span>
+                          <span>
+                            <strong>
+                              {isRussian ? "Плащ включён" : "Cape enabled"}
+                            </strong>
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="settings-custom-preview-card">
+                    <div className="settings-custom-avatar-wrapper">
+                      {customSkinUrl ? (
+                        <img
+                          src={customSkinUrl}
+                          alt="Skin preview"
+                          className="settings-custom-skin-img"
+                        />
+                      ) : (
+                        <div className="settings-custom-avatar-placeholder">
+                          <IconShirt />
+                        </div>
+                      )}
+                      {capeEnabled && (
+                        <span className="settings-custom-cape-badge">
+                          {isRussian ? "ПЛАЩ" : "CAPE"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="settings-custom-preview-meta">
+                      <strong>
+                        {skinSource === "custom"
+                          ? isRussian
+                            ? "Пользовательский файл"
+                            : "Custom file"
+                          : skinSource === "ely"
+                            ? "Ely.by Skin"
+                            : "Microsoft Skin"}
+                      </strong>
+                      <small>
+                        {skinModel === "classic"
+                          ? "Classic Steve"
+                          : "Slim Alex"}
+                      </small>
+                    </div>
+                    {(customSkinUrl || customCapeUrl) && (
+                      <button
+                        type="button"
+                        className="settings-custom-reset-btn"
+                        onClick={() => {
+                          handleResetSkin();
+                          handleResetCape();
+                        }}
+                      >
+                        {isRussian
+                          ? "Сбросить на стандартный"
+                          : "Reset to default"}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="settings-custom-card settings-custom-card-wide">
+                    <div className="settings-custom-card-title">
+                      <IconPalette />
+                      <span>
+                        {isRussian
+                          ? "Цветовая тема лаунчера"
+                          : "Launcher Color Theme"}
+                      </span>
+                    </div>
+                    <div className="settings-theme-palette">
+                      {LAUNCHER_THEMES.map((theme) => (
+                        <button
+                          key={theme.id}
+                          type="button"
+                          className={`settings-theme-chip ${currentTheme === theme.id ? "active" : ""}`}
+                          onClick={() => handleSelectTheme(theme.id)}
+                        >
+                          <span
+                            className="settings-theme-dot"
+                            style={{
+                              backgroundColor: theme.accent,
+                              boxShadow: `0 0 10px ${theme.accent}`,
+                            }}
+                          />
+                          <span className="settings-theme-name">
+                            {theme.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </SettingsSection>
+            )}
+
             {activeTab === "files" && (
               <SettingsSection
                 id="settings-files"
