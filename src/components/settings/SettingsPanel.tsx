@@ -85,62 +85,62 @@ export const NEON_THEMES: readonly NeonTheme[] = [
 export const BASE_THEMES: readonly BaseTheme[] = [
   {
     id: "cappuccino",
-    name: "Cappuccino",
+    name: "Rosewater",
     nameRu: "Капучино",
-    previewColor: "#c49e7b",
-    launcherBg: "#120e0c",
-    sidebarBg: "rgba(28, 21, 18, 0.95)",
-    sectionBg: "rgba(24, 18, 15, 0.88)",
-    cardBg: "rgba(38, 29, 24, 0.65)",
-    cardBorder: "rgba(196, 158, 123, 0.22)",
-    frameBorder: "1px solid rgba(196, 158, 123, 0.28)",
+    previewColor: "#f4dbd6",
+    launcherBg: "#1e2030",
+    sidebarBg: "rgba(24, 25, 38, 0.95)",
+    sectionBg: "rgba(36, 39, 58, 0.92)",
+    cardBg: "rgba(54, 58, 79, 0.65)",
+    cardBorder: "rgba(244, 219, 214, 0.22)",
+    frameBorder: "1px solid rgba(244, 219, 214, 0.38)",
     frameBg:
-      "radial-gradient(circle at center, rgba(196, 158, 123, 0.09) 0%, rgba(18, 14, 12, 0.92) 100%)",
+      "radial-gradient(circle at center, rgba(244, 219, 214, 0.14) 0%, rgba(24, 25, 38, 0.95) 100%)",
     frameShadow: "inset 0 0 24px rgba(0, 0, 0, 0.6)",
   },
   {
-    id: "nord",
-    name: "Nord Frost",
-    nameRu: "Нордик",
-    previewColor: "#88c0d0",
-    launcherBg: "#080c14",
-    sidebarBg: "rgba(15, 23, 38, 0.95)",
-    sectionBg: "rgba(13, 20, 34, 0.88)",
-    cardBg: "rgba(23, 34, 54, 0.65)",
-    cardBorder: "rgba(136, 192, 208, 0.22)",
-    frameBorder: "1px solid rgba(136, 192, 208, 0.28)",
+    id: "lavender",
+    name: "Lavender",
+    nameRu: "Лаванда",
+    previewColor: "#b7bdf8",
+    launcherBg: "#1e2030",
+    sidebarBg: "rgba(24, 25, 38, 0.95)",
+    sectionBg: "rgba(36, 39, 58, 0.92)",
+    cardBg: "rgba(54, 58, 79, 0.65)",
+    cardBorder: "rgba(183, 189, 248, 0.22)",
+    frameBorder: "1px solid rgba(183, 189, 248, 0.38)",
     frameBg:
-      "radial-gradient(circle at center, rgba(136, 192, 208, 0.09) 0%, rgba(8, 12, 20, 0.92) 100%)",
+      "radial-gradient(circle at center, rgba(183, 189, 248, 0.14) 0%, rgba(24, 25, 38, 0.95) 100%)",
     frameShadow: "inset 0 0 24px rgba(0, 0, 0, 0.6)",
   },
   {
-    id: "everforest",
-    name: "Everforest",
-    nameRu: "Эверфорест",
-    previewColor: "#a7c080",
-    launcherBg: "#090f0c",
-    sidebarBg: "rgba(18, 28, 22, 0.95)",
-    sectionBg: "rgba(15, 24, 19, 0.88)",
-    cardBg: "rgba(26, 38, 30, 0.65)",
-    cardBorder: "rgba(167, 192, 128, 0.22)",
-    frameBorder: "1px solid rgba(167, 192, 128, 0.28)",
+    id: "sapphire",
+    name: "Sapphire",
+    nameRu: "Сапфир",
+    previewColor: "#7dc4e4",
+    launcherBg: "#1e2030",
+    sidebarBg: "rgba(24, 25, 38, 0.95)",
+    sectionBg: "rgba(36, 39, 58, 0.92)",
+    cardBg: "rgba(54, 58, 79, 0.65)",
+    cardBorder: "rgba(125, 196, 228, 0.22)",
+    frameBorder: "1px solid rgba(125, 196, 228, 0.38)",
     frameBg:
-      "radial-gradient(circle at center, rgba(167, 192, 128, 0.09) 0%, rgba(9, 15, 12, 0.92) 100%)",
+      "radial-gradient(circle at center, rgba(125, 196, 228, 0.14) 0%, rgba(24, 25, 38, 0.95) 100%)",
     frameShadow: "inset 0 0 24px rgba(0, 0, 0, 0.6)",
   },
   {
-    id: "gruvbox",
-    name: "Gruvbox",
-    nameRu: "Грувбокс",
-    previewColor: "#d79921",
-    launcherBg: "#12100d",
-    sidebarBg: "rgba(29, 25, 20, 0.95)",
-    sectionBg: "rgba(25, 21, 17, 0.88)",
-    cardBg: "rgba(40, 34, 27, 0.65)",
-    cardBorder: "rgba(215, 153, 33, 0.22)",
-    frameBorder: "1px solid rgba(215, 153, 33, 0.28)",
+    id: "green",
+    name: "Green",
+    nameRu: "Мята",
+    previewColor: "#a6da95",
+    launcherBg: "#1e2030",
+    sidebarBg: "rgba(24, 25, 38, 0.95)",
+    sectionBg: "rgba(36, 39, 58, 0.92)",
+    cardBg: "rgba(54, 58, 79, 0.65)",
+    cardBorder: "rgba(166, 218, 149, 0.22)",
+    frameBorder: "1px solid rgba(166, 218, 149, 0.38)",
     frameBg:
-      "radial-gradient(circle at center, rgba(215, 153, 33, 0.09) 0%, rgba(18, 16, 13, 0.92) 100%)",
+      "radial-gradient(circle at center, rgba(166, 218, 149, 0.14) 0%, rgba(24, 25, 38, 0.95) 100%)",
     frameShadow: "inset 0 0 24px rgba(0, 0, 0, 0.6)",
   },
 ] as const;
@@ -165,6 +165,8 @@ export function applyBaseTheme(baseId: string) {
   document.documentElement.style.setProperty("--section-bg", b.sectionBg);
   document.documentElement.style.setProperty("--card-bg", b.cardBg);
   document.documentElement.style.setProperty("--card-border", b.cardBorder);
+  document.documentElement.style.setProperty("--dock-bg", b.sidebarBg);
+  document.documentElement.style.setProperty("--dock-border", b.cardBorder);
   document.documentElement.style.setProperty(
     "--theme-frame-border",
     b.frameBorder,
@@ -914,19 +916,15 @@ export const SettingsPanel = React.memo(
                         </div>
                       </div>
 
-                      {/* Разделитель */}
                       <div
                         className="settings-theme-group-divider"
                         aria-hidden="true"
                       />
 
-                      {/* Без подсветки (Тема лаунчера: фон, рамки) */}
                       <div className="settings-theme-group">
                         <div className="settings-theme-group-header matte">
                           <span>
-                            {isRussian
-                              ? "Без подсветки (Фон и рамки)"
-                              : "Launcher Theme (Bg & Frames)"}
+                            {isRussian ? "Без подсветки" : "Without glow"}
                           </span>
                         </div>
                         <div className="settings-theme-group-grid">

@@ -22,7 +22,11 @@ import { ImportModal } from "./components/instances/ImportModal";
 import { ImportProgressPopup } from "./components/instances/ImportProgressPopup";
 import { AccountModal } from "./components/accounts/AccountModal";
 import { FriendsTab } from "./components/friends/FriendsTab";
-import { SettingsPanel } from "./components/settings/SettingsPanel";
+import {
+  SettingsPanel,
+  applyBaseTheme,
+  applyNeonTheme,
+} from "./components/settings/SettingsPanel";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   getStoredFullscreenOnStart,
@@ -147,6 +151,10 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const savedNeon = localStorage.getItem("omega:neonTheme") || "omega";
+    const savedBase = localStorage.getItem("omega:baseTheme") || "cappuccino";
+    applyNeonTheme(savedNeon);
+    applyBaseTheme(savedBase);
     applyTheme(themeHex);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

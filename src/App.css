@@ -22,6 +22,23 @@
   --color-gridline-blue: #3f4959;
   --color-glass-edge: #bad7f71f;
   --color-luminous-fill: #c7d3ea1f;
+
+  /* Catppuccin Macchiato theme variables */
+  --launcher-bg: #1e2030;
+  --sidebar-bg: rgba(24, 25, 38, 0.95);
+  --section-bg: rgba(36, 39, 58, 0.92);
+  --card-bg: rgba(54, 58, 79, 0.65);
+  --card-border: rgba(244, 219, 214, 0.22);
+  --dock-bg: rgba(24, 25, 38, 0.95);
+  --dock-border: rgba(244, 219, 214, 0.22);
+  --text-color: #cad3f5;
+  --theme-frame-border: 1px solid rgba(244, 219, 214, 0.38);
+  --theme-frame-bg: radial-gradient(
+    circle at center,
+    rgba(244, 219, 214, 0.14) 0%,
+    rgba(24, 25, 38, 0.95) 100%
+  );
+  --theme-frame-shadow: inset 0 0 24px rgba(0, 0, 0, 0.6);
 }
 * {
   box-sizing: border-box;
@@ -57,8 +74,8 @@ a,
 
 body {
   font-family: "Inter", sans-serif;
-  background: var(--launcher-bg, #05060f);
-  color: #ffffff;
+  background: var(--launcher-bg, #1e2030);
+  color: var(--text-color, #cad3f5);
   overflow: hidden;
   transition: background 250ms ease;
 }
@@ -111,15 +128,15 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   height: 100vh;
   width: 100vw;
-  background: var(--launcher-bg, #05060f);
+  background: var(--launcher-bg, #1e2030);
   transition: background 250ms ease;
 }
 
 /* Sidebar */
 .sidebar {
   width: 70px;
-  background: var(--sidebar-bg, rgba(16, 19, 27, 0.95));
-  border-right: 1px solid var(--card-border, rgba(186, 215, 247, 0.05));
+  background: var(--sidebar-bg, rgba(24, 25, 38, 0.95));
+  border-right: 1px solid var(--card-border, rgba(244, 219, 214, 0.15));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2393,15 +2410,17 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   align-items: center;
   gap: 20px;
-  background: rgba(8, 10, 20, 0.97);
+  background: var(--dock-bg, rgba(24, 25, 38, 0.96));
   padding: 5px 24px;
   border-radius: 26px;
-  border: 1px solid rgba(139, 92, 246, 0.35);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+  border: 1px solid var(--dock-border, rgba(139, 92, 246, 0.35));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
   animation: dockOpacityFade 0.25s ease;
   transition:
     transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 180ms ease;
+    opacity 180ms ease,
+    background 250ms ease,
+    border-color 250ms ease;
   will-change: transform;
 }
 
