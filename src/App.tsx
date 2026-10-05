@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { Language, ModpackInstance } from "./types";
 import { translations } from "./i18n";
-import { IconBox, IconMicrosoft } from "./ui/icons";
+import { IconArrowLeft, IconBox, IconChevronDown, IconMicrosoft, IconSettings } from "./ui/icons";
 import { FloatingDock } from "./components/navigation/FloatingDock";
 import { CatalogTabs } from "./components/catalog/CatalogTabs";
 import { ToastProvider, useToast } from "./ui/ToastProvider";
+import { useSkin } from "./hooks/useSkin";
+import { HomeView } from "./components/home/HomeView";
 import { useInstances } from "./hooks/useInstances";
 import { useAccounts } from "./hooks/useAccounts";
 import { useOmegaAuth } from "./hooks/useOmegaAuth";
@@ -75,6 +77,7 @@ function App() {
     );
   });
   const accountsApi = useAccounts(t, game.pushLog, omegaAuth);
+  const skinApi = useSkin(accountsApi.account?.name);
   const friendsApi = useFriends(omegaAuth);
 
   const {
@@ -246,68 +249,102 @@ function App() {
       }}
       onDragStart={(e) => e.preventDefault()}
     >
+      <header className="millida-top-bar">
+        <div className="millida-top-left">
+          {activeTab !== "home" && (
+            <button
+              type="button"
+              className="millida-back-home-btn"
+              onClick={() => setActiveTab("home")}
+              title={t.backToHome || "На главную"}
+            >
+              <IconArrowLeft />
+              <span>{t.backToHome || "На главную"}</span>
+            </button>
+          )}
+        </div>
+
+        <div className="millida-top-center">
+          <div className="millida-title-badge">
+            <div className="millida-logo-dot" />
+            <span>OMEGA LAUNCHER</span>
+          </div>
+        </div>
+
+        <div className="millida-top-right">
+          <div
+            className="millida-user-profile"
+            onClick={() => {
+              accountsApi.setProfileMenuOpen(true);
+              accountsApi.setAccountModalView("list");
+            }}
+          >
+            <div className="avatar">
+              {accountsApi.account.type === "microsoft" ? (
+                <IconMicrosoft />
+              ) : (
+                accountsApi.account.name.substring(0, 2).toUpperCase()
+              )}
+            </div>
+            <div className="user-info">
+              <span className="user-name">{accountsApi.account.name}</span>
+              <span className="user-status">
+                <span className="status-dot" />{" "}
+                {accountsApi.account.type === "offline"
+                  ? t.onlineStatus
+                  : (t as any).connectedLabel}
+              </span>
+            </div>
+            <IconChevronDown size={14} className="dropdown-arrow" />
+          </div>
+
+          <button
+            type="button"
+            className="millida-top-action-btn"
+            onClick={() => {
+              void launcherWindow
+                .isFullscreen()
+                .then((isFull) => launcherWindow.setFullscreen(!isFull))
+                .catch(() => {});
+            }}
+            title="Полноэкранный режим (F11)"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            className={`millida-top-action-btn ${activeTab === "settings" ? "active" : ""}`}
+            onClick={() => setActiveTab(activeTab === "settings" ? "home" : "settings")}
+            title={t.sidebarSettings || "Настройки"}
+          >
+            <IconSettings />
+          </button>
+        </div>
+      </header>
+
       <main
         className={`main-content ${activeTab !== "home" ? "main-content-route" : ""}`}
       >
         {activeTab === "home" && (
-          <header className="top-bar">
-            <div
-              className="user-profile"
-              onClick={() => {
-                accountsApi.setProfileMenuOpen(true);
-                accountsApi.setAccountModalView("list");
-              }}
-            >
-              <div className="avatar">
-                {accountsApi.account.type === "microsoft" ? (
-                  <IconMicrosoft />
-                ) : (
-                  accountsApi.account.name.substring(0, 2).toUpperCase()
-                )}
-              </div>
-              <div className="user-info">
-                <span className="user-name">{accountsApi.account.name}</span>
-                <span className="user-status">
-                  <span className="status-dot" />{" "}
-                  {accountsApi.account.type === "offline"
-                    ? t.onlineStatus
-                    : (t as any).connectedLabel}
-                </span>
-              </div>
-            </div>
-          </header>
-        )}
-
-        {activeTab === "home" && (
-          <div className="home-glow-overlay" aria-hidden="true">
-            <div className="home-glow-icon">
-              <img src="/icons/128x128.png?v=6" alt="" />
-            </div>
-            <div className="home-glow-beam" />
-          </div>
-        )}
-
-        {activeTab === "home" && (
-          <HomeDashboard
+          <HomeView
             t={t}
-            instances={instancesApi.visibleInstances}
-            selectedInstanceId={instancesApi.selectedInstanceId}
+            account={accountsApi.account}
             selectedInstance={instancesApi.selectedInstance}
-            logs={game.logs}
             isRunning={game.isRunning}
-            consoleOpen={game.consoleOpen}
-            onToggleConsole={() => game.setConsoleOpen((p) => !p)}
-            onSelectInstance={(id) => instancesApi.setSelectedInstanceId(id)}
-            onPlayInstance={playInstanceById}
-            onServerLaunch={handleServerLaunch}
-            friendsApi={friendsApi}
-            presenceApi={presenceApi}
-            invites={invites}
-            onDismissInvite={(fromId) =>
-              setInvites((prev) => prev.filter((i) => i.fromId !== fromId))
-            }
-            onNotify={showToast}
-            onCreate={() => setIsCreating(true)}
+            skinApi={skinApi}
+            onPlay={playSelected}
+            onStop={() => void game.stopGame()}
+            onSelectVersion={() => setActiveTab("modpacks")}
           />
         )}
 
@@ -546,24 +583,26 @@ function App() {
         />
       )}
 
-      <FloatingDock
-        activeTab={activeTab}
-        isHome={activeTab === "home"}
-        isRunning={game.isRunning}
-        selectedVersionLabel={
-          instancesApi.selectedInstance
-            ? instancesApi.selectedInstance.mcVersion
-            : "1.20.1"
-        }
-        onHome={() => setActiveTab("home")}
-        onCatalog={() => setActiveTab("mods")}
-        onModpacks={() => setActiveTab("modpacks")}
-        onSettings={() => setActiveTab("settings")}
-        onFriends={() => setActiveTab("friends")}
-        onPlay={playSelected}
-        onStop={() => void game.stopGame()}
-        t={t}
-      />
+      {activeTab !== "home" && (
+        <FloatingDock
+          activeTab={activeTab}
+          isHome={false}
+          isRunning={game.isRunning}
+          selectedVersionLabel={
+            instancesApi.selectedInstance
+              ? instancesApi.selectedInstance.mcVersion
+              : "1.20.1"
+          }
+          onHome={() => setActiveTab("home")}
+          onCatalog={() => setActiveTab("mods")}
+          onModpacks={() => setActiveTab("modpacks")}
+          onSettings={() => setActiveTab("settings")}
+          onFriends={() => setActiveTab("friends")}
+          onPlay={playSelected}
+          onStop={() => void game.stopGame()}
+          t={t}
+        />
+      )}
 
       <ImportProgressPopup
         t={t}
@@ -571,27 +610,6 @@ function App() {
         progress={instancesApi.installProgress}
         onClose={() => setImportPopupHidden(true)}
       />
-
-      {activeTab === "home" && instancesApi.selectedInstance && (
-        <div className="playtime-badge">
-          <span className="playtime-badge-dot" />
-          <span>
-            {t.playtimeLabel}:{" "}
-            <b>{formatPlayTime(instancesApi.selectedInstance.playTimeMs, t)}</b>
-          </span>
-          <span className="playtime-badge-sep">•</span>
-          <span>
-            {t.lastLaunchLabel}:{" "}
-            <b>
-              {formatLastLaunch(
-                instancesApi.selectedInstance.lastPlayedAt,
-                language,
-                t,
-              )}
-            </b>
-          </span>
-        </div>
-      )}
     </div>
   );
 }

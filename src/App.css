@@ -5959,3 +5959,683 @@ input[type="color"]::-webkit-color-swatch {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ==========================================================================
+   Millida-Style Launcher Redesign Styles
+   ========================================================================== */
+
+.millida-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 28px;
+  position: relative;
+  z-index: 20;
+  background: rgba(14, 5, 13, 0.75);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  box-sizing: border-box;
+}
+
+.millida-top-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 140px;
+}
+
+.millida-back-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f1e4f0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.millida-back-home-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.millida-top-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.millida-title-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #f3eaf2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.millida-logo-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+
+.millida-top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 140px;
+  justify-content: flex-end;
+}
+
+.millida-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 12px;
+  background: rgba(30, 10, 26, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.millida-user-profile:hover {
+  background: rgba(48, 16, 42, 0.95);
+  border-color: rgba(255, 60, 130, 0.35);
+}
+
+.millida-user-profile .avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.millida-user-profile .user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  text-align: left;
+}
+
+.millida-user-profile .user-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.millida-user-profile .user-status {
+  font-size: 10px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.millida-user-profile .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.millida-user-profile .dropdown-arrow {
+  color: #94a3b8;
+  margin-left: 2px;
+}
+
+.millida-top-action-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(30, 10, 26, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.millida-top-action-btn:hover,
+.millida-top-action-btn.active {
+  background: rgba(58, 20, 50, 0.95);
+  color: #ffffff;
+  border-color: rgba(255, 60, 130, 0.4);
+}
+
+/* Home Container & Atmosphere */
+.millida-home-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+
+.millida-bg-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background: radial-gradient(
+    ellipse 75% 65% at 50% 48%,
+    #4a1532 0%,
+    #300d20 40%,
+    #1a0613 75%,
+    #0f030b 100%
+  );
+}
+
+.millida-radial-glow {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 720px;
+  height: 720px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 45, 120, 0.22) 0%,
+    rgba(190, 25, 95, 0.12) 35%,
+    rgba(90, 10, 50, 0.04) 65%,
+    transparent 80%
+  );
+  filter: blur(28px);
+}
+
+.millida-sunburst {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1100px;
+  height: 1100px;
+  background: repeating-conic-gradient(
+    from 0deg at 50% 50%,
+    rgba(255, 60, 135, 0.045) 0deg 8deg,
+    transparent 8deg 16deg
+  );
+  mask-image: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.9) 0%, transparent 65%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.9) 0%, transparent 65%);
+}
+
+/* Left side gaming cards */
+.millida-left-cards {
+  position: absolute;
+  left: 36px;
+  top: 140px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.millida-skin-card {
+  position: relative;
+  width: 200px;
+  height: 76px;
+  background: linear-gradient(135deg, rgba(28, 12, 32, 0.92) 0%, rgba(18, 6, 22, 0.96) 100%);
+  border: 2px solid #2563eb;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5), inset 0 0 16px rgba(37, 99, 235, 0.15);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.millida-skin-card:hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: #60a5fa;
+  box-shadow: 0 14px 34px rgba(37, 99, 235, 0.35), inset 0 0 20px rgba(96, 165, 250, 0.25);
+}
+
+.millida-card-badge {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 22px;
+  height: 22px;
+  background: #f43f5e;
+  border: 2px solid #ffffff;
+  color: white;
+  font-weight: 900;
+  font-size: 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.6);
+}
+
+.millida-card-avatar-box {
+  width: 46px;
+  height: 46px;
+  border-radius: 9px;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.millida-card-skin-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.millida-card-avatar-placeholder {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  background: #334155;
+}
+
+.millida-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.millida-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.millida-card-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: #93c5fd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Center Stage & 3D Skin */
+.millida-center-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+  min-height: 0;
+}
+
+.millida-skin-wrapper {
+  position: relative;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateY(-24px);
+}
+
+.millida-skin-shadow {
+  width: 240px;
+  height: 36px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0.25) 45%, transparent 75%);
+  margin-top: -22px;
+  border-radius: 50%;
+  filter: blur(4px);
+}
+
+/* Bottom Launch Dock */
+.millida-dock-wrapper {
+  position: absolute;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.millida-dock {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: stretch;
+  background: rgba(20, 7, 20, 0.92);
+  backdrop-filter: blur(18px);
+  border: 3px solid #2e1026;
+  border-radius: 16px;
+  padding: 8px 10px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.75), 0 0 28px rgba(255, 45, 120, 0.15);
+}
+
+.millida-dock-version-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s ease;
+  border-radius: 12px;
+}
+
+.millida-dock-version-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.millida-dock-cube-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.45));
+}
+
+.millida-dock-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.millida-dock-caption {
+  font-size: 10px;
+  font-weight: 800;
+  color: #38bdf8;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.millida-dock-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.millida-dock-meta {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.millida-dock-play-btn {
+  margin-left: 12px;
+  padding: 0 42px;
+  min-height: 56px;
+  background: linear-gradient(135deg, #ff2d78 0%, #ff4b93 100%);
+  border: 2px solid #ff72aa;
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: 0 8px 26px rgba(255, 45, 120, 0.5);
+  transition: all 0.18s ease;
+}
+
+.millida-dock-play-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(255, 45, 120, 0.7);
+  filter: brightness(1.08);
+}
+
+.millida-dock-play-btn:active {
+  transform: translateY(0);
+}
+
+.millida-dock-play-btn.running {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+  border-color: #fb7185;
+  box-shadow: 0 8px 26px rgba(225, 29, 72, 0.5);
+}
+
+.millida-play-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.millida-play-label {
+  letter-spacing: 0.02em;
+}
+
+/* Skin Customizer Modal */
+.skin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.skin-modal-content {
+  width: 440px;
+  max-width: 95vw;
+  background: #190918;
+  border: 1px solid rgba(255, 60, 130, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 32px rgba(255, 45, 120, 0.15);
+  overflow: hidden;
+  animation: skinModalEnter 0.2s ease-out;
+}
+
+@keyframes skinModalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.skin-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.skin-modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skin-modal-icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: rgba(255, 45, 120, 0.15);
+  border: 1px solid rgba(255, 45, 120, 0.3);
+  color: #ff4b93;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skin-modal-header h3 {
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.skin-modal-subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 2px 0 0 0;
+}
+
+.skin-modal-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+}
+
+.skin-modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.skin-modal-body {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.skin-modal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skin-modal-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.skin-modal-pills {
+  display: flex;
+  gap: 8px;
+}
+
+.skin-pill {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.skin-pill:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+}
+
+.skin-pill.active {
+  background: #ff2d78;
+  border-color: #ff72aa;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(255, 45, 120, 0.4);
+}
+
+.skin-modal-upload-section {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.skin-upload-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  border: 1px solid #60a5fa;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+}
+
+.skin-upload-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.5);
+}
+
+.skin-reset-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  color: #f87171;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.skin-reset-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ffffff;
+}
