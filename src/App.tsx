@@ -9,9 +9,7 @@ import {
   IconSettings,
   IconVolumeX,
   IconVolume2,
-  IconActivity,
   IconMessageSquare,
-  IconBug,
 } from "./ui/icons";
 import { SkinHeadPreview } from "./components/home/SkinHeadPreview";
 import { FloatingDock } from "./components/navigation/FloatingDock";
@@ -274,17 +272,8 @@ function App() {
               <span>{t.backToHome || "На главную"}</span>
             </button>
           )}
-        </div>
 
-        <div className="millida-top-center">
-          <div className="millida-title-badge">
-            <div className="millida-logo-dot" />
-            <span>OMEGA LAUNCHER</span>
-          </div>
-        </div>
-
-        <div className="millida-top-right">
-          {/* Friends online pill */}
+          {/* Friends online pill moved to the left */}
           <button
             type="button"
             className="millida-top-friends-pill"
@@ -318,7 +307,16 @@ function App() {
               <span>{invites.length || 2}</span>
             </div>
           </button>
+        </div>
 
+        <div className="millida-top-center">
+          <div className="millida-title-badge">
+            <div className="millida-logo-dot" />
+            <span>OMEGA LAUNCHER</span>
+          </div>
+        </div>
+
+        <div className="millida-top-right">
           {/* User profile dropdown widget */}
           <div
             className="millida-user-profile"
@@ -363,18 +361,6 @@ function App() {
             {soundMuted ? <IconVolumeX size={18} /> : <IconVolume2 size={18} />}
           </button>
 
-          {/* Telemetry / Ping stats */}
-          <button
-            type="button"
-            className="millida-top-action-btn"
-            onClick={() => {
-              showToast("FPS: 60 • Пинг: 24 ms • Стабильно");
-            }}
-            title={t.telemetryStats || "Статистика"}
-          >
-            <IconActivity size={18} />
-          </button>
-
           {/* Messages / Notifications */}
           <button
             type="button"
@@ -386,22 +372,6 @@ function App() {
             <div className="millida-action-badge" aria-hidden="true">
               <span>3</span>
             </div>
-          </button>
-
-          {/* Protection / Antivirus +50 */}
-          <button
-            type="button"
-            className="millida-top-action-btn millida-top-protect-btn"
-            onClick={() => {
-              showToast(
-                "Omega Guard: Защита целостности активна (+50)",
-                "success",
-              );
-            }}
-            title={t.protectionStatus || "Защита активна (+50)"}
-          >
-            <IconBug size={17} />
-            <span className="millida-protect-text">+50</span>
           </button>
 
           {/* Settings */}

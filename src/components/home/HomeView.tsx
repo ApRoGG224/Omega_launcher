@@ -189,42 +189,6 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
           </div>
         </div>
 
-        {/* Right side Featured / Recommendation Card */}
-        <div className="millida-right-featured">
-          <div className="millida-featured-card">
-            <div className="millida-featured-thumb">
-              <div className="millida-featured-icon-badge">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-                    stroke="#a3e635"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-              <span className="millida-featured-label-art">ARCANIA</span>
-            </div>
-            <div className="millida-featured-content">
-              <span className="millida-featured-subtitle">
-                {t.tryToday || "ПОПРОБУЙ СЕГОДНЯ"}
-              </span>
-              <span className="millida-featured-title">Arcania 1.4.3</span>
-              <div className="millida-featured-meta">
-                <span>fabric · 1.20.1 · ⬇ 4 920</span>
-              </div>
-              <button
-                type="button"
-                className="millida-featured-action-btn"
-                onClick={onOpenStore}
-              >
-                <span>{t.tryBtn || "Попробовать"} &gt;</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Bottom Launch Dock */}
         <div className="millida-dock-wrapper">
           <div className="millida-dock">
@@ -236,40 +200,124 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
               title={t.myBuildsDesc || "Выбор версии / сборки"}
             >
               <div className="millida-dock-cube-icon">
-                {/* Isometric 3D Cyan Block Icon */}
-                <svg width="38" height="38" viewBox="0 0 32 32" fill="none">
-                  <path
-                    d="M16 2L29 9.5V22.5L16 30L3 22.5V9.5L16 2Z"
-                    fill="#00e5ff"
-                    fillOpacity="0.3"
-                    stroke="#00f0ff"
-                    strokeWidth="1.8"
-                  />
-                  <path
-                    d="M16 2V16.5M16 16.5L29 9.5M16 16.5L3 9.5M16 16.5V30"
-                    stroke="#38bdf8"
-                    strokeWidth="1.6"
-                  />
-                  <path
-                    d="M9.5 6L22.5 13M9.5 26V13"
-                    stroke="#0284c7"
+                {/* Rich 3D Isometric Shaded Minecraft Block */}
+                <svg width="42" height="42" viewBox="0 0 32 32" fill="none">
+                  <defs>
+                    <linearGradient
+                      id="cubeTop"
+                      x1="16"
+                      y1="2"
+                      x2="16"
+                      y2="17"
+                      gradientUnits="userSpaceOnUse"
+                    >
+                      <stop offset="0%" stopColor="#67e8f9" />
+                      <stop offset="100%" stopColor="#06b6d4" />
+                    </linearGradient>
+                    <linearGradient
+                      id="cubeLeft"
+                      x1="3"
+                      y1="9.5"
+                      x2="16"
+                      y2="31"
+                      gradientUnits="userSpaceOnUse"
+                    >
+                      <stop offset="0%" stopColor="#0891b2" />
+                      <stop offset="100%" stopColor="#0e7490" />
+                    </linearGradient>
+                    <linearGradient
+                      id="cubeRight"
+                      x1="29"
+                      y1="9.5"
+                      x2="16"
+                      y2="31"
+                      gradientUnits="userSpaceOnUse"
+                    >
+                      <stop offset="0%" stopColor="#0e7490" />
+                      <stop offset="100%" stopColor="#155e75" />
+                    </linearGradient>
+                  </defs>
+                  {/* Top face */}
+                  <polygon
+                    points="16,2 29,9.5 16,17 3,9.5"
+                    fill="url(#cubeTop)"
+                    stroke="#a5f3fc"
                     strokeWidth="1"
-                    strokeDasharray="2 2"
                   />
-                  <circle cx="16" cy="16.5" r="2.5" fill="#ffffff" />
+                  <line
+                    x1="9.5"
+                    y1="5.75"
+                    x2="22.5"
+                    y2="13.25"
+                    stroke="rgba(255,255,255,0.4)"
+                    strokeWidth="0.8"
+                  />
+                  <line
+                    x1="22.5"
+                    y1="5.75"
+                    x2="9.5"
+                    y2="13.25"
+                    stroke="rgba(255,255,255,0.4)"
+                    strokeWidth="0.8"
+                  />
+                  {/* Left face */}
+                  <polygon
+                    points="3,9.5 16,17 16,31 3,23.5"
+                    fill="url(#cubeLeft)"
+                    stroke="#22d3ee"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="9.5"
+                    y1="13.25"
+                    x2="9.5"
+                    y2="27.25"
+                    stroke="rgba(0,0,0,0.2)"
+                    strokeWidth="0.8"
+                  />
+                  {/* Right face */}
+                  <polygon
+                    points="16,17 29,9.5 29,23.5 16,31"
+                    fill="url(#cubeRight)"
+                    stroke="#06b6d4"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="22.5"
+                    y1="13.25"
+                    x2="22.5"
+                    y2="27.25"
+                    stroke="rgba(0,0,0,0.3)"
+                    strokeWidth="0.8"
+                  />
+                  {/* Center glowing crystal core */}
+                  <circle cx="16" cy="17" r="2.2" fill="#ffffff" />
+                  <circle
+                    cx="16"
+                    cy="17"
+                    r="3.6"
+                    stroke="#cffafe"
+                    strokeWidth="0.8"
+                    strokeOpacity="0.8"
+                  />
                 </svg>
               </div>
               <div className="millida-dock-text">
-                <span className="millida-dock-caption">
-                  {t.todayPlaying || "СЕГОДНЯ ИГРАЕМ"}
-                </span>
+                <div className="millida-dock-caption-wrap">
+                  <span className="millida-dock-caption">
+                    {t.todayPlaying || "СЕГОДНЯ ИГРАЕМ"}
+                  </span>
+                </div>
                 <span className="millida-dock-title">
                   {selectedInstance?.name || "Скайблок"}
                 </span>
-                <span className="millida-dock-meta">
-                  {loaderText} · {versionText} · <IconClock size={12} />{" "}
-                  {playTimeText}
-                </span>
+                <div className="millida-dock-meta">
+                  <span className="dock-loader-chip">{loaderText}</span>
+                  <span className="dock-version-chip">{versionText}</span>
+                  <span className="dock-playtime">
+                    <IconClock size={12} /> {playTimeText}
+                  </span>
+                </div>
               </div>
             </button>
 
