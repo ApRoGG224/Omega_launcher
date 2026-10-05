@@ -879,17 +879,12 @@ export const SettingsPanel = React.memo(
                       </span>
                     </div>
                     <div className="settings-theme-groups">
-                      {/* С подсветкой (Цвет неона) */}
                       <div className="settings-theme-group">
                         <div className="settings-theme-group-header neon">
                           <span className="settings-theme-header-sparkle">
                             ✦
                           </span>
-                          <span>
-                            {isRussian
-                              ? "С подсветкой (Цвет неона)"
-                              : "Neon Glow Accent"}
-                          </span>
+                          <span>{isRussian ? "Цвет неона" : "Neon Color"}</span>
                         </div>
                         <div className="settings-theme-group-grid">
                           {NEON_THEMES.map((theme) => (
@@ -924,7 +919,7 @@ export const SettingsPanel = React.memo(
                       <div className="settings-theme-group">
                         <div className="settings-theme-group-header matte">
                           <span>
-                            {isRussian ? "Без подсветки" : "Without glow"}
+                            {isRussian ? "Тема лаунчера" : "Launcher Theme"}
                           </span>
                         </div>
                         <div className="settings-theme-group-grid">
