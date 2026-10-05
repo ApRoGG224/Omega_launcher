@@ -72,17 +72,7 @@ export const LAUNCHER_THEMES: readonly LauncherTheme[] = [
     glow: true,
   },
 
-  // Без подсветки (Matte / Calm)
-  {
-    id: "slate",
-    name: "Dark Slate",
-    nameRu: "Графит",
-    accent: "#94a3b8",
-    rgb: "148, 163, 184",
-    light: "#cbd5e1",
-    dark: "#64748b",
-    glow: false,
-  },
+  // Без подсветки (боковые рамки нейтральные, акценты элементов остаются)
   {
     id: "cappuccino",
     name: "Cappuccino",
@@ -90,27 +80,37 @@ export const LAUNCHER_THEMES: readonly LauncherTheme[] = [
     accent: "#c49e7b",
     rgb: "196, 158, 123",
     light: "#d8bca2",
-    dark: "#a37e5c",
+    dark: "#9a7454",
     glow: false,
   },
   {
-    id: "nordic",
-    name: "Nordic Frost",
+    id: "nord",
+    name: "Nord Frost",
     nameRu: "Нордик",
-    accent: "#7ea0b7",
-    rgb: "126, 160, 183",
-    light: "#a3c0d4",
-    dark: "#5b8098",
+    accent: "#88c0d0",
+    rgb: "136, 192, 208",
+    light: "#a3d7e5",
+    dark: "#5e81ac",
     glow: false,
   },
   {
-    id: "mocha",
-    name: "Warm Mocha",
-    nameRu: "Тёплый Мокко",
-    accent: "#a77b5a",
-    rgb: "167, 123, 90",
-    light: "#c09675",
-    dark: "#845e41",
+    id: "everforest",
+    name: "Everforest",
+    nameRu: "Эверфорест",
+    accent: "#a7c080",
+    rgb: "167, 192, 128",
+    light: "#b5cca0",
+    dark: "#7a9458",
+    glow: false,
+  },
+  {
+    id: "gruvbox",
+    name: "Gruvbox",
+    nameRu: "Грувбокс",
+    accent: "#d79921",
+    rgb: "215, 153, 33",
+    light: "#fabd2f",
+    dark: "#b57614",
     glow: false,
   },
 ] as const;
@@ -122,10 +122,42 @@ export function applyLauncherTheme(themeId: string) {
   document.documentElement.style.setProperty("--accent-color-rgb", t.rgb);
   document.documentElement.style.setProperty("--accent-color-light", t.light);
   document.documentElement.style.setProperty("--accent-color-dark", t.dark);
-  document.documentElement.style.setProperty(
-    "--accent-box-shadow",
-    t.glow ? `0 0 16px rgba(${t.rgb}, 0.35)` : "none",
-  );
+
+  if (t.glow) {
+    // С подсветкой: боковые рамки окрашены в неоновый цвет темы
+    document.documentElement.style.setProperty(
+      "--theme-frame-border",
+      `1px solid rgba(${t.rgb}, 0.28)`,
+    );
+    document.documentElement.style.setProperty(
+      "--theme-frame-bg",
+      `radial-gradient(circle at center, rgba(${t.rgb}, 0.12) 0%, rgba(5, 7, 15, 0.85) 100%)`,
+    );
+    document.documentElement.style.setProperty(
+      "--theme-frame-shadow",
+      `inset 0 0 24px rgba(0, 0, 0, 0.5), 0 0 14px rgba(${t.rgb}, 0.14)`,
+    );
+    document.documentElement.style.setProperty(
+      "--accent-box-shadow",
+      `0 0 16px rgba(${t.rgb}, 0.35)`,
+    );
+  } else {
+    // Без подсветки: боковые рамки остаются нейтральными тёмными, как на скриншоте 2
+    document.documentElement.style.setProperty(
+      "--theme-frame-border",
+      "1px solid rgba(186, 215, 247, 0.08)",
+    );
+    document.documentElement.style.setProperty(
+      "--theme-frame-bg",
+      "radial-gradient(circle at center, rgba(255, 255, 255, 0.02) 0%, rgba(4, 6, 13, 0.85) 100%)",
+    );
+    document.documentElement.style.setProperty(
+      "--theme-frame-shadow",
+      "inset 0 0 24px rgba(0, 0, 0, 0.6)",
+    );
+    document.documentElement.style.setProperty("--accent-box-shadow", "none");
+  }
+
   localStorage.setItem("omega:theme", t.id);
 }
 
