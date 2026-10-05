@@ -3961,7 +3961,7 @@ input[type="color"]::-webkit-color-swatch {
 .sub-tab-btn {
   padding: 8px 18px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background: transparent;
   color: #9da7ba;
   font-weight: 600;
@@ -3969,21 +3969,21 @@ input[type="color"]::-webkit-color-swatch {
   cursor: pointer;
   transition:
     color 0.08s ease,
-    background-color 0.08s ease;
+    background-color 0.08s ease,
+    border-color 0.08s ease,
+    box-shadow 0.08s ease;
 }
 
 .sub-tab-btn:hover {
   color: #fff;
+  border-color: rgba(var(--accent-color-rgb), 0.4);
 }
 
 .sub-tab-btn.active {
-  background: linear-gradient(
-    135deg,
-    var(--accent-color),
-    var(--accent-color-light)
-  );
+  background: transparent;
+  border-color: var(--accent-color);
   color: #fff;
-  box-shadow: 0 0 12px rgba(var(--accent-color-rgb), 0.4);
+  box-shadow: 0 0 12px rgba(var(--accent-color-rgb), 0.45);
 }
 
 /* Servers List & Server Cards */
