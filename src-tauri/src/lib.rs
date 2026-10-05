@@ -296,6 +296,35 @@ fn count_installed_mods(app: tauri::AppHandle, instance_id: String) -> Result<us
 }
 
 #[tauri::command]
+fn list_installed_mod_files(app: tauri::AppHandle, instance_id: String) -> Result<Vec<String>, String> {
+    let mut path = std::path::PathBuf::from(get_data_dir(&app));
+    path.push("instances");
+    path.push(&instance_id);
+    path.push("minecraft");
+    path.push("mods");
+
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+
+    let entries = std::fs::read_dir(&path).map_err(|e| e.to_string())?;
+    let mut files: Vec<String> = entries
+        .filter_map(|entry| entry.ok())
+        .filter_map(|entry| {
+            let ft = entry.file_type().ok()?;
+            if ft.is_file() {
+                Some(entry.file_name().to_string_lossy().to_string())
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    files.sort();
+    Ok(files)
+}
+
+#[tauri::command]
 fn list_worlds(app: tauri::AppHandle, instance_id: String) -> Result<Vec<String>, String> {
     let mut path = std::path::PathBuf::from(get_data_dir(&app));
     path.push("instances");
@@ -406,6 +435,7 @@ pub fn run() {
             open_folder,
             create_shortcut,
             count_installed_mods,
+            list_installed_mod_files,
             list_worlds,
             open_path,
             translate_text,

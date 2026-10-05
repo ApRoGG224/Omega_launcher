@@ -103,6 +103,10 @@ export const ipc = {
     return invoke<number>("count_installed_mods", { instanceId });
   },
 
+  async listInstalledModFiles(instanceId: string): Promise<string[]> {
+    return invoke<string[]>("list_installed_mod_files", { instanceId });
+  },
+
   async listWorlds(instanceId: string): Promise<string[]> {
     return invoke<string[]>("list_worlds", { instanceId });
   },
@@ -177,7 +181,11 @@ export const ipc = {
     await invoke("db_delete_server", { host, port });
   },
 
-  async dbSaveServerFavicon(host: string, port: number, favicon: string): Promise<void> {
+  async dbSaveServerFavicon(
+    host: string,
+    port: number,
+    favicon: string,
+  ): Promise<void> {
     await invoke("db_save_server_favicon", { host, port, favicon });
   },
 

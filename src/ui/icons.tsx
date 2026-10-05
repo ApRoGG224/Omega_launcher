@@ -102,10 +102,10 @@ export const IconCompass = React.memo(({ size = 20 }: { size?: number }) => (
     <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
   </svg>
 ));
-export const IconLayers = React.memo(() => (
+export const IconLayers = React.memo(({ size = 20 }: { size?: number }) => (
   <svg
-    width="20"
-    height="20"
+    width={size}
+    height={size}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -318,19 +318,21 @@ export const IconMicrosoft = React.memo(() => (
     <rect x="13" y="13" width="8" height="8" fill="#ffba08" />
   </svg>
 ));
-export const IconSearch = React.memo(() => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <circle cx="11" cy="11" r="8"></circle>
-    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-  </svg>
-));
+export const IconSearch = React.memo(
+  ({ size = 18 }: { size?: number } = {}) => (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+  ),
+);
 export const IconDownload = React.memo(
   ({ size = 14 }: { size?: number } = {}) => (
     <svg
