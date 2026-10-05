@@ -299,7 +299,10 @@ export const SettingsPanel = React.memo(
 
     React.useEffect(() => {
       let cancelled = false;
-      setSkinLoading(true);
+      const timer = setTimeout(() => {
+        setSkinLoading(true);
+        void resolveSkin();
+      }, 250);
 
       const resolveSkin = async () => {
         const name = (playerNickname || account?.name || "Steve").trim();
@@ -318,7 +321,7 @@ export const SettingsPanel = React.memo(
               .getMicrosoftSkin(name)
               .catch(() => null);
             if (officialUrl && !cancelled) {
-              setActive3dSkinUrl(officialUrl);
+              setActive3dSkinUrl(officialUrl.replace(/^http:\/\//, "https://"));
               setActive3dCapeUrl(null);
               setSkinLoading(false);
               return;
@@ -338,24 +341,48 @@ export const SettingsPanel = React.memo(
         }
 
         if (skinSource === "ely") {
+          try {
+            const res = await fetch(
+              `https://skinsystem.ely.by/textures/${encodeURIComponent(name)}`,
+            );
+            if (res.ok) {
+              const data = await res.json();
+              if (data?.SKIN?.url && !cancelled) {
+                const url = data.SKIN.url.replace(/^http:\/\//, "https://");
+                const detectedModel =
+                  data.SKIN.metadata?.model === "slim" ? "slim" : "classic";
+                setSkinModel(detectedModel);
+                setActive3dSkinUrl(url);
+                if (data?.CAPE?.url && capeEnabled) {
+                  setActive3dCapeUrl(
+                    data.CAPE.url.replace(/^http:\/\//, "https://"),
+                  );
+                } else {
+                  setActive3dCapeUrl(null);
+                }
+                setSkinLoading(false);
+                return;
+              }
+            }
+          } catch {
+            // fallback
+          }
+
           if (!cancelled) {
+            // Fallback to official mojang skin if Ely.by does not have custom texture
             setActive3dSkinUrl(
-              `http://skinsystem.ely.by/skins/${encodeURIComponent(name)}.png`,
+              `https://minotar.net/skin/${encodeURIComponent(name)}`,
             );
-            setActive3dCapeUrl(
-              capeEnabled
-                ? `http://skinsystem.ely.by/cloaks/${encodeURIComponent(name)}.png`
-                : null,
-            );
+            setActive3dCapeUrl(null);
             setSkinLoading(false);
           }
           return;
         }
       };
 
-      void resolveSkin();
       return () => {
         cancelled = true;
+        clearTimeout(timer);
       };
     }, [
       skinSource,

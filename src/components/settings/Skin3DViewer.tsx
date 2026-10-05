@@ -6,6 +6,8 @@ import {
   RunningAnimation,
 } from "skinview3d";
 
+export const FALLBACK_STEVE_SKIN = "https://minotar.net/skin/MHF_Steve";
+
 export interface Skin3DViewerProps {
   skinUrl?: string | null;
   capeUrl?: string | null;
@@ -20,8 +22,8 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
   skinUrl,
   capeUrl,
   model = "default",
-  width = 190,
-  height = 230,
+  width = 180,
+  height = 190,
   animation = "idle",
   loading = false,
 }) => {
@@ -31,10 +33,12 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
   useEffect(() => {
     if (!canvasRef.current) return;
 
+    const initialSkin = skinUrl || FALLBACK_STEVE_SKIN;
     const viewer = new SkinViewer({
       canvas: canvasRef.current,
       width,
       height,
+      skin: initialSkin,
       model: model === "slim" ? "slim" : "default",
     });
 
@@ -42,6 +46,9 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
     viewer.controls.enableZoom = true;
     viewer.controls.enablePan = false;
     viewer.camera.position.set(0, 0, 42);
+
+    // Initial animation
+    viewer.animation = new IdleAnimation();
 
     viewerRef.current = viewer;
 
@@ -57,24 +64,26 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
     }
   }, [width, height]);
 
+  // Update skin texture
   useEffect(() => {
     const viewer = viewerRef.current;
     if (!viewer) return;
 
-    if (skinUrl) {
-      viewer
-        .loadSkin(skinUrl, {
-          model: model === "slim" ? "slim" : "default",
-        })
-        .catch(() => {
-          // If skin texture fails to load (e.g. 404 or network error), reset
-          viewer.resetSkin();
-        });
-    } else {
-      viewer.resetSkin();
-    }
+    const targetSkin = skinUrl || FALLBACK_STEVE_SKIN;
+    viewer
+      .loadSkin(targetSkin, {
+        model: model === "slim" ? "slim" : "default",
+      })
+      .catch(() => {
+        if (targetSkin !== FALLBACK_STEVE_SKIN) {
+          viewer
+            .loadSkin(FALLBACK_STEVE_SKIN, { model: "default" })
+            .catch(() => {});
+        }
+      });
   }, [skinUrl, model]);
 
+  // Update cape
   useEffect(() => {
     const viewer = viewerRef.current;
     if (!viewer) return;
@@ -88,6 +97,7 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
     }
   }, [capeUrl]);
 
+  // Update animation mode
   useEffect(() => {
     const viewer = viewerRef.current;
     if (!viewer) return;
