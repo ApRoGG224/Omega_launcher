@@ -1441,9 +1441,9 @@ input[type="color"]::-webkit-color-swatch {
   position: relative;
 }
 .play-btn {
-  background: var(--accent-color);
+  background: transparent;
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.45);
+  border: 1px solid var(--accent-color);
   border-radius: 12px;
   padding: 0 40px;
   height: 56px;
@@ -1455,7 +1455,7 @@ input[type="color"]::-webkit-color-swatch {
   align-items: center;
   gap: 10px;
   transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(var(--accent-color-rgb), 0.4);
+  box-shadow: 0 0 12px rgba(var(--accent-color-rgb), 0.45);
 }
 .modal-action-btn {
   height: 40px;
@@ -1467,7 +1467,10 @@ input[type="color"]::-webkit-color-swatch {
   min-width: 0;
 }
 .play-btn:hover {
-  background: var(--accent-color-light);
+  background: rgba(var(--accent-color-rgb), 0.15);
+  border-color: var(--accent-color-light);
+  box-shadow: 0 0 16px rgba(var(--accent-color-rgb), 0.65);
+  color: #fff;
 }
 .stats-row {
   display: flex;
@@ -2754,9 +2757,9 @@ input[type="color"]::-webkit-color-swatch {
 
 .recent-instance-item:hover,
 .recent-instance-item.selected {
-  background: rgba(102, 58, 243, 0.18);
-  border-color: rgba(139, 92, 246, 0.5);
-  box-shadow: 0 0 7px rgba(102, 58, 246, 0.2);
+  background: rgba(var(--accent-color-rgb), 0.14);
+  border-color: rgba(var(--accent-color-rgb), 0.5);
+  box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.25);
 }
 
 .recent-inst-info {
@@ -4387,17 +4390,31 @@ input[type="color"]::-webkit-color-swatch {
 
 .assembly-detail-actions .secondary-action-btn {
   background: rgba(186, 215, 247, 0.08);
+  border: 1px solid rgba(186, 215, 247, 0.16);
   box-shadow: none;
   font-size: 0.82rem;
   height: 36px;
 }
 
+.assembly-detail-actions .secondary-action-btn:hover {
+  background: rgba(186, 215, 247, 0.14);
+  border-color: rgba(186, 215, 247, 0.3);
+  box-shadow: none;
+}
+
 .assembly-detail-actions .delete-action-btn {
   background: rgba(186, 215, 247, 0.05);
+  border: 1px solid rgba(228, 109, 76, 0.3);
   box-shadow: none;
   font-size: 0.82rem;
   height: 36px;
   color: #e46d4c;
+}
+
+.assembly-detail-actions .delete-action-btn:hover {
+  background: rgba(228, 109, 76, 0.15);
+  border-color: rgba(228, 109, 76, 0.6);
+  box-shadow: 0 0 8px rgba(228, 109, 76, 0.25);
 }
 
 /* Media Queries for Screen Dimensions Scaling */
