@@ -18,7 +18,7 @@ import {
   IconUsers,
 } from "../../ui/icons";
 
-export interface LauncherTheme {
+export interface NeonTheme {
   id: string;
   name: string;
   nameRu?: string;
@@ -26,11 +26,24 @@ export interface LauncherTheme {
   rgb: string;
   light: string;
   dark: string;
-  glow: boolean;
 }
 
-export const LAUNCHER_THEMES: readonly LauncherTheme[] = [
-  // С подсветкой (Neon)
+export interface BaseTheme {
+  id: string;
+  name: string;
+  nameRu?: string;
+  previewColor: string;
+  launcherBg: string;
+  sidebarBg: string;
+  sectionBg: string;
+  cardBg: string;
+  cardBorder: string;
+  frameBorder: string;
+  frameBg: string;
+  frameShadow: string;
+}
+
+export const NEON_THEMES: readonly NeonTheme[] = [
   {
     id: "omega",
     name: "Omega Violet",
@@ -39,7 +52,6 @@ export const LAUNCHER_THEMES: readonly LauncherTheme[] = [
     rgb: "102, 58, 243",
     light: "#8b5cf6",
     dark: "#4c2bd6",
-    glow: true,
   },
   {
     id: "cyber",
@@ -49,7 +61,6 @@ export const LAUNCHER_THEMES: readonly LauncherTheme[] = [
     rgb: "0, 210, 255",
     light: "#38bdf8",
     dark: "#0284c7",
-    glow: true,
   },
   {
     id: "emerald",
@@ -59,7 +70,6 @@ export const LAUNCHER_THEMES: readonly LauncherTheme[] = [
     rgb: "16, 185, 129",
     light: "#34d399",
     dark: "#059669",
-    glow: true,
   },
   {
     id: "crimson",
@@ -69,96 +79,117 @@ export const LAUNCHER_THEMES: readonly LauncherTheme[] = [
     rgb: "255, 42, 95",
     light: "#ff5983",
     dark: "#cc1846",
-    glow: true,
   },
+] as const;
 
-  // Без подсветки (боковые рамки нейтральные, акценты элементов остаются)
+export const BASE_THEMES: readonly BaseTheme[] = [
   {
     id: "cappuccino",
     name: "Cappuccino",
     nameRu: "Капучино",
-    accent: "#c49e7b",
-    rgb: "196, 158, 123",
-    light: "#d8bca2",
-    dark: "#9a7454",
-    glow: false,
+    previewColor: "#c49e7b",
+    launcherBg: "#120e0c",
+    sidebarBg: "rgba(28, 21, 18, 0.95)",
+    sectionBg: "rgba(24, 18, 15, 0.88)",
+    cardBg: "rgba(38, 29, 24, 0.65)",
+    cardBorder: "rgba(196, 158, 123, 0.22)",
+    frameBorder: "1px solid rgba(196, 158, 123, 0.28)",
+    frameBg:
+      "radial-gradient(circle at center, rgba(196, 158, 123, 0.09) 0%, rgba(18, 14, 12, 0.92) 100%)",
+    frameShadow: "inset 0 0 24px rgba(0, 0, 0, 0.6)",
   },
   {
     id: "nord",
     name: "Nord Frost",
     nameRu: "Нордик",
-    accent: "#88c0d0",
-    rgb: "136, 192, 208",
-    light: "#a3d7e5",
-    dark: "#5e81ac",
-    glow: false,
+    previewColor: "#88c0d0",
+    launcherBg: "#080c14",
+    sidebarBg: "rgba(15, 23, 38, 0.95)",
+    sectionBg: "rgba(13, 20, 34, 0.88)",
+    cardBg: "rgba(23, 34, 54, 0.65)",
+    cardBorder: "rgba(136, 192, 208, 0.22)",
+    frameBorder: "1px solid rgba(136, 192, 208, 0.28)",
+    frameBg:
+      "radial-gradient(circle at center, rgba(136, 192, 208, 0.09) 0%, rgba(8, 12, 20, 0.92) 100%)",
+    frameShadow: "inset 0 0 24px rgba(0, 0, 0, 0.6)",
   },
   {
     id: "everforest",
     name: "Everforest",
     nameRu: "Эверфорест",
-    accent: "#a7c080",
-    rgb: "167, 192, 128",
-    light: "#b5cca0",
-    dark: "#7a9458",
-    glow: false,
+    previewColor: "#a7c080",
+    launcherBg: "#090f0c",
+    sidebarBg: "rgba(18, 28, 22, 0.95)",
+    sectionBg: "rgba(15, 24, 19, 0.88)",
+    cardBg: "rgba(26, 38, 30, 0.65)",
+    cardBorder: "rgba(167, 192, 128, 0.22)",
+    frameBorder: "1px solid rgba(167, 192, 128, 0.28)",
+    frameBg:
+      "radial-gradient(circle at center, rgba(167, 192, 128, 0.09) 0%, rgba(9, 15, 12, 0.92) 100%)",
+    frameShadow: "inset 0 0 24px rgba(0, 0, 0, 0.6)",
   },
   {
     id: "gruvbox",
     name: "Gruvbox",
     nameRu: "Грувбокс",
-    accent: "#d79921",
-    rgb: "215, 153, 33",
-    light: "#fabd2f",
-    dark: "#b57614",
-    glow: false,
+    previewColor: "#d79921",
+    launcherBg: "#12100d",
+    sidebarBg: "rgba(29, 25, 20, 0.95)",
+    sectionBg: "rgba(25, 21, 17, 0.88)",
+    cardBg: "rgba(40, 34, 27, 0.65)",
+    cardBorder: "rgba(215, 153, 33, 0.22)",
+    frameBorder: "1px solid rgba(215, 153, 33, 0.28)",
+    frameBg:
+      "radial-gradient(circle at center, rgba(215, 153, 33, 0.09) 0%, rgba(18, 16, 13, 0.92) 100%)",
+    frameShadow: "inset 0 0 24px rgba(0, 0, 0, 0.6)",
   },
 ] as const;
 
-export function applyLauncherTheme(themeId: string) {
-  const t =
-    LAUNCHER_THEMES.find((th) => th.id === themeId) ?? LAUNCHER_THEMES[0];
+export function applyNeonTheme(neonId: string) {
+  const t = NEON_THEMES.find((th) => th.id === neonId) ?? NEON_THEMES[0];
   document.documentElement.style.setProperty("--accent-color", t.accent);
   document.documentElement.style.setProperty("--accent-color-rgb", t.rgb);
   document.documentElement.style.setProperty("--accent-color-light", t.light);
   document.documentElement.style.setProperty("--accent-color-dark", t.dark);
+  document.documentElement.style.setProperty(
+    "--accent-box-shadow",
+    `0 0 16px rgba(${t.rgb}, 0.35)`,
+  );
+  localStorage.setItem("omega:neonTheme", t.id);
+}
 
-  if (t.glow) {
-    // С подсветкой: боковые рамки окрашены в неоновый цвет темы
-    document.documentElement.style.setProperty(
-      "--theme-frame-border",
-      `1px solid rgba(${t.rgb}, 0.28)`,
-    );
-    document.documentElement.style.setProperty(
-      "--theme-frame-bg",
-      `radial-gradient(circle at center, rgba(${t.rgb}, 0.12) 0%, rgba(5, 7, 15, 0.85) 100%)`,
-    );
-    document.documentElement.style.setProperty(
-      "--theme-frame-shadow",
-      `inset 0 0 24px rgba(0, 0, 0, 0.5), 0 0 14px rgba(${t.rgb}, 0.14)`,
-    );
-    document.documentElement.style.setProperty(
-      "--accent-box-shadow",
-      `0 0 16px rgba(${t.rgb}, 0.35)`,
-    );
-  } else {
-    // Без подсветки: боковые рамки остаются нейтральными тёмными, как на скриншоте 2
-    document.documentElement.style.setProperty(
-      "--theme-frame-border",
-      "1px solid rgba(186, 215, 247, 0.08)",
-    );
-    document.documentElement.style.setProperty(
-      "--theme-frame-bg",
-      "radial-gradient(circle at center, rgba(255, 255, 255, 0.02) 0%, rgba(4, 6, 13, 0.85) 100%)",
-    );
-    document.documentElement.style.setProperty(
-      "--theme-frame-shadow",
-      "inset 0 0 24px rgba(0, 0, 0, 0.6)",
-    );
-    document.documentElement.style.setProperty("--accent-box-shadow", "none");
+export function applyBaseTheme(baseId: string) {
+  const b = BASE_THEMES.find((th) => th.id === baseId) ?? BASE_THEMES[0];
+  document.documentElement.style.setProperty("--launcher-bg", b.launcherBg);
+  document.documentElement.style.setProperty("--sidebar-bg", b.sidebarBg);
+  document.documentElement.style.setProperty("--section-bg", b.sectionBg);
+  document.documentElement.style.setProperty("--card-bg", b.cardBg);
+  document.documentElement.style.setProperty("--card-border", b.cardBorder);
+  document.documentElement.style.setProperty(
+    "--theme-frame-border",
+    b.frameBorder,
+  );
+  document.documentElement.style.setProperty("--theme-frame-bg", b.frameBg);
+  document.documentElement.style.setProperty(
+    "--theme-frame-shadow",
+    b.frameShadow,
+  );
+  localStorage.setItem("omega:baseTheme", b.id);
+}
+
+export function applyLauncherTheme(themeId: string) {
+  const neon = NEON_THEMES.find((t) => t.id === themeId);
+  if (neon) {
+    applyNeonTheme(neon.id);
+    return;
   }
-
-  localStorage.setItem("omega:theme", t.id);
+  const base = BASE_THEMES.find((b) => b.id === themeId);
+  if (base) {
+    applyBaseTheme(base.id);
+    return;
+  }
+  applyNeonTheme("omega");
+  applyBaseTheme("cappuccino");
 }
 
 const VERSION_FILTER_ITEMS = [
@@ -356,8 +387,11 @@ export const SettingsPanel = React.memo(
         return localStorage.getItem("omega:customCape") || null;
       },
     );
-    const [currentTheme, setCurrentTheme] = React.useState<string>(() => {
-      return localStorage.getItem("omega:theme") || "omega";
+    const [neonTheme, setNeonTheme] = React.useState<string>(() => {
+      return localStorage.getItem("omega:neonTheme") || "cyber";
+    });
+    const [baseTheme, setBaseTheme] = React.useState<string>(() => {
+      return localStorage.getItem("omega:baseTheme") || "cappuccino";
     });
 
     const [viewerAnimation, setViewerAnimation] = React.useState<
@@ -458,13 +492,20 @@ export const SettingsPanel = React.memo(
     }, [skinSource, account?.name, customSkinUrl, customCapeUrl, capeEnabled]);
 
     React.useEffect(() => {
-      const saved = localStorage.getItem("omega:theme") || "omega";
-      applyLauncherTheme(saved);
+      const savedNeon = localStorage.getItem("omega:neonTheme") || "cyber";
+      const savedBase = localStorage.getItem("omega:baseTheme") || "cappuccino";
+      applyNeonTheme(savedNeon);
+      applyBaseTheme(savedBase);
     }, []);
 
-    const handleSelectTheme = (themeId: string) => {
-      setCurrentTheme(themeId);
-      applyLauncherTheme(themeId);
+    const handleSelectNeon = (id: string) => {
+      setNeonTheme(id);
+      applyNeonTheme(id);
+    };
+
+    const handleSelectBaseTheme = (id: string) => {
+      setBaseTheme(id);
+      applyBaseTheme(id);
     };
 
     const handleSkinUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -836,40 +877,40 @@ export const SettingsPanel = React.memo(
                       </span>
                     </div>
                     <div className="settings-theme-groups">
-                      {/* С подсветкой */}
+                      {/* С подсветкой (Цвет неона) */}
                       <div className="settings-theme-group">
                         <div className="settings-theme-group-header neon">
                           <span className="settings-theme-header-sparkle">
                             ✦
                           </span>
                           <span>
-                            {isRussian ? "С подсветкой" : "With neon glow"}
+                            {isRussian
+                              ? "С подсветкой (Цвет неона)"
+                              : "Neon Glow Accent"}
                           </span>
                         </div>
                         <div className="settings-theme-group-grid">
-                          {LAUNCHER_THEMES.filter((t) => t.glow).map(
-                            (theme) => (
-                              <button
-                                key={theme.id}
-                                type="button"
-                                className={`settings-theme-chip with-glow ${currentTheme === theme.id ? "active" : ""}`}
-                                onClick={() => handleSelectTheme(theme.id)}
-                              >
-                                <span
-                                  className="settings-theme-dot glow"
-                                  style={{
-                                    backgroundColor: theme.accent,
-                                    boxShadow: `0 0 8px ${theme.accent}`,
-                                  }}
-                                />
-                                <span className="settings-theme-name">
-                                  {isRussian
-                                    ? theme.nameRu || theme.name
-                                    : theme.name}
-                                </span>
-                              </button>
-                            ),
-                          )}
+                          {NEON_THEMES.map((theme) => (
+                            <button
+                              key={theme.id}
+                              type="button"
+                              className={`settings-theme-chip with-glow ${neonTheme === theme.id ? "active" : ""}`}
+                              onClick={() => handleSelectNeon(theme.id)}
+                            >
+                              <span
+                                className="settings-theme-dot glow"
+                                style={{
+                                  backgroundColor: theme.accent,
+                                  boxShadow: `0 0 8px ${theme.accent}`,
+                                }}
+                              />
+                              <span className="settings-theme-name">
+                                {isRussian
+                                  ? theme.nameRu || theme.name
+                                  : theme.name}
+                              </span>
+                            </button>
+                          ))}
                         </div>
                       </div>
 
@@ -879,36 +920,36 @@ export const SettingsPanel = React.memo(
                         aria-hidden="true"
                       />
 
-                      {/* Без подсветки */}
+                      {/* Без подсветки (Тема лаунчера: фон, рамки) */}
                       <div className="settings-theme-group">
                         <div className="settings-theme-group-header matte">
                           <span>
-                            {isRussian ? "Без подсветки" : "Matte & Natural"}
+                            {isRussian
+                              ? "Без подсветки (Фон и рамки)"
+                              : "Launcher Theme (Bg & Frames)"}
                           </span>
                         </div>
                         <div className="settings-theme-group-grid">
-                          {LAUNCHER_THEMES.filter((t) => !t.glow).map(
-                            (theme) => (
-                              <button
-                                key={theme.id}
-                                type="button"
-                                className={`settings-theme-chip no-glow ${currentTheme === theme.id ? "active" : ""}`}
-                                onClick={() => handleSelectTheme(theme.id)}
-                              >
-                                <span
-                                  className="settings-theme-dot matte"
-                                  style={{
-                                    backgroundColor: theme.accent,
-                                  }}
-                                />
-                                <span className="settings-theme-name">
-                                  {isRussian
-                                    ? theme.nameRu || theme.name
-                                    : theme.name}
-                                </span>
-                              </button>
-                            ),
-                          )}
+                          {BASE_THEMES.map((theme) => (
+                            <button
+                              key={theme.id}
+                              type="button"
+                              className={`settings-theme-chip base-theme-chip ${baseTheme === theme.id ? "active" : ""}`}
+                              onClick={() => handleSelectBaseTheme(theme.id)}
+                            >
+                              <span
+                                className="settings-theme-dot matte"
+                                style={{
+                                  backgroundColor: theme.previewColor,
+                                }}
+                              />
+                              <span className="settings-theme-name">
+                                {isRussian
+                                  ? theme.nameRu || theme.name
+                                  : theme.name}
+                              </span>
+                            </button>
+                          ))}
                         </div>
                       </div>
                     </div>
