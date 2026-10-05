@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import type { ModpackInstance, Account } from "../../types";
 import { Skin3DViewer } from "../settings/Skin3DViewer";
 import { SkinModal } from "./SkinModal";
+import { SkinHeadPreview } from "./SkinHeadPreview";
 import type { SkinApi } from "../../hooks/useSkin";
 import { IconPlay, IconX } from "../../ui/icons";
 
@@ -57,17 +58,8 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(({
           onClick={() => setSkinModalOpen(true)}
           title={t.changeSkin || "Сменить скин"}
         >
-          <div className="millida-card-badge">!</div>
           <div className="millida-card-avatar-box">
-            {skinApi.activeSkinUrl ? (
-              <img
-                src={skinApi.activeSkinUrl}
-                alt="Skin preview"
-                className="millida-card-skin-img"
-              />
-            ) : (
-              <div className="millida-card-avatar-placeholder" />
-            )}
+            <SkinHeadPreview skinUrl={skinApi.activeSkinUrl} size={36} />
           </div>
           <div className="millida-card-info">
             <span className="millida-card-title">{t.mySkin || "Мой скин"}</span>

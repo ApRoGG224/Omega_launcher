@@ -6084,20 +6084,17 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .millida-user-profile .avatar {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   background: transparent;
-  border-style: solid;
-  border-width: 6px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='rgba(255,255,255,0.1)' stroke='rgba(255,255,255,0.25)' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E") 6 fill stretch;
-  clip-path: polygon(3px 0, calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px), 0 3px, 3px 3px);
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 12px;
   color: #fff;
-  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .millida-user-profile .user-info {
@@ -6254,31 +6251,14 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .millida-card-badge {
-  position: absolute;
-  top: -8px;
-  left: -8px;
-  width: 20px;
-  height: 20px;
-  background: #f43f5e;
-  border: 1.5px solid #ffffff;
-  color: white;
-  font-weight: 900;
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.6);
-  z-index: 2;
+  display: none;
 }
 
 .millida-card-avatar-box {
-  width: 44px;
-  height: 44px;
-  background: transparent;
-  border-style: solid;
-  border-width: 6px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230f172a' stroke='rgba(255,255,255,0.25)' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E") 6 fill stretch;
-  clip-path: polygon(3px 0, calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px), 0 3px, 3px 3px);
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
   overflow: hidden;
   display: flex;
   align-items: center;
