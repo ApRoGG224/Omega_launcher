@@ -881,9 +881,6 @@ export const SettingsPanel = React.memo(
                     <div className="settings-theme-groups">
                       <div className="settings-theme-group">
                         <div className="settings-theme-group-header neon">
-                          <span className="settings-theme-header-sparkle">
-                            ✦
-                          </span>
                           <span>{isRussian ? "Цвет неона" : "Neon Color"}</span>
                         </div>
                         <div className="settings-theme-group-grid">
