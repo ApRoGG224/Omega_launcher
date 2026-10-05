@@ -13,6 +13,7 @@ import {
 import type { FriendsApi } from "../../hooks/useFriends";
 import type { InviteInfo, PresenceApi } from "../../hooks/usePresence";
 import type { ModpackInstance } from "../../types";
+import { IsometricCube } from "../instances/IsometricCube";
 
 const resolveIcon = (icon: string | undefined) => {
   if (!icon) return undefined;
@@ -145,27 +146,30 @@ export const FriendsTab = React.memo(
     const EmptyState = () => (
       <div className="friends-empty">
         <div className="friends-empty-art">
-          <div className="friends-empty-orb main" />
-          <div className="friends-empty-orb side" />
-          <div className="friends-empty-orb dots" />
-          <div className="friends-empty-pill">
-            {friends.ownCode ?? "OMG-??????"}
+          <div className="friends-empty-cube-wrap">
+            <IsometricCube size={50} variant="emerald" />
           </div>
         </div>
-        <h3>{t.friendsEmpty}</h3>
-        <p>{t.friendsTabSubtitle}</p>
+        <h3>{t.friendsEmpty || "Пока нет друзей"}</h3>
+        <p>
+          {t.friendsEmptyDesc ||
+            "Добавьте друга по его коду, чтобы играть вместе и видеть статус онлайн!"}
+        </p>
         <div className="friends-add-row wide">
           <input
             value={codeInput}
             onChange={(e) => setCodeInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && void submitByCode()}
-            placeholder={t.friendsSearchPlaceholder}
+            placeholder={
+              t.friendsSearchPlaceholder || "Код или никнейм друга..."
+            }
           />
           <button
             onClick={() => void submitByCode()}
             disabled={busyCode || !codeInput.trim()}
           >
-            <IconPlus /> {t.friendsAdd}
+            <IconPlus size={14} />{" "}
+            <span>{t.friendsAdd || "Добавить друга"}</span>
           </button>
         </div>
       </div>
@@ -174,16 +178,17 @@ export const FriendsTab = React.memo(
     const UnauthState = () => (
       <div className="friends-empty">
         <div className="friends-empty-art">
-          <div className="friends-empty-orb main dim" />
-          <div className="friends-empty-orb side dim" />
-          <div className="friends-lock-icon">
-            <IconUsers />
+          <div className="friends-empty-cube-wrap">
+            <IsometricCube size={50} variant="cyan" />
           </div>
         </div>
-        <h3>{t.friendsTabTitle}</h3>
-        <p>{t.friendsNotLoggedIn}</p>
+        <h3>{t.friendsTabTitle || "Друзья"}</h3>
+        <p>
+          {t.friendsNotLoggedIn ||
+            "Войдите в аккаунт, чтобы играть с друзьями и отправлять заявки."}
+        </p>
         <button className="friends-login-btn" onClick={onOpenAccounts}>
-          {t.accountsTitle}
+          {t.accountsTitle || "Войти в аккаунт"}
         </button>
       </div>
     );
@@ -191,9 +196,17 @@ export const FriendsTab = React.memo(
     return (
       <div className="friends-tab">
         <div className="friends-tab-header">
-          <div>
-            <h2>{t.friendsTabTitle}</h2>
-            <p>{t.friendsTabSubtitle}</p>
+          <div className="friends-heading-group">
+            <div className="friends-header-emblem">
+              <IsometricCube size={24} variant="emerald" />
+            </div>
+            <div>
+              <h2>{t.friendsTabTitle || "Друзья"}</h2>
+              <p>
+                {t.friendsTabSubtitle ||
+                  "Играйте вместе: онлайн-статус, приглашения и вход на сервер"}
+              </p>
+            </div>
           </div>
           {friends.active && (
             <div className="friends-header-right">

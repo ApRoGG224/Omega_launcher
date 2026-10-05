@@ -3282,52 +3282,70 @@ input[type="color"]::-webkit-color-swatch {
   border-radius: 10px;
 }
 
-/* Friends tab (dock entry at the bottom) */
+/* Friends tab */
 .friends-tab {
   flex: 1;
   background: #090d15;
-  border-style: solid;
-  border-width: 12px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M8 1h20v7h7v20h-7v7H8v-7H1V8h7V1z' fill='%23090d15' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    12 fill stretch;
+  border: 1px solid #1e293b;
   clip-path: polygon(
-    8px 0,
-    calc(100% - 8px) 0,
-    calc(100% - 8px) 8px,
-    100% 8px,
-    100% calc(100% - 8px),
-    calc(100% - 8px) calc(100% - 8px),
-    calc(100% - 8px) 100%,
-    8px 100%,
-    8px calc(100% - 8px),
-    0 calc(100% - 8px),
-    0 8px,
-    8px 8px
+    6px 0,
+    calc(100% - 6px) 0,
+    100% 6px,
+    100% calc(100% - 6px),
+    calc(100% - 6px) 100%,
+    6px 100%,
+    0 calc(100% - 6px),
+    0 6px
   );
-  padding: 30px;
-  padding-bottom: 80px;
-  margin-top: 20px;
+  padding: 24px 28px;
+  padding-bottom: 75px;
+  margin-top: 14px;
   width: 100%;
   min-height: calc(100vh - 130px);
   box-sizing: border-box;
   overflow-y: auto;
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.85),
-    0 0 24px rgba(2, 132, 199, 0.1);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85);
 }
 
 .friends-tab-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
 }
 
+.friends-heading-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.friends-header-emblem {
+  width: 38px;
+  height: 38px;
+  background: #0e1422;
+  border: 1px solid #1e293b;
+  clip-path: polygon(
+    3px 0,
+    calc(100% - 3px) 0,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    0 calc(100% - 3px),
+    0 3px
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .friends-tab-header h2 {
-  font-size: 1.8rem;
-  font-weight: 800;
-  margin-bottom: 5px;
+  font-size: 1.6rem;
+  font-weight: 900;
+  margin: 0 0 3px 0;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -3335,20 +3353,16 @@ input[type="color"]::-webkit-color-swatch {
   letter-spacing: -0.01em;
 }
 
-.friends-tab-header h2 svg {
-  color: #84cc16;
-}
-
 .friends-tab-header p {
   color: #94a3b8;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   margin: 0;
 }
 
 .friends-header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -3356,34 +3370,27 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
-  background: #0e1a0b;
-  border-style: solid;
-  border-width: 6px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e1a0b' stroke='%23365314' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    6 fill stretch;
+  padding: 6px 14px;
+  background: #0e1422;
+  border: 1px solid #1e293b;
   clip-path: polygon(
-    4px 0,
-    calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
-    100% 4px,
-    100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
-    calc(100% - 4px) 100%,
-    4px 100%,
-    4px calc(100% - 4px),
-    0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    3px 0,
+    calc(100% - 3px) 0,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    0 calc(100% - 3px),
+    0 3px
   );
   color: #84cc16;
-  font-size: 0.85rem;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .friends-online-badge .status-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 0;
   box-shadow: 0 0 6px currentColor;
 }
@@ -3392,46 +3399,44 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
-  background: #0e1a0b;
-  border-style: solid;
-  border-width: 6px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e1a0b' stroke='%23365314' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    6 fill stretch;
+  padding: 6px 12px;
+  background: #0e1422;
+  border: 1px solid #1e293b;
   clip-path: polygon(
     4px 0,
     calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
     100% 4px,
     100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
     calc(100% - 4px) 100%,
     4px 100%,
-    4px calc(100% - 4px),
     0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    0 4px
   );
-  font-size: 0.8rem;
+  font-size: 12px;
   color: #94a3b8;
 }
 
 .friends-code-chip code {
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-weight: 800;
+  font-size: 13px;
   color: #84cc16;
   letter-spacing: 0.5px;
+  font-family: monospace;
 }
 
 .friends-code-chip .friend-code-reveal {
   display: flex;
   align-items: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
 .friend-code-copy {
   width: 26px;
   height: 26px;
-  border: none;
+  border: 1px solid rgba(132, 204, 22, 0.3);
   clip-path: polygon(
     2px 0,
     calc(100% - 2px) 0,
@@ -3442,14 +3447,13 @@ input[type="color"]::-webkit-color-swatch {
     0 calc(100% - 2px),
     0 2px
   );
-  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(132, 204, 22, 0.15);
+  background: rgba(132, 204, 22, 0.12);
   color: #84cc16;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.18s ease;
 }
 
 .friend-code-copy:hover {
@@ -3457,34 +3461,25 @@ input[type="color"]::-webkit-color-swatch {
   color: #071502;
 }
 
-.friend-code-copy svg {
-  width: 14px;
-  height: 14px;
-}
-
 .friends-own-avatar {
   position: relative;
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: 0;
   clip-path: polygon(
-    4px 0,
-    calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
-    100% 4px,
-    100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
-    calc(100% - 4px) 100%,
-    4px 100%,
-    4px calc(100% - 4px),
-    0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    3px 0,
+    calc(100% - 3px) 0,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    0 calc(100% - 3px),
+    0 3px
   );
-  border: 1px solid #84cc16;
-  background: #14240f;
-  color: #84cc16;
-  font-size: 0.85rem;
+  border: 1px solid #38bdf8;
+  background: #0e1422;
+  color: #38bdf8;
+  font-size: 13px;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -3493,11 +3488,11 @@ input[type="color"]::-webkit-color-swatch {
   overflow: visible;
   padding: 0;
   flex-shrink: 0;
-  transition: all 0.2s;
+  transition: all 0.18s ease;
 }
 
 .friends-own-avatar:hover {
-  box-shadow: 0 0 16px rgba(132, 204, 22, 0.5);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
 }
 
 .friends-own-avatar img {
@@ -3509,12 +3504,12 @@ input[type="color"]::-webkit-color-swatch {
 
 .friends-avatar-edit {
   position: absolute;
-  right: -4px;
-  bottom: -4px;
-  width: 18px;
-  height: 18px;
+  right: -3px;
+  bottom: -3px;
+  width: 16px;
+  height: 16px;
   border-radius: 0;
-  background: #0e1422;
+  background: #090d15;
   border: 1px solid #38bdf8;
   color: #38bdf8;
   display: flex;
@@ -3524,12 +3519,12 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .friends-avatar-edit svg {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
 }
 
 .friends-tab-body {
-  margin-top: 24px;
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -3537,24 +3532,20 @@ input[type="color"]::-webkit-color-swatch {
 
 .friends-tab-tabs {
   display: flex;
-  gap: 8px;
-  background: #091106;
-  border: 1px solid #1c2e0d;
+  gap: 4px;
+  background: #06090e;
+  border: 1px solid #1e293b;
   clip-path: polygon(
     4px 0,
     calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
     100% 4px,
     100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
     calc(100% - 4px) 100%,
     4px 100%,
-    4px calc(100% - 4px),
     0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    0 4px
   );
-  padding: 5px;
+  padding: 4px;
   width: fit-content;
 }
 
@@ -3562,50 +3553,49 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 18px;
-  border: none;
+  padding: 7px 18px;
+  border: 1px solid transparent;
   border-radius: 0;
   background: transparent;
   color: #94a3b8;
-  font-size: 0.85rem;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.18s ease;
+  clip-path: polygon(
+    3px 0,
+    calc(100% - 3px) 0,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    0 calc(100% - 3px),
+    0 3px
+  );
+}
+
+.friends-tab-tabs button:hover:not(.active) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .friends-tab-tabs button.active {
   background: #84cc16;
-  border-style: solid;
-  border-width: 6px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2384cc16' stroke='%23a3e635' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    6 fill stretch;
-  clip-path: polygon(
-    4px 0,
-    calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
-    100% 4px,
-    100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
-    calc(100% - 4px) 100%,
-    4px 100%,
-    4px calc(100% - 4px),
-    0 calc(100% - 4px),
-    0 4px,
-    4px 4px
-  );
+  border: 1px solid #a3e635;
   color: #071502;
-  box-shadow: 0 4px 14px rgba(132, 204, 22, 0.4);
+  font-weight: 800;
+  box-shadow: 0 2px 10px rgba(132, 204, 22, 0.35);
 }
 
 .friends-count {
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
   border-radius: 0;
   background: #dc2626;
   color: #ffffff;
-  font-size: 0.72rem;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3613,70 +3603,58 @@ input[type="color"]::-webkit-color-swatch {
 
 .friends-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 10px;
 }
 
 .friend-card {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
+  gap: 12px;
+  padding: 12px 16px;
   background: #0e1422;
-  border-style: solid;
-  border-width: 8px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e1422' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    8 fill stretch;
+  border: 1px solid #1e293b;
   clip-path: polygon(
     4px 0,
     calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
     100% 4px,
     100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
     calc(100% - 4px) 100%,
     4px 100%,
-    4px calc(100% - 4px),
     0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    0 4px
   );
   border-radius: 0;
-  transition: all 0.2s ease;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .friend-card:hover {
-  background: #12210e;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2312210e' stroke='%2384cc16' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    8 fill stretch;
-  box-shadow: 0 8px 24px rgba(132, 204, 22, 0.25);
-  transform: translateY(-2px);
+  background: #141c2e;
+  border-color: #38bdf8;
+  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.2);
+  transform: translateY(-1px);
 }
 
 .friend-card-avatar {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 0;
   clip-path: polygon(
-    4px 0,
-    calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
-    100% 4px,
-    100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
-    calc(100% - 4px) 100%,
-    4px 100%,
-    4px calc(100% - 4px),
-    0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    3px 0,
+    calc(100% - 3px) 0,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    0 calc(100% - 3px),
+    0 3px
   );
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 13px;
   font-weight: 800;
   color: #fff;
   background: #090d15;
@@ -3691,12 +3669,12 @@ input[type="color"]::-webkit-color-swatch {
 
 .friend-card-dot {
   position: absolute;
-  right: -2px;
-  bottom: -2px;
-  width: 10px;
-  height: 10px;
+  right: -1px;
+  bottom: -1px;
+  width: 9px;
+  height: 9px;
   border-radius: 0;
-  border: 1px solid #05060f;
+  border: 1px solid #090d15;
 }
 
 .friend-card-avatar img {
@@ -3712,8 +3690,8 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .friend-card-name {
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 800;
   color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
@@ -3723,9 +3701,9 @@ input[type="color"]::-webkit-color-swatch {
 .friend-card-activity {
   display: flex;
   align-items: center;
-  gap: 7px;
-  margin-top: 3px;
-  font-size: 0.78rem;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 12px;
   color: #94a3b8;
   white-space: nowrap;
   overflow: hidden;
@@ -3733,8 +3711,8 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .friend-card-status {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 0;
   background: #3f4959;
   flex-shrink: 0;
@@ -3742,24 +3720,74 @@ input[type="color"]::-webkit-color-swatch {
 
 .friend-card-status.on {
   background: #84cc16;
-  box-shadow: 0 0 8px #84cc16;
+  box-shadow: 0 0 6px #84cc16;
 }
 
 .friend-card-actions {
   display: flex;
-  gap: 7px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
+.friend-action-btn {
+  width: 30px;
+  height: 30px;
+  background: #0e1422;
+  border: 1px solid #1e293b;
+  clip-path: polygon(
+    2px 0,
+    calc(100% - 2px) 0,
+    100% 2px,
+    100% calc(100% - 2px),
+    calc(100% - 2px) 100%,
+    2px 100%,
+    0 calc(100% - 2px),
+    0 2px
+  );
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.friend-action-btn:hover {
+  background: #141c2e;
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.friend-action-btn.join {
+  background: #84cc16;
+  border-color: #a3e635;
+  color: #071502;
+}
+
+.friend-action-btn.join:hover {
+  background: #95dc20;
+}
+
 .friend-action-btn.invite {
-  background: rgba(6, 182, 212, 0.15);
+  background: rgba(56, 189, 248, 0.15);
   color: #38bdf8;
-  border-color: rgba(56, 189, 248, 0.3);
+  border-color: rgba(56, 189, 248, 0.35);
 }
 
 .friend-action-btn.invite:hover {
-  background: #06b6d4;
+  background: #38bdf8;
   color: #071502;
+}
+
+.friend-action-btn.decline {
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.friend-action-btn.decline:hover {
+  background: #ef4444;
+  color: #ffffff;
 }
 
 .friend-action-btn:disabled {
@@ -3771,36 +3799,28 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
+  padding: 6px 14px;
   border-radius: 0;
   clip-path: polygon(
-    4px 0,
-    calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
-    100% 4px,
-    100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
-    calc(100% - 4px) 100%,
-    4px 100%,
-    4px calc(100% - 4px),
-    0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    3px 0,
+    calc(100% - 3px) 0,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    0 calc(100% - 3px),
+    0 3px
   );
-  border: none;
-  font-size: 0.78rem;
+  border: 1px solid transparent;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.friends-text-btn svg {
-  width: 13px;
-  height: 13px;
+  transition: all 0.18s ease;
 }
 
 .friends-text-btn.accept {
   background: #84cc16;
+  border-color: #a3e635;
   color: #071502;
 }
 
@@ -3809,9 +3829,9 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .friends-text-btn.decline {
-  background: rgba(228, 109, 76, 0.2);
+  background: rgba(239, 68, 68, 0.12);
   color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .friends-text-btn.decline:hover {
@@ -3826,7 +3846,7 @@ input[type="color"]::-webkit-color-swatch {
 .friends-requests {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .friends-invites {
@@ -3837,25 +3857,22 @@ input[type="color"]::-webkit-color-swatch {
 
 .friend-invite-banner {
   background: #0e1422;
-  border-style: solid;
-  border-width: 6px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e1422' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    6 fill stretch;
+  border: 1px solid #38bdf8;
   clip-path: polygon(
     4px 0,
     calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
     100% 4px,
     100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
     calc(100% - 4px) 100%,
     4px 100%,
-    4px calc(100% - 4px),
     0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    0 4px
   );
-  border-radius: 0;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.2);
 }
 
 .friend-invite-banner code {
@@ -3867,26 +3884,22 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  padding: 46px 20px;
+  padding: 56px 20px;
   text-align: center;
   background: #0e1422;
   border: 1px dashed #1e293b;
   clip-path: polygon(
-    8px 0,
-    calc(100% - 8px) 0,
-    calc(100% - 8px) 8px,
-    100% 8px,
-    100% calc(100% - 8px),
-    calc(100% - 8px) calc(100% - 8px),
-    calc(100% - 8px) 100%,
-    8px 100%,
-    8px calc(100% - 8px),
-    0 calc(100% - 8px),
-    0 8px,
-    8px 8px
+    6px 0,
+    calc(100% - 6px) 0,
+    100% 6px,
+    100% calc(100% - 6px),
+    calc(100% - 6px) 100%,
+    6px 100%,
+    0 calc(100% - 6px),
+    0 6px
   );
-  border-radius: 0;
 }
 
 .friends-empty.small {
@@ -3894,174 +3907,51 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .friends-empty h3 {
-  margin: 6px 0 0;
-  font-size: 1.15rem;
-  font-weight: 700;
+  margin: 8px 0 0;
+  font-size: 1.25rem;
+  font-weight: 800;
   color: #ffffff;
 }
 
 .friends-empty p {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   color: #94a3b8;
-  max-width: 380px;
+  max-width: 420px;
   line-height: 1.5;
 }
 
 .friends-empty-art {
-  position: relative;
-  width: 150px;
-  height: 110px;
-  margin-bottom: 8px;
-}
-
-.friends-empty-orb {
-  position: absolute;
-  border-radius: 0;
-  clip-path: polygon(
-    4px 0,
-    calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
-    100% 4px,
-    100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
-    calc(100% - 4px) 100%,
-    4px 100%,
-    4px calc(100% - 4px),
-    0 calc(100% - 4px),
-    0 4px,
-    4px 4px
-  );
-}
-
-.friends-empty-orb.main {
-  width: 74px;
-  height: 74px;
-  left: 38px;
-  top: 10px;
-  background: radial-gradient(circle at 30% 30%, #a3e635, #4d7c0f 70%);
-  box-shadow: 0 0 32px rgba(132, 204, 22, 0.4);
-  opacity: 0.9;
-}
-
-.friends-empty-orb.main.dim {
-  opacity: 0.35;
-  filter: saturate(0.3);
-}
-
-.friends-empty-orb.side {
-  width: 40px;
-  height: 40px;
-  right: 12px;
-  top: 42px;
-  background: radial-gradient(circle at 30% 30%, #65a30d, #365314 70%);
-  box-shadow: 0 0 20px rgba(101, 163, 13, 0.4);
-  opacity: 0.85;
-}
-
-.friends-empty-orb.side.dim {
-  opacity: 0.3;
-  filter: saturate(0.3);
-}
-
-.friends-empty-orb.dots {
-  width: 18px;
-  height: 18px;
-  left: 12px;
-  bottom: 8px;
-  background: #4d7c0f;
-  opacity: 0.5;
-}
-
-.friends-empty-pill {
-  position: absolute;
-  left: 50%;
-  bottom: 2px;
-  transform: translateX(-50%);
-  padding: 4px 12px;
-  border-radius: 0;
-  clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    0 calc(100% - 2px),
-    0 2px
-  );
-  background: #091106;
-  border: 1px solid #84cc16;
-  color: #84cc16;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-}
-
-.friends-lock-icon {
-  position: absolute;
-  left: 50%;
-  top: 40px;
-  transform: translateX(-50%);
-  width: 52px;
-  height: 52px;
-  border-radius: 0;
-  clip-path: polygon(
-    4px 0,
-    calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
-    100% 4px,
-    100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
-    calc(100% - 4px) 100%,
-    4px 100%,
-    4px calc(100% - 4px),
-    0 calc(100% - 4px),
-    0 4px,
-    4px 4px
-  );
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0e1422;
-  border: 1px solid #38bdf8;
-  color: #38bdf8;
+  margin-bottom: 6px;
 }
 
-.friends-lock-icon svg {
-  width: 26px;
-  height: 26px;
+.friends-empty-cube-wrap {
+  filter: drop-shadow(0 0 18px rgba(132, 204, 22, 0.35));
 }
 
 .friends-login-btn {
-  margin-top: 8px;
+  margin-top: 10px;
   padding: 10px 24px;
-  border: none;
   background: #84cc16;
-  border-style: solid;
-  border-width: 6px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2384cc16' stroke='%23a3e635' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    6 fill stretch;
+  border: 1px solid #a3e635;
   clip-path: polygon(
     4px 0,
     calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
     100% 4px,
     100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
     calc(100% - 4px) 100%,
     4px 100%,
-    4px calc(100% - 4px),
     0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    0 4px
   );
   color: #071502;
   font-size: 0.88rem;
   font-weight: 800;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.18s ease;
   box-shadow: 0 4px 14px rgba(132, 204, 22, 0.45);
 }
 
@@ -4071,34 +3961,92 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .friends-add-row.wide {
-  width: 340px;
+  width: 380px;
   max-width: 90%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .friends-add-row.wide input {
   flex: 1;
+  background: #090d15;
+  border: 1px solid #1e293b;
+  clip-path: polygon(
+    3px 0,
+    calc(100% - 3px) 0,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    0 calc(100% - 3px),
+    0 3px
+  );
+  color: #ffffff;
+  padding: 8px 12px;
+  font-size: 13px;
+  outline: none;
+  transition: all 0.18s ease;
+}
+
+.friends-add-row.wide input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+}
+
+.friends-add-row.wide button {
+  height: 35px;
+  padding: 0 16px;
+  background: #84cc16;
+  border: 1px solid #a3e635;
+  clip-path: polygon(
+    3px 0,
+    calc(100% - 3px) 0,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    0 calc(100% - 3px),
+    0 3px
+  );
+  color: #071502;
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.friends-add-row.wide button:hover:not(:disabled) {
+  background: #95dc20;
+  box-shadow: 0 2px 10px rgba(132, 204, 22, 0.35);
+}
+
+.friends-add-row.wide button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #141c2e;
+  border-color: #1e293b;
+  color: #64748b;
 }
 
 .friend-join-modal {
   padding: 24px;
   background: #090d15;
-  border-style: solid;
-  border-width: 12px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M8 1h20v7h7v20h-7v7H8v-7H1V8h7V1z' fill='%23090d15' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    12 fill stretch;
+  border: 1px solid #1e293b;
   clip-path: polygon(
-    8px 0,
-    calc(100% - 8px) 0,
-    calc(100% - 8px) 8px,
-    100% 8px,
-    100% calc(100% - 8px),
-    calc(100% - 8px) calc(100% - 8px),
-    calc(100% - 8px) 100%,
-    8px 100%,
-    8px calc(100% - 8px),
-    0 calc(100% - 8px),
-    0 8px,
-    8px 8px
+    6px 0,
+    calc(100% - 6px) 0,
+    100% 6px,
+    100% calc(100% - 6px),
+    calc(100% - 6px) 100%,
+    6px 100%,
+    0 calc(100% - 6px),
+    0 6px
   );
   border-radius: 0;
   width: 420px;
@@ -4117,7 +4065,6 @@ input[type="color"]::-webkit-color-swatch {
   max-height: 280px;
   overflow-y: auto;
 }
-
 .install-progress-bar {
   height: 6px;
   border-radius: 999px;
@@ -4401,23 +4348,16 @@ input[type="color"]::-webkit-color-swatch {
   gap: 8px;
   background: #090d15;
   padding: 6px 10px;
-  border-style: solid;
-  border-width: 8px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23090d15' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    8 fill stretch;
+  border: 1px solid #1e293b;
   clip-path: polygon(
     4px 0,
     calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
     100% 4px,
     100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
     calc(100% - 4px) 100%,
     4px 100%,
-    4px calc(100% - 4px),
     0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    0 4px
   );
   border-radius: 0;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
@@ -4426,9 +4366,19 @@ input[type="color"]::-webkit-color-swatch {
 .sub-tab-btn {
   display: inline-flex;
   align-items: center;
-  padding: 8px 16px;
+  padding: 7px 16px;
   border-radius: 0;
-  border: none;
+  border: 1px solid transparent;
+  clip-path: polygon(
+    3px 0,
+    calc(100% - 3px) 0,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    0 calc(100% - 3px),
+    0 3px
+  );
   background: transparent;
   color: #94a3b8;
   font: inherit;
@@ -4439,33 +4389,16 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .sub-tab-btn:hover {
-  background: rgba(132, 204, 22, 0.12);
+  background: rgba(255, 255, 255, 0.05);
   color: #ffffff;
 }
 
 .sub-tab-btn.active {
   background: #84cc16;
-  border-style: solid;
-  border-width: 6px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2384cc16' stroke='%23a3e635' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    6 fill stretch;
-  clip-path: polygon(
-    4px 0,
-    calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
-    100% 4px,
-    100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
-    calc(100% - 4px) 100%,
-    4px 100%,
-    4px calc(100% - 4px),
-    0 calc(100% - 4px),
-    0 4px,
-    4px 4px
-  );
+  border: 1px solid #a3e635;
   color: #071502;
   font-weight: 800;
-  box-shadow: 0 4px 14px rgba(132, 204, 22, 0.45);
+  box-shadow: 0 2px 10px rgba(132, 204, 22, 0.35);
 }
 
 .sub-tab-content {
@@ -6930,38 +6863,31 @@ input[type="color"]::-webkit-color-swatch {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 14px;
-  background: transparent;
-  border-style: solid;
-  border-width: 8px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='rgba(255,255,255,0.06)' stroke='rgba(255,255,255,0.2)' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    8 fill stretch;
+  padding: 6px 16px;
+  background: #0e1422;
+  border: 1px solid #1e293b;
   clip-path: polygon(
-    4px 0,
-    calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
-    100% 4px,
-    100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
-    calc(100% - 4px) 100%,
-    4px 100%,
-    4px calc(100% - 4px),
-    0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    3px 0,
+    calc(100% - 3px) 0,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    0 calc(100% - 3px),
+    0 3px
   );
   color: #f1e4f0;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.18s ease;
   box-sizing: border-box;
 }
 
 .millida-back-home-btn:hover {
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='rgba(255,255,255,0.12)' stroke='rgba(255,255,255,0.38)' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    8 fill stretch;
-  color: #fff;
+  background: #141c2e;
+  border-color: #38bdf8;
+  color: #ffffff;
 }
 
 .millida-top-center {
@@ -6978,31 +6904,24 @@ input[type="color"]::-webkit-color-swatch {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 16px;
-  background: transparent;
-  border-style: solid;
-  border-width: 8px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='rgba(255,255,255,0.04)' stroke='rgba(255,255,255,0.18)' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    8 fill stretch;
+  padding: 6px 18px;
+  background: #090d15;
+  border: 1px solid #1e293b;
   clip-path: polygon(
     4px 0,
     calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
     100% 4px,
     100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
     calc(100% - 4px) 100%,
     4px 100%,
-    4px calc(100% - 4px),
     0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    0 4px
   );
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
   color: #f3eaf2;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   box-sizing: border-box;
 }
 
@@ -7032,34 +6951,27 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 12px;
+  padding: 5px 14px;
   background: #0e1422;
-  border-style: solid;
-  border-width: 8px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e1422' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    8 fill stretch;
+  border: 1px solid #1e293b;
   clip-path: polygon(
     4px 0,
     calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
     100% 4px,
     100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
     calc(100% - 4px) 100%,
     4px 100%,
-    4px calc(100% - 4px),
     0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    0 4px
   );
   cursor: pointer;
   box-sizing: border-box;
+  transition: all 0.18s ease;
 }
 
 .millida-top-friends-pill:hover {
   background: #141c2e;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141c2e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    8 fill stretch;
+  border-color: #38bdf8;
 }
 
 .millida-friends-heads-row {
@@ -7120,25 +7032,18 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 2px 12px;
+  padding: 4px 14px;
   background: #0e1422;
-  border-style: solid;
-  border-width: 8px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e1422' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    8 fill stretch;
+  border: 1px solid #1e293b;
   clip-path: polygon(
     4px 0,
     calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
     100% 4px,
     100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
     calc(100% - 4px) 100%,
     4px 100%,
-    4px calc(100% - 4px),
     0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    0 4px
   );
   cursor: pointer;
   transition: all 0.18s ease;
@@ -7148,8 +7053,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .millida-user-profile:hover {
   background: #141c2e;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141c2e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    8 fill stretch;
+  border-color: #38bdf8;
 }
 
 .millida-user-profile .avatar {
@@ -7208,23 +7112,16 @@ input[type="color"]::-webkit-color-swatch {
   width: 38px;
   height: 38px;
   background: #0e1422;
-  border-style: solid;
-  border-width: 8px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e1422' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    8 fill stretch;
+  border: 1px solid #1e293b;
   clip-path: polygon(
     4px 0,
     calc(100% - 4px) 0,
-    calc(100% - 4px) 4px,
     100% 4px,
     100% calc(100% - 4px),
-    calc(100% - 4px) calc(100% - 4px),
     calc(100% - 4px) 100%,
     4px 100%,
-    4px calc(100% - 4px),
     0 calc(100% - 4px),
-    0 4px,
-    4px 4px
+    0 4px
   );
   color: #cbd5e1;
   display: flex;
@@ -7233,17 +7130,19 @@ input[type="color"]::-webkit-color-swatch {
   cursor: pointer;
   transition: all 0.18s ease;
   box-sizing: border-box;
-  flex-shrink: 0;
 }
 
-.millida-top-action-btn:hover,
-.millida-top-action-btn.active {
+.millida-top-action-btn:hover {
   background: #141c2e;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141c2e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    8 fill stretch;
+  border-color: #38bdf8;
   color: #ffffff;
 }
 
+.millida-top-action-btn.active {
+  background: #111f38;
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
 .millida-btn-relative {
   position: relative;
   display: inline-flex;
