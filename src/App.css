@@ -5627,47 +5627,113 @@ input[type="color"]::-webkit-color-swatch {
   color: #fff;
 }
 
-.settings-theme-palette {
+.settings-theme-groups {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.settings-theme-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.settings-theme-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.settings-theme-group-header.neon {
+  color: #c4b5fd;
+}
+
+.settings-theme-group-header.matte {
+  color: #94a3b8;
+}
+
+.settings-theme-header-sparkle {
+  color: #a78bfa;
+  font-size: 0.72rem;
+  text-shadow: 0 0 8px rgba(167, 139, 250, 0.6);
+}
+
+.settings-theme-group-divider {
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(186, 215, 247, 0.12) 20%,
+    rgba(186, 215, 247, 0.12) 80%,
+    transparent
+  );
+  align-self: stretch;
+}
+
+.settings-theme-group-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 6px;
 }
 
 .settings-theme-chip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 34px;
+  gap: 7px;
+  min-height: 29px;
   padding: 3px 8px;
-  border: 1px solid rgba(186, 215, 247, 0.12);
-  border-radius: 8px;
-  background: rgba(186, 215, 247, 0.035);
-  color: #b0bad0;
+  border: 1px solid rgba(186, 215, 247, 0.1);
+  border-radius: 7px;
+  background: rgba(186, 215, 247, 0.03);
+  color: #a6b3cb;
   font: inherit;
-  font-size: 0.67rem;
+  font-size: 0.65rem;
   cursor: pointer;
   transition: all 140ms ease;
 }
 
 .settings-theme-chip:hover {
-  border-color: rgba(var(--accent-color-rgb), 0.3);
+  border-color: rgba(var(--accent-color-rgb), 0.35);
   background: rgba(var(--accent-color-rgb), 0.08);
   color: #fff;
 }
 
 .settings-theme-chip.active {
   border-color: var(--accent-color);
-  background: rgba(var(--accent-color-rgb), 0.16);
+  background: rgba(var(--accent-color-rgb), 0.18);
   color: #fff;
   font-weight: 600;
-  box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.2);
+}
+
+.settings-theme-chip.active.with-glow {
+  box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.35);
+}
+
+.settings-theme-chip.active.no-glow {
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-color-rgb), 0.4);
 }
 
 .settings-theme-dot {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+
+.settings-theme-dot.glow {
+  box-shadow: 0 0 6px currentColor;
+}
+
+.settings-theme-dot.matte {
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 .settings-theme-name {

@@ -18,54 +18,100 @@ import {
   IconUsers,
 } from "../../ui/icons";
 
-export const LAUNCHER_THEMES = [
+export interface LauncherTheme {
+  id: string;
+  name: string;
+  nameRu?: string;
+  accent: string;
+  rgb: string;
+  light: string;
+  dark: string;
+  glow: boolean;
+}
+
+export const LAUNCHER_THEMES: readonly LauncherTheme[] = [
+  // С подсветкой (Neon)
   {
     id: "omega",
     name: "Omega Violet",
+    nameRu: "Omega Violet",
     accent: "#663af3",
     rgb: "102, 58, 243",
     light: "#8b5cf6",
     dark: "#4c2bd6",
+    glow: true,
   },
   {
     id: "cyber",
     name: "Cyber Cyan",
+    nameRu: "Cyber Cyan",
     accent: "#00d2ff",
     rgb: "0, 210, 255",
     light: "#38bdf8",
     dark: "#0284c7",
+    glow: true,
   },
   {
     id: "emerald",
     name: "Emerald Green",
+    nameRu: "Emerald Green",
     accent: "#10b981",
     rgb: "16, 185, 129",
     light: "#34d399",
     dark: "#059669",
+    glow: true,
   },
   {
-    id: "sunset",
-    name: "Sunset Orange",
-    accent: "#ff6b4a",
-    rgb: "255, 107, 74",
-    light: "#fb923c",
-    dark: "#ea580c",
+    id: "crimson",
+    name: "Crimson Neon",
+    nameRu: "Crimson Neon",
+    accent: "#ff2a5f",
+    rgb: "255, 42, 95",
+    light: "#ff5983",
+    dark: "#cc1846",
+    glow: true,
+  },
+
+  // Без подсветки (Matte / Calm)
+  {
+    id: "slate",
+    name: "Dark Slate",
+    nameRu: "Графит",
+    accent: "#94a3b8",
+    rgb: "148, 163, 184",
+    light: "#cbd5e1",
+    dark: "#64748b",
+    glow: false,
   },
   {
-    id: "rose",
-    name: "Rose Neon",
-    accent: "#f43f5e",
-    rgb: "244, 63, 94",
-    light: "#fb7185",
-    dark: "#e11d48",
+    id: "cappuccino",
+    name: "Cappuccino",
+    nameRu: "Капучино",
+    accent: "#c49e7b",
+    rgb: "196, 158, 123",
+    light: "#d8bca2",
+    dark: "#a37e5c",
+    glow: false,
   },
   {
-    id: "gold",
-    name: "Electric Gold",
-    accent: "#f59e0b",
-    rgb: "245, 158, 11",
-    light: "#fbbf24",
-    dark: "#d97706",
+    id: "nordic",
+    name: "Nordic Frost",
+    nameRu: "Нордик",
+    accent: "#7ea0b7",
+    rgb: "126, 160, 183",
+    light: "#a3c0d4",
+    dark: "#5b8098",
+    glow: false,
+  },
+  {
+    id: "mocha",
+    name: "Warm Mocha",
+    nameRu: "Тёплый Мокко",
+    accent: "#a77b5a",
+    rgb: "167, 123, 90",
+    light: "#c09675",
+    dark: "#845e41",
+    glow: false,
   },
 ] as const;
 
@@ -76,6 +122,10 @@ export function applyLauncherTheme(themeId: string) {
   document.documentElement.style.setProperty("--accent-color-rgb", t.rgb);
   document.documentElement.style.setProperty("--accent-color-light", t.light);
   document.documentElement.style.setProperty("--accent-color-dark", t.dark);
+  document.documentElement.style.setProperty(
+    "--accent-box-shadow",
+    t.glow ? `0 0 16px rgba(${t.rgb}, 0.35)` : "none",
+  );
   localStorage.setItem("omega:theme", t.id);
 }
 
@@ -753,26 +803,82 @@ export const SettingsPanel = React.memo(
                           : "Launcher Color Theme"}
                       </span>
                     </div>
-                    <div className="settings-theme-palette">
-                      {LAUNCHER_THEMES.map((theme) => (
-                        <button
-                          key={theme.id}
-                          type="button"
-                          className={`settings-theme-chip ${currentTheme === theme.id ? "active" : ""}`}
-                          onClick={() => handleSelectTheme(theme.id)}
-                        >
-                          <span
-                            className="settings-theme-dot"
-                            style={{
-                              backgroundColor: theme.accent,
-                              boxShadow: `0 0 10px ${theme.accent}`,
-                            }}
-                          />
-                          <span className="settings-theme-name">
-                            {theme.name}
+                    <div className="settings-theme-groups">
+                      {/* С подсветкой */}
+                      <div className="settings-theme-group">
+                        <div className="settings-theme-group-header neon">
+                          <span className="settings-theme-header-sparkle">
+                            ✦
                           </span>
-                        </button>
-                      ))}
+                          <span>
+                            {isRussian ? "С подсветкой" : "With neon glow"}
+                          </span>
+                        </div>
+                        <div className="settings-theme-group-grid">
+                          {LAUNCHER_THEMES.filter((t) => t.glow).map(
+                            (theme) => (
+                              <button
+                                key={theme.id}
+                                type="button"
+                                className={`settings-theme-chip with-glow ${currentTheme === theme.id ? "active" : ""}`}
+                                onClick={() => handleSelectTheme(theme.id)}
+                              >
+                                <span
+                                  className="settings-theme-dot glow"
+                                  style={{
+                                    backgroundColor: theme.accent,
+                                    boxShadow: `0 0 8px ${theme.accent}`,
+                                  }}
+                                />
+                                <span className="settings-theme-name">
+                                  {isRussian
+                                    ? theme.nameRu || theme.name
+                                    : theme.name}
+                                </span>
+                              </button>
+                            ),
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Разделитель */}
+                      <div
+                        className="settings-theme-group-divider"
+                        aria-hidden="true"
+                      />
+
+                      {/* Без подсветки */}
+                      <div className="settings-theme-group">
+                        <div className="settings-theme-group-header matte">
+                          <span>
+                            {isRussian ? "Без подсветки" : "Matte & Natural"}
+                          </span>
+                        </div>
+                        <div className="settings-theme-group-grid">
+                          {LAUNCHER_THEMES.filter((t) => !t.glow).map(
+                            (theme) => (
+                              <button
+                                key={theme.id}
+                                type="button"
+                                className={`settings-theme-chip no-glow ${currentTheme === theme.id ? "active" : ""}`}
+                                onClick={() => handleSelectTheme(theme.id)}
+                              >
+                                <span
+                                  className="settings-theme-dot matte"
+                                  style={{
+                                    backgroundColor: theme.accent,
+                                  }}
+                                />
+                                <span className="settings-theme-name">
+                                  {isRussian
+                                    ? theme.nameRu || theme.name
+                                    : theme.name}
+                                </span>
+                              </button>
+                            ),
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
