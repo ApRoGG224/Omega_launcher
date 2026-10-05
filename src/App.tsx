@@ -440,6 +440,7 @@ function App() {
               void instancesApi.installModByDrag(instanceId, payload)
             }
             installProgress={instancesApi.installProgress}
+            onOpenCatalog={() => setActiveTab("catalog")}
           />
         )}
 
