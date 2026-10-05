@@ -6007,9 +6007,11 @@ input[type="color"]::-webkit-color-swatch {
   align-items: center;
   gap: 8px;
   padding: 4px 14px;
+  background: transparent;
   border-style: solid;
   border-width: 8px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='rgba(255,255,255,0.06)' stroke='rgba(255,255,255,0.2)' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E") 8 fill stretch;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px), 0 4px, 4px 4px);
   color: #f1e4f0;
   font-size: 13px;
   font-weight: 600;
@@ -6034,9 +6036,11 @@ input[type="color"]::-webkit-color-swatch {
   align-items: center;
   gap: 8px;
   padding: 4px 16px;
+  background: transparent;
   border-style: solid;
   border-width: 8px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='rgba(255,255,255,0.04)' stroke='rgba(255,255,255,0.18)' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E") 8 fill stretch;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px), 0 4px, 4px 4px);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -6065,9 +6069,11 @@ input[type="color"]::-webkit-color-swatch {
   align-items: center;
   gap: 10px;
   padding: 2px 10px;
+  background: transparent;
   border-style: solid;
   border-width: 8px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231e0a1a' stroke='rgba(255,255,255,0.18)' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E") 8 fill stretch;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px), 0 4px, 4px 4px);
   cursor: pointer;
   transition: all 0.18s ease;
   box-sizing: border-box;
@@ -6080,9 +6086,11 @@ input[type="color"]::-webkit-color-swatch {
 .millida-user-profile .avatar {
   width: 28px;
   height: 28px;
+  background: transparent;
   border-style: solid;
   border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='rgba(255,255,255,0.1)' stroke='rgba(255,255,255,0.25)' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E") 6 fill stretch;
+  clip-path: polygon(3px 0, calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px), 0 3px, 3px 3px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6129,9 +6137,11 @@ input[type="color"]::-webkit-color-swatch {
 .millida-top-action-btn {
   width: 40px;
   height: 40px;
+  background: transparent;
   border-style: solid;
   border-width: 8px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231e0a1a' stroke='rgba(255,255,255,0.18)' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E") 8 fill stretch;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px), 0 4px, 4px 4px);
   color: #cbd5e1;
   display: flex;
   align-items: center;
@@ -6221,9 +6231,11 @@ input[type="color"]::-webkit-color-swatch {
   position: relative;
   width: 216px;
   height: 76px;
+  background: transparent;
   border-style: solid;
   border-width: 12px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M8 1h20v7h7v20h-7v7H8v-7H1V8h7V1z' fill='%231c0a18' stroke='%232563eb' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E") 12 fill stretch;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px), 0 8px, 8px 8px);
   display: flex;
   align-items: center;
   padding: 0 10px;
@@ -6262,9 +6274,11 @@ input[type="color"]::-webkit-color-swatch {
 .millida-card-avatar-box {
   width: 44px;
   height: 44px;
+  background: transparent;
   border-style: solid;
   border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230f172a' stroke='rgba(255,255,255,0.25)' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E") 6 fill stretch;
+  clip-path: polygon(3px 0, calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px), 0 3px, 3px 3px);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -6359,9 +6373,11 @@ input[type="color"]::-webkit-color-swatch {
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
+  background: transparent;
   border-style: solid;
   border-width: 12px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M8 1h20v7h7v20h-7v7H8v-7H1V8h7V1z' fill='%23190717' stroke='%23381230' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E") 12 fill stretch;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px), 0 8px, 8px 8px);
   padding: 4px 10px;
   box-shadow: 0 16px 44px rgba(0, 0, 0, 0.75), 0 0 28px rgba(255, 45, 120, 0.15);
   box-sizing: border-box;
@@ -6372,9 +6388,11 @@ input[type="color"]::-webkit-color-swatch {
   align-items: center;
   gap: 16px;
   padding: 6px 18px;
+  background: transparent;
   border-style: solid;
   border-width: 8px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='rgba(255,255,255,0.03)' stroke='rgba(255,255,255,0.12)' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E") 8 fill stretch;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px), 0 4px, 4px 4px);
   cursor: pointer;
   text-align: left;
   transition: all 0.18s ease;
@@ -6423,9 +6441,11 @@ input[type="color"]::-webkit-color-swatch {
   margin-left: 12px;
   padding: 0 38px;
   height: 52px;
+  background: transparent;
   border-style: solid;
   border-width: 12px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M8 1h20v7h7v20h-7v7H8v-7H1V8h7V1z' fill='%23ff2d78' stroke='%23ff72aa' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E") 12 fill stretch;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px), 0 8px, 8px 8px);
   color: #ffffff;
   font-size: 17px;
   font-weight: 900;
@@ -6664,6 +6684,11 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 /* Global square UI rule across the entire launcher */
+button,
+[role="button"] {
+  background: transparent;
+}
+
 button,
 [role="button"],
 input,
