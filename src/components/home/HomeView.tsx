@@ -80,8 +80,9 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(({
       <div className="millida-center-stage">
         <div className="millida-skin-wrapper">
           <Skin3DViewer
-            width={380}
-            height={520}
+            width={360}
+            height={500}
+            cameraDistance={65}
             skinUrl={skinApi.activeSkinUrl}
             capeUrl={skinApi.activeCapeUrl}
             model={

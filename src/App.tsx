@@ -16,7 +16,6 @@ import { useVersions } from "./hooks/useVersions";
 import { useGameSession } from "./hooks/useGameSession";
 import { useSmoothScrolling } from "./hooks/useSmoothScrolling";
 import { ipc } from "./services/ipc";
-import { HomeDashboard } from "./components/home/HomeDashboard";
 import { CreateInstanceModal } from "./components/home/CreateInstanceModal";
 import { ModsPanel } from "./components/mods/ModsPanel";
 import { InstancesPanel } from "./components/instances/InstancesPanel";
@@ -333,7 +332,7 @@ function App() {
       </header>
 
       <main
-        className={`main-content ${activeTab !== "home" ? "main-content-route" : ""}`}
+        className={activeTab === "home" ? "main-content-home" : "main-content main-content-route"}
       >
         {activeTab === "home" && (
           <HomeView

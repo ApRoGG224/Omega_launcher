@@ -16,6 +16,7 @@ export interface Skin3DViewerProps {
   height?: number;
   animation?: "idle" | "walk" | "run" | "none";
   loading?: boolean;
+  cameraDistance?: number;
 }
 
 export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
@@ -26,6 +27,7 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
   height = 250,
   animation = "idle",
   loading = false,
+  cameraDistance = 58,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewerRef = useRef<SkinViewer | null>(null);
@@ -64,7 +66,7 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
     viewer.controls.enableRotate = true;
     viewer.controls.enableZoom = true;
     viewer.controls.enablePan = false;
-    viewer.camera.position.set(0, 0, 42);
+    viewer.camera.position.set(0, 0, cameraDistance);
 
     // Initial animation
     viewer.animation = new IdleAnimation();
