@@ -23,22 +23,22 @@
   --color-glass-edge: #bad7f71f;
   --color-luminous-fill: #c7d3ea1f;
 
-  /* Catppuccin Mocha theme variables (darker tone) */
-  --launcher-bg: #11111b;
-  --sidebar-bg: rgba(17, 17, 27, 0.97);
-  --section-bg: rgba(24, 24, 37, 0.92);
-  --card-bg: rgba(49, 50, 68, 0.55);
-  --card-border: rgba(245, 224, 220, 0.22);
-  --dock-bg: rgba(17, 17, 27, 0.97);
-  --dock-border: rgba(245, 224, 220, 0.22);
+  /* Deep dark sleek theme variables */
+  --launcher-bg: #07080e;
+  --sidebar-bg: rgba(9, 10, 16, 0.97);
+  --section-bg: rgba(11, 13, 20, 0.92);
+  --card-bg: rgba(14, 16, 26, 0.75);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --dock-bg: rgba(9, 10, 16, 0.97);
+  --dock-border: rgba(255, 255, 255, 0.08);
   --text-color: #cdd6f4;
-  --theme-frame-border: 1px solid rgba(245, 224, 220, 0.38);
+  --theme-frame-border: 1px solid rgba(245, 224, 220, 0.3);
   --theme-frame-bg: radial-gradient(
     circle at center,
-    rgba(245, 224, 220, 0.14) 0%,
-    rgba(17, 17, 27, 0.97) 100%
+    rgba(245, 224, 220, 0.08) 0%,
+    rgba(9, 10, 16, 0.98) 100%
   );
-  --theme-frame-shadow: inset 0 0 24px rgba(0, 0, 0, 0.75);
+  --theme-frame-shadow: inset 0 0 24px rgba(0, 0, 0, 0.85);
 }
 * {
   box-sizing: border-box;
@@ -74,7 +74,7 @@ a,
 
 body {
   font-family: "Inter", sans-serif;
-  background: var(--launcher-bg, #11111b);
+  background: var(--launcher-bg, #07080e);
   color: var(--text-color, #cdd6f4);
   overflow: hidden;
   transition: background 250ms ease;
@@ -128,15 +128,15 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   height: 100vh;
   width: 100vw;
-  background: var(--launcher-bg, #11111b);
+  background: var(--launcher-bg, #07080e);
   transition: background 250ms ease;
 }
 
 /* Sidebar */
 .sidebar {
   width: 70px;
-  background: var(--sidebar-bg, rgba(17, 17, 27, 0.97));
-  border-right: 1px solid var(--card-border, rgba(245, 224, 220, 0.15));
+  background: var(--sidebar-bg, rgba(9, 10, 16, 0.97));
+  border-right: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -5521,19 +5521,19 @@ input[type="color"]::-webkit-color-swatch {
   justify-content: center;
   min-height: 28px;
   padding: 3px 10px;
-  border: 1px dashed rgba(var(--accent-color-rgb), 0.45);
+  border: 1px dashed rgba(var(--accent-color-rgb), 0.35);
   border-radius: 7px;
-  background: rgba(var(--accent-color-rgb), 0.08);
-  color: #c4beff;
+  background: rgba(var(--accent-color-rgb), 0.06);
+  color: #e2e8f0;
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: all 140ms ease;
 }
 
 .settings-custom-upload-btn:hover {
   border-color: var(--accent-color);
-  background: rgba(var(--accent-color-rgb), 0.2);
+  background: rgba(var(--accent-color-rgb), 0.16);
   color: #fff;
 }
 
