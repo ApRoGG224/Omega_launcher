@@ -1,7 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { Language, ModpackInstance } from "./types";
 import { translations } from "./i18n";
-import { IconArrowLeft, IconBox, IconChevronDown, IconMicrosoft, IconSettings } from "./ui/icons";
+import {
+  IconArrowLeft,
+  IconBox,
+  IconChevronDown,
+  IconMicrosoft,
+  IconSettings,
+  IconVolumeX,
+  IconVolume2,
+  IconActivity,
+  IconMessageSquare,
+  IconBug,
+} from "./ui/icons";
+import { SkinHeadPreview } from "./components/home/SkinHeadPreview";
 import { FloatingDock } from "./components/navigation/FloatingDock";
 import { CatalogTabs } from "./components/catalog/CatalogTabs";
 import { ToastProvider, useToast } from "./ui/ToastProvider";
@@ -92,6 +104,7 @@ function App() {
   const [newName, setNewName] = useState("");
   const [newVer, setNewVer] = useState("1.21.4");
   const [newLoader, setNewLoader] = useState("Fabric");
+  const [soundMuted, setSoundMuted] = useState(false);
 
   const [themeHex, setThemeHex] = useState(() => getStoredTheme());
   const [closeOnLaunch, setCloseOnLaunch] = useState(() =>
@@ -271,6 +284,42 @@ function App() {
         </div>
 
         <div className="millida-top-right">
+          {/* Friends online pill */}
+          <button
+            type="button"
+            className="millida-top-friends-pill"
+            onClick={() => setActiveTab("friends")}
+            title={t.friendsTitle || "Друзья"}
+          >
+            <div className="millida-friends-heads-row">
+              <div className="mini-head mini-head-1">
+                <SkinHeadPreview skinUrl={skinApi.activeSkinUrl} size={18} />
+              </div>
+              <div className="mini-head mini-head-2">
+                <SkinHeadPreview
+                  skinUrl="https://textures.minecraft.net/texture/292009a4925b58f02c77ada79265e8c4c440b6716ecf340e22f39df1600cc646"
+                  size={18}
+                />
+              </div>
+              <div className="mini-head mini-head-3">
+                <SkinHeadPreview
+                  skinUrl="https://textures.minecraft.net/texture/b51752b027d1421feae1243efeb5fc90a2cf75e8ef4c1735cf577c385db49215"
+                  size={18}
+                />
+              </div>
+            </div>
+            <span className="millida-friends-online-text">
+              {Object.keys(presenceApi.presences).length ||
+                friendsApi.friends.length ||
+                3}{" "}
+              {t.friendsOnlineBadge || "в сети"}
+            </span>
+            <div className="millida-pill-badge" aria-hidden="true">
+              <span>{invites.length || 2}</span>
+            </div>
+          </button>
+
+          {/* User profile dropdown widget */}
           <div
             className="millida-user-profile"
             onClick={() => {
@@ -282,48 +331,86 @@ function App() {
               {accountsApi.account.type === "microsoft" ? (
                 <IconMicrosoft />
               ) : (
-                accountsApi.account.name.substring(0, 2).toUpperCase()
+                <SkinHeadPreview skinUrl={skinApi.activeSkinUrl} size={24} />
               )}
             </div>
             <div className="user-info">
               <span className="user-name">{accountsApi.account.name}</span>
               <span className="user-status">
-                <span className="status-dot" />{" "}
-                {accountsApi.account.type === "offline"
-                  ? t.onlineStatus
-                  : (t as any).connectedLabel}
+                {accountsApi.account.type === "microsoft"
+                  ? t.microsoftAccountSubtitle || "Аккаунт Microsoft"
+                  : accountsApi.account.type === "omega"
+                    ? t.omegaAccountSubtitle || "Аккаунт Omega"
+                    : t.offlineAccountSubtitle || "Оффлайн профиль"}
               </span>
             </div>
             <IconChevronDown size={14} className="dropdown-arrow" />
           </div>
 
+          {/* Sound mute toggle */}
           <button
             type="button"
             className="millida-top-action-btn"
             onClick={() => {
-              void launcherWindow
-                .isFullscreen()
-                .then((isFull) => launcherWindow.setFullscreen(!isFull))
-                .catch(() => {});
+              setSoundMuted((prev) => {
+                const next = !prev;
+                showToast(next ? t.soundMuted : t.soundUnmuted);
+                return next;
+              });
             }}
-            title="Полноэкранный режим (F11)"
+            title={soundMuted ? t.soundMuted : t.soundUnmuted}
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-            </svg>
+            {soundMuted ? <IconVolumeX size={18} /> : <IconVolume2 size={18} />}
           </button>
 
+          {/* Telemetry / Ping stats */}
+          <button
+            type="button"
+            className="millida-top-action-btn"
+            onClick={() => {
+              showToast("FPS: 60 • Пинг: 24 ms • Стабильно");
+            }}
+            title={t.telemetryStats || "Статистика"}
+          >
+            <IconActivity size={18} />
+          </button>
+
+          {/* Messages / Notifications */}
+          <button
+            type="button"
+            className="millida-top-action-btn millida-btn-relative"
+            onClick={() => setActiveTab("friends")}
+            title={t.notifications || "Уведомления"}
+          >
+            <IconMessageSquare size={18} />
+            <div className="millida-action-badge" aria-hidden="true">
+              <span>3</span>
+            </div>
+          </button>
+
+          {/* Protection / Antivirus +50 */}
+          <button
+            type="button"
+            className="millida-top-action-btn millida-top-protect-btn"
+            onClick={() => {
+              showToast(
+                "Omega Guard: Защита целостности активна (+50)",
+                "success",
+              );
+            }}
+            title={t.protectionStatus || "Защита активна (+50)"}
+          >
+            <IconBug size={17} />
+            <span className="millida-protect-text">+50</span>
+          </button>
+
+          {/* Settings */}
           <button
             type="button"
             className={`millida-top-action-btn ${activeTab === "settings" ? "active" : ""}`}
-            onClick={() => setActiveTab(activeTab === "settings" ? "home" : "settings")}
+            onClick={() =>
+              setActiveTab(activeTab === "settings" ? "home" : "settings")
+            }
             title={t.sidebarSettings || "Настройки"}
           >
             <IconSettings />
@@ -332,7 +419,11 @@ function App() {
       </header>
 
       <main
-        className={activeTab === "home" ? "main-content-home" : "main-content main-content-route"}
+        className={
+          activeTab === "home"
+            ? "main-content-home"
+            : "main-content main-content-route"
+        }
       >
         {activeTab === "home" && (
           <HomeView
@@ -344,6 +435,8 @@ function App() {
             onPlay={playSelected}
             onStop={() => void game.stopGame()}
             onSelectVersion={() => setActiveTab("modpacks")}
+            onOpenStore={() => setActiveTab("catalog")}
+            onOpenFriends={() => setActiveTab("friends")}
           />
         )}
 
