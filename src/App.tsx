@@ -283,27 +283,29 @@ function App() {
             >
               <div className="millida-friends-heads-row">
                 <div className="mini-head mini-head-1">
-                  <SkinHeadPreview skinUrl={skinApi.activeSkinUrl} size={18} />
+                  <SkinHeadPreview
+                    skinUrl={skinApi.activeSkinUrl}
+                    fallback="steve"
+                    size={20}
+                  />
                 </div>
                 <div className="mini-head mini-head-2">
-                  <SkinHeadPreview
-                    skinUrl="https://textures.minecraft.net/texture/292009a4925b58f02c77ada79265e8c4c440b6716ecf340e22f39df1600cc646"
-                    size={18}
-                  />
+                  <SkinHeadPreview fallback="steve" size={20} />
                 </div>
                 <div className="mini-head mini-head-3">
-                  <SkinHeadPreview
-                    skinUrl="https://textures.minecraft.net/texture/b51752b027d1421feae1243efeb5fc90a2cf75e8ef4c1735cf577c385db49215"
-                    size={18}
-                  />
+                  <SkinHeadPreview fallback="alex" size={20} />
                 </div>
               </div>
-              <span className="millida-friends-online-text">
-                {Object.keys(presenceApi.presences).length ||
-                  friendsApi.friends.length ||
-                  3}{" "}
-                {t.friendsOnlineBadge || "в сети"}
-              </span>
+              <div className="millida-friends-online-text">
+                <span className="millida-friends-online-num">
+                  {Object.keys(presenceApi.presences).length ||
+                    friendsApi.friends.length ||
+                    3}
+                </span>
+                <span className="millida-friends-online-label">
+                  {t.friendsOnlineBadge || "в сети"}
+                </span>
+              </div>
             </button>
             <div className="millida-pill-badge" aria-hidden="true">
               <span>{invites.length || 2}</span>
