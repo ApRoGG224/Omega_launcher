@@ -24,7 +24,16 @@ import { AccountModal } from "./components/accounts/AccountModal";
 import { FriendsTab } from "./components/friends/FriendsTab";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { getStoredFullscreenOnStart, getStoredLanguage, getStoredTheme, setStoredFullscreenOnStart, setStoredLanguage, setStoredTheme, getStoredCloseOnLaunch, setStoredCloseOnLaunch } from "./services/storage";
+import {
+  getStoredFullscreenOnStart,
+  getStoredLanguage,
+  getStoredTheme,
+  setStoredFullscreenOnStart,
+  setStoredLanguage,
+  setStoredTheme,
+  getStoredCloseOnLaunch,
+  setStoredCloseOnLaunch,
+} from "./services/storage";
 import "./App.css";
 
 const launcherWindow = getCurrentWindow();
@@ -56,12 +65,20 @@ function App() {
     setInvites((prev) =>
       prev.some((i) => i.fromId === invite.fromId) ? prev : [...prev, invite],
     );
-    showToast(`${invite.fromName} ${t.friendsInvite} (${invite.hostPort})`, "success");
+    showToast(
+      `${invite.fromName} ${t.friendsInvite} (${invite.hostPort})`,
+      "success",
+    );
   });
   const accountsApi = useAccounts(t, game.pushLog, omegaAuth);
   const friendsApi = useFriends(omegaAuth);
 
-  const { currentVersionsList, versionFilters, toggleVersionFilter, manifestError } = useVersions();
+  const {
+    currentVersionsList,
+    versionFilters,
+    toggleVersionFilter,
+    manifestError,
+  } = useVersions();
 
   const [activeTab, setActiveTab] = useState("home");
   const [isCreating, setIsCreating] = useState(false);
@@ -71,8 +88,12 @@ function App() {
   const [newLoader, setNewLoader] = useState("Fabric");
 
   const [themeHex, setThemeHex] = useState(() => getStoredTheme());
-  const [closeOnLaunch, setCloseOnLaunch] = useState(() => getStoredCloseOnLaunch());
-  const [fullscreenOnStart, setFullscreenOnStart] = useState(() => getStoredFullscreenOnStart());
+  const [closeOnLaunch, setCloseOnLaunch] = useState(() =>
+    getStoredCloseOnLaunch(),
+  );
+  const [fullscreenOnStart, setFullscreenOnStart] = useState(() =>
+    getStoredFullscreenOnStart(),
+  );
 
   useEffect(() => {
     void launcherWindow.setFullscreen(fullscreenOnStart).catch((error) => {
@@ -85,7 +106,8 @@ function App() {
       if (event.key !== "F11") return;
       event.preventDefault();
 
-      void launcherWindow.isFullscreen()
+      void launcherWindow
+        .isFullscreen()
         .then((isFullscreen) => launcherWindow.setFullscreen(!isFullscreen))
         .catch((error) => {
           console.warn("Unable to toggle launcher fullscreen state", error);
@@ -93,7 +115,8 @@ function App() {
     };
 
     window.addEventListener("keydown", handleFullscreenShortcut);
-    return () => window.removeEventListener("keydown", handleFullscreenShortcut);
+    return () =>
+      window.removeEventListener("keydown", handleFullscreenShortcut);
   }, []);
 
   useEffect(() => {
@@ -105,7 +128,9 @@ function App() {
     setStoredTheme(hex);
     document.documentElement.style.setProperty("--accent-color", hex);
 
-    let r = 0, g = 0, b = 0;
+    let r = 0,
+      g = 0,
+      b = 0;
     if (hex.length === 4) {
       r = parseInt(hex[1] + hex[1], 16);
       g = parseInt(hex[2] + hex[2], 16);
@@ -115,7 +140,10 @@ function App() {
       g = parseInt(hex[3] + hex[4], 16);
       b = parseInt(hex[5] + hex[6], 16);
     }
-    document.documentElement.style.setProperty("--accent-color-rgb", `${r}, ${g}, ${b}`);
+    document.documentElement.style.setProperty(
+      "--accent-color-rgb",
+      `${r}, ${g}, ${b}`,
+    );
   }, []);
 
   useEffect(() => {
@@ -158,23 +186,38 @@ function App() {
     instancesApi.moveInstanceToTop(inst.id);
     presenceApi.setGameStatus({ instanceName: inst.name });
     void game.playInstance(inst, accountsApi.account.name, t);
-  }, [instancesApi.selectedInstance, game, accountsApi.account, presenceApi, t]);
+  }, [
+    instancesApi.selectedInstance,
+    game,
+    accountsApi.account,
+    presenceApi,
+    t,
+  ]);
 
-  const playInstanceById = useCallback((instanceId: string) => {
-    const inst = instancesApi.instances.find((i) => i.id === instanceId);
-    if (!inst) return;
-    instancesApi.moveInstanceToTop(instanceId);
-    presenceApi.setGameStatus({ instanceName: inst.name });
-    void game.playInstance(inst, accountsApi.account.name, t);
-  }, [instancesApi.instances, game, accountsApi.account, presenceApi, t]);
+  const playInstanceById = useCallback(
+    (instanceId: string) => {
+      const inst = instancesApi.instances.find((i) => i.id === instanceId);
+      if (!inst) return;
+      instancesApi.moveInstanceToTop(instanceId);
+      presenceApi.setGameStatus({ instanceName: inst.name });
+      void game.playInstance(inst, accountsApi.account.name, t);
+    },
+    [instancesApi.instances, game, accountsApi.account, presenceApi, t],
+  );
 
-  const handleServerLaunch = useCallback((instanceId: string, serverHostPort: string) => {
-    const inst = instancesApi.instances.find((i) => i.id === instanceId);
-    if (!inst) return;
-    instancesApi.moveInstanceToTop(instanceId);
-    presenceApi.setGameStatus({ instanceName: inst.name, serverHost: serverHostPort });
-    void game.playInstance(inst, accountsApi.account.name, t, serverHostPort);
-  }, [instancesApi.instances, game, accountsApi.account, presenceApi, t]);
+  const handleServerLaunch = useCallback(
+    (instanceId: string, serverHostPort: string) => {
+      const inst = instancesApi.instances.find((i) => i.id === instanceId);
+      if (!inst) return;
+      instancesApi.moveInstanceToTop(instanceId);
+      presenceApi.setGameStatus({
+        instanceName: inst.name,
+        serverHost: serverHostPort,
+      });
+      void game.playInstance(inst, accountsApi.account.name, t, serverHostPort);
+    },
+    [instancesApi.instances, game, accountsApi.account, presenceApi, t],
+  );
 
   useEffect(() => {
     if (!game.runningInstanceId) presenceApi.setGameStatus(null);
@@ -195,8 +238,9 @@ function App() {
       }}
       onDragStart={(e) => e.preventDefault()}
     >
-
-      <main className={`main-content ${activeTab !== "home" ? "main-content-route" : ""}`}>
+      <main
+        className={`main-content ${activeTab !== "home" ? "main-content-route" : ""}`}
+      >
         {activeTab === "home" && (
           <header className="top-bar">
             <div
@@ -216,7 +260,10 @@ function App() {
               <div className="user-info">
                 <span className="user-name">{accountsApi.account.name}</span>
                 <span className="user-status">
-                  <span className="status-dot" /> {accountsApi.account.type === "offline" ? t.onlineStatus : (t as any).connectedLabel}
+                  <span className="status-dot" />{" "}
+                  {accountsApi.account.type === "offline"
+                    ? t.onlineStatus
+                    : (t as any).connectedLabel}
                 </span>
               </div>
             </div>
@@ -282,12 +329,16 @@ function App() {
             onSaveEdit={instancesApi.saveEdit}
             onCloseEdit={() => instancesApi.setEditModalOpen(null)}
             onCreate={() => setIsCreating(true)}
-            onDropMod={(instanceId, payload) => void instancesApi.installModByDrag(instanceId, payload)}
+            onDropMod={(instanceId, payload) =>
+              void instancesApi.installModByDrag(instanceId, payload)
+            }
             installProgress={instancesApi.installProgress}
           />
         )}
 
-        {["mods", "resourcepacks", "shaders", "datapacks", "catalog"].includes(activeTab) && (
+        {["mods", "resourcepacks", "shaders", "datapacks", "catalog"].includes(
+          activeTab,
+        ) && (
           <div
             style={{
               display: "flex",
@@ -300,12 +351,48 @@ function App() {
               boxSizing: "border-box",
             }}
           >
-            <CatalogTabs t={t} activeTab={activeTab} setActiveTab={setActiveTab} />
+            <CatalogTabs
+              t={t}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
 
-            {activeTab === "mods" && <ModsPanel instances={instancesApi.instances} t={t} language={language} projectType="mod" versionsList={currentVersionsList} />}
-            {activeTab === "resourcepacks" && <ModsPanel instances={instancesApi.instances} t={t} language={language} projectType="resourcepack" versionsList={currentVersionsList} />}
-            {activeTab === "shaders" && <ModsPanel instances={instancesApi.instances} t={t} language={language} projectType="shader" versionsList={currentVersionsList} />}
-            {activeTab === "datapacks" && <ModsPanel instances={instancesApi.instances} t={t} language={language} projectType="datapack" versionsList={currentVersionsList} />}
+            {activeTab === "mods" && (
+              <ModsPanel
+                instances={instancesApi.instances}
+                t={t}
+                language={language}
+                projectType="mod"
+                versionsList={currentVersionsList}
+              />
+            )}
+            {activeTab === "resourcepacks" && (
+              <ModsPanel
+                instances={instancesApi.instances}
+                t={t}
+                language={language}
+                projectType="resourcepack"
+                versionsList={currentVersionsList}
+              />
+            )}
+            {activeTab === "shaders" && (
+              <ModsPanel
+                instances={instancesApi.instances}
+                t={t}
+                language={language}
+                projectType="shader"
+                versionsList={currentVersionsList}
+              />
+            )}
+            {activeTab === "datapacks" && (
+              <ModsPanel
+                instances={instancesApi.instances}
+                t={t}
+                language={language}
+                projectType="datapack"
+                versionsList={currentVersionsList}
+              />
+            )}
             {activeTab === "catalog" && (
               <ModsPanel
                 instances={instancesApi.instances}
@@ -314,7 +401,13 @@ function App() {
                 projectType="modpack"
                 onCreateModpack={(name, mcVer, loader, iconUrl, projectId) => {
                   setActiveTab("home");
-                  void instancesApi.createFromCatalog(name, mcVer, loader, iconUrl, projectId);
+                  void instancesApi.createFromCatalog(
+                    name,
+                    mcVer,
+                    loader,
+                    iconUrl,
+                    projectId,
+                  );
                 }}
                 versionsList={currentVersionsList}
               />
@@ -355,6 +448,7 @@ function App() {
               setFullscreenOnStart(v);
               setStoredFullscreenOnStart(v);
             }}
+            account={accountsApi.account}
             onOpenStore={() => setActiveTab("catalog")}
           />
         )}
@@ -420,7 +514,9 @@ function App() {
           onBack={() => accountsApi.setAccountModalView("list")}
           onSelectAccount={accountsApi.handleSelectAccount}
           onDeleteAccount={accountsApi.handleDeleteAccount}
-          onLogoutCurrentAccount={() => void accountsApi.handleLogoutCurrentAccount()}
+          onLogoutCurrentAccount={() =>
+            void accountsApi.handleLogoutCurrentAccount()
+          }
           onLogoutOmega={() => void omegaAuth.logout()}
           onAddOffline={accountsApi.handleAddOffline}
           onAddMicrosoft={() => void accountsApi.handleAddMicrosoft()}
@@ -435,7 +531,9 @@ function App() {
           t={t}
           step={instancesApi.importStep}
           onSelectStep={instancesApi.setImportStep}
-          onImport={(kind, path) => void instancesApi.importFromArchive(kind, path)}
+          onImport={(kind, path) =>
+            void instancesApi.importFromArchive(kind, path)
+          }
           onClose={() => instancesApi.setImportModalOpen(false)}
         />
       )}
@@ -444,7 +542,11 @@ function App() {
         activeTab={activeTab}
         isHome={activeTab === "home"}
         isRunning={game.isRunning}
-        selectedVersionLabel={instancesApi.selectedInstance ? instancesApi.selectedInstance.mcVersion : "1.20.1"}
+        selectedVersionLabel={
+          instancesApi.selectedInstance
+            ? instancesApi.selectedInstance.mcVersion
+            : "1.20.1"
+        }
         onHome={() => setActiveTab("home")}
         onCatalog={() => setActiveTab("mods")}
         onModpacks={() => setActiveTab("modpacks")}
@@ -466,11 +568,19 @@ function App() {
         <div className="playtime-badge">
           <span className="playtime-badge-dot" />
           <span>
-            {t.playtimeLabel}: <b>{formatPlayTime(instancesApi.selectedInstance.playTimeMs, t)}</b>
+            {t.playtimeLabel}:{" "}
+            <b>{formatPlayTime(instancesApi.selectedInstance.playTimeMs, t)}</b>
           </span>
           <span className="playtime-badge-sep">•</span>
           <span>
-            {t.lastLaunchLabel}: <b>{formatLastLaunch(instancesApi.selectedInstance.lastPlayedAt, language, t)}</b>
+            {t.lastLaunchLabel}:{" "}
+            <b>
+              {formatLastLaunch(
+                instancesApi.selectedInstance.lastPlayedAt,
+                language,
+                t,
+              )}
+            </b>
           </span>
         </div>
       )}
@@ -487,7 +597,11 @@ function formatPlayTime(ms: number | undefined, t: any): string {
   return `0 ${t.timeMin}`;
 }
 
-function formatLastLaunch(iso: string | undefined, language: Language, t: any): string {
+function formatLastLaunch(
+  iso: string | undefined,
+  language: Language,
+  t: any,
+): string {
   if (!iso) return t.neverLaunched;
   return new Date(iso).toLocaleString(language === "ru" ? "ru-RU" : "en-US", {
     day: "2-digit",

@@ -1,6 +1,7 @@
 import React from "react";
-import type { Language, VersionFilterState } from "../../types";
+import type { Account, Language, VersionFilterState } from "../../types";
 import { ipc } from "../../services/ipc";
+import { Skin3DViewer } from "./Skin3DViewer";
 import {
   IconCpu,
   IconDownload,
@@ -217,6 +218,7 @@ export const SettingsPanel = React.memo(
     setCloseOnLaunch,
     fullscreenOnStart,
     setFullscreenOnStart,
+    account,
     onOpenStore,
   }: {
     t: any;
@@ -244,6 +246,7 @@ export const SettingsPanel = React.memo(
     setCloseOnLaunch: (v: boolean) => void;
     fullscreenOnStart: boolean;
     setFullscreenOnStart: (v: boolean) => void;
+    account?: Account;
     onOpenStore: () => void;
   }) => {
     const [activeTab, setActiveTab] =
@@ -272,6 +275,96 @@ export const SettingsPanel = React.memo(
     const [currentTheme, setCurrentTheme] = React.useState<string>(() => {
       return localStorage.getItem("omega:theme") || "omega";
     });
+
+    const [playerNickname, setPlayerNickname] = React.useState<string>(() => {
+      return account?.name || "Steve";
+    });
+
+    React.useEffect(() => {
+      if (account?.name) {
+        setPlayerNickname(account.name);
+      }
+    }, [account?.name]);
+
+    const [viewerAnimation, setViewerAnimation] = React.useState<
+      "idle" | "walk" | "none"
+    >("idle");
+    const [active3dSkinUrl, setActive3dSkinUrl] = React.useState<string | null>(
+      null,
+    );
+    const [active3dCapeUrl, setActive3dCapeUrl] = React.useState<string | null>(
+      null,
+    );
+    const [skinLoading, setSkinLoading] = React.useState(false);
+
+    React.useEffect(() => {
+      let cancelled = false;
+      setSkinLoading(true);
+
+      const resolveSkin = async () => {
+        const name = (playerNickname || account?.name || "Steve").trim();
+        if (skinSource === "custom") {
+          if (!cancelled) {
+            setActive3dSkinUrl(customSkinUrl);
+            setActive3dCapeUrl(capeEnabled ? customCapeUrl : null);
+            setSkinLoading(false);
+          }
+          return;
+        }
+
+        if (skinSource === "microsoft") {
+          try {
+            const officialUrl = await ipc
+              .getMicrosoftSkin(name)
+              .catch(() => null);
+            if (officialUrl && !cancelled) {
+              setActive3dSkinUrl(officialUrl);
+              setActive3dCapeUrl(null);
+              setSkinLoading(false);
+              return;
+            }
+          } catch {
+            // fallback
+          }
+
+          if (!cancelled) {
+            setActive3dSkinUrl(
+              `https://minotar.net/skin/${encodeURIComponent(name)}`,
+            );
+            setActive3dCapeUrl(null);
+            setSkinLoading(false);
+          }
+          return;
+        }
+
+        if (skinSource === "ely") {
+          if (!cancelled) {
+            setActive3dSkinUrl(
+              `http://skinsystem.ely.by/skins/${encodeURIComponent(name)}.png`,
+            );
+            setActive3dCapeUrl(
+              capeEnabled
+                ? `http://skinsystem.ely.by/cloaks/${encodeURIComponent(name)}.png`
+                : null,
+            );
+            setSkinLoading(false);
+          }
+          return;
+        }
+      };
+
+      void resolveSkin();
+      return () => {
+        cancelled = true;
+      };
+    }, [
+      skinSource,
+      playerNickname,
+      account?.name,
+      customSkinUrl,
+      customCapeUrl,
+      capeEnabled,
+    ]);
 
     React.useEffect(() => {
       const saved = localStorage.getItem("omega:theme") || "omega";
@@ -562,58 +655,112 @@ export const SettingsPanel = React.memo(
                           </span>
                         </label>
                       </div>
+
+                      <div className="settings-custom-row">
+                        <label>
+                          {isRussian ? "Никнейм игрока" : "Player nickname"}
+                        </label>
+                        <div
+                          className="settings-rewrite-input"
+                          style={{ maxWidth: "160px" }}
+                        >
+                          <input
+                            type="text"
+                            value={playerNickname}
+                            placeholder={account?.name || "Steve"}
+                            onChange={(e) => setPlayerNickname(e.target.value)}
+                            style={{
+                              minHeight: "28px",
+                              padding: "4px 8px",
+                              fontSize: "0.72rem",
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   <div className="settings-custom-preview-card">
-                    <div className="settings-custom-avatar-wrapper">
-                      {customSkinUrl ? (
-                        <img
-                          src={customSkinUrl}
-                          alt="Skin preview"
-                          className="settings-custom-skin-img"
-                        />
-                      ) : (
-                        <div className="settings-custom-avatar-placeholder">
-                          <IconShirt />
-                        </div>
-                      )}
-                      {capeEnabled && (
-                        <span className="settings-custom-cape-badge">
-                          {isRussian ? "ПЛАЩ" : "CAPE"}
-                        </span>
-                      )}
+                    <div className="settings-custom-3d-box">
+                      <Skin3DViewer
+                        skinUrl={active3dSkinUrl}
+                        capeUrl={capeEnabled ? active3dCapeUrl : null}
+                        model={skinModel === "slim" ? "slim" : "default"}
+                        width={180}
+                        height={190}
+                        animation={viewerAnimation}
+                        loading={skinLoading}
+                      />
                     </div>
+
+                    <div className="settings-custom-3d-toolbar">
+                      <div className="settings-custom-anim-buttons">
+                        <button
+                          type="button"
+                          className={viewerAnimation === "idle" ? "active" : ""}
+                          onClick={() => setViewerAnimation("idle")}
+                        >
+                          {isRussian ? "Дыхание" : "Idle"}
+                        </button>
+                        <button
+                          type="button"
+                          className={viewerAnimation === "walk" ? "active" : ""}
+                          onClick={() => setViewerAnimation("walk")}
+                        >
+                          {isRussian ? "Ходьба" : "Walk"}
+                        </button>
+                        <button
+                          type="button"
+                          className={viewerAnimation === "none" ? "active" : ""}
+                          onClick={() => setViewerAnimation("none")}
+                        >
+                          {isRussian ? "Пауза" : "Pause"}
+                        </button>
+                      </div>
+                      <span className="settings-custom-hint">
+                        {isRussian
+                          ? "Вращай мышью • Масштаб колесом"
+                          : "Drag to rotate • Wheel to zoom"}
+                      </span>
+                    </div>
+
                     <div className="settings-custom-preview-meta">
                       <strong>
                         {skinSource === "custom"
                           ? isRussian
-                            ? "Пользовательский файл"
-                            : "Custom file"
+                            ? "Пользовательский PNG"
+                            : "Custom PNG file"
                           : skinSource === "ely"
-                            ? "Ely.by Skin"
-                            : "Microsoft Skin"}
+                            ? `Ely.by: ${playerNickname || account?.name || "Steve"}`
+                            : `Microsoft: ${playerNickname || account?.name || "Steve"}`}
                       </strong>
                       <small>
                         {skinModel === "classic"
-                          ? "Classic Steve"
-                          : "Slim Alex"}
+                          ? "Classic Steve (4px)"
+                          : "Slim Alex (3px)"}
+                        {capeEnabled
+                          ? isRussian
+                            ? " • С плащом"
+                            : " • With cape"
+                          : ""}
                       </small>
                     </div>
-                    {(customSkinUrl || customCapeUrl) && (
-                      <button
-                        type="button"
-                        className="settings-custom-reset-btn"
-                        onClick={() => {
-                          handleResetSkin();
-                          handleResetCape();
-                        }}
-                      >
-                        {isRussian
-                          ? "Сбросить на стандартный"
-                          : "Reset to default"}
-                      </button>
-                    )}
+
+                    {skinSource === "custom" &&
+                      (customSkinUrl || customCapeUrl) && (
+                        <button
+                          type="button"
+                          className="settings-custom-reset-btn"
+                          onClick={() => {
+                            handleResetSkin();
+                            handleResetCape();
+                          }}
+                        >
+                          {isRussian
+                            ? "Сбросить на стандартный"
+                            : "Reset to default"}
+                        </button>
+                      )}
                   </div>
 
                   <div className="settings-custom-card settings-custom-card-wide">
