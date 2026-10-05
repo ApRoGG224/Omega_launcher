@@ -23,6 +23,8 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
 - Automatic installation of Minecraft versions and dependencies.
 - High focus on automation within the launcher.
 - Global system CLI support (`omega` command runs `npm run tauri dev`).
+- Immersive 3D character home screen inspired by modern launchers (3D skin view, quick skin customization card, and consolidated version/play launch dock).
+- Centralized `useSkin` state management for Ely.by, Microsoft, and custom PNG skins with Steve/Alex models.
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 
