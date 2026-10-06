@@ -28,9 +28,11 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
 - Stepped pixel-art notched corner UI styling (8px and 4px step cutouts using 9-slice SVG border-image) across cards, dock, top-bar, instances panel, settings panel, friends panel, and catalog/mods store, maintaining a strict non-rounded square aesthetic.
 - Radiant emerald Minecraft atmosphere background with dynamic radial glow, sunburst rays, and drifting sparkles.
 - Balanced top bar layout: friends online pill with mini heads and badge in the top-left, center Omega Launcher badge, and right-hand user profile widget, audio mute toggle, and messages.
-- Triple left action cards: Store ("Магазин / Бонус ждёт"), Skin Customizer ("Мой скин / Загрузи свой"), and Play with Friends ("Играть с друзьями").
+- Dual left action cards: Store ("Магазин Omega") and Play with Friends ("Играть с друзьями").
+- Interactive Procedural Animation Wheel (`AnimationWheelModal`) triggered by pressing 'B' (or clicking the on-screen badge), supporting Take the L, Get Griddy, Twerk, Floss, Gangnam Style, Dab, Wave, Disco, Clap, and Zombie with clean skeletal joint resets in Three.js/skinview3d.
+- Dedicated Omega Store (`OmegaStorePanel`, tab `"store"`) with three tabs: Skins (popular presets + custom PNG upload + model switch + 3D live viewport), Accessories (cape collection + custom cape upload + visibility toggle + back-facing 3D stage), and Launcher Customization (neon themes, base themes, custom accent color, atmosphere particle toggles).
 - Polished pixel-notched launch dock with deep navy instance selector, rich 3D isometric shaded block icon, loader/version chips, and vibrant lime-green Play button ("▶ Играть").
-- Stepped notched styling across "Ваши сборки" (InstancesPanel), "Настройки" (SettingsPanel), "Друзья" (FriendsTab), and "Каталог" (CatalogTabs & ModsPanel).
+- Stepped notched styling across "Ваши сборки" (InstancesPanel), "Настройки" (SettingsPanel), "Друзья" (FriendsTab), "Каталог" (CatalogTabs & ModsPanel), and "Магазин Omega" (OmegaStorePanel).
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 

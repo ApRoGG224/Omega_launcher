@@ -18,6 +18,8 @@ export interface SkinApi {
   skinLoading: boolean;
   uploadSkin: (file: File) => Promise<void>;
   uploadCape: (file: File) => Promise<void>;
+  setPresetSkin: (url: string, model?: SkinModel) => void;
+  setPresetCape: (url: string) => void;
   resetSkin: () => void;
   resetCape: () => void;
 }
@@ -96,6 +98,22 @@ export function useSkin(accountName?: string): SkinApi {
       reader.onerror = () => reject(reader.error);
       reader.readAsDataURL(file);
     });
+  }, []);
+
+  const setPresetSkin = useCallback((url: string, model: SkinModel = "auto") => {
+    setCustomSkinUrl(url);
+    setSkinSourceState("custom");
+    setSkinModelState(model);
+    localStorage.setItem("omega:customSkin", url);
+    localStorage.setItem("omega:skinSource", "custom");
+    localStorage.setItem("omega:skinModel", model);
+  }, []);
+
+  const setPresetCape = useCallback((url: string) => {
+    setCustomCapeUrl(url);
+    setCapeEnabledState(true);
+    localStorage.setItem("omega:customCape", url);
+    localStorage.setItem("omega:capeEnabled", "true");
   }, []);
 
   const resetSkin = useCallback(() => {
@@ -202,6 +220,8 @@ export function useSkin(accountName?: string): SkinApi {
     skinLoading,
     uploadSkin,
     uploadCape,
+    setPresetSkin,
+    setPresetCape,
     resetSkin,
     resetCape,
   };

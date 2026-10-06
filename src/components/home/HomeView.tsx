@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { ModpackInstance, Account } from "../../types";
 import { Skin3DViewer } from "../settings/Skin3DViewer";
-import { SkinModal } from "./SkinModal";
-import { SkinHeadPreview } from "./SkinHeadPreview";
+import { AnimationWheelModal } from "./AnimationWheelModal";
+import type { AnimationId } from "../../utils/skinAnimations";
 import type { SkinApi } from "../../hooks/useSkin";
 import { IconPlay, IconX, IconClock } from "../../ui/icons";
 
@@ -31,7 +31,36 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
     onOpenStore,
     onOpenFriends,
   }) => {
-    const [skinModalOpen, setSkinModalOpen] = useState(false);
+    const [currentAnimation, setCurrentAnimation] =
+      useState<AnimationId | string>("idle");
+    const [wheelOpen, setWheelOpen] = useState(false);
+
+    useEffect(() => {
+      const isInputElement = (target: EventTarget | null): boolean => {
+        if (!target || !(target instanceof HTMLElement)) return false;
+        const tag = target.tagName.toLowerCase();
+        return (
+          tag === "input" ||
+          tag === "textarea" ||
+          tag === "select" ||
+          target.isContentEditable ||
+          Boolean(
+            target.closest("input, textarea, select, [contenteditable='true']"),
+          )
+        );
+      };
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.code === "KeyB") {
+          if (isInputElement(e.target)) return;
+          e.preventDefault();
+          setWheelOpen((prev) => !prev);
+        }
+      };
+
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
 
     const formatPlayTime = (ms: number | undefined): string => {
       const totalMin = Math.floor((ms || 0) / 60000);
@@ -102,30 +131,7 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
             </div>
           </button>
 
-          {/* Card 2: My Skin / Upload */}
-          <button
-            type="button"
-            className="millida-left-card millida-card-skin"
-            onClick={() => setSkinModalOpen(true)}
-            title={t.changeSkin || "Сменить скин"}
-          >
-            <div className="millida-card-badge-exclamation" aria-hidden="true">
-              <span>!</span>
-            </div>
-            <div className="millida-card-art-box millida-skin-art">
-              <SkinHeadPreview skinUrl={skinApi.activeSkinUrl} size={36} />
-            </div>
-            <div className="millida-card-info">
-              <span className="millida-card-title">
-                {t.mySkin || "Мой скин"}
-              </span>
-              <span className="millida-card-sub millida-sub-cyan">
-                {t.uploadYourOwn || "Загрузи свой"}
-              </span>
-            </div>
-          </button>
-
-          {/* Card 3: Play with Friends */}
+          {/* Card 2: Play with Friends */}
           <button
             type="button"
             className="millida-left-card millida-card-friends"
@@ -166,7 +172,7 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
           </button>
         </div>
 
-        {/* Center 3D skin model */}
+        {/* Center 3D skin model & Animation prompt */}
         <div className="millida-center-stage">
           <div className="millida-skin-wrapper">
             <Skin3DViewer
@@ -182,10 +188,21 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
                     ? "slim"
                     : "default"
               }
-              animation="idle"
+              animation={currentAnimation}
               loading={skinApi.skinLoading}
             />
             <div className="millida-skin-shadow" aria-hidden="true" />
+
+            {/* Animation Wheel Shortcut Badge */}
+            <button
+              type="button"
+              className="millida-anim-badge-btn"
+              onClick={() => setWheelOpen(true)}
+              title={t.emotesBtnTitle || "Колесо анимаций [B]"}
+            >
+              <span className="anim-badge-kbd">B</span>
+              <span className="anim-badge-label">{t.emotesBtn || "Эмоции"}</span>
+            </button>
           </div>
         </div>
 
@@ -338,14 +355,14 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
           </div>
         </div>
 
-        {/* Skin customizer modal */}
-        {skinModalOpen && (
-          <SkinModal
-            t={t}
-            skinApi={skinApi}
-            onClose={() => setSkinModalOpen(false)}
-          />
-        )}
+        {/* Animation wheel modal */}
+        <AnimationWheelModal
+          isOpen={wheelOpen}
+          currentAnimation={currentAnimation}
+          onSelectAnimation={(id) => setCurrentAnimation(id)}
+          onClose={() => setWheelOpen(false)}
+          t={t}
+        />
       </div>
     );
   },

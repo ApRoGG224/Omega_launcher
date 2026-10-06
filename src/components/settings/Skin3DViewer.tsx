@@ -5,6 +5,10 @@ import {
   WalkingAnimation,
   RunningAnimation,
 } from "skinview3d";
+import {
+  createCustomAnimation,
+  type AnimationId,
+} from "../../utils/skinAnimations";
 
 export const FALLBACK_STEVE_SKIN = "https://minotar.net/skin/MHF_Steve";
 
@@ -14,7 +18,7 @@ export interface Skin3DViewerProps {
   model?: "default" | "slim" | "auto-detect";
   width?: number;
   height?: number;
-  animation?: "idle" | "walk" | "run" | "none";
+  animation?: AnimationId | "idle" | "walk" | "run" | "none" | string;
   loading?: boolean;
   cameraDistance?: number;
 }
@@ -129,14 +133,26 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
     const viewer = viewerRef.current;
     if (!viewer) return;
 
-    if (animation === "idle") {
+    if (viewer.playerObject) {
+      viewer.playerObject.skin.resetJoints();
+      viewer.playerObject.position.set(0, 0, 0);
+      viewer.playerObject.rotation.set(0, 0, 0);
+      if (viewer.playerObject.cape) {
+        viewer.playerObject.cape.rotation.set(Math.PI * 0.06, 0, 0);
+      }
+    }
+
+    if (!animation || animation === "none") {
+      viewer.animation = null;
+    } else if (animation === "idle") {
       viewer.animation = new IdleAnimation();
     } else if (animation === "walk") {
       viewer.animation = new WalkingAnimation();
     } else if (animation === "run") {
       viewer.animation = new RunningAnimation();
     } else {
-      viewer.animation = null;
+      const customAnim = createCustomAnimation(animation);
+      viewer.animation = customAnim || new IdleAnimation();
     }
   }, [animation]);
 

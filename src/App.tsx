@@ -38,6 +38,7 @@ import {
   applyBaseTheme,
   applyNeonTheme,
 } from "./components/settings/SettingsPanel";
+import { OmegaStorePanel } from "./components/store/OmegaStorePanel";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   getStoredFullscreenOnStart,
@@ -411,8 +412,20 @@ function App() {
             onPlay={playSelected}
             onStop={() => void game.stopGame()}
             onSelectVersion={() => setActiveTab("modpacks")}
-            onOpenStore={() => setActiveTab("catalog")}
+            onOpenStore={() => setActiveTab("store")}
             onOpenFriends={() => setActiveTab("friends")}
+          />
+        )}
+
+        {activeTab === "store" && (
+          <OmegaStorePanel
+            t={t}
+            skinApi={skinApi}
+            account={accountsApi.account}
+            onBack={() => setActiveTab("home")}
+            themeHex={themeHex}
+            applyTheme={applyTheme}
+            showToast={showToast}
           />
         )}
 
@@ -563,7 +576,7 @@ function App() {
               setStoredFullscreenOnStart(v);
             }}
             account={accountsApi.account}
-            onOpenStore={() => setActiveTab("catalog")}
+            onOpenStore={() => setActiveTab("store")}
           />
         )}
 
