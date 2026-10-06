@@ -120,6 +120,11 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
     const next = !currentVal;
     setter(next);
     localStorage.setItem(key, String(next));
+    window.dispatchEvent(
+      new CustomEvent("omega:atmosphere-change", {
+        detail: { key, value: next },
+      }),
+    );
     showToast("Настройки атмосферы сохранены", "success");
   };
 
@@ -401,14 +406,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                   </button>
                 </div>
 
-                <div
-                  className="preview-stage-canvas"
-                  style={{
-                    transform:
-                      characterAngle === 180 ? "rotateY(180deg)" : "none",
-                    transition: "transform 0.4s ease",
-                  }}
-                >
+                <div className="preview-stage-canvas">
                   <Skin3DViewer
                     width={310}
                     height={430}
@@ -424,6 +422,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                     }
                     animation="idle"
                     loading={skinApi.skinLoading}
+                    rotationY={characterAngle === 180 ? Math.PI : 0}
                   />
                 </div>
 
@@ -589,14 +588,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                   </button>
                 </div>
 
-                <div
-                  className="preview-stage-canvas"
-                  style={{
-                    transform:
-                      characterAngle === 180 ? "rotateY(180deg)" : "none",
-                    transition: "transform 0.4s ease",
-                  }}
-                >
+                <div className="preview-stage-canvas">
                   <Skin3DViewer
                     width={310}
                     height={430}
@@ -612,6 +604,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                     }
                     animation="walk"
                     loading={skinApi.skinLoading}
+                    rotationY={characterAngle === 180 ? Math.PI : 0}
                   />
                 </div>
 

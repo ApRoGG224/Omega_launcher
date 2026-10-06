@@ -34,9 +34,9 @@ export const AnimationWheelModal: React.FC<AnimationWheelModalProps> = ({
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" || e.code === "KeyB") {
+      if (e.key === "Escape") {
         e.preventDefault();
-        e.stopPropagation();
+        e.stopImmediatePropagation();
         onClose();
       }
     };

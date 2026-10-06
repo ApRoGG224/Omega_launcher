@@ -21,6 +21,7 @@ export interface Skin3DViewerProps {
   animation?: AnimationId | "idle" | "walk" | "run" | "none" | string;
   loading?: boolean;
   cameraDistance?: number;
+  rotationY?: number;
 }
 
 export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
@@ -32,9 +33,15 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
   animation = "idle",
   loading = false,
   cameraDistance = 58,
+  rotationY = 0,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewerRef = useRef<SkinViewer | null>(null);
+
+  const toRadians = (val: number | undefined): number => {
+    if (val === undefined || isNaN(val)) return 0;
+    return Math.abs(val) > 2 * Math.PI ? (val * Math.PI) / 180 : val;
+  };
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -71,6 +78,7 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
     viewer.controls.enableZoom = true;
     viewer.controls.enablePan = false;
     viewer.camera.position.set(0, 0, cameraDistance);
+    viewer.playerObject.rotation.y = toRadians(rotationY);
 
     // Initial animation
     viewer.animation = new IdleAnimation();
@@ -88,6 +96,13 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
       viewerRef.current.setSize(width, height);
     }
   }, [width, height]);
+
+  // Update rotation angle
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer?.playerObject) return;
+    viewer.playerObject.rotation.y = toRadians(rotationY);
+  }, [rotationY]);
 
   // Update skin texture
   useEffect(() => {
@@ -136,7 +151,7 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
     if (viewer.playerObject) {
       viewer.playerObject.skin.resetJoints();
       viewer.playerObject.position.set(0, 0, 0);
-      viewer.playerObject.rotation.set(0, 0, 0);
+      viewer.playerObject.rotation.set(0, toRadians(rotationY), 0);
       if (viewer.playerObject.cape) {
         viewer.playerObject.cape.rotation.set(Math.PI * 0.06, 0, 0);
       }
@@ -154,7 +169,7 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
       const customAnim = createCustomAnimation(animation);
       viewer.animation = customAnim || new IdleAnimation();
     }
-  }, [animation]);
+  }, [animation, rotationY]);
 
   return (
     <div

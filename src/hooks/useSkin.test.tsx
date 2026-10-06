@@ -78,4 +78,31 @@ describe("useSkin", () => {
     expect(result.current.customCapeUrl).toBe("https://example.com/cape.png");
     expect(result.current.capeEnabled).toBe(true);
   });
+
+  it("resolves custom cape for ely source when capeEnabled is true", async () => {
+    vi.useFakeTimers();
+    // mock global fetch
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        SKIN: { url: "http://ely.by/skin.png" },
+      }),
+    } as any);
+
+    const { result } = renderHook(() => useSkin("StevePlayer"));
+
+    act(() => {
+      result.current.setPresetCape("https://example.com/store-cape.png");
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(result.current.activeCapeUrl).toBe("https://example.com/store-cape.png");
+    expect(result.current.activeSkinUrl).toBe("https://ely.by/skin.png");
+
+    fetchSpy.mockRestore();
+    vi.useRealTimers();
+  });
 });

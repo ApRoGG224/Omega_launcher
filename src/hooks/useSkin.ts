@@ -154,7 +154,7 @@ export function useSkin(accountName?: string): SkinApi {
           const officialUrl = await ipc.getMicrosoftSkin(name).catch(() => null);
           if (officialUrl && !cancelled) {
             setActiveSkinUrl(officialUrl.replace(/^http:\/\//, "https://"));
-            setActiveCapeUrl(null);
+            setActiveCapeUrl(capeEnabled ? customCapeUrl : null);
             setSkinLoading(false);
             return;
           }
@@ -164,7 +164,7 @@ export function useSkin(accountName?: string): SkinApi {
 
         if (!cancelled) {
           setActiveSkinUrl(`https://minotar.net/skin/${encodeURIComponent(name)}`);
-          setActiveCapeUrl(null);
+          setActiveCapeUrl(capeEnabled ? customCapeUrl : null);
           setSkinLoading(false);
         }
         return;
@@ -178,8 +178,13 @@ export function useSkin(accountName?: string): SkinApi {
             if (data?.SKIN?.url && !cancelled) {
               const url = data.SKIN.url.replace(/^http:\/\//, "https://");
               setActiveSkinUrl(url);
-              if (data?.CAPE?.url && capeEnabled) {
-                setActiveCapeUrl(data.CAPE.url.replace(/^http:\/\//, "https://"));
+              if (capeEnabled) {
+                const cape =
+                  customCapeUrl ||
+                  (data?.CAPE?.url
+                    ? data.CAPE.url.replace(/^http:\/\//, "https://")
+                    : null);
+                setActiveCapeUrl(cape);
               } else {
                 setActiveCapeUrl(null);
               }
@@ -193,7 +198,7 @@ export function useSkin(accountName?: string): SkinApi {
 
         if (!cancelled) {
           setActiveSkinUrl(`https://minotar.net/skin/${encodeURIComponent(name)}`);
-          setActiveCapeUrl(null);
+          setActiveCapeUrl(capeEnabled ? customCapeUrl : null);
           setSkinLoading(false);
         }
         return;

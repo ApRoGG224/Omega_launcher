@@ -35,6 +35,38 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
       useState<AnimationId | string>("idle");
     const [wheelOpen, setWheelOpen] = useState(false);
 
+    const [sunburstEnabled, setSunburstEnabled] = useState<boolean>(
+      () => localStorage.getItem("omega:atmosphereSunburst") !== "false",
+    );
+    const [sparksEnabled, setSparksEnabled] = useState<boolean>(
+      () => localStorage.getItem("omega:atmosphereSparks") !== "false",
+    );
+    const [glowEnabled, setGlowEnabled] = useState<boolean>(
+      () => localStorage.getItem("omega:atmosphereGlow") !== "false",
+    );
+
+    useEffect(() => {
+      const handleAtmosphereUpdate = () => {
+        setSunburstEnabled(
+          localStorage.getItem("omega:atmosphereSunburst") !== "false",
+        );
+        setSparksEnabled(
+          localStorage.getItem("omega:atmosphereSparks") !== "false",
+        );
+        setGlowEnabled(
+          localStorage.getItem("omega:atmosphereGlow") !== "false",
+        );
+      };
+
+      window.addEventListener("omega:atmosphere-change", handleAtmosphereUpdate);
+      window.addEventListener("storage", handleAtmosphereUpdate);
+
+      return () => {
+        window.removeEventListener("omega:atmosphere-change", handleAtmosphereUpdate);
+        window.removeEventListener("storage", handleAtmosphereUpdate);
+      };
+    }, []);
+
     useEffect(() => {
       const isInputElement = (target: EventTarget | null): boolean => {
         if (!target || !(target instanceof HTMLElement)) return false;
@@ -51,8 +83,8 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
       };
 
       const handleKeyDown = (e: KeyboardEvent) => {
+        if (isInputElement(e.target)) return;
         if (e.code === "KeyB") {
-          if (isInputElement(e.target)) return;
           e.preventDefault();
           setWheelOpen((prev) => !prev);
         }
@@ -79,16 +111,18 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
       <div className="millida-home-container">
         {/* Radiant Emerald Minecraft background glow & sunburst rays */}
         <div className="millida-bg-atmosphere" aria-hidden="true">
-          <div className="millida-radial-glow" />
-          <div className="millida-sunburst" />
-          <div className="millida-dust-sparks">
-            <div className="spark spark-1" />
-            <div className="spark spark-2" />
-            <div className="spark spark-3" />
-            <div className="spark spark-4" />
-            <div className="spark spark-5" />
-            <div className="spark spark-6" />
-          </div>
+          {glowEnabled && <div className="millida-radial-glow" />}
+          {sunburstEnabled && <div className="millida-sunburst" />}
+          {sparksEnabled && (
+            <div className="millida-dust-sparks">
+              <div className="spark spark-1" />
+              <div className="spark spark-2" />
+              <div className="spark spark-3" />
+              <div className="spark spark-4" />
+              <div className="spark spark-5" />
+              <div className="spark spark-6" />
+            </div>
+          )}
         </div>
 
         {/* Left side gaming cards */}
