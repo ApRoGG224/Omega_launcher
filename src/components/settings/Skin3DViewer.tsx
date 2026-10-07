@@ -8,7 +8,6 @@ import {
 import {
   createCustomAnimation,
   resetEmoteJoints,
-  rigEmotecraftSkeleton,
   type AnimationId,
 } from "../../utils/skinAnimations";
 
@@ -151,7 +150,6 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = ({
     if (!viewer) return;
 
     if (viewer.playerObject) {
-      rigEmotecraftSkeleton(viewer.playerObject);
       resetEmoteJoints(viewer.playerObject);
       viewer.playerObject.rotation.set(0, toRadians(rotationY), 0);
     }

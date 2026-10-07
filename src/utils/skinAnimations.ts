@@ -1,5 +1,4 @@
 import { PlayerAnimation, type PlayerObject, IdleAnimation } from "skinview3d";
-import { Group, BoxGeometry, Mesh } from "three";
 
 export type AnimationId =
   | "idle"
@@ -23,51 +22,8 @@ export interface EmoteDefinition {
   createAnimation: () => PlayerAnimation;
 }
 
-export function rigEmotecraftSkeleton(player: PlayerObject): void {
-  if (!player?.skin || (player as any).__emotecraftRigged) return;
-
-  const setupLimbJoint = (
-    limb: any,
-    isLeg: boolean,
-    isLeft: boolean,
-  ) => {
-    if (!limb || limb.userData.elbow || limb.userData.knee) return;
-
-    const pivot = limb.children?.[0] as Group | undefined;
-    if (!pivot) return;
-
-    const jointGroup = new Group();
-    jointGroup.name = isLeg ? (isLeft ? "leftKnee" : "rightKnee") : (isLeft ? "leftElbow" : "rightElbow");
-    // Pivot of elbow/knee is halfway down the limb (y = -6 from shoulder/hip)
-    jointGroup.position.set(0, -6, 0);
-
-    const lowerBox = new BoxGeometry();
-    const isSlim = (player.skin as any).slim;
-    const limbWidth = !isLeg && isSlim ? 3 : 4;
-    lowerBox.scale(limbWidth, 6, 4);
-    lowerBox.translate(0, -3, 0);
-
-    const layer1Mat = (player.skin as any).layer1MaterialBiased || (player.skin as any).layer1Material;
-    const lowerMesh = new Mesh(lowerBox, layer1Mat);
-    lowerMesh.castShadow = true;
-    lowerMesh.receiveShadow = true;
-
-    jointGroup.add(lowerMesh);
-    pivot.add(jointGroup);
-
-    if (isLeg) {
-      limb.userData.knee = jointGroup;
-    } else {
-      limb.userData.elbow = jointGroup;
-    }
-  };
-
-  setupLimbJoint(player.skin.rightArm, false, false);
-  setupLimbJoint(player.skin.leftArm, false, true);
-  setupLimbJoint(player.skin.rightLeg, true, false);
-  setupLimbJoint(player.skin.leftLeg, true, true);
-
-  (player as any).__emotecraftRigged = true;
+export function rigEmotecraftSkeleton(_player: PlayerObject): void {
+  // Pure native PlayerObject skeleton - no duplicate Three.js meshes
 }
 
 export function resetEmoteJoints(player: PlayerObject): void {
@@ -77,10 +33,26 @@ export function resetEmoteJoints(player: PlayerObject): void {
   player.rotation.set(0, 0, 0);
 
   const skin = player.skin as any;
-  if (skin.rightArm?.userData?.elbow) skin.rightArm.userData.elbow.rotation.set(0, 0, 0);
-  if (skin.leftArm?.userData?.elbow) skin.leftArm.userData.elbow.rotation.set(0, 0, 0);
-  if (skin.rightLeg?.userData?.knee) skin.rightLeg.userData.knee.rotation.set(0, 0, 0);
-  if (skin.leftLeg?.userData?.knee) skin.leftLeg.userData.knee.rotation.set(0, 0, 0);
+  if (skin.body) {
+    skin.body.position.set(0, 0, 0);
+    skin.body.rotation.set(0, 0, 0);
+  }
+
+  // Remove any leftover meshes from prior experimental rigging
+  ["rightArm", "leftArm", "rightLeg", "leftLeg"].forEach((part) => {
+    if (skin[part]?.userData?.elbow) {
+      try {
+        skin[part].children?.[0]?.remove(skin[part].userData.elbow);
+      } catch {}
+      delete skin[part].userData.elbow;
+    }
+    if (skin[part]?.userData?.knee) {
+      try {
+        skin[part].children?.[0]?.remove(skin[part].userData.knee);
+      } catch {}
+      delete skin[part].userData.knee;
+    }
+  });
 
   if (player.cape) {
     player.cape.rotation.set(Math.PI * 0.06, 0, 0);
@@ -91,33 +63,24 @@ export function resetEmoteJoints(player: PlayerObject): void {
 export class EmoteWaveAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
     const t = this.progress * 6;
-    rigEmotecraftSkeleton(player);
     const skin = player.skin as any;
 
-    // Right arm raised, bent elbow, oscillating wave
+    // Right arm raised, oscillating wave
     skin.rightArm.rotation.x = -Math.PI * 0.65;
-    skin.rightArm.rotation.y = -0.3;
-    skin.rightArm.rotation.z = -0.35 + Math.sin(t) * 0.35;
-
-    if (skin.rightArm.userData.elbow) {
-      skin.rightArm.userData.elbow.rotation.x = -0.55 + Math.sin(t) * 0.2;
-      skin.rightArm.userData.elbow.rotation.z = Math.sin(t) * 0.15;
-    }
+    skin.rightArm.rotation.y = -0.25 + Math.cos(t) * 0.15;
+    skin.rightArm.rotation.z = -0.3 + Math.sin(t) * 0.38;
 
     // Left arm rests gently at hip
     skin.leftArm.rotation.x = 0.15;
     skin.leftArm.rotation.z = 0.18;
-    if (skin.leftArm.userData.elbow) {
-      skin.leftArm.userData.elbow.rotation.x = 0;
-    }
 
     // Friendly tilted head
     skin.head.rotation.y = Math.sin(t * 0.5) * 0.15;
-    skin.head.rotation.z = -0.12;
+    skin.head.rotation.z = -0.15;
 
     // Gentle torso sway
     skin.body.rotation.z = Math.sin(t * 0.5) * 0.04;
-    player.position.y = Math.abs(Math.sin(t * 0.5)) * 0.2;
+    player.position.y = Math.abs(Math.sin(t * 0.5)) * 0.25;
   }
 }
 
@@ -125,30 +88,22 @@ export class EmoteWaveAnimation extends PlayerAnimation {
 export class EmoteClapAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
     const t = this.progress * 12;
-    rigEmotecraftSkeleton(player);
     const skin = player.skin as any;
     const clapCycle = Math.sin(t);
 
-    // Both arms brought together in front of the chest with bent elbows
+    // Both arms brought together in front of the chest
     skin.rightArm.rotation.x = -Math.PI * 0.45;
-    skin.rightArm.rotation.y = -0.45 - clapCycle * 0.22;
-    skin.rightArm.rotation.z = -0.15;
+    skin.rightArm.rotation.y = -0.42 - clapCycle * 0.28;
+    skin.rightArm.rotation.z = -0.18;
 
     skin.leftArm.rotation.x = -Math.PI * 0.45;
-    skin.leftArm.rotation.y = 0.45 + clapCycle * 0.22;
-    skin.leftArm.rotation.z = 0.15;
-
-    if (skin.rightArm.userData.elbow) {
-      skin.rightArm.userData.elbow.rotation.x = -0.65 - Math.abs(clapCycle) * 0.15;
-    }
-    if (skin.leftArm.userData.elbow) {
-      skin.leftArm.userData.elbow.rotation.x = -0.65 - Math.abs(clapCycle) * 0.15;
-    }
+    skin.leftArm.rotation.y = 0.42 + clapCycle * 0.28;
+    skin.leftArm.rotation.z = 0.18;
 
     // Springy body bounce
-    player.position.y = Math.abs(clapCycle) * 0.4;
-    skin.head.rotation.x = Math.abs(clapCycle) * 0.08;
-    skin.body.rotation.x = Math.abs(clapCycle) * 0.04;
+    player.position.y = Math.abs(clapCycle) * 0.45;
+    skin.head.rotation.x = Math.abs(clapCycle) * 0.12;
+    skin.body.rotation.x = Math.abs(clapCycle) * 0.06;
   }
 }
 
@@ -156,28 +111,21 @@ export class EmoteClapAnimation extends PlayerAnimation {
 export class EmotePointAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
     const t = this.progress * 4;
-    rigEmotecraftSkeleton(player);
     const skin = player.skin as any;
 
     // Right arm firmly extended forward
     skin.rightArm.rotation.x = -Math.PI * 0.52;
-    skin.rightArm.rotation.y = -0.15 + Math.sin(t) * 0.05;
+    skin.rightArm.rotation.y = -0.18 + Math.sin(t) * 0.06;
     skin.rightArm.rotation.z = -0.05;
-    if (skin.rightArm.userData.elbow) {
-      skin.rightArm.userData.elbow.rotation.x = -0.1;
-    }
 
     // Left arm on waist
     skin.leftArm.rotation.x = 0.25;
-    skin.leftArm.rotation.z = 0.4;
-    if (skin.leftArm.userData.elbow) {
-      skin.leftArm.userData.elbow.rotation.x = -0.4;
-    }
+    skin.leftArm.rotation.z = 0.42;
 
     // Body slightly angled toward target
-    skin.body.rotation.y = -0.18;
-    skin.head.rotation.y = -0.22;
-    skin.head.rotation.x = 0.05;
+    skin.body.rotation.y = -0.22;
+    skin.head.rotation.y = -0.28;
+    skin.head.rotation.x = 0.06;
 
     // Confident stance
     skin.rightLeg.rotation.x = -0.15;
@@ -189,29 +137,25 @@ export class EmotePointAnimation extends PlayerAnimation {
 export class EmoteBowAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
     const t = this.progress * 2.5;
-    rigEmotecraftSkeleton(player);
     const skin = player.skin as any;
-    const bowFactor = Math.sin(t) * 0.5 + 0.5; // 0 to 1 smooth cycle
+    const bowFactor = Math.sin(t) * 0.5 + 0.5;
 
     // Torso folds forward
-    skin.body.rotation.x = 0.65 * bowFactor;
-    skin.head.rotation.x = 0.45 * bowFactor;
+    skin.body.rotation.x = 0.72 * bowFactor;
+    skin.head.rotation.x = 0.5 * bowFactor;
 
     // Arms pinned neatly to hips
-    skin.rightArm.rotation.x = 0.3 * bowFactor;
-    skin.rightArm.rotation.z = -0.15 * bowFactor;
-    skin.leftArm.rotation.x = 0.3 * bowFactor;
-    skin.leftArm.rotation.z = 0.15 * bowFactor;
+    skin.rightArm.rotation.x = 0.35 * bowFactor;
+    skin.rightArm.rotation.z = -0.18 * bowFactor;
+    skin.leftArm.rotation.x = 0.35 * bowFactor;
+    skin.leftArm.rotation.z = 0.18 * bowFactor;
 
-    if (skin.rightArm.userData.elbow) skin.rightArm.userData.elbow.rotation.x = -0.15 * bowFactor;
-    if (skin.leftArm.userData.elbow) skin.leftArm.userData.elbow.rotation.x = -0.15 * bowFactor;
+    // Stable stance
+    skin.rightLeg.rotation.x = -0.12 * bowFactor;
+    skin.leftLeg.rotation.x = -0.12 * bowFactor;
 
-    // Slightly bent knees
-    if (skin.rightLeg.userData.knee) skin.rightLeg.userData.knee.rotation.x = 0.15 * bowFactor;
-    if (skin.leftLeg.userData.knee) skin.leftLeg.userData.knee.rotation.x = 0.15 * bowFactor;
-
-    player.position.y = -0.4 * bowFactor;
-    player.position.z = -0.3 * bowFactor;
+    player.position.y = -0.5 * bowFactor;
+    player.position.z = -0.35 * bowFactor;
   }
 }
 
@@ -219,29 +163,25 @@ export class EmoteBowAnimation extends PlayerAnimation {
 export class EmoteShrugAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
     const t = this.progress * 3.5;
-    rigEmotecraftSkeleton(player);
     const skin = player.skin as any;
     const shrugCycle = Math.sin(t) * 0.5 + 0.5;
 
-    // Both elbows bent 90°, hands out with palms up
-    skin.rightArm.rotation.x = -0.45 * shrugCycle;
-    skin.rightArm.rotation.y = -0.3 * shrugCycle;
-    skin.rightArm.rotation.z = -0.65 * shrugCycle;
+    // Both hands out with palms up
+    skin.rightArm.rotation.x = -0.4 * shrugCycle;
+    skin.rightArm.rotation.y = -0.35 * shrugCycle;
+    skin.rightArm.rotation.z = -0.75 * shrugCycle;
 
-    skin.leftArm.rotation.x = -0.45 * shrugCycle;
-    skin.leftArm.rotation.y = 0.3 * shrugCycle;
-    skin.leftArm.rotation.z = 0.65 * shrugCycle;
-
-    if (skin.rightArm.userData.elbow) skin.rightArm.userData.elbow.rotation.x = -0.75 * shrugCycle;
-    if (skin.leftArm.userData.elbow) skin.leftArm.userData.elbow.rotation.x = -0.75 * shrugCycle;
+    skin.leftArm.rotation.x = -0.4 * shrugCycle;
+    skin.leftArm.rotation.y = 0.35 * shrugCycle;
+    skin.leftArm.rotation.z = 0.75 * shrugCycle;
 
     // Head tilted with quizzical look
-    skin.head.rotation.z = 0.18 * shrugCycle;
-    skin.head.rotation.y = 0.12 * shrugCycle;
-    skin.head.rotation.x = -0.05 * shrugCycle;
+    skin.head.rotation.z = 0.22 * shrugCycle;
+    skin.head.rotation.y = 0.15 * shrugCycle;
+    skin.head.rotation.x = -0.08 * shrugCycle;
 
-    // Slight shoulder raise
-    skin.body.position.y = -6 + 0.4 * shrugCycle;
+    // Shoulder raise bounce
+    player.position.y = 0.35 * shrugCycle;
   }
 }
 
@@ -249,26 +189,22 @@ export class EmoteShrugAnimation extends PlayerAnimation {
 export class EmoteFacepalmAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
     const t = this.progress * 2;
-    rigEmotecraftSkeleton(player);
     const skin = player.skin as any;
-    const fpFactor = Math.sin(t) * 0.4 + 0.6;
+    const fpFactor = Math.sin(t) * 0.35 + 0.65;
 
     // Right arm brings hand up to cover forehead
-    skin.rightArm.rotation.x = -Math.PI * 0.72 * fpFactor;
-    skin.rightArm.rotation.y = -0.45 * fpFactor;
-    skin.rightArm.rotation.z = -0.3 * fpFactor;
-    if (skin.rightArm.userData.elbow) {
-      skin.rightArm.userData.elbow.rotation.x = -0.95 * fpFactor;
-    }
+    skin.rightArm.rotation.x = -Math.PI * 0.76 * fpFactor;
+    skin.rightArm.rotation.y = -0.48 * fpFactor;
+    skin.rightArm.rotation.z = -0.32 * fpFactor;
 
     // Left arm hanging limply
-    skin.leftArm.rotation.x = 0.05;
-    skin.leftArm.rotation.z = 0.12;
+    skin.leftArm.rotation.x = 0.08;
+    skin.leftArm.rotation.z = 0.14;
 
     // Head hung in disappointment
-    skin.head.rotation.x = 0.42 * fpFactor;
-    skin.head.rotation.y = -0.15 * fpFactor;
-    skin.body.rotation.x = 0.12 * fpFactor;
+    skin.head.rotation.x = 0.48 * fpFactor;
+    skin.head.rotation.y = -0.16 * fpFactor;
+    skin.body.rotation.x = 0.14 * fpFactor;
   }
 }
 
@@ -276,40 +212,31 @@ export class EmoteFacepalmAnimation extends PlayerAnimation {
 export class EmoteDiscoAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
     const t = this.progress * 7;
-    rigEmotecraftSkeleton(player);
     const skin = player.skin as any;
     const beat = Math.sin(t);
 
     // Right arm points diagonally up and down
-    skin.rightArm.rotation.x = -Math.sin(t) * 1.2 - 0.4;
-    skin.rightArm.rotation.z = -0.6 - Math.sin(t) * 0.6;
-    if (skin.rightArm.userData.elbow) {
-      skin.rightArm.userData.elbow.rotation.x = -0.35 + Math.abs(beat) * 0.25;
-    }
+    skin.rightArm.rotation.x = -beat * 1.3 - 0.4;
+    skin.rightArm.rotation.z = -0.65 - beat * 0.6;
 
     // Left arm on hip
-    skin.leftArm.rotation.x = 0.2;
+    skin.leftArm.rotation.x = 0.22;
     skin.leftArm.rotation.z = 0.45;
-    if (skin.leftArm.userData.elbow) {
-      skin.leftArm.userData.elbow.rotation.x = -0.5;
-    }
 
     // Torso grooves with hip twist
-    skin.body.rotation.y = Math.sin(t) * 0.35;
-    skin.body.rotation.z = Math.sin(t) * 0.15;
-    skin.head.rotation.y = Math.sin(t) * 0.25;
+    skin.body.rotation.y = Math.sin(t) * 0.38;
+    skin.body.rotation.z = Math.sin(t) * 0.18;
+    skin.head.rotation.y = Math.sin(t) * 0.28;
 
-    // Knees bend to the rhythm
-    skin.leftLeg.rotation.x = -Math.sin(t) * 0.4;
-    skin.rightLeg.rotation.x = Math.sin(t) * 0.4;
-    if (skin.leftLeg.userData.knee) skin.leftLeg.userData.knee.rotation.x = Math.abs(Math.sin(t)) * 0.3;
-    if (skin.rightLeg.userData.knee) skin.rightLeg.userData.knee.rotation.x = Math.abs(Math.sin(t)) * 0.3;
+    // Legs step to the rhythm
+    skin.leftLeg.rotation.x = -Math.sin(t) * 0.45;
+    skin.rightLeg.rotation.x = Math.sin(t) * 0.45;
 
     // Vertical bounce
     player.position.y = Math.abs(beat) * 1.2;
 
     if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.08 + Math.abs(beat) * 0.15;
+      player.cape.rotation.x = Math.PI * 0.08 + Math.abs(beat) * 0.2;
     }
   }
 }
@@ -318,37 +245,32 @@ export class EmoteDiscoAnimation extends PlayerAnimation {
 export class EmoteTwerkAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
     const t = this.progress * 14;
-    rigEmotecraftSkeleton(player);
     const skin = player.skin as any;
+    const bounce = Math.sin(t);
 
     // Leaning forward stance
-    skin.body.rotation.x = 0.88;
-    skin.head.rotation.x = -0.48;
+    skin.body.rotation.x = 0.92;
+    skin.head.rotation.x = -0.52;
 
-    // Wide squatting legs with bent knees
-    skin.leftLeg.rotation.x = -0.55 + Math.sin(t) * 0.06;
-    skin.rightLeg.rotation.x = -0.55 - Math.sin(t) * 0.06;
-    skin.leftLeg.rotation.z = -0.22;
-    skin.rightLeg.rotation.z = 0.22;
-
-    if (skin.leftLeg.userData.knee) skin.leftLeg.userData.knee.rotation.x = 0.65;
-    if (skin.rightLeg.userData.knee) skin.rightLeg.userData.knee.rotation.x = 0.65;
+    // Wide squatting legs
+    skin.leftLeg.rotation.x = -0.58 + bounce * 0.12;
+    skin.rightLeg.rotation.x = -0.58 - bounce * 0.12;
+    skin.leftLeg.rotation.z = -0.25;
+    skin.rightLeg.rotation.z = 0.25;
 
     // Hands braced on knees
-    skin.leftArm.rotation.x = -0.65;
-    skin.leftArm.rotation.z = 0.32;
-    skin.rightArm.rotation.x = -0.65;
-    skin.rightArm.rotation.z = -0.32;
-    if (skin.leftArm.userData.elbow) skin.leftArm.userData.elbow.rotation.x = -0.5;
-    if (skin.rightArm.userData.elbow) skin.rightArm.userData.elbow.rotation.x = -0.5;
+    skin.leftArm.rotation.x = -0.72;
+    skin.leftArm.rotation.z = 0.35;
+    skin.rightArm.rotation.x = -0.72;
+    skin.rightArm.rotation.z = -0.35;
 
     // Pelvic oscillations
-    skin.body.position.y = -6 + Math.sin(t) * 0.9;
+    skin.body.position.y = Math.sin(t) * 0.9;
     skin.body.position.z = Math.cos(t) * 1.2;
-    player.position.y = -1.4 + Math.abs(Math.sin(t)) * 0.45;
+    player.position.y = -1.3 + Math.abs(bounce) * 0.55;
 
     if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.35 + Math.sin(t) * 0.25;
+      player.cape.rotation.x = Math.PI * 0.4 + Math.sin(t) * 0.3;
     }
   }
 }
