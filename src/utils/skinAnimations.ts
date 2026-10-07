@@ -244,34 +244,33 @@ export class EmoteDiscoAnimation extends PlayerAnimation {
 // 8. TWERK (Emotecraft iconic rhythmic twerk)
 export class EmoteTwerkAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
-    const t = this.progress * 16;
+    const t = this.progress * 12;
     const skin = player.skin as any;
     const bounce = Math.sin(t);
-    const squat = Math.abs(bounce);
 
-    // Natural sneak-forward angle
-    skin.body.rotation.x = 0.36;
-    skin.head.rotation.x = -0.22;
+    // Natural deep sneak/crouch posture
+    skin.body.rotation.x = 0.46 + bounce * 0.12;
+    skin.head.rotation.x = -0.28;
 
-    // Arms balanced on knees
-    skin.leftArm.rotation.x = -0.55;
-    skin.leftArm.rotation.z = 0.22;
-    skin.rightArm.rotation.x = -0.55;
-    skin.rightArm.rotation.z = -0.22;
+    // Rhythmic squat bends on both knees
+    skin.leftLeg.rotation.x = -0.52 - bounce * 0.22;
+    skin.rightLeg.rotation.x = -0.52 - bounce * 0.22;
+    skin.leftLeg.rotation.z = -0.16;
+    skin.rightLeg.rotation.z = 0.16;
 
-    // Rhythmic squat bends on both legs
-    skin.leftLeg.rotation.x = -0.42 - squat * 0.38;
-    skin.rightLeg.rotation.x = -0.42 - squat * 0.38;
-    skin.leftLeg.rotation.z = -0.15;
-    skin.rightLeg.rotation.z = 0.15;
+    // Hands positioned comfortably on hips/knees
+    skin.leftArm.rotation.x = -0.42;
+    skin.leftArm.rotation.z = 0.35;
+    skin.rightArm.rotation.x = -0.42;
+    skin.rightArm.rotation.z = -0.35;
 
-    // Rapid hip drops and side-to-side sway
-    skin.body.rotation.y = Math.sin(t * 0.5) * 0.25;
-    skin.body.rotation.z = Math.sin(t) * 0.12;
-    player.position.y = -1.5 + squat * 1.1;
+    // Hip shake and lively vertical squat bounce
+    skin.body.rotation.y = Math.cos(t) * 0.2;
+    skin.body.rotation.z = Math.sin(t) * 0.1;
+    player.position.y = -2.2 + Math.abs(bounce) * 1.5;
 
     if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.25 + squat * 0.35;
+      player.cape.rotation.x = 0.65 + Math.abs(bounce) * 0.45;
     }
   }
 }

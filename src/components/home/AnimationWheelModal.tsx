@@ -22,6 +22,7 @@ export const AnimationWheelModal: React.FC<AnimationWheelModalProps> = ({
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const openedAtRef = useRef<number>(Date.now());
 
   const radiusOuter = 150;
   const radiusInner = 50;
@@ -75,6 +76,7 @@ export const AnimationWheelModal: React.FC<AnimationWheelModalProps> = ({
       setHoveredIndex(null);
       return;
     }
+    openedAtRef.current = Date.now();
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -87,13 +89,20 @@ export const AnimationWheelModal: React.FC<AnimationWheelModalProps> = ({
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code === "KeyB") {
         e.preventDefault();
-        // If a sector was hovered while holding B, activate it on release!
+        const duration = Date.now() - openedAtRef.current;
         setHoveredIndex((curr) => {
           if (curr !== null && ANIMATION_CATALOG[curr]) {
             onSelectAnimation(ANIMATION_CATALOG[curr].id);
+            onClose();
+            return null;
           }
-          onClose();
-          return null;
+          // If held and released in deadzone center, close wheel
+          if (duration >= 250) {
+            onClose();
+            return null;
+          }
+          // If rapid tap (<250ms) without hover, leave open for click selection
+          return curr;
         });
       }
     };
