@@ -226,17 +226,6 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
               loading={skinApi.skinLoading}
             />
             <div className="millida-skin-shadow" aria-hidden="true" />
-
-            {/* Animation Wheel Shortcut Badge */}
-            <button
-              type="button"
-              className="millida-anim-badge-btn"
-              onClick={() => setWheelOpen(true)}
-              title={t.emotesBtnTitle || "Колесо анимаций [B]"}
-            >
-              <span className="anim-badge-kbd">B</span>
-              <span className="anim-badge-label">{t.emotesBtn || "Эмоции"}</span>
-            </button>
           </div>
         </div>
 

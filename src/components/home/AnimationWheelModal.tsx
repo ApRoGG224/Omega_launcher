@@ -4,7 +4,6 @@ import {
   type AnimationId,
   type EmoteDefinition,
 } from "../../utils/skinAnimations";
-import { IconX } from "../../ui/icons";
 
 interface AnimationWheelModalProps {
   isOpen: boolean;
@@ -128,24 +127,6 @@ export const AnimationWheelModal: React.FC<AnimationWheelModalProps> = ({
         className="anim-wheel-panel"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header Bar */}
-        <div className="anim-wheel-topbar">
-          <div className="anim-wheel-title-group">
-            <span className="anim-wheel-kbd">B</span>
-            <span className="anim-wheel-heading">
-              {t.emotesTitle || "Колесо анимаций"}
-            </span>
-          </div>
-          <button
-            type="button"
-            className="anim-wheel-close-btn"
-            onClick={onClose}
-            title={t.cancel || "Закрыть"}
-          >
-            <IconX />
-          </button>
-        </div>
-
         {/* Circular Wheel Stage with SVG Pie */}
         <div
           ref={containerRef}

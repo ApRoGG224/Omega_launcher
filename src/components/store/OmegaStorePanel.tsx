@@ -3,7 +3,6 @@ import type { Account } from "../../types";
 import type { SkinApi, SkinModel } from "../../hooks/useSkin";
 import { Skin3DViewer } from "../settings/Skin3DViewer";
 import {
-  IconArrowLeft,
   IconCheck,
   IconShirt,
   IconSparkles,
@@ -12,16 +11,14 @@ import {
 } from "../../ui/icons";
 import {
   PRESET_SKINS,
-  PRESET_CAPES,
   type PresetSkin,
-  type PresetCape,
 } from "./storePresets";
 
 interface OmegaStorePanelProps {
   t: any;
   skinApi: SkinApi;
   account: Account;
-  onBack: () => void;
+  onBack?: () => void;
   showToast: (msg: string, type?: "success" | "error") => void;
   onUpdateAccountName?: (name: string) => void;
 }
@@ -32,7 +29,6 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
   t,
   skinApi,
   account,
-  onBack,
   showToast,
   onUpdateAccountName,
 }) => {
@@ -114,28 +110,12 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
     );
   };
 
-  const handleSelectPresetCape = (preset: PresetCape) => {
-    skinApi.setPresetCape(preset.url);
-    showToast(
-      `${t.storeCapeApplied || "Плащ применён"}: ${preset.nameRu}`,
-      "success",
-    );
-  };
 
   return (
     <div className="omega-store-page">
       {/* Top Header */}
       <header className="omega-store-header">
         <div className="omega-store-header-left">
-          <button
-            type="button"
-            className="omega-store-back-btn"
-            onClick={onBack}
-            title={t.back || "Назад"}
-          >
-            <IconArrowLeft />
-            <span>{t.back || "Главная"}</span>
-          </button>
           <div className="omega-store-title-wrap">
             <span className="omega-store-badge">Omega</span>
             <h1 className="omega-store-title">
@@ -144,7 +124,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
           </div>
         </div>
 
-        {/* Tab switchers: only skins and accessories */}
+        {/* Tab switchers: skins and capes */}
         <nav className="omega-store-nav">
           <button
             type="button"
@@ -161,7 +141,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
             onClick={() => setActiveTab("accessories")}
           >
             <IconSparkles />
-            <span>{t.storeTabCapes || "Плащи Microsoft"}</span>
+            <span>{t.storeTabCapes || "Плащи"}</span>
           </button>
         </nav>
       </header>
@@ -398,7 +378,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
           </div>
         )}
 
-        {/* TAB 2: ACCESSORIES (CAPES - MICROSOFT ONLY) */}
+        {/* TAB 2: ACCESSORIES (CAPES) */}
         {activeTab === "accessories" && (
           <div className="store-split-layout">
             <div className="store-scroll-col">
@@ -406,10 +386,10 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
               <div className="store-section-card">
                 <div className="section-card-header">
                   <h3>{t.storeCapesSettings || "Настройки плаща"}</h3>
-                  <span className="section-card-tag">Официальные плащи</span>
+                  <span className="section-card-tag">Плащи</span>
                 </div>
                 <p className="section-card-desc">
-                  Официальные лицензионные плащи Microsoft и фестивалей Minecon.
+                  Загрузите PNG-файл вашего плаща или управляйте его видимостью в игре.
                 </p>
 
                 <div className="store-actions-row">
@@ -453,72 +433,6 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                       <span>{t.storeResetBtn || "Сбросить"}</span>
                     </button>
                   )}
-                </div>
-              </div>
-
-              {/* Preset Capes Grid */}
-              <div className="store-section-card">
-                <div className="section-card-header">
-                  <h3>Официальные плащи Microsoft & Mojang</h3>
-                  <span className="section-card-tag">
-                    {PRESET_CAPES.length} плащей
-                  </span>
-                </div>
-
-                <div className="store-presets-grid">
-                  {PRESET_CAPES.map((preset) => {
-                    const isCurrent =
-                      skinApi.capeEnabled &&
-                      (skinApi.activeCapeUrl === preset.url ||
-                        skinApi.customCapeUrl === preset.url);
-
-                    return (
-                      <div
-                        key={preset.id}
-                        className={`store-preset-card ${
-                          isCurrent ? "current-active" : ""
-                        }`}
-                      >
-                        <div
-                          className="preset-cape-preview-box"
-                          style={{
-                            background: `linear-gradient(135deg, ${preset.previewColor}44 0%, #0d121f 100%)`,
-                            border: `1px solid ${preset.previewColor}88`,
-                          }}
-                        >
-                          <div
-                            className="cape-color-indicator"
-                            style={{ backgroundColor: preset.previewColor }}
-                          />
-                          <span className="cape-badge-tag">{preset.tag}</span>
-                        </div>
-
-                        <div className="preset-card-meta">
-                          <div className="preset-card-title-row">
-                            <span className="preset-title">{preset.nameRu}</span>
-                          </div>
-                          <p className="preset-desc">{preset.descriptionRu}</p>
-                        </div>
-
-                        <div className="preset-card-action">
-                          {isCurrent ? (
-                            <div className="preset-active-label">
-                              <IconCheck size={16} />
-                              <span>{t.storeActiveBadge || "Надет"}</span>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              className="preset-select-btn"
-                              onClick={() => handleSelectPresetCape(preset)}
-                            >
-                              <span>{t.storeApplyBtn || "Надеть"}</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
             </div>

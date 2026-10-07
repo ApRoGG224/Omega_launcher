@@ -244,33 +244,34 @@ export class EmoteDiscoAnimation extends PlayerAnimation {
 // 8. TWERK (Emotecraft iconic rhythmic twerk)
 export class EmoteTwerkAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
-    const t = this.progress * 14;
+    const t = this.progress * 16;
     const skin = player.skin as any;
     const bounce = Math.sin(t);
+    const squat = Math.abs(bounce);
 
-    // Leaning forward stance
-    skin.body.rotation.x = 0.92;
-    skin.head.rotation.x = -0.52;
+    // Natural sneak-forward angle
+    skin.body.rotation.x = 0.36;
+    skin.head.rotation.x = -0.22;
 
-    // Wide squatting legs
-    skin.leftLeg.rotation.x = -0.58 + bounce * 0.12;
-    skin.rightLeg.rotation.x = -0.58 - bounce * 0.12;
-    skin.leftLeg.rotation.z = -0.25;
-    skin.rightLeg.rotation.z = 0.25;
+    // Arms balanced on knees
+    skin.leftArm.rotation.x = -0.55;
+    skin.leftArm.rotation.z = 0.22;
+    skin.rightArm.rotation.x = -0.55;
+    skin.rightArm.rotation.z = -0.22;
 
-    // Hands braced on knees
-    skin.leftArm.rotation.x = -0.72;
-    skin.leftArm.rotation.z = 0.35;
-    skin.rightArm.rotation.x = -0.72;
-    skin.rightArm.rotation.z = -0.35;
+    // Rhythmic squat bends on both legs
+    skin.leftLeg.rotation.x = -0.42 - squat * 0.38;
+    skin.rightLeg.rotation.x = -0.42 - squat * 0.38;
+    skin.leftLeg.rotation.z = -0.15;
+    skin.rightLeg.rotation.z = 0.15;
 
-    // Pelvic oscillations
-    skin.body.position.y = Math.sin(t) * 0.9;
-    skin.body.position.z = Math.cos(t) * 1.2;
-    player.position.y = -1.3 + Math.abs(bounce) * 0.55;
+    // Rapid hip drops and side-to-side sway
+    skin.body.rotation.y = Math.sin(t * 0.5) * 0.25;
+    skin.body.rotation.z = Math.sin(t) * 0.12;
+    player.position.y = -1.5 + squat * 1.1;
 
     if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.4 + Math.sin(t) * 0.3;
+      player.cape.rotation.x = Math.PI * 0.25 + squat * 0.35;
     }
   }
 }
