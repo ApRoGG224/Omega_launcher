@@ -31,8 +31,9 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
     onOpenStore,
     onOpenFriends,
   }) => {
-    const [currentAnimation, setCurrentAnimation] =
-      useState<AnimationId | string>("idle");
+    const [currentAnimation, setCurrentAnimation] = useState<
+      AnimationId | string
+    >("idle");
     const [wheelOpen, setWheelOpen] = useState(false);
 
     const [sunburstEnabled, setSunburstEnabled] = useState<boolean>(
@@ -58,11 +59,17 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
         );
       };
 
-      window.addEventListener("omega:atmosphere-change", handleAtmosphereUpdate);
+      window.addEventListener(
+        "omega:atmosphere-change",
+        handleAtmosphereUpdate,
+      );
       window.addEventListener("storage", handleAtmosphereUpdate);
 
       return () => {
-        window.removeEventListener("omega:atmosphere-change", handleAtmosphereUpdate);
+        window.removeEventListener(
+          "omega:atmosphere-change",
+          handleAtmosphereUpdate,
+        );
         window.removeEventListener("storage", handleAtmosphereUpdate);
       };
     }, []);
@@ -108,7 +115,9 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
     const playTimeText = formatPlayTime(selectedInstance?.playTimeMs);
 
     return (
-      <div className="millida-home-container">
+      <div
+        className={`millida-home-container ${wheelOpen ? "wheel-active" : ""}`}
+      >
         {/* Radiant Emerald Minecraft background glow & sunburst rays */}
         <div className="millida-bg-atmosphere" aria-hidden="true">
           {glowEnabled && <div className="millida-radial-glow" />}

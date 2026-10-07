@@ -6931,7 +6931,11 @@ input[type="color"]::-webkit-color-swatch {
 
 /* Card 1: Store - Warm Amber / Gold theme */
 .millida-card-store {
-  background: linear-gradient(135deg, rgba(28, 20, 6, 0.95) 0%, rgba(14, 10, 3, 0.95) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(28, 20, 6, 0.95) 0%,
+    rgba(14, 10, 3, 0.95) 100%
+  );
   border: 1.5px solid rgba(245, 158, 11, 0.35);
 }
 
@@ -6942,7 +6946,11 @@ input[type="color"]::-webkit-color-swatch {
 
 /* Card 2: Skin - Electric Cyan / Sapphire theme */
 .millida-card-skin {
-  background: linear-gradient(135deg, rgba(9, 21, 43, 0.95) 0%, rgba(5, 11, 23, 0.95) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(9, 21, 43, 0.95) 0%,
+    rgba(5, 11, 23, 0.95) 100%
+  );
   border: 1.5px solid rgba(56, 189, 248, 0.35);
 }
 
@@ -6953,7 +6961,11 @@ input[type="color"]::-webkit-color-swatch {
 
 /* Card 3: Friends - Emerald / Forest theme */
 .millida-card-friends {
-  background: linear-gradient(135deg, rgba(7, 25, 15, 0.95) 0%, rgba(4, 14, 8, 0.95) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(7, 25, 15, 0.95) 0%,
+    rgba(4, 14, 8, 0.95) 100%
+  );
   border: 1.5px solid rgba(34, 197, 94, 0.35);
 }
 
@@ -7570,9 +7582,9 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(4, 7, 13, 0.82);
-  backdrop-filter: blur(10px);
-  animation: animWheelFadeIn 0.2s ease-out;
+  background: rgba(4, 7, 13, 0.88);
+  animation: animWheelFadeIn 0.15s ease-out;
+  contain: layout style;
 }
 
 @keyframes animWheelFadeIn {
@@ -7586,17 +7598,17 @@ input[type="color"]::-webkit-color-swatch {
 
 .anim-wheel-backdrop-glow {
   position: absolute;
-  width: 580px;
-  height: 580px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, rgba(56, 189, 248, 0.08) 45%, transparent 70%);
+  width: 540px;
+  height: 540px;
+  background: radial-gradient(
+    circle,
+    rgba(16, 185, 129, 0.16) 0%,
+    rgba(56, 189, 248, 0.05) 50%,
+    transparent 70%
+  );
   pointer-events: none;
   border-radius: 50%;
-  animation: animWheelPulse 3s ease-in-out infinite alternate;
-}
-
-@keyframes animWheelPulse {
-  0% { transform: scale(0.95); opacity: 0.7; }
-  100% { transform: scale(1.05); opacity: 1; }
+  opacity: 0.85;
 }
 
 .anim-wheel-panel {
@@ -7609,8 +7621,6 @@ input[type="color"]::-webkit-color-swatch {
   user-select: none;
 }
 
-
-
 /* Donut Stage */
 .anim-wheel-stage-donut {
   position: relative;
@@ -7618,37 +7628,40 @@ input[type="color"]::-webkit-color-swatch {
   height: 340px;
   margin: 0 auto;
   cursor: pointer;
+  border-radius: 50%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
 }
 
 .anim-wheel-svg {
   width: 100%;
   height: 100%;
   overflow: visible;
-  filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.75));
+  display: block;
 }
 
 .anim-wheel-pie-slice {
   cursor: pointer;
-  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.16s ease,
-    stroke 0.16s ease,
-    stroke-width 0.16s ease;
+  transition:
+    stroke 0.12s ease,
+    stroke-width 0.12s ease,
+    opacity 0.12s ease;
 }
 
-.anim-wheel-pie-slice:hover,
 .anim-wheel-pie-slice.hovered {
-  filter: brightness(1.3) drop-shadow(0 0 16px rgba(255, 255, 255, 0.5));
+  stroke: #ffffff;
+  stroke-width: 3.5px;
+  opacity: 1;
 }
 
 .anim-wheel-pie-slice.current {
   stroke: #38bdf8;
-  stroke-width: 3.5;
+  stroke-width: 3.5px;
 }
 
 /* Center Hole */
 .anim-wheel-empty-hole {
   fill: #090e18;
-  fill-opacity: 0.88;
+  fill-opacity: 0.92;
 }
 
 .anim-wheel-hole-border {
@@ -7668,25 +7681,25 @@ input[type="color"]::-webkit-color-swatch {
   justify-content: center;
   gap: 2px;
   pointer-events: none;
-  transition: transform 0.15s ease, filter 0.15s ease;
+  transition: transform 0.12s ease;
   z-index: 5;
 }
 
 .anim-wheel-slice-label.hovered {
-  transform: translate(-50%, -50%) scale(1.15);
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
+  transform: translate(-50%, -50%) scale(1.12);
 }
 
 .slice-icon {
   font-size: 20px;
   line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
 }
 
 .slice-name {
   font-size: 10.5px;
   font-weight: 800;
   color: #ffffff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95);
   white-space: nowrap;
   letter-spacing: 0.3px;
 }
@@ -7697,6 +7710,7 @@ input[type="color"]::-webkit-color-swatch {
   margin-top: 20px;
   background: rgba(11, 17, 28, 0.94);
   border: 1.5px solid rgba(16, 185, 129, 0.35);
+  border-radius: 8px;
   padding: 12px 18px;
   box-sizing: border-box;
   display: flex;
@@ -7737,6 +7751,7 @@ input[type="color"]::-webkit-color-swatch {
 .bottom-pill-reset-btn {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
   color: #f1f5f9;
   padding: 7px 14px;
   font-size: 11px;
@@ -7750,6 +7765,12 @@ input[type="color"]::-webkit-color-swatch {
   background: rgba(239, 68, 68, 0.25);
   border-color: #ef4444;
   color: #fca5a5;
+}
+
+/* Pause background atmosphere when wheel is open */
+.millida-home-container.wheel-active .millida-sunburst,
+.millida-home-container.wheel-active .millida-dust-sparks {
+  animation-play-state: paused;
 }
 
 /* Store Nick Search Form */
@@ -8315,7 +8336,11 @@ input[type="color"]::-webkit-color-swatch {
 
 .store-preview-stage-card {
   height: 100%;
-  background: radial-gradient(circle at center, rgba(14, 22, 38, 0.85) 0%, rgba(6, 10, 18, 0.95) 100%);
+  background: radial-gradient(
+    circle at center,
+    rgba(14, 22, 38, 0.85) 0%,
+    rgba(6, 10, 18, 0.95) 100%
+  );
   border: 1.5px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   display: flex;
