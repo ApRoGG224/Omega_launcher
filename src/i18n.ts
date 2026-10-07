@@ -29,7 +29,7 @@ export const translations = {
     createInstance: "Создать сборку",
     createBtn: "Создать",
     playBtn: "ИГРАТЬ",
-    stopBtn: "ОСТАНОВИТЬ",
+    stopBtn: "СТОП",
     noInstanceSelected: "Сборка не выбрана",
     modsCount: "Модов",
     folderBtn: "Папка",

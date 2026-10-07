@@ -7293,8 +7293,9 @@ input[type="color"]::-webkit-color-swatch {
 
 .millida-dock-play-btn {
   margin-left: 12px;
-  padding: 0 42px;
+  width: 180px;
   height: 52px;
+  padding: 0 16px;
   background: #84cc16;
   border: 1.5px solid #a3e635;
   border-radius: 6px;
@@ -7306,10 +7307,11 @@ input[type="color"]::-webkit-color-swatch {
   justify-content: center;
   gap: 12px;
   cursor: pointer;
-  box-shadow: 0 8px 28px rgba(132, 204, 22, 0.5);
+  box-shadow: none;
   transition:
     transform 0.18s ease,
-    filter 0.18s ease;
+    background-color 0.18s ease,
+    border-color 0.18s ease;
   box-sizing: border-box;
   flex-shrink: 0;
 }
@@ -7318,7 +7320,7 @@ input[type="color"]::-webkit-color-swatch {
   transform: translateY(-2px);
   background: #95dc20;
   border-color: #bef264;
-  box-shadow: 0 12px 34px rgba(132, 204, 22, 0.7);
+  box-shadow: none;
 }
 
 .millida-dock-play-btn:active {
@@ -7330,7 +7332,14 @@ input[type="color"]::-webkit-color-swatch {
   color: #ffffff;
   border: 1.5px solid #fb7185;
   border-radius: 6px;
-  box-shadow: 0 8px 26px rgba(225, 29, 72, 0.5);
+  box-shadow: none;
+}
+
+.millida-dock-play-btn.running:hover {
+  transform: translateY(-2px);
+  background: #f43f5e;
+  border-color: #fda4af;
+  box-shadow: none;
 }
 
 .millida-play-icon {

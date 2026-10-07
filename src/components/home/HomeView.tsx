@@ -369,10 +369,10 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
               title={isRunning ? t.stopBtn : t.playBtn}
             >
               <span className="millida-play-icon">
-                {isRunning ? <IconX /> : <IconPlay size={20} />}
+                {isRunning ? <IconX size={20} /> : <IconPlay size={20} />}
               </span>
               <span className="millida-play-label">
-                {isRunning ? t.stopBtn || "Остановить" : t.playBtn || "Играть"}
+                {isRunning ? t.stopBtn || "СТОП" : t.playBtn || "ИГРАТЬ"}
               </span>
             </button>
           </div>
