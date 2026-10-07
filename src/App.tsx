@@ -423,9 +423,8 @@ function App() {
             skinApi={skinApi}
             account={accountsApi.account}
             onBack={() => setActiveTab("home")}
-            themeHex={themeHex}
-            applyTheme={applyTheme}
             showToast={showToast}
+            onUpdateAccountName={accountsApi.setAccountNickname}
           />
         )}
 

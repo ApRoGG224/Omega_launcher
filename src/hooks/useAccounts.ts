@@ -35,6 +35,7 @@ export interface AccountsApi {
   handleAddOmega: () => Promise<void>;
   handleDeleteAccount: (acc: Account) => void;
   handleLogoutCurrentAccount: () => Promise<void>;
+  setAccountNickname: (nickname: string) => void;
 }
 
 export function useAccounts(
@@ -239,6 +240,21 @@ export function useAccounts(
     setAccount(updated[0] || { name: "NightWolf", type: "offline" });
   }, [account, savedAccounts, omega, syncAccountsToDb]);
 
+  const setAccountNickname = useCallback(
+    (nickname: string) => {
+      const trimmed = nickname.trim();
+      if (!trimmed) return;
+      const current = account;
+      const updatedAccount: Account = { ...current, name: trimmed };
+      const updatedList = [
+        updatedAccount,
+        ...savedAccounts.filter((a) => !sameAccount(a, current)),
+      ];
+      commitAccounts(updatedList, updatedAccount);
+    },
+    [account, savedAccounts, commitAccounts],
+  );
+
   return {
     account,
     savedAccounts,
@@ -264,5 +280,6 @@ export function useAccounts(
     handleAddOmega,
     handleDeleteAccount,
     handleLogoutCurrentAccount,
+    setAccountNickname,
   };
 }

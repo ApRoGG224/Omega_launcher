@@ -84,9 +84,9 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
 
       const handleKeyDown = (e: KeyboardEvent) => {
         if (isInputElement(e.target)) return;
-        if (e.code === "KeyB") {
+        if (e.code === "KeyB" && !e.repeat) {
           e.preventDefault();
-          setWheelOpen((prev) => !prev);
+          setWheelOpen(true);
         }
       };
 

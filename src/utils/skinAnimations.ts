@@ -1,365 +1,368 @@
 import { PlayerAnimation, type PlayerObject, IdleAnimation } from "skinview3d";
+import { Group, BoxGeometry, Mesh } from "three";
 
 export type AnimationId =
   | "idle"
-  | "take_the_l"
-  | "get_griddy"
-  | "twerk"
-  | "floss"
-  | "gangnam"
-  | "dab"
   | "wave"
-  | "disco"
   | "clap"
-  | "zombie";
+  | "point"
+  | "bow"
+  | "shrug"
+  | "facepalm"
+  | "disco"
+  | "twerk";
 
 export interface EmoteDefinition {
   id: AnimationId;
   nameRu: string;
   nameEn: string;
-  category: "dance" | "meme" | "gesture";
+  category: "gesture" | "dance" | "meme";
   icon: string;
+  color: string;
   descriptionRu: string;
   createAnimation: () => PlayerAnimation;
 }
 
-export class TakeTheLAnimation extends PlayerAnimation {
-  protected animate(player: PlayerObject): void {
-    const t = this.progress * 7;
-    // Right arm forms the "L" near the forehead
-    player.skin.rightArm.rotation.x = -Math.PI * 0.72 + Math.sin(t) * 0.08;
-    player.skin.rightArm.rotation.y = -0.3;
-    player.skin.rightArm.rotation.z = -0.4 + Math.sin(t) * 0.05;
+export function rigEmotecraftSkeleton(player: PlayerObject): void {
+  if (!player?.skin || (player as any).__emotecraftRigged) return;
 
-    // Left arm rhythmic pump
-    player.skin.leftArm.rotation.x = Math.sin(t) * 0.5 + 0.3;
-    player.skin.leftArm.rotation.y = 0.1;
-    player.skin.leftArm.rotation.z = Math.PI * 0.12;
+  const setupLimbJoint = (
+    limb: any,
+    isLeg: boolean,
+    isLeft: boolean,
+  ) => {
+    if (!limb || limb.userData.elbow || limb.userData.knee) return;
 
-    // Hopping kick with legs
-    player.skin.rightLeg.rotation.x = Math.sin(t) * 0.7;
-    player.skin.leftLeg.rotation.x = -Math.abs(Math.sin(t)) * 0.25;
+    const pivot = limb.children?.[0] as Group | undefined;
+    if (!pivot) return;
 
-    // Vertical bounce
-    player.position.y = Math.abs(Math.sin(t)) * 2.0;
+    const jointGroup = new Group();
+    jointGroup.name = isLeg ? (isLeft ? "leftKnee" : "rightKnee") : (isLeft ? "leftElbow" : "rightElbow");
+    // Pivot of elbow/knee is halfway down the limb (y = -6 from shoulder/hip)
+    jointGroup.position.set(0, -6, 0);
 
-    // Mocking head shake
-    player.skin.head.rotation.x = Math.sin(t) * 0.12;
-    player.skin.head.rotation.y = Math.sin(t * 0.5) * 0.22;
+    const lowerBox = new BoxGeometry();
+    const isSlim = (player.skin as any).slim;
+    const limbWidth = !isLeg && isSlim ? 3 : 4;
+    lowerBox.scale(limbWidth, 6, 4);
+    lowerBox.translate(0, -3, 0);
 
-    if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.08 + Math.abs(Math.sin(t)) * 0.25;
+    const layer1Mat = (player.skin as any).layer1MaterialBiased || (player.skin as any).layer1Material;
+    const lowerMesh = new Mesh(lowerBox, layer1Mat);
+    lowerMesh.castShadow = true;
+    lowerMesh.receiveShadow = true;
+
+    jointGroup.add(lowerMesh);
+    pivot.add(jointGroup);
+
+    if (isLeg) {
+      limb.userData.knee = jointGroup;
+    } else {
+      limb.userData.elbow = jointGroup;
     }
+  };
+
+  setupLimbJoint(player.skin.rightArm, false, false);
+  setupLimbJoint(player.skin.leftArm, false, true);
+  setupLimbJoint(player.skin.rightLeg, true, false);
+  setupLimbJoint(player.skin.leftLeg, true, true);
+
+  (player as any).__emotecraftRigged = true;
+}
+
+export function resetEmoteJoints(player: PlayerObject): void {
+  if (!player?.skin) return;
+  player.skin.resetJoints();
+  player.position.set(0, 0, 0);
+  player.rotation.set(0, 0, 0);
+
+  const skin = player.skin as any;
+  if (skin.rightArm?.userData?.elbow) skin.rightArm.userData.elbow.rotation.set(0, 0, 0);
+  if (skin.leftArm?.userData?.elbow) skin.leftArm.userData.elbow.rotation.set(0, 0, 0);
+  if (skin.rightLeg?.userData?.knee) skin.rightLeg.userData.knee.rotation.set(0, 0, 0);
+  if (skin.leftLeg?.userData?.knee) skin.leftLeg.userData.knee.rotation.set(0, 0, 0);
+
+  if (player.cape) {
+    player.cape.rotation.set(Math.PI * 0.06, 0, 0);
   }
 }
 
-export class GetGriddyAnimation extends PlayerAnimation {
+// 1. WAVE (Emotecraft friendly hand wave)
+export class EmoteWaveAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
-    const t = this.progress * 8;
-    // Hands formed as goggles at eye level
-    player.skin.rightArm.rotation.x = -Math.PI * 0.62 + Math.sin(t) * 0.12;
-    player.skin.rightArm.rotation.y = -0.38 + Math.cos(t) * 0.05;
-    player.skin.rightArm.rotation.z = -0.32;
+    const t = this.progress * 6;
+    rigEmotecraftSkeleton(player);
+    const skin = player.skin as any;
 
-    player.skin.leftArm.rotation.x = -Math.PI * 0.62 + Math.cos(t) * 0.12;
-    player.skin.leftArm.rotation.y = 0.38 - Math.cos(t) * 0.05;
-    player.skin.leftArm.rotation.z = 0.32;
+    // Right arm raised, bent elbow, oscillating wave
+    skin.rightArm.rotation.x = -Math.PI * 0.65;
+    skin.rightArm.rotation.y = -0.3;
+    skin.rightArm.rotation.z = -0.35 + Math.sin(t) * 0.35;
 
-    // Heel-to-toe skip
-    player.skin.leftLeg.rotation.x = Math.sin(t * 0.6) * 0.45;
-    player.skin.rightLeg.rotation.x = Math.sin(t * 0.6 + Math.PI) * 0.45;
-
-    // Torso sway and groove
-    player.skin.body.rotation.z = Math.sin(t * 0.3) * 0.14;
-    player.skin.head.rotation.z = -Math.sin(t * 0.3) * 0.1;
-    player.skin.head.rotation.y = Math.sin(t * 0.3) * 0.15;
-
-    // Bounce
-    player.position.y = Math.abs(Math.sin(t * 0.6)) * 1.4;
-
-    if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.06 + Math.abs(Math.sin(t * 0.6)) * 0.18;
+    if (skin.rightArm.userData.elbow) {
+      skin.rightArm.userData.elbow.rotation.x = -0.55 + Math.sin(t) * 0.2;
+      skin.rightArm.userData.elbow.rotation.z = Math.sin(t) * 0.15;
     }
+
+    // Left arm rests gently at hip
+    skin.leftArm.rotation.x = 0.15;
+    skin.leftArm.rotation.z = 0.18;
+    if (skin.leftArm.userData.elbow) {
+      skin.leftArm.userData.elbow.rotation.x = 0;
+    }
+
+    // Friendly tilted head
+    skin.head.rotation.y = Math.sin(t * 0.5) * 0.15;
+    skin.head.rotation.z = -0.12;
+
+    // Gentle torso sway
+    skin.body.rotation.z = Math.sin(t * 0.5) * 0.04;
+    player.position.y = Math.abs(Math.sin(t * 0.5)) * 0.2;
   }
 }
 
-export class TwerkAnimation extends PlayerAnimation {
+// 2. CLAP (Emotecraft rhythmic clapping)
+export class EmoteClapAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
-    const t = this.progress * 16;
-    // Torso angled forward
-    player.skin.body.rotation.x = 0.85;
-    player.skin.head.rotation.x = -0.45;
-
-    // Squatting leg stance
-    player.skin.leftLeg.rotation.x = -0.52 + Math.sin(t) * 0.08;
-    player.skin.rightLeg.rotation.x = -0.52 - Math.sin(t) * 0.08;
-    player.skin.leftLeg.rotation.z = -0.18;
-    player.skin.rightLeg.rotation.z = 0.18;
-
-    // Hands braced on knees
-    player.skin.leftArm.rotation.x = -0.6;
-    player.skin.leftArm.rotation.z = 0.28;
-    player.skin.rightArm.rotation.x = -0.6;
-    player.skin.rightArm.rotation.z = -0.28;
-
-    // Rapid hip oscillations
-    player.skin.body.position.y = -6 + Math.sin(t) * 0.8;
-    player.skin.body.position.z = Math.cos(t) * 1.1;
-    player.position.y = -1.2 + Math.abs(Math.sin(t)) * 0.5;
-
-    if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.3 + Math.sin(t) * 0.25;
-    }
-  }
-}
-
-export class FlossAnimation extends PlayerAnimation {
-  protected animate(player: PlayerObject): void {
-    const t = this.progress * 9;
-    // Straight arms swinging past hips
-    player.skin.leftArm.rotation.z = Math.sin(t) * 0.65;
-    player.skin.rightArm.rotation.z = Math.sin(t) * 0.65;
-    player.skin.leftArm.rotation.x = Math.cos(t) * 0.55;
-    player.skin.rightArm.rotation.x = Math.cos(t) * 0.55;
-
-    // Torso swinging opposite to arms
-    player.skin.body.rotation.y = -Math.sin(t) * 0.38;
-    player.skin.body.rotation.z = -Math.sin(t) * 0.18;
-    player.skin.head.rotation.y = Math.sin(t) * 0.18;
-
-    // Slight leg stance shift
-    player.skin.leftLeg.rotation.z = -0.15 - Math.sin(t) * 0.08;
-    player.skin.rightLeg.rotation.z = 0.15 - Math.sin(t) * 0.08;
-
-    if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.07 + Math.abs(Math.sin(t)) * 0.15;
-    }
-  }
-}
-
-export class GangnamAnimation extends PlayerAnimation {
-  protected animate(player: PlayerObject): void {
-    const t = this.progress * 10;
-    // Crossed wrists holding reins
-    player.skin.leftArm.rotation.x = -1.15 + Math.sin(t) * 0.18;
-    player.skin.leftArm.rotation.y = 0.48;
-    player.skin.leftArm.rotation.z = 0.15;
-
-    player.skin.rightArm.rotation.x = -1.15 + Math.sin(t) * 0.18;
-    player.skin.rightArm.rotation.y = -0.48;
-    player.skin.rightArm.rotation.z = -0.15;
-
-    // Trotting feet
-    player.skin.leftLeg.rotation.x = Math.sin(t) * 0.42;
-    player.skin.rightLeg.rotation.x = Math.sin(t + Math.PI) * 0.42;
-
-    // Bounce
-    player.position.y = Math.abs(Math.sin(t)) * 1.6;
-    player.skin.head.rotation.x = Math.sin(t) * 0.12;
-
-    if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.1 + Math.abs(Math.sin(t)) * 0.22;
-    }
-  }
-}
-
-export class DabAnimation extends PlayerAnimation {
-  protected animate(player: PlayerObject): void {
-    const t = this.progress * 4;
-    // Left arm across face
-    player.skin.leftArm.rotation.x = -1.45 + Math.sin(t) * 0.04;
-    player.skin.leftArm.rotation.y = 1.05;
-    player.skin.leftArm.rotation.z = 0.52;
-
-    // Right arm high diagonal
-    player.skin.rightArm.rotation.x = -0.75 + Math.sin(t) * 0.04;
-    player.skin.rightArm.rotation.y = -0.2;
-    player.skin.rightArm.rotation.z = -1.85;
-
-    // Head tucked down
-    player.skin.head.rotation.x = 0.45;
-    player.skin.head.rotation.y = 0.72;
-    player.skin.head.rotation.z = 0.15;
-
-    // Braced feet
-    player.skin.leftLeg.rotation.z = 0.22;
-    player.skin.rightLeg.rotation.z = -0.22;
-
-    if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.08;
-    }
-  }
-}
-
-export class CustomWaveAnimation extends PlayerAnimation {
-  protected animate(player: PlayerObject): void {
-    const t = this.progress * 7;
-    // Waving right arm
-    player.skin.rightArm.rotation.x = -Math.PI * 0.85;
-    player.skin.rightArm.rotation.z = -Math.PI * 0.15 + Math.sin(t) * 0.38;
-
-    // Rest left arm
-    player.skin.leftArm.rotation.z = Math.PI * 0.04;
-
-    // Friendly head tilt
-    player.skin.head.rotation.y = Math.sin(t * 0.3) * 0.15;
-    player.skin.head.rotation.z = -0.08;
-    player.skin.body.rotation.z = Math.sin(t * 0.3) * 0.05;
-
-    if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.06;
-    }
-  }
-}
-
-export class DiscoAnimation extends PlayerAnimation {
-  protected animate(player: PlayerObject): void {
-    const t = this.progress * 5;
-    // Right arm disco pointing up/down
-    player.skin.rightArm.rotation.x = -Math.sin(t) * 1.3 - 0.4;
-    player.skin.rightArm.rotation.z = -0.55 - Math.sin(t) * 0.55;
-
-    // Left hand on hip
-    player.skin.leftArm.rotation.x = 0.25;
-    player.skin.leftArm.rotation.z = 0.42;
-
-    // Torso and hip twist
-    player.skin.body.rotation.y = Math.sin(t) * 0.32;
-    player.skin.body.rotation.z = Math.sin(t) * 0.12;
-
-    // Stepping
-    player.skin.leftLeg.rotation.x = -Math.sin(t) * 0.35;
-    player.skin.rightLeg.rotation.x = Math.sin(t) * 0.35;
-
-    // Head bob
-    player.skin.head.rotation.y = Math.sin(t) * 0.2;
-
-    if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.08 + Math.abs(Math.sin(t)) * 0.12;
-    }
-  }
-}
-
-export class ClapAnimation extends PlayerAnimation {
-  protected animate(player: PlayerObject): void {
-    const t = this.progress * 11;
+    const t = this.progress * 12;
+    rigEmotecraftSkeleton(player);
+    const skin = player.skin as any;
     const clapCycle = Math.sin(t);
 
-    // Hands meeting
-    player.skin.leftArm.rotation.x = -Math.PI * 0.48;
-    player.skin.leftArm.rotation.y = 0.42 + clapCycle * 0.25;
-    player.skin.leftArm.rotation.z = 0.1;
+    // Both arms brought together in front of the chest with bent elbows
+    skin.rightArm.rotation.x = -Math.PI * 0.45;
+    skin.rightArm.rotation.y = -0.45 - clapCycle * 0.22;
+    skin.rightArm.rotation.z = -0.15;
 
-    player.skin.rightArm.rotation.x = -Math.PI * 0.48;
-    player.skin.rightArm.rotation.y = -0.42 - clapCycle * 0.25;
-    player.skin.rightArm.rotation.z = -0.1;
+    skin.leftArm.rotation.x = -Math.PI * 0.45;
+    skin.leftArm.rotation.y = 0.45 + clapCycle * 0.22;
+    skin.leftArm.rotation.z = 0.15;
 
-    // Micro bounce
-    player.position.y = Math.abs(clapCycle) * 0.35;
-    player.skin.head.rotation.x = Math.abs(clapCycle) * 0.08;
+    if (skin.rightArm.userData.elbow) {
+      skin.rightArm.userData.elbow.rotation.x = -0.65 - Math.abs(clapCycle) * 0.15;
+    }
+    if (skin.leftArm.userData.elbow) {
+      skin.leftArm.userData.elbow.rotation.x = -0.65 - Math.abs(clapCycle) * 0.15;
+    }
+
+    // Springy body bounce
+    player.position.y = Math.abs(clapCycle) * 0.4;
+    skin.head.rotation.x = Math.abs(clapCycle) * 0.08;
+    skin.body.rotation.x = Math.abs(clapCycle) * 0.04;
+  }
+}
+
+// 3. POINT (Emotecraft pointing gesture)
+export class EmotePointAnimation extends PlayerAnimation {
+  protected animate(player: PlayerObject): void {
+    const t = this.progress * 4;
+    rigEmotecraftSkeleton(player);
+    const skin = player.skin as any;
+
+    // Right arm firmly extended forward
+    skin.rightArm.rotation.x = -Math.PI * 0.52;
+    skin.rightArm.rotation.y = -0.15 + Math.sin(t) * 0.05;
+    skin.rightArm.rotation.z = -0.05;
+    if (skin.rightArm.userData.elbow) {
+      skin.rightArm.userData.elbow.rotation.x = -0.1;
+    }
+
+    // Left arm on waist
+    skin.leftArm.rotation.x = 0.25;
+    skin.leftArm.rotation.z = 0.4;
+    if (skin.leftArm.userData.elbow) {
+      skin.leftArm.userData.elbow.rotation.x = -0.4;
+    }
+
+    // Body slightly angled toward target
+    skin.body.rotation.y = -0.18;
+    skin.head.rotation.y = -0.22;
+    skin.head.rotation.x = 0.05;
+
+    // Confident stance
+    skin.rightLeg.rotation.x = -0.15;
+    skin.leftLeg.rotation.x = 0.15;
+  }
+}
+
+// 4. BOW (Emotecraft respectful bow)
+export class EmoteBowAnimation extends PlayerAnimation {
+  protected animate(player: PlayerObject): void {
+    const t = this.progress * 2.5;
+    rigEmotecraftSkeleton(player);
+    const skin = player.skin as any;
+    const bowFactor = Math.sin(t) * 0.5 + 0.5; // 0 to 1 smooth cycle
+
+    // Torso folds forward
+    skin.body.rotation.x = 0.65 * bowFactor;
+    skin.head.rotation.x = 0.45 * bowFactor;
+
+    // Arms pinned neatly to hips
+    skin.rightArm.rotation.x = 0.3 * bowFactor;
+    skin.rightArm.rotation.z = -0.15 * bowFactor;
+    skin.leftArm.rotation.x = 0.3 * bowFactor;
+    skin.leftArm.rotation.z = 0.15 * bowFactor;
+
+    if (skin.rightArm.userData.elbow) skin.rightArm.userData.elbow.rotation.x = -0.15 * bowFactor;
+    if (skin.leftArm.userData.elbow) skin.leftArm.userData.elbow.rotation.x = -0.15 * bowFactor;
+
+    // Slightly bent knees
+    if (skin.rightLeg.userData.knee) skin.rightLeg.userData.knee.rotation.x = 0.15 * bowFactor;
+    if (skin.leftLeg.userData.knee) skin.leftLeg.userData.knee.rotation.x = 0.15 * bowFactor;
+
+    player.position.y = -0.4 * bowFactor;
+    player.position.z = -0.3 * bowFactor;
+  }
+}
+
+// 5. SHRUG (Emotecraft confused shrug)
+export class EmoteShrugAnimation extends PlayerAnimation {
+  protected animate(player: PlayerObject): void {
+    const t = this.progress * 3.5;
+    rigEmotecraftSkeleton(player);
+    const skin = player.skin as any;
+    const shrugCycle = Math.sin(t) * 0.5 + 0.5;
+
+    // Both elbows bent 90°, hands out with palms up
+    skin.rightArm.rotation.x = -0.45 * shrugCycle;
+    skin.rightArm.rotation.y = -0.3 * shrugCycle;
+    skin.rightArm.rotation.z = -0.65 * shrugCycle;
+
+    skin.leftArm.rotation.x = -0.45 * shrugCycle;
+    skin.leftArm.rotation.y = 0.3 * shrugCycle;
+    skin.leftArm.rotation.z = 0.65 * shrugCycle;
+
+    if (skin.rightArm.userData.elbow) skin.rightArm.userData.elbow.rotation.x = -0.75 * shrugCycle;
+    if (skin.leftArm.userData.elbow) skin.leftArm.userData.elbow.rotation.x = -0.75 * shrugCycle;
+
+    // Head tilted with quizzical look
+    skin.head.rotation.z = 0.18 * shrugCycle;
+    skin.head.rotation.y = 0.12 * shrugCycle;
+    skin.head.rotation.x = -0.05 * shrugCycle;
+
+    // Slight shoulder raise
+    skin.body.position.y = -6 + 0.4 * shrugCycle;
+  }
+}
+
+// 6. FACEPALM (Emotecraft exasperated facepalm)
+export class EmoteFacepalmAnimation extends PlayerAnimation {
+  protected animate(player: PlayerObject): void {
+    const t = this.progress * 2;
+    rigEmotecraftSkeleton(player);
+    const skin = player.skin as any;
+    const fpFactor = Math.sin(t) * 0.4 + 0.6;
+
+    // Right arm brings hand up to cover forehead
+    skin.rightArm.rotation.x = -Math.PI * 0.72 * fpFactor;
+    skin.rightArm.rotation.y = -0.45 * fpFactor;
+    skin.rightArm.rotation.z = -0.3 * fpFactor;
+    if (skin.rightArm.userData.elbow) {
+      skin.rightArm.userData.elbow.rotation.x = -0.95 * fpFactor;
+    }
+
+    // Left arm hanging limply
+    skin.leftArm.rotation.x = 0.05;
+    skin.leftArm.rotation.z = 0.12;
+
+    // Head hung in disappointment
+    skin.head.rotation.x = 0.42 * fpFactor;
+    skin.head.rotation.y = -0.15 * fpFactor;
+    skin.body.rotation.x = 0.12 * fpFactor;
+  }
+}
+
+// 7. DISCO (Emotecraft retro Saturday night disco dance)
+export class EmoteDiscoAnimation extends PlayerAnimation {
+  protected animate(player: PlayerObject): void {
+    const t = this.progress * 7;
+    rigEmotecraftSkeleton(player);
+    const skin = player.skin as any;
+    const beat = Math.sin(t);
+
+    // Right arm points diagonally up and down
+    skin.rightArm.rotation.x = -Math.sin(t) * 1.2 - 0.4;
+    skin.rightArm.rotation.z = -0.6 - Math.sin(t) * 0.6;
+    if (skin.rightArm.userData.elbow) {
+      skin.rightArm.userData.elbow.rotation.x = -0.35 + Math.abs(beat) * 0.25;
+    }
+
+    // Left arm on hip
+    skin.leftArm.rotation.x = 0.2;
+    skin.leftArm.rotation.z = 0.45;
+    if (skin.leftArm.userData.elbow) {
+      skin.leftArm.userData.elbow.rotation.x = -0.5;
+    }
+
+    // Torso grooves with hip twist
+    skin.body.rotation.y = Math.sin(t) * 0.35;
+    skin.body.rotation.z = Math.sin(t) * 0.15;
+    skin.head.rotation.y = Math.sin(t) * 0.25;
+
+    // Knees bend to the rhythm
+    skin.leftLeg.rotation.x = -Math.sin(t) * 0.4;
+    skin.rightLeg.rotation.x = Math.sin(t) * 0.4;
+    if (skin.leftLeg.userData.knee) skin.leftLeg.userData.knee.rotation.x = Math.abs(Math.sin(t)) * 0.3;
+    if (skin.rightLeg.userData.knee) skin.rightLeg.userData.knee.rotation.x = Math.abs(Math.sin(t)) * 0.3;
+
+    // Vertical bounce
+    player.position.y = Math.abs(beat) * 1.2;
 
     if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.06;
+      player.cape.rotation.x = Math.PI * 0.08 + Math.abs(beat) * 0.15;
     }
   }
 }
 
-export class ZombieAnimation extends PlayerAnimation {
+// 8. TWERK (Emotecraft iconic rhythmic twerk)
+export class EmoteTwerkAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
-    const t = this.progress * 4;
-    // Straight forward arms
-    player.skin.leftArm.rotation.x = -Math.PI * 0.52 + Math.sin(t) * 0.06;
-    player.skin.leftArm.rotation.y = 0.08;
-    player.skin.rightArm.rotation.x = -Math.PI * 0.52 - Math.sin(t) * 0.06;
-    player.skin.rightArm.rotation.y = -0.08;
+    const t = this.progress * 14;
+    rigEmotecraftSkeleton(player);
+    const skin = player.skin as any;
 
-    // Head tilt
-    player.skin.head.rotation.z = 0.18;
-    player.skin.head.rotation.x = 0.1;
-    player.skin.head.rotation.y = Math.sin(t * 0.5) * 0.15;
+    // Leaning forward stance
+    skin.body.rotation.x = 0.88;
+    skin.head.rotation.x = -0.48;
 
-    // Shambling walk
-    player.skin.leftLeg.rotation.x = Math.sin(t) * 0.4;
-    player.skin.rightLeg.rotation.x = Math.sin(t + Math.PI) * 0.4;
+    // Wide squatting legs with bent knees
+    skin.leftLeg.rotation.x = -0.55 + Math.sin(t) * 0.06;
+    skin.rightLeg.rotation.x = -0.55 - Math.sin(t) * 0.06;
+    skin.leftLeg.rotation.z = -0.22;
+    skin.rightLeg.rotation.z = 0.22;
+
+    if (skin.leftLeg.userData.knee) skin.leftLeg.userData.knee.rotation.x = 0.65;
+    if (skin.rightLeg.userData.knee) skin.rightLeg.userData.knee.rotation.x = 0.65;
+
+    // Hands braced on knees
+    skin.leftArm.rotation.x = -0.65;
+    skin.leftArm.rotation.z = 0.32;
+    skin.rightArm.rotation.x = -0.65;
+    skin.rightArm.rotation.z = -0.32;
+    if (skin.leftArm.userData.elbow) skin.leftArm.userData.elbow.rotation.x = -0.5;
+    if (skin.rightArm.userData.elbow) skin.rightArm.userData.elbow.rotation.x = -0.5;
+
+    // Pelvic oscillations
+    skin.body.position.y = -6 + Math.sin(t) * 0.9;
+    skin.body.position.z = Math.cos(t) * 1.2;
+    player.position.y = -1.4 + Math.abs(Math.sin(t)) * 0.45;
 
     if (player.cape) {
-      player.cape.rotation.x = Math.PI * 0.06;
+      player.cape.rotation.x = Math.PI * 0.35 + Math.sin(t) * 0.25;
     }
   }
 }
 
 export const ANIMATION_CATALOG: EmoteDefinition[] = [
   {
-    id: "take_the_l",
-    nameRu: "Take The L",
-    nameEn: "Take The L",
-    category: "meme",
-    icon: "🕺",
-    descriptionRu: "Легендарный танец с буквой L у лба и подскоками",
-    createAnimation: () => new TakeTheLAnimation(),
-  },
-  {
-    id: "get_griddy",
-    nameRu: "Get Griddy",
-    nameEn: "Get Griddy",
-    category: "dance",
-    icon: "🔥",
-    descriptionRu: "Вирусный танец Гридди с очками-замками у глаз",
-    createAnimation: () => new GetGriddyAnimation(),
-  },
-  {
-    id: "twerk",
-    nameRu: "Twerk",
-    nameEn: "Twerk",
-    category: "meme",
-    icon: "🍑",
-    descriptionRu: "Ритмичный наклон и интенсивные движения бедрами",
-    createAnimation: () => new TwerkAnimation(),
-  },
-  {
-    id: "floss",
-    nameRu: "Floss",
-    nameEn: "Floss",
-    category: "dance",
-    icon: "💃",
-    descriptionRu: "Синхронные махи руками сквозь корпус",
-    createAnimation: () => new FlossAnimation(),
-  },
-  {
-    id: "gangnam",
-    nameRu: "Gangnam Style",
-    nameEn: "Gangnam Style",
-    category: "dance",
-    icon: "🐎",
-    descriptionRu: "Скрещенные руки наездника и ритмичный бег",
-    createAnimation: () => new GangnamAnimation(),
-  },
-  {
-    id: "dab",
-    nameRu: "Dab",
-    nameEn: "Dab",
-    category: "meme",
-    icon: "⚡",
-    descriptionRu: "Фирменный дэб с рукой у лица",
-    createAnimation: () => new DabAnimation(),
-  },
-  {
     id: "wave",
     nameRu: "Приветствие",
     nameEn: "Wave",
     category: "gesture",
     icon: "👋",
-    descriptionRu: "Дружелюбный взмах рукой и наклон головы",
-    createAnimation: () => new CustomWaveAnimation(),
-  },
-  {
-    id: "disco",
-    nameRu: "Диско",
-    nameEn: "Disco",
-    category: "dance",
-    icon: "🪩",
-    descriptionRu: "Ретро-указатель вверх и в стороны в стиле лихорадки субботы",
-    createAnimation: () => new DiscoAnimation(),
+    color: "#10b981",
+    descriptionRu: "Дружелюбный взмах рукой со сгибом в локте",
+    createAnimation: () => new EmoteWaveAnimation(),
   },
   {
     id: "clap",
@@ -367,17 +370,69 @@ export const ANIMATION_CATALOG: EmoteDefinition[] = [
     nameEn: "Clap",
     category: "gesture",
     icon: "👏",
-    descriptionRu: "Бурные аплодисменты обеими руками",
-    createAnimation: () => new ClapAnimation(),
+    color: "#06b6d4",
+    descriptionRu: "Бурные аплодисменты согнутыми руками перед собой",
+    createAnimation: () => new EmoteClapAnimation(),
   },
   {
-    id: "zombie",
-    nameRu: "Зомби",
-    nameEn: "Zombie",
+    id: "point",
+    nameRu: "Указать",
+    nameEn: "Point",
     category: "gesture",
-    icon: "🧟",
-    descriptionRu: "Вытянутые вперед руки и угрожающая походка",
-    createAnimation: () => new ZombieAnimation(),
+    icon: "👉",
+    color: "#3b82f6",
+    descriptionRu: "Четкий указательный жест рукой вперед",
+    createAnimation: () => new EmotePointAnimation(),
+  },
+  {
+    id: "bow",
+    nameRu: "Поклон",
+    nameEn: "Bow",
+    category: "gesture",
+    icon: "🙇",
+    color: "#8b5cf6",
+    descriptionRu: "Уважительный церемониальный поклон корпусом",
+    createAnimation: () => new EmoteBowAnimation(),
+  },
+  {
+    id: "shrug",
+    nameRu: "Пожать плечами",
+    nameEn: "Shrug",
+    category: "gesture",
+    icon: "🤷",
+    color: "#64748b",
+    descriptionRu: "Разведение согнутых рук и вопросительный наклон головы",
+    createAnimation: () => new EmoteShrugAnimation(),
+  },
+  {
+    id: "facepalm",
+    nameRu: "Рукалицо",
+    nameEn: "Facepalm",
+    category: "meme",
+    icon: "🤦",
+    color: "#ef4444",
+    descriptionRu: "Прижатая ладонь ко лбу со сгибом в локте",
+    createAnimation: () => new EmoteFacepalmAnimation(),
+  },
+  {
+    id: "disco",
+    nameRu: "Диско-танец",
+    nameEn: "Disco",
+    category: "dance",
+    icon: "🪩",
+    color: "#f59e0b",
+    descriptionRu: "Ритмичный ретро-танец со сгибанием коленей",
+    createAnimation: () => new EmoteDiscoAnimation(),
+  },
+  {
+    id: "twerk",
+    nameRu: "Тверк",
+    nameEn: "Twerk",
+    category: "dance",
+    icon: "🍑",
+    color: "#f97316",
+    descriptionRu: "Приседание с согнутыми коленями и ритмичными движениями",
+    createAnimation: () => new EmoteTwerkAnimation(),
   },
 ];
 
