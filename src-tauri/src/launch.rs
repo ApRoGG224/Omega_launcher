@@ -80,6 +80,7 @@ async fn collect_libraries(
 ) -> Result<Vec<String>, String> {
     let mut libraries: Vec<String> = Vec::new();
     let mut visited = std::collections::HashSet::new();
+    let mut seen_keys = std::collections::HashSet::new();
     let mut current = version_name.to_string();
 
     loop {
@@ -99,6 +100,15 @@ async fn collect_libraries(
             for lib in list {
                 if lib.is_string() {
                     let name = lib.as_str().unwrap().to_string();
+                    let parts: Vec<&str> = name.split(':').collect();
+                    let group = parts.get(0).unwrap_or(&"");
+                    let artifact = parts.get(1).unwrap_or(&"");
+                    let classifier = if parts.len() > 3 { parts[3] } else { "" };
+                    let key = format!("{group}:{artifact}:{classifier}");
+                    if !seen_keys.insert(key) {
+                        continue;
+                    }
+
                     let path = expand_library_path(&name);
                     let file = libraries_dir.join(&path);
                     if !file.exists() {
@@ -112,6 +122,15 @@ async fn collect_libraries(
                 if !rules_match(lib.get("rules")) {
                     continue;
                 }
+                let parts: Vec<&str> = name.split(':').collect();
+                let group = parts.get(0).unwrap_or(&"");
+                let artifact = parts.get(1).unwrap_or(&"");
+                let classifier = if parts.len() > 3 { parts[3] } else { "" };
+                let key = format!("{group}:{artifact}:{classifier}");
+                if !seen_keys.insert(key) {
+                    continue;
+                }
+
                 let is_native = lib.get("natives").is_some();
 
                 let path = lib
@@ -121,14 +140,27 @@ async fn collect_libraries(
                     .unwrap_or_else(|| expand_library_path(name));
                 let file = libraries_dir.join(&path);
                 if !file.exists() {
-                    let url = lib
+                    let url = if let Some(artifact_url) = lib
                         .pointer("/downloads/artifact/url")
                         .and_then(|u| u.as_str())
-                        .map(|u| u.to_string())
-                        .unwrap_or_else(|| format!("https://libraries.minecraft.net/{path}"));
-                    let _ = download_file(app, client, &url, &file).await;
+                    {
+                        artifact_url.to_string()
+                    } else if let Some(maven_url) = lib.get("url").and_then(|u| u.as_str()) {
+                        let base = maven_url.trim_end_matches('/');
+                        format!("{base}/{path}")
+                    } else {
+                        format!("https://libraries.minecraft.net/{path}")
+                    };
+                    if let Err(e) = download_file(app, client, &url, &file).await {
+                        emit_line(
+                            app,
+                            &format!(
+                                "[launcher/WARN] Failed to download library {name} from {url}: {e}"
+                            ),
+                        );
+                    }
                 }
-                if !is_native {
+                if file.exists() && !is_native {
                     libraries.push(file.to_string_lossy().to_string());
                 }
 
@@ -165,8 +197,23 @@ async fn collect_libraries(
                                 .get("url")
                                 .and_then(|u| u.as_str())
                                 .map(|s| s.to_string())
-                                .unwrap_or_else(|| format!("https://libraries.minecraft.net/{native_path}"));
-                            let _ = download_file(app, client, &url, &native_jar).await;
+                                .or_else(|| {
+                                    lib.get("url").and_then(|u| u.as_str()).map(|maven_url| {
+                                        let base = maven_url.trim_end_matches('/');
+                                        format!("{base}/{native_path}")
+                                    })
+                                })
+                                .unwrap_or_else(|| {
+                                    format!("https://libraries.minecraft.net/{native_path}")
+                                });
+                            if let Err(e) = download_file(app, client, &url, &native_jar).await {
+                                emit_line(
+                                    app,
+                                    &format!(
+                                        "[launcher/WARN] Failed to download native {native_path} from {url}: {e}"
+                                    ),
+                                );
+                            }
                         }
                         if native_jar.exists() {
                             extract_zip(&native_jar, natives_dir)?;
@@ -677,6 +724,7 @@ pub async fn launch_minecraft(
         let reader = BufReader::new(stdout);
         for line in reader.lines() {
             if let Ok(line) = line {
+                println!("{line}");
                 let _ = app1.emit("download-progress", line);
             }
         }
@@ -689,6 +737,7 @@ pub async fn launch_minecraft(
         let reader = BufReader::new(stderr);
         for line in reader.lines() {
             if let Ok(line) = line {
+                eprintln!("[ERROR] {line}");
                 let _ = app.emit("download-progress", format!("[ERROR] {}", line));
             }
         }
