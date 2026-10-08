@@ -332,10 +332,11 @@ export const IconMicrosoft = React.memo(() => (
   </svg>
 ));
 export const IconSearch = React.memo(
-  ({ size = 18 }: { size?: number } = {}) => (
+  ({ size = 18, className }: IconProps = {}) => (
     <svg
       width={size}
       height={size}
+      className={className}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

@@ -13,6 +13,7 @@ mod installer;
 mod java;
 mod launch;
 mod network;
+mod skins;
 mod util;
 mod validate;
 
@@ -430,6 +431,8 @@ pub fn run() {
             auth::get_microsoft_skin,
             auth::get_cached_microsoft_account,
             auth::upload_microsoft_skin,
+            skins::fetch_minecraft_inside_skins,
+            skins::fetch_skin_as_data_url,
             launch::kill_minecraft,
             download::download_mod,
             download::update_all_mods,

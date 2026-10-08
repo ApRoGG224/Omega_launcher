@@ -16,6 +16,20 @@ export interface ImportResult {
   loader?: string;
 }
 
+export interface MinecraftInsideSkinItem {
+  nickname: string;
+  skinUrl: string;
+  renderUrl: string;
+}
+
+export interface MinecraftInsidePage {
+  skins: MinecraftInsideSkinItem[];
+  currentPage: number;
+  totalPages: number;
+  hasPrev: boolean;
+  hasNext: boolean;
+}
+
 export const ipc = {
   async loginMicrosoft(): Promise<string> {
     return invoke<string>("login_microsoft");
@@ -35,6 +49,20 @@ export const ipc = {
 
   async uploadMicrosoftSkin(skinData: string, variant: string): Promise<string> {
     return invoke<string>("upload_microsoft_skin", { skinData, variant });
+  },
+
+  async fetchMinecraftInsideSkins(
+    page: number,
+    query?: string,
+  ): Promise<MinecraftInsidePage> {
+    return invoke<MinecraftInsidePage>("fetch_minecraft_inside_skins", {
+      page,
+      query: query ?? null,
+    });
+  },
+
+  async fetchSkinAsDataUrl(url: string): Promise<string> {
+    return invoke<string>("fetch_skin_as_data_url", { url });
   },
 
   async launchMinecraft(args: {
