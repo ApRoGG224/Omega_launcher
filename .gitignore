@@ -12,3 +12,4 @@ src-tauri/node_pid.txt
 src-tauri/mc_pid.txt
 ms_auth.json
 build/
+*.db

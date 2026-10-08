@@ -428,6 +428,8 @@ pub fn run() {
             launch::launch_minecraft,
             auth::login_microsoft,
             auth::get_microsoft_skin,
+            auth::get_cached_microsoft_account,
+            auth::upload_microsoft_skin,
             launch::kill_minecraft,
             download::download_mod,
             download::update_all_mods,

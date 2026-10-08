@@ -514,12 +514,24 @@ export const SettingsPanel = React.memo(
       const file = e.target.files?.[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         const dataUrl = event.target?.result as string;
+        if (!dataUrl) return;
         setCustomSkinUrl(dataUrl);
         setSkinSource("custom");
         localStorage.setItem("omega:customSkin", dataUrl);
         localStorage.setItem("omega:skinSource", "custom");
+
+        if (account?.type === "microsoft") {
+          try {
+            const modelToUse = skinModel === "slim" ? "slim" : "classic";
+            await ipc.uploadMicrosoftSkin(dataUrl, modelToUse);
+            setSkinSource("microsoft");
+            localStorage.setItem("omega:skinSource", "microsoft");
+          } catch {
+            // Keep custom fallback
+          }
+        }
       };
       reader.readAsDataURL(file);
     };

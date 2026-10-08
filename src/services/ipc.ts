@@ -29,6 +29,14 @@ export const ipc = {
     return invoke<string | null>("get_microsoft_skin", { username });
   },
 
+  async getCachedMicrosoftAccount(): Promise<{ name: string; uuid: string; type: "microsoft" } | null> {
+    return invoke<{ name: string; uuid: string; type: "microsoft" } | null>("get_cached_microsoft_account");
+  },
+
+  async uploadMicrosoftSkin(skinData: string, variant: string): Promise<string> {
+    return invoke<string>("upload_microsoft_skin", { skinData, variant });
+  },
+
   async launchMinecraft(args: {
     version: string;
     server: string;

@@ -73,21 +73,51 @@ export function useAccounts(
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      let merged: Account[] = loadAccounts();
       try {
-        const rows = await ipc.dbLoadAccounts();
+        const rows = (await ipc.dbLoadAccounts().catch(() => [])) || [];
         if (cancelled) return;
         if (rows.length > 0) {
           const mapped: Account[] = rows.map((r) => ({ name: r.name, type: r.type as Account["type"] }));
           const local = loadAccounts();
-          const merged = [...mapped, ...local.filter((localAccount) => !mapped.some((dbAccount) => sameAccount(dbAccount, localAccount)))];
-          setSavedAccounts(merged);
-          setAccount((prev) => merged.find((a) => sameAccount(a, prev)) || merged[0] || prev);
-        } else {
-          const local = loadAccounts();
-          if (local.length > 0) syncAccountsToDb(local);
+          merged = [...mapped, ...local.filter((localAccount) => !mapped.some((dbAccount) => sameAccount(dbAccount, localAccount)))];
         }
       } catch {
-        // Tauri backend unavailable (browser dev) - localStorage cache is used.
+        // DB load not available
+      }
+
+      // Reconcile Microsoft accounts with true cached Microsoft authentication
+      try {
+        const cachedMs = await ipc.getCachedMicrosoftAccount();
+        if (cachedMs && cachedMs.name) {
+          let hasMs = false;
+          merged = merged.map((acc) => {
+            if (acc.type === "microsoft") {
+              hasMs = true;
+              return { ...acc, name: cachedMs.name };
+            }
+            return acc;
+          });
+          if (!hasMs) {
+            merged.push({ name: cachedMs.name, type: "microsoft" });
+          }
+        }
+      } catch {
+        // Ignore if IPC not available
+      }
+
+      if (cancelled) return;
+      if (merged.length > 0) {
+        persistAccounts(merged);
+        syncAccountsToDb(merged);
+        setSavedAccounts(merged);
+        setAccount((prev) => {
+          if (prev.type === "microsoft") {
+            const ms = merged.find((a) => a.type === "microsoft");
+            return ms || prev;
+          }
+          return merged.find((a) => sameAccount(a, prev)) || merged[0] || prev;
+        });
       }
     })();
     return () => {
@@ -244,6 +274,7 @@ export function useAccounts(
     (nickname: string) => {
       const trimmed = nickname.trim();
       if (!trimmed) return;
+      if (account.type === "microsoft") return;
       const current = account;
       const updatedAccount: Account = { ...current, name: trimmed };
       const updatedList = [

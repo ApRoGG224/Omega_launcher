@@ -171,4 +171,46 @@ describe("useAccounts", () => {
     );
     expect(result.current.account).toEqual({ name: "Steve", type: "omega" });
   });
+
+  it("не позволяет изменить никнейм Microsoft аккаунта через setAccountNickname", async () => {
+    mockInvoke.mockImplementation(async (cmd: string) => {
+      if (cmd === "db_load_accounts") return [{ name: "ApRoGG", type: "microsoft" }];
+      return null;
+    });
+
+    const { result } = renderHook(() => useAccounts({}, vi.fn()));
+
+    await waitFor(() => {
+      expect(result.current.account.name).toBe("ApRoGG");
+      expect(result.current.account.type).toBe("microsoft");
+    });
+
+    act(() => {
+      result.current.setAccountNickname("Notch");
+    });
+
+    // Nickname MUST remain ApRoGG!
+    expect(result.current.account.name).toBe("ApRoGG");
+  });
+
+  it("восстанавливает никнейм Microsoft аккаунта из getCachedMicrosoftAccount", async () => {
+    localStorage.setItem(
+      "savedNicknames",
+      JSON.stringify([{ name: "Notch", type: "microsoft" }]),
+    );
+
+    mockInvoke.mockImplementation(async (cmd: string) => {
+      if (cmd === "get_cached_microsoft_account") {
+        return { name: "ApRoGG", uuid: "123", type: "microsoft" };
+      }
+      return null;
+    });
+
+    const { result } = renderHook(() => useAccounts({}, vi.fn()));
+
+    await waitFor(() => {
+      expect(result.current.account.name).toBe("ApRoGG");
+      expect(result.current.savedAccounts.find((a) => a.type === "microsoft")?.name).toBe("ApRoGG");
+    });
+  });
 });

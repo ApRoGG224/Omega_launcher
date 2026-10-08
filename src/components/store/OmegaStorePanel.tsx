@@ -13,6 +13,7 @@ import {
   PRESET_SKINS,
   type PresetSkin,
 } from "./storePresets";
+import { ipc } from "../../services/ipc";
 
 interface OmegaStorePanelProps {
   t: any;
@@ -20,7 +21,6 @@ interface OmegaStorePanelProps {
   account: Account;
   onBack?: () => void;
   showToast: (msg: string, type?: "success" | "error") => void;
-  onUpdateAccountName?: (name: string) => void;
 }
 
 type StoreTab = "skins" | "accessories";
@@ -30,7 +30,6 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
   skinApi,
   account,
   showToast,
-  onUpdateAccountName,
 }) => {
   const [activeTab, setActiveTab] = useState<StoreTab>("skins");
   const [characterAngle, setCharacterAngle] = useState<number>(0);
@@ -45,6 +44,8 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
     avatarUrl: string;
   } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+  const [isSyncingMs, setIsSyncingMs] = useState(false);
 
   const handleSearchNick = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -69,25 +70,65 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
     img.src = skinUrl;
   };
 
-  const handleApplySearchedSkin = () => {
+  const handleApplySearchedSkin = async () => {
     if (!searchedSkin) return;
-    skinApi.setPresetSkin(searchedSkin.url, "auto");
-    if (onUpdateAccountName) {
-      onUpdateAccountName(searchedSkin.nickname);
+    setIsApplying(true);
+    try {
+      const modelToUse = skinApi.skinModel === "auto" ? "classic" : skinApi.skinModel;
+      skinApi.setPresetSkin(searchedSkin.url, skinApi.skinModel);
+
+      if (account.type === "microsoft") {
+        await ipc.uploadMicrosoftSkin(searchedSkin.url, modelToUse);
+        skinApi.setSkinSource("microsoft");
+        showToast(
+          `Скин сохранён в игре и загружен в ваш аккаунт Microsoft!`,
+          "success",
+        );
+      } else {
+        showToast(
+          `Скин игрока "${searchedSkin.nickname}" успешно сохранён в игре!`,
+          "success",
+        );
+      }
+    } catch (err: any) {
+      showToast(
+        `Скин установлен локально, но ошибка отправки в Microsoft: ${err?.message || err}`,
+        "error",
+      );
+    } finally {
+      setIsApplying(false);
     }
-    showToast(
-      `Скин "${searchedSkin.nickname}" успешно сохранён в игре!`,
-      "success",
-    );
   };
 
   const handleSkinUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      void skinApi.uploadSkin(file).then(() => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const dataUrl = event.target?.result as string;
+      if (!dataUrl) return;
+      const modelToUse = skinApi.skinModel === "slim" ? "slim" : "classic";
+      skinApi.setPresetSkin(dataUrl, skinApi.skinModel);
+
+      if (account.type === "microsoft") {
+        try {
+          await ipc.uploadMicrosoftSkin(dataUrl, modelToUse);
+          skinApi.setSkinSource("microsoft");
+          showToast(
+            "Скин успешно загружен в аккаунт Microsoft и сохранён в игре!",
+            "success",
+          );
+        } catch (err: any) {
+          showToast(
+            `Скин сохранён локально, но ошибка отправки в Microsoft: ${err?.message || err}`,
+            "error",
+          );
+        }
+      } else {
         showToast(t.storeSkinApplied || "Скин успешно загружен и применён!", "success");
-      });
-    }
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleCapeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,15 +140,49 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
     }
   };
 
-  const handleSelectPresetSkin = (preset: PresetSkin) => {
+  const handleSelectPresetSkin = async (preset: PresetSkin) => {
+    const modelToUse = preset.model === "slim" ? "slim" : "classic";
     skinApi.setPresetSkin(preset.url, preset.model);
-    if (onUpdateAccountName && preset.nickname) {
-      onUpdateAccountName(preset.nickname);
+
+    if (account.type === "microsoft") {
+      try {
+        await ipc.uploadMicrosoftSkin(preset.url, modelToUse);
+        skinApi.setSkinSource("microsoft");
+        showToast(
+          `${preset.nameRu}: скин сохранён в игре и загружен в аккаунт Microsoft!`,
+          "success",
+        );
+      } catch (err: any) {
+        showToast(
+          `Скин применён, но ошибка загрузки в Microsoft: ${err?.message || err}`,
+          "error",
+        );
+      }
+    } else {
+      showToast(
+        `${t.storeSkinApplied || "Скин применён"}: ${preset.nameRu}`,
+        "success",
+      );
     }
-    showToast(
-      `${t.storeSkinApplied || "Скин применён"}: ${preset.nameRu} (ник: ${preset.nickname})`,
-      "success",
-    );
+  };
+
+  const handleSyncToMicrosoft = async () => {
+    const skinToUpload = skinApi.customSkinUrl || skinApi.activeSkinUrl;
+    if (!skinToUpload) {
+      showToast("Нет активного скина для загрузки", "error");
+      return;
+    }
+    setIsSyncingMs(true);
+    try {
+      const modelToUse = skinApi.skinModel === "slim" ? "slim" : "classic";
+      await ipc.uploadMicrosoftSkin(skinToUpload, modelToUse);
+      skinApi.setSkinSource("microsoft");
+      showToast("Скин успешно синхронизирован с аккаунтом Microsoft!", "success");
+    } catch (err: any) {
+      showToast(`Ошибка синхронизации с Microsoft: ${err?.message || err}`, "error");
+    } finally {
+      setIsSyncingMs(false);
+    }
   };
 
 
@@ -187,14 +262,15 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                     />
                     <div className="found-skin-meta">
                       <span className="found-skin-name">{searchedSkin.nickname}</span>
-                      <span className="found-skin-sub">Готов к сохранению в игре</span>
+                      <span className="found-skin-sub">Скин найден и готов к установке</span>
                     </div>
                     <button
                       type="button"
                       className="found-skin-apply-btn"
+                      disabled={isApplying}
                       onClick={handleApplySearchedSkin}
                     >
-                      <span>Применить скин и ник</span>
+                      <span>{isApplying ? "Сохранение..." : "Надеть этот скин"}</span>
                     </button>
                   </div>
                 )}
@@ -226,6 +302,19 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                   >
                     <span>{t.storeUploadSkinBtn || "Загрузить скин (PNG)"}</span>
                   </button>
+
+                  {account.type === "microsoft" && (skinApi.customSkinUrl || skinApi.activeSkinUrl) && (
+                    <button
+                      type="button"
+                      className="store-upload-btn"
+                      style={{ background: "#0078d4", borderColor: "#2893e3" }}
+                      disabled={isSyncingMs}
+                      onClick={handleSyncToMicrosoft}
+                      title="Сохранить скин в ваш официальный аккаунт Microsoft"
+                    >
+                      <span>{isSyncingMs ? "Синхронизация..." : "Сохранить в Microsoft"}</span>
+                    </button>
+                  )}
 
                   {skinApi.customSkinUrl && (
                     <button

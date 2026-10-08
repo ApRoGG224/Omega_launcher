@@ -5,6 +5,7 @@ use std::net::{IpAddr, SocketAddr};
 use reqwest::header::{ACCEPT, ACCEPT_ENCODING};
 use serde_json::{json, Value};
 use tauri::{AppHandle, Emitter};
+use base64::Engine as _;
 
 use crate::util::app_data_dir;
 
@@ -111,6 +112,14 @@ async fn exchange_code(code: &str) -> Result<(String, String, String), String> {
 /// saved refresh token when it has expired. Returns `true` when a refresh was
 /// performed, `false` when nothing needed refreshing.
 pub async fn try_refresh_cached_token(app: &AppHandle) -> Result<bool, String> {
+    try_refresh_cached_token_internal(app, false).await
+}
+
+pub async fn try_refresh_cached_token_forced(app: &AppHandle) -> Result<bool, String> {
+    try_refresh_cached_token_internal(app, true).await
+}
+
+async fn try_refresh_cached_token_internal(app: &AppHandle, force: bool) -> Result<bool, String> {
     let path = app_data_dir(app).join("ms_auth.json");
     let text = match std::fs::read_to_string(&path) {
         Ok(t) => t,
@@ -131,7 +140,7 @@ pub async fn try_refresh_cached_token(app: &AppHandle) -> Result<bool, String> {
         .map(|exp| exp <= now_unix())
         .unwrap_or(true);
 
-    if !expired {
+    if !force && !expired {
         return Ok(false);
     }
 
@@ -249,6 +258,145 @@ pub fn logout_microsoft(app: AppHandle) -> Result<(), String> {
         Ok(_) => Ok(()),
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(()),
         Err(err) => Err(err.to_string()),
+    }
+}
+
+/// Returns the cached Microsoft account details (username and uuid) if logged in.
+#[tauri::command]
+pub fn get_cached_microsoft_account(app: AppHandle) -> Result<Option<Value>, String> {
+    if let Some(json) = read_cached_auth(&app) {
+        let name = json.get("name").and_then(|v| v.as_str()).unwrap_or("");
+        let uuid = json.get("uuid").and_then(|v| v.as_str()).unwrap_or("");
+        if !name.is_empty() {
+            return Ok(Some(json!({
+                "name": name,
+                "uuid": uuid,
+                "type": "microsoft"
+            })));
+        }
+    }
+    Ok(None)
+}
+
+async fn resolve_skin_png_bytes(skin_data: &str) -> Result<Vec<u8>, String> {
+    let raw = skin_data.trim();
+    let bytes = if raw.starts_with("http://") || raw.starts_with("https://") {
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(20))
+            .build()
+            .map_err(|e| format!("HTTP client error: {e}"))?;
+        let res = client
+            .get(raw)
+            .send()
+            .await
+            .map_err(|e| format!("Не удалось скачать скин: {e}"))?;
+        if !res.status().is_success() {
+            return Err(format!("Ошибка скачивания скина: HTTP {}", res.status()));
+        }
+        res.bytes().await.map_err(|e| format!("Ошибка чтения данных: {e}"))?.to_vec()
+    } else if raw.starts_with("data:") {
+        let b64 = raw.split_once(',').map(|(_, b)| b).unwrap_or(raw);
+        base64::prelude::BASE64_STANDARD
+            .decode(b64.trim())
+            .map_err(|e| format!("Некорректный base64: {e}"))?
+    } else if std::path::Path::new(raw).exists() {
+        std::fs::read(raw).map_err(|e| format!("Не удалось прочитать файл скина: {e}"))?
+    } else {
+        base64::prelude::BASE64_STANDARD
+            .decode(raw)
+            .map_err(|e| format!("Не удалось распознать формат скина: {e}"))?
+    };
+
+    if bytes.len() < 8 || &bytes[0..8] != b"\x89PNG\r\n\x1a\n" {
+        return Err("Файл скина должен быть валидным изображением в формате PNG".to_string());
+    }
+    if bytes.len() > 5 * 1024 * 1024 {
+        return Err("Размер файла скина превышает 5 МБ".to_string());
+    }
+
+    Ok(bytes)
+}
+
+fn build_skin_upload_request(
+    client: &reqwest::Client,
+    token: &str,
+    bytes: &[u8],
+    variant: &str,
+) -> Result<reqwest::RequestBuilder, String> {
+    let part = reqwest::multipart::Part::bytes(bytes.to_vec())
+        .file_name("skin.png")
+        .mime_str("image/png")
+        .map_err(|e| format!("Multipart error: {e}"))?;
+    let form = reqwest::multipart::Form::new()
+        .text("variant", variant.to_string())
+        .part("file", part);
+    Ok(client
+        .post("https://api.minecraftservices.com/minecraft/profile/skins")
+        .header(ACCEPT, "application/json")
+        .header(ACCEPT_ENCODING, "identity")
+        .bearer_auth(token)
+        .multipart(form))
+}
+
+/// Uploads and applies the skin to the player's Microsoft account via the official Mojang API.
+/// This updates the skin on official Mojang servers, making it visible across all launchers
+/// and multiplayer servers.
+#[tauri::command]
+pub async fn upload_microsoft_skin(
+    app: AppHandle,
+    skin_data: String,
+    variant: String,
+) -> Result<String, String> {
+    let bytes = resolve_skin_png_bytes(&skin_data).await?;
+
+    let normalized_variant = if variant.trim().to_lowercase() == "slim" {
+        "slim"
+    } else {
+        "classic"
+    };
+
+    try_refresh_cached_token(&app).await?;
+    let auth = read_cached_auth(&app).ok_or("Аккаунт Microsoft не авторизован")?;
+    let mut access_token = auth
+        .get("access_token")
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty())
+        .ok_or("Токен доступа Microsoft отсутствует. Пожалуйста, войдите в аккаунт заново.")?
+        .to_string();
+
+    let client = auth_client()?;
+
+    let req = build_skin_upload_request(&client, &access_token, &bytes, normalized_variant)?;
+    let mut res = req
+        .send()
+        .await
+        .map_err(|e| format_reqwest_error("Загрузка скина в Microsoft", &e))?;
+
+    if res.status() == reqwest::StatusCode::UNAUTHORIZED {
+        emit_auth_log(&app, "[MS_AUTH]: Токен истёк, обновляем авторизацию...");
+        if try_refresh_cached_token_forced(&app).await.is_ok() {
+            if let Some(fresh_auth) = read_cached_auth(&app) {
+                if let Some(fresh_tok) = fresh_auth.get("access_token").and_then(|v| v.as_str()) {
+                    access_token = fresh_tok.to_string();
+                    let retry_req = build_skin_upload_request(&client, &access_token, &bytes, normalized_variant)?;
+                    res = retry_req
+                        .send()
+                        .await
+                        .map_err(|e| format_reqwest_error("Загрузка скина в Microsoft (повтор)", &e))?;
+                }
+            }
+        }
+    }
+
+    let status = res.status();
+    if status.is_success() {
+        emit_auth_log(&app, "[MS_AUTH]: Скин успешно сохранён в профиле Microsoft!");
+        Ok("Скин успешно обновлён в аккаунте Microsoft".to_string())
+    } else if status.as_u16() == 429 {
+        Err("Слишком много запросов к Mojang API. Подождите 1 минуту перед сменой скина.".to_string())
+    } else {
+        let body = res.text().await.unwrap_or_default();
+        Err(format!("Ошибка Mojang API ({status}): {body}"))
     }
 }
 

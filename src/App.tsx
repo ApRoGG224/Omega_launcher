@@ -458,7 +458,6 @@ function App() {
             account={accountsApi.account}
             onBack={() => setActiveTab("home")}
             showToast={showToast}
-            onUpdateAccountName={accountsApi.setAccountNickname}
           />
         )}
 
