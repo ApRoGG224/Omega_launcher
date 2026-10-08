@@ -25,7 +25,7 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
 - Global system CLI support (`omega` command runs `npm run tauri dev`).
 - Immersive 3D character home screen inspired by modern launchers (3D skin view, quick skin customization card, and consolidated version/play launch dock).
 - Centralized `useSkin` state management for Ely.by, Microsoft, and custom PNG skins with Steve/Alex models.
-- Authentic Minecraft stepped notched pixel-art UI styling (9-slice SVG `border-image` + `clip-path: polygon(...)`) across all buttons, cards, docks, top bar, instances, friends, store, and settings menus, perfectly recreating the stepped pixel aesthetic.
+- Authentic Minecraft stepped notched pixel-art UI styling standardized across the entire launcher with a uniform 4px border-width, 4-slice SVG (`24x24`), and 2px polygon clip-path formula, completely eliminating corner protrusion artifacts ("кусочки") on buttons, cards, docks, top bar, instances, friends, store, and settings menus.
 - Radiant emerald Minecraft atmosphere background with dynamic radial glow, sunburst rays, and drifting sparkles.
 - Top bar with stepped notched widgets: friends online pill with red badge, user profile dropdown, square action buttons (Audio Mute, Stats, Messages with badge), bright lime-green Protection/Bug button with bottom-right cyan `+50` badge, and Settings gear button.
 - Dual left action cards: Store ("Магазин Omega") and Play with Friends ("Играть с друзьями").
