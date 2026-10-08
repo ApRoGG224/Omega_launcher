@@ -43,6 +43,14 @@ export const ipc = {
     return invoke<string | null>("get_microsoft_skin", { username });
   },
 
+  async openElyLogin(): Promise<void> {
+    await invoke("open_ely_login");
+  },
+
+  async openUrl(url: string): Promise<void> {
+    await invoke("open_url", { url });
+  },
+
   async getCachedMicrosoftAccount(): Promise<{ name: string; uuid: string; type: "microsoft" } | null> {
     return invoke<{ name: string; uuid: string; type: "microsoft" } | null>("get_cached_microsoft_account");
   },

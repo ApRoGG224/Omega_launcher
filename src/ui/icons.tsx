@@ -331,6 +331,21 @@ export const IconMicrosoft = React.memo(() => (
     <rect x="13" y="13" width="8" height="8" fill="#ffba08" />
   </svg>
 ));
+export const IconEly = React.memo(({ size = 16, className }: IconProps = {}) => (
+  <svg
+    width={size}
+    height={size}
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+  >
+    <rect x="2" y="2" width="20" height="20" rx="4" fill="#0284c7" />
+    <path
+      d="M7 6h10v2.5H9.5v3h6.5v2.5H9.5V17H17v2.5H7V6z"
+      fill="#ffffff"
+    />
+  </svg>
+));
 export const IconSearch = React.memo(
   ({ size = 18, className }: IconProps = {}) => (
     <svg

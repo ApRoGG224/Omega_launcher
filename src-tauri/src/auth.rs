@@ -4,7 +4,7 @@ use std::net::{IpAddr, SocketAddr};
 
 use reqwest::header::{ACCEPT, ACCEPT_ENCODING};
 use serde_json::{json, Value};
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 use base64::Engine as _;
 
 use crate::util::app_data_dir;
@@ -642,4 +642,41 @@ pub async fn login_microsoft(app: AppHandle) -> Result<String, String> {
     write_auth_file(&app, &auth_json)?;
 
     Ok(format!("SUCCESS:{name}"))
+}
+
+#[tauri::command]
+pub async fn open_ely_login(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("ely_auth") {
+        let _ = window.show();
+        let _ = window.set_focus();
+        return Ok(());
+    }
+
+    let url_str = "https://account.ely.by/login";
+    let target_url = match url_str.parse::<tauri::Url>() {
+        Ok(u) => u,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let builder = tauri::WebviewWindowBuilder::new(
+        &app,
+        "ely_auth",
+        tauri::WebviewUrl::External(target_url),
+    )
+    .title("Ely.by — Вход в аккаунт")
+    .inner_size(520.0, 700.0)
+    .center();
+
+    match builder.build() {
+        Ok(window) => {
+            let _ = window.set_focus();
+            Ok(())
+        }
+        Err(e) => {
+            use tauri_plugin_opener::OpenerExt;
+            app.opener()
+                .open_url(url_str, None::<&str>)
+                .map_err(|open_err| format!("Failed to open Ely.by ({e}): {open_err}"))
+        }
+    }
 }

@@ -12,7 +12,9 @@ import {
   IconUser,
   IconUsers,
   IconX,
+  IconEly,
 } from "../../ui/icons";
+import { ipc } from "../../services/ipc";
 import type { AccountModalView, OmegaFormMode } from "../../hooks/useAccounts";
 
 export const AccountModal = React.memo(
@@ -319,6 +321,30 @@ export const AccountModal = React.memo(
                   <div className="account-method-info">
                     <h4>{(t as any).offlineAccountTitle}</h4>
                     <p>{(t as any).offlineAccountDesc}</p>
+                  </div>
+                </div>
+
+                <div
+                  className="account-method-card"
+                  onClick={async () => {
+                    try {
+                      if (typeof ipc?.openElyLogin === "function") {
+                        await ipc.openElyLogin();
+                      } else {
+                        window.open("https://account.ely.by/login", "_blank");
+                      }
+                    } catch {
+                      window.open("https://account.ely.by/login", "_blank");
+                    }
+                    onChangeView("offline");
+                  }}
+                >
+                  <div className="account-method-icon" style={{ background: "rgba(2, 132, 199, 0.15)", color: "#38bdf8" }}>
+                    <IconEly size={22} />
+                  </div>
+                  <div className="account-method-info">
+                    <h4>Ely.by</h4>
+                    <p>Вход через браузер и привязка скина Ely.by</p>
                   </div>
                 </div>
               </>

@@ -117,11 +117,16 @@ export function useSkin(accountName?: string): SkinApi {
   }, []);
 
   const resetSkin = useCallback(() => {
+    const name = (accountName || "").trim();
+    if (name) {
+      localStorage.removeItem(`omega:ely_skin:${name}`);
+    }
+    localStorage.removeItem("omega:ely_skin");
     setCustomSkinUrl(null);
     setSkinSourceState("ely");
     localStorage.removeItem("omega:customSkin");
     localStorage.setItem("omega:skinSource", "ely");
-  }, []);
+  }, [accountName]);
 
   const resetCape = useCallback(() => {
     setCustomCapeUrl(null);
@@ -171,6 +176,19 @@ export function useSkin(accountName?: string): SkinApi {
       }
 
       if (skinSource === "ely") {
+        const savedElySkin =
+          localStorage.getItem(`omega:ely_skin:${name}`) ||
+          localStorage.getItem("omega:ely_skin");
+
+        if (savedElySkin) {
+          if (!cancelled) {
+            setActiveSkinUrl(savedElySkin);
+            setActiveCapeUrl(capeEnabled ? customCapeUrl : null);
+            setSkinLoading(false);
+          }
+          return;
+        }
+
         try {
           const res = await fetch(`https://skinsystem.ely.by/textures/${encodeURIComponent(name)}`);
           if (res.ok) {

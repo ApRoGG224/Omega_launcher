@@ -10,6 +10,7 @@ vi.mock("../../services/ipc", () => ({
     fetchMinecraftInsideSkins: vi.fn(),
     fetchSkinAsDataUrl: vi.fn(),
     uploadMicrosoftSkin: vi.fn(),
+    openElyLogin: vi.fn(),
   },
 }));
 
@@ -125,9 +126,16 @@ describe("OmegaStorePanel", () => {
       );
     });
 
-    // Verify account name remains unchanged
+    // Verify account name remains unchanged and skin saved for Ely.by
     expect(mockAccount.name).toBe("OriginalNick");
-    expect(mockShowToast).toHaveBeenCalledWith("Скин применён!", "success");
+    expect(mockSkinApi.setSkinSource).toHaveBeenCalledWith("ely");
+    expect(localStorage.getItem("omega:ely_skin:OriginalNick")).toBe(
+      "data:image/png;base64,mockSkinData"
+    );
+    expect(mockShowToast).toHaveBeenCalledWith(
+      "Скин применён и сохранён для Ely.by!",
+      "success"
+    );
 
     // Switch to "Недавние скины" tab
     const recentTabBtn = screen.getByRole("button", { name: /Недавние скины/i });
@@ -136,6 +144,32 @@ describe("OmegaStorePanel", () => {
     // Should find zefaa in recent skins
     await waitFor(() => {
       expect(screen.getByText("zefaa")).toBeTruthy();
+    });
+  });
+
+  it("renders Ely.by login button and calls openElyLogin on click", async () => {
+    (ipc.openElyLogin as any).mockResolvedValue(undefined);
+
+    render(
+      <OmegaStorePanel
+        t={{}}
+        skinApi={mockSkinApi}
+        account={mockAccount}
+        showToast={mockShowToast}
+      />
+    );
+
+    const elyBtn = screen.getByRole("button", { name: /Войти в Ely.by/i });
+    expect(elyBtn).toBeTruthy();
+
+    fireEvent.click(elyBtn);
+
+    await waitFor(() => {
+      expect(ipc.openElyLogin).toHaveBeenCalledTimes(1);
+      expect(mockShowToast).toHaveBeenCalledWith(
+        "Открываем окно входа в Ely.by...",
+        "success"
+      );
     });
   });
 

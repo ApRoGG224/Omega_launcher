@@ -11,6 +11,7 @@ import {
   IconX,
   IconClock,
   IconHistory,
+  IconEly,
 } from "../../ui/icons";
 import {
   ipc,
@@ -197,7 +198,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
     setPreviewSkinUrl(recent.skinUrl);
   };
 
-  // Apply catalog skin (NEVER change account nickname, automatically syncs with Microsoft if licensed)
+  // Apply catalog skin (NEVER change account nickname, automatically syncs with Microsoft if licensed or Ely.by if offline)
   const handleApplyInsideSkin = async (skin: MinecraftInsideSkinItem) => {
     setApplyingNick(skin.nickname);
     try {
@@ -217,6 +218,10 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
       if (account.type === "microsoft") {
         await ipc.uploadMicrosoftSkin(finalSkinData, modelToUse);
         skinApi.setSkinSource("microsoft");
+      } else if (account.type === "offline") {
+        localStorage.setItem(`omega:ely_skin:${account.name}`, finalSkinData);
+        localStorage.setItem("omega:ely_skin", finalSkinData);
+        skinApi.setSkinSource("ely");
       }
 
       saveRecentSkin({
@@ -227,7 +232,11 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
         model: modelToUse,
       });
 
-      showToast("Скин применён!", "success");
+      if (account.type === "offline") {
+        showToast("Скин применён и сохранён для Ely.by!", "success");
+      } else {
+        showToast("Скин применён!", "success");
+      }
     } catch (err: any) {
       showToast(
         `Скин сохранён локально, но ошибка отправки в Microsoft: ${err?.message || err}`,
@@ -249,10 +258,18 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
       if (account.type === "microsoft") {
         await ipc.uploadMicrosoftSkin(recent.skinUrl, modelToUse);
         skinApi.setSkinSource("microsoft");
+      } else if (account.type === "offline") {
+        localStorage.setItem(`omega:ely_skin:${account.name}`, recent.skinUrl);
+        localStorage.setItem("omega:ely_skin", recent.skinUrl);
+        skinApi.setSkinSource("ely");
       }
 
       saveRecentSkin(recent);
-      showToast("Скин применён!", "success");
+      if (account.type === "offline") {
+        showToast("Скин применён и сохранён для Ely.by!", "success");
+      } else {
+        showToast("Скин применён!", "success");
+      }
     } catch (err: any) {
       showToast(
         `Скин сохранён локально, но ошибка отправки в Microsoft: ${err?.message || err}`,
@@ -286,6 +303,10 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
       if (account.type === "microsoft") {
         await ipc.uploadMicrosoftSkin(finalData, modelToUse);
         skinApi.setSkinSource("microsoft");
+      } else if (account.type === "offline") {
+        localStorage.setItem(`omega:ely_skin:${account.name}`, finalData);
+        localStorage.setItem("omega:ely_skin", finalData);
+        skinApi.setSkinSource("ely");
       }
 
       saveRecentSkin({
@@ -296,7 +317,11 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
         model: modelToUse,
       });
 
-      showToast("Скин применён!", "success");
+      if (account.type === "offline") {
+        showToast("Скин применён и сохранён для Ely.by!", "success");
+      } else {
+        showToast("Скин применён!", "success");
+      }
     } catch (err: any) {
       showToast(
         `Скин сохранён локально, но ошибка отправки в Microsoft: ${err?.message || err}`,
@@ -329,6 +354,10 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
           );
           return;
         }
+      } else if (account.type === "offline") {
+        localStorage.setItem(`omega:ely_skin:${account.name}`, dataUrl);
+        localStorage.setItem("omega:ely_skin", dataUrl);
+        skinApi.setSkinSource("ely");
       }
 
       saveRecentSkin({
@@ -339,9 +368,43 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
         model: modelToUse,
       });
 
-      showToast("Скин применён!", "success");
+      if (account.type === "offline") {
+        showToast("Скин применён и сохранён для Ely.by!", "success");
+      } else {
+        showToast("Скин применён!", "success");
+      }
     };
     reader.readAsDataURL(file);
+  };
+
+  const [isOpeningEly, setIsOpeningEly] = useState(false);
+
+  const handleOpenElyLogin = async () => {
+    setIsOpeningEly(true);
+    try {
+      if (typeof ipc?.openElyLogin === "function") {
+        await ipc.openElyLogin();
+        showToast("Открываем окно входа в Ely.by...", "success");
+      } else if (typeof ipc?.openUrl === "function") {
+        await ipc.openUrl("https://account.ely.by/login");
+        showToast("Открываем страницу входа в Ely.by в браузере...", "success");
+      } else {
+        window.open("https://account.ely.by/login", "_blank");
+        showToast("Открываем страницу входа в Ely.by в браузере...", "success");
+      }
+    } catch {
+      if (typeof ipc?.openUrl === "function") {
+        try {
+          await ipc.openUrl("https://account.ely.by/login");
+          showToast("Открываем страницу входа в Ely.by в браузере...", "success");
+          return;
+        } catch {}
+      }
+      window.open("https://account.ely.by/login", "_blank");
+      showToast("Открываем страницу входа в Ely.by в браузере...", "success");
+    } finally {
+      setTimeout(() => setIsOpeningEly(false), 800);
+    }
   };
 
   const handleCapeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -791,6 +854,17 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                     onClick={() => skinFileInputRef.current?.click()}
                   >
                     <span>{t.storeUploadSkinBtn || "Загрузить скин (PNG)"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="store-ely-btn"
+                    disabled={isOpeningEly}
+                    onClick={handleOpenElyLogin}
+                    title="Войти в аккаунт Ely.by через браузер для управления и синхронизации скинов"
+                  >
+                    <IconEly size={16} />
+                    <span>{isOpeningEly ? "Открытие..." : "Войти в Ely.by"}</span>
                   </button>
 
                   {skinApi.customSkinUrl && (

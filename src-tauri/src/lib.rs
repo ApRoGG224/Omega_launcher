@@ -372,6 +372,12 @@ fn open_path(app: tauri::AppHandle, path: String) {
 }
 
 #[tauri::command]
+fn open_url(app: tauri::AppHandle, url: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app.opener().open_url(url, None::<&str>).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn translate_text(text: String, target_lang: String) -> Result<String, String> {
     if text.is_empty() {
         return Ok(String::new());
@@ -437,12 +443,14 @@ pub fn run() {
             download::download_mod,
             download::update_all_mods,
             auth::logout_microsoft,
+            auth::open_ely_login,
             open_folder,
             create_shortcut,
             count_installed_mods,
             list_installed_mod_files,
             list_worlds,
             open_path,
+            open_url,
             translate_text,
             imports::install_modpack,
             imports::export_modpack,
