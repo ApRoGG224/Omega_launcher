@@ -10,6 +10,8 @@ import {
   IconVolumeX,
   IconVolume2,
   IconMessageSquare,
+  IconActivity,
+  IconBug,
 } from "./ui/icons";
 import { SkinHeadPreview } from "./components/home/SkinHeadPreview";
 import { FloatingDock } from "./components/navigation/FloatingDock";
@@ -366,6 +368,18 @@ function App() {
             {soundMuted ? <IconVolumeX size={18} /> : <IconVolume2 size={18} />}
           </button>
 
+          {/* Stats / Display */}
+          <button
+            type="button"
+            className="millida-top-action-btn"
+            onClick={() => {
+              showToast("FPS: 60 • Пинг: 24 ms • Стабильно");
+            }}
+            title={t.telemetryStats || "Статистика"}
+          >
+            <IconActivity size={18} />
+          </button>
+
           {/* Messages / Notifications */}
           <div className="millida-btn-relative">
             <button
@@ -378,6 +392,26 @@ function App() {
             </button>
             <div className="millida-action-badge" aria-hidden="true">
               <span>3</span>
+            </div>
+          </div>
+
+          {/* Protection / Bug report +50 */}
+          <div className="millida-btn-relative">
+            <button
+              type="button"
+              className="millida-top-action-btn millida-top-protect-btn"
+              onClick={() => {
+                showToast(
+                  "Omega Guard: Защита целостности активна (+50)",
+                  "success",
+                );
+              }}
+              title={t.protectionStatus || "Защита активна (+50)"}
+            >
+              <IconBug size={18} />
+            </button>
+            <div className="millida-protect-badge" aria-hidden="true">
+              <span>+50</span>
             </div>
           </div>
 

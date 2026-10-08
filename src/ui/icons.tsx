@@ -247,6 +247,19 @@ export const IconPlay = React.memo(
     </svg>
   ),
 );
+export const IconPixelPlay = React.memo(
+  ({ size = 18, className }: IconProps = {}) => (
+    <svg
+      width={size}
+      height={size}
+      className={className}
+      viewBox="0 0 16 16"
+      fill="currentColor"
+    >
+      <path d="M2 1h3v2h3v2h3v2h3v2h-3v2h-3v2H5v2H2V1z" />
+    </svg>
+  ),
+);
 export const IconFolder = React.memo(
   ({ size = 18, className }: IconProps = {}) => (
     <svg
@@ -349,24 +362,22 @@ export const IconDownload = React.memo(
     </svg>
   ),
 );
-export const IconX = React.memo(
-  ({ size = 20, className }: IconProps = {}) => (
-    <svg
-      width={size}
-      height={size}
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
-  ),
-);
+export const IconX = React.memo(({ size = 20, className }: IconProps = {}) => (
+  <svg
+    width={size}
+    height={size}
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
+  </svg>
+));
 export const IconTrash = React.memo(
   ({ size = 14, className }: IconProps = {}) => (
     <svg

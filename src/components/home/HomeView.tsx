@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
 import type { ModpackInstance, Account } from "../../types";
 import { Skin3DViewer } from "../settings/Skin3DViewer";
-import { AnimationWheelModal } from "./AnimationWheelModal";
-import type { AnimationId } from "../../utils/skinAnimations";
 import type { SkinApi } from "../../hooks/useSkin";
-import { IconPlay, IconX, IconClock } from "../../ui/icons";
+import { IconPixelPlay, IconX, IconClock } from "../../ui/icons";
 
 interface HomeViewProps {
   t: any;
@@ -31,11 +29,6 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
     onOpenStore,
     onOpenFriends,
   }) => {
-    const [currentAnimation, setCurrentAnimation] = useState<
-      AnimationId | string
-    >("idle");
-    const [wheelOpen, setWheelOpen] = useState(false);
-
     const [sunburstEnabled, setSunburstEnabled] = useState<boolean>(
       () => localStorage.getItem("omega:atmosphereSunburst") !== "false",
     );
@@ -74,33 +67,6 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
       };
     }, []);
 
-    useEffect(() => {
-      const isInputElement = (target: EventTarget | null): boolean => {
-        if (!target || !(target instanceof HTMLElement)) return false;
-        const tag = target.tagName.toLowerCase();
-        return (
-          tag === "input" ||
-          tag === "textarea" ||
-          tag === "select" ||
-          target.isContentEditable ||
-          Boolean(
-            target.closest("input, textarea, select, [contenteditable='true']"),
-          )
-        );
-      };
-
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (isInputElement(e.target)) return;
-        if (e.code === "KeyB" && !e.repeat) {
-          e.preventDefault();
-          setWheelOpen(true);
-        }
-      };
-
-      window.addEventListener("keydown", handleKeyDown);
-      return () => window.removeEventListener("keydown", handleKeyDown);
-    }, []);
-
     const formatPlayTime = (ms: number | undefined): string => {
       const totalMin = Math.floor((ms || 0) / 60000);
       const h = Math.floor(totalMin / 60);
@@ -115,9 +81,7 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
     const playTimeText = formatPlayTime(selectedInstance?.playTimeMs);
 
     return (
-      <div
-        className={`millida-home-container ${wheelOpen ? "wheel-active" : ""}`}
-      >
+      <div className="millida-home-container">
         {/* Radiant Emerald Minecraft background glow & sunburst rays */}
         <div className="millida-bg-atmosphere" aria-hidden="true">
           {glowEnabled && <div className="millida-radial-glow" />}
@@ -231,7 +195,7 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
                     ? "slim"
                     : "default"
               }
-              animation={currentAnimation}
+              animation="idle"
               loading={skinApi.skinLoading}
             />
             <div className="millida-skin-shadow" aria-hidden="true" />
@@ -249,105 +213,38 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
               title={t.myBuildsDesc || "Выбор версии / сборки"}
             >
               <div className="millida-dock-cube-icon">
-                {/* Rich 3D Isometric Shaded Minecraft Block */}
-                <svg width="42" height="42" viewBox="0 0 32 32" fill="none">
-                  <defs>
-                    <linearGradient
-                      id="cubeTop"
-                      x1="16"
-                      y1="2"
-                      x2="16"
-                      y2="17"
-                      gradientUnits="userSpaceOnUse"
-                    >
-                      <stop offset="0%" stopColor="#67e8f9" />
-                      <stop offset="100%" stopColor="#06b6d4" />
-                    </linearGradient>
-                    <linearGradient
-                      id="cubeLeft"
-                      x1="3"
-                      y1="9.5"
-                      x2="16"
-                      y2="31"
-                      gradientUnits="userSpaceOnUse"
-                    >
-                      <stop offset="0%" stopColor="#0891b2" />
-                      <stop offset="100%" stopColor="#0e7490" />
-                    </linearGradient>
-                    <linearGradient
-                      id="cubeRight"
-                      x1="29"
-                      y1="9.5"
-                      x2="16"
-                      y2="31"
-                      gradientUnits="userSpaceOnUse"
-                    >
-                      <stop offset="0%" stopColor="#0e7490" />
-                      <stop offset="100%" stopColor="#155e75" />
-                    </linearGradient>
-                  </defs>
-                  {/* Top face */}
+                {/* Isometric Minecraft Grass Block */}
+                <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
+                  {/* Top Face - Grass */}
                   <polygon
-                    points="16,2 29,9.5 16,17 3,9.5"
-                    fill="url(#cubeTop)"
-                    stroke="#a5f3fc"
-                    strokeWidth="1"
-                  />
-                  <line
-                    x1="9.5"
-                    y1="5.75"
-                    x2="22.5"
-                    y2="13.25"
-                    stroke="rgba(255,255,255,0.4)"
+                    points="16,3 29,10 16,17 3,10"
+                    fill="#74b72e"
+                    stroke="#5b8c22"
                     strokeWidth="0.8"
                   />
-                  <line
-                    x1="22.5"
-                    y1="5.75"
-                    x2="9.5"
-                    y2="13.25"
-                    stroke="rgba(255,255,255,0.4)"
-                    strokeWidth="0.8"
-                  />
-                  {/* Left face */}
+                  {/* Left Face - Dirt */}
                   <polygon
-                    points="3,9.5 16,17 16,31 3,23.5"
-                    fill="url(#cubeLeft)"
-                    stroke="#22d3ee"
-                    strokeWidth="1"
-                  />
-                  <line
-                    x1="9.5"
-                    y1="13.25"
-                    x2="9.5"
-                    y2="27.25"
-                    stroke="rgba(0,0,0,0.2)"
+                    points="3,10 16,17 16,29 3,22"
+                    fill="#866043"
+                    stroke="#68472f"
                     strokeWidth="0.8"
                   />
-                  {/* Right face */}
+                  {/* Left Face - Grass Overhang */}
                   <polygon
-                    points="16,17 29,9.5 29,23.5 16,31"
-                    fill="url(#cubeRight)"
-                    stroke="#06b6d4"
-                    strokeWidth="1"
+                    points="3,10 16,17 16,20 13,18 10,21 7,17 3,18"
+                    fill="#5b8c22"
                   />
-                  <line
-                    x1="22.5"
-                    y1="13.25"
-                    x2="22.5"
-                    y2="27.25"
-                    stroke="rgba(0,0,0,0.3)"
+                  {/* Right Face - Dirt (Shadowed) */}
+                  <polygon
+                    points="16,17 29,10 29,22 16,29"
+                    fill="#6d4c32"
+                    stroke="#543720"
                     strokeWidth="0.8"
                   />
-                  {/* Center glowing crystal core */}
-                  <circle cx="16" cy="17" r="2.2" fill="#ffffff" />
-                  <circle
-                    cx="16"
-                    cy="17"
-                    r="3.6"
-                    stroke="#cffafe"
-                    strokeWidth="0.8"
-                    strokeOpacity="0.8"
+                  {/* Right Face - Grass Overhang */}
+                  <polygon
+                    points="16,17 29,10 29,18 25,17 22,21 19,18 16,20"
+                    fill="#466e18"
                   />
                 </svg>
               </div>
@@ -358,7 +255,7 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
                   </span>
                 </div>
                 <span className="millida-dock-title">
-                  {selectedInstance?.name || "Скайблок"}
+                  {selectedInstance?.name || "Выживание"}
                 </span>
                 <div className="millida-dock-meta">
                   <span className="dock-loader-chip">{loaderText}</span>
@@ -370,7 +267,7 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
               </div>
             </button>
 
-            {/* Right section: Big vibrant Lime-Green Play button */}
+            {/* Right section: Vibrant Play button */}
             <button
               type="button"
               className={`millida-dock-play-btn ${isRunning ? "running" : ""}`}
@@ -378,23 +275,14 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
               title={isRunning ? t.stopBtn : t.playBtn}
             >
               <span className="millida-play-icon">
-                {isRunning ? <IconX size={20} /> : <IconPlay size={20} />}
+                {isRunning ? <IconX size={20} /> : <IconPixelPlay size={18} />}
               </span>
               <span className="millida-play-label">
-                {isRunning ? t.stopBtn || "СТОП" : t.playBtn || "ИГРАТЬ"}
+                {isRunning ? t.stopBtn || "СТОП" : t.playBtn || "Играть"}
               </span>
             </button>
           </div>
         </div>
-
-        {/* Animation wheel modal */}
-        <AnimationWheelModal
-          isOpen={wheelOpen}
-          currentAnimation={currentAnimation}
-          onSelectAnimation={(id) => setCurrentAnimation(id)}
-          onClose={() => setWheelOpen(false)}
-          t={t}
-        />
       </div>
     );
   },

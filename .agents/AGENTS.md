@@ -25,13 +25,13 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
 - Global system CLI support (`omega` command runs `npm run tauri dev`).
 - Immersive 3D character home screen inspired by modern launchers (3D skin view, quick skin customization card, and consolidated version/play launch dock).
 - Centralized `useSkin` state management for Ely.by, Microsoft, and custom PNG skins with Steve/Alex models.
-- Clean, modern rounded border UI styling (`border-radius: 6px`–`8px`, `border: 1.5px solid rgba(255,255,255,0.12)`) across all cards, dock, top-bar, instances panel, settings panel, friends panel, and catalog/mods store, eliminating artificial notched SVG borders and clip-paths for crisp rendering matching the settings gear button standard.
+- Authentic Minecraft stepped notched pixel-art UI styling (9-slice SVG `border-image` + `clip-path: polygon(...)`) across all buttons, cards, docks, top bar, instances, friends, store, and settings menus, perfectly recreating the stepped pixel aesthetic.
 - Radiant emerald Minecraft atmosphere background with dynamic radial glow, sunburst rays, and drifting sparkles.
-- Balanced top bar layout: friends online pill with mini heads and badge in the top-left, center Omega Launcher badge, and right-hand user profile widget, audio mute toggle, and messages.
+- Top bar with stepped notched widgets: friends online pill with red badge, user profile dropdown, square action buttons (Audio Mute, Stats, Messages with badge), bright lime-green Protection/Bug button with bottom-right cyan `+50` badge, and Settings gear button.
 - Dual left action cards: Store ("Магазин Omega") and Play with Friends ("Играть с друзьями").
-- Interactive Emotecraft-Style Animation Donut Wheel (`AnimationWheelModal`): triggered by holding 'B' (or clicking badge), features a hollow cutout center, no top arrows, cached polar mouse angle tracking without layout thrashing, and hold-to-select/release-to-play mechanics. Includes 8 smooth Emotecraft animations with native `skinview3d` joint manipulation (Wave, Clap, Point, Bow, Shrug, Facepalm, Disco, Twerk) with clean skeletal resets and zero artificial child mesh geometry artifacts. Fully optimized for 60 FPS: eliminated expensive fullscreen backdrop-blur filters, cached SVG path geometry, hardware-accelerated slice highlights, and automatic pausing of background atmosphere particles while open.
-- Dedicated Omega Store (`OmegaStorePanel`, tab `"store"`) focused purely on Skins and Official Capes: online skin search by player nickname with in-game account synchronization and preset catalog of famous players (Notch, Dream, Technoblade, etc.), plus official Microsoft/Mojang/Minecon capes (Migrator, 15th Anniversary, Vanilla, Cherry Blossom, Twitch, TikTok, Mojang Studios, MCC Prismarine, Minecon). All distracting launcher theme switchers removed in favor of a unified emerald aesthetic.
-- Clean launch dock button (`millida-dock-play-btn`): fixed 1-to-1 identical dimensions between Start ("ИГРАТЬ") and Stop ("СТОП") states (`width: 180px`, `height: 52px`), eliminated outer glowing shadows (`box-shadow: none`) for clean modern borders.
+- Stepped notched Launch Dock: royal blue version selector (`#1d5dc7`) with custom 3D isometric Minecraft grass block icon, and pastel lilac/purple Play button (`#9f75ff`) with black pixel play icon (`▶`) and bold "Играть".
+- Animation wheel (`AnimationWheelModal`) and skeletal Emotecraft animation listeners completely removed to ensure zero runtime lag and 60 FPS UI responsiveness.
+- Dedicated Omega Store (`OmegaStorePanel`, tab `"store"`) focused purely on Skins and Official Capes: online skin search by player nickname with in-game account synchronization and preset catalog of famous players (Notch, Dream, Technoblade, etc.), plus official Microsoft/Mojang/Minecon capes (Migrator, 15th Anniversary, Vanilla, Cherry Blossom, Twitch, TikTok, Mojang Studios, MCC Prismarine, Minecon).
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 
@@ -71,4 +71,3 @@ When working on tasks for this repository, the agent MUST follow this strict seq
 - `ui-ux-pro-max`, `design-system`, `ui-styling`, `design`, `brand`, `banner-design`, `slides`: Design Lab & UI/UX engineering intelligence suite.
 - `senior-frontend`: Advanced React/TypeScript frontend development patterns, accessibility standards, and bundle optimization.
 - `react-best-practices`: 57+ Vercel React and Next.js performance optimization rules (waterfall prevention, bundle size control, rendering and state performance).
-
