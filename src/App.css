@@ -2744,22 +2744,22 @@ input[type="color"]::-webkit-color-swatch {
   height: 44px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%239f75ff' stroke='%238b5cf6' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   display: flex;
   align-items: center;
@@ -2772,7 +2772,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .rhombus-play-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23b28fff' stroke='%23a78bfa' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .rhombus-play-btn:active {
@@ -2781,7 +2781,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .rhombus-play-btn.running {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23e11d48' stroke='%23fb7185' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
@@ -3507,22 +3507,22 @@ input[type="color"]::-webkit-color-swatch {
   gap: 6px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e1420' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   padding: 4px;
   width: fit-content;
@@ -3599,22 +3599,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 10px 14px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2310141e' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   transition: all 0.18s ease;
   box-sizing: border-box;
@@ -3622,7 +3622,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .friend-card:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141a28' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .friend-card-avatar {
@@ -4803,22 +4803,22 @@ input[type="color"]::-webkit-color-swatch {
   flex-shrink: 0;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2310141e' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   padding: 4px 10px;
   display: flex;
@@ -4832,12 +4832,12 @@ input[type="color"]::-webkit-color-swatch {
 
 .assembly-scroll-card:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141a28' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .assembly-scroll-card.active {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2311244c' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .assembly-scroll-card.drop-target {
@@ -5130,22 +5130,22 @@ input[type="color"]::-webkit-color-swatch {
   height: 36px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%239f75ff' stroke='%238b5cf6' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #000000;
   font-size: 13px;
@@ -5161,29 +5161,29 @@ input[type="color"]::-webkit-color-swatch {
 
 .assembly-play-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23b28fff' stroke='%23a78bfa' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .assembly-action-btn {
   height: 34px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #cbd5e1;
   font-size: 11px;
@@ -5199,25 +5199,25 @@ input[type="color"]::-webkit-color-swatch {
 
 .assembly-action-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
 .assembly-action-btn.delete-btn {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%232b1216' stroke='%23ef4444' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #f87171;
 }
 
 .assembly-action-btn.delete-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23e11d48' stroke='%23fb7185' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
 .assembly-action-btn.delete-btn.confirm {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23dc2626' stroke='%23ef4444' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
@@ -6323,22 +6323,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 12px 14px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e1420' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   display: flex;
   flex-direction: column;
@@ -6492,22 +6492,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 10px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e1420' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   gap: 8px;
   transition: all 180ms ease;
@@ -6810,22 +6810,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 4px 14px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #f1e4f0;
   font-size: 13px;
@@ -6837,7 +6837,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .millida-back-home-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
@@ -6901,22 +6901,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 4px 14px 4px 10px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   cursor: pointer;
   box-sizing: border-box;
@@ -6925,7 +6925,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .millida-top-friends-pill:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .millida-friends-heads-row {
@@ -7009,22 +7009,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 4px 14px 4px 8px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   cursor: pointer;
   transition: all 0.18s ease;
@@ -7034,7 +7034,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .millida-user-profile:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .millida-user-profile .avatar {
@@ -7098,22 +7098,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 0;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #cbd5e1;
   display: flex;
@@ -7126,13 +7126,13 @@ input[type="color"]::-webkit-color-swatch {
 
 .millida-top-action-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
 .millida-top-action-btn.active {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2311244c' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #38bdf8;
 }
 
@@ -7168,22 +7168,22 @@ input[type="color"]::-webkit-color-swatch {
   background: transparent !important;
   color: #071502 !important;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23a3e635' stroke='%23bef264' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   display: flex;
   align-items: center;
@@ -7195,7 +7195,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .millida-top-protect-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23bef264' stroke='%23d9f99d' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .millida-protect-badge {
@@ -7385,22 +7385,22 @@ input[type="color"]::-webkit-color-swatch {
   height: 72px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230f1624' stroke='%23223049' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   display: flex;
   align-items: center;
@@ -7439,34 +7439,34 @@ input[type="color"]::-webkit-color-swatch {
 /* Card 1: Store - Warm Amber / Gold theme */
 .millida-card-store {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a140a' stroke='%23453315' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .millida-card-store:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23261c0d' stroke='%23facc15' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 /* Card 2: Skin - Electric Cyan / Sapphire theme */
 .millida-card-skin {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2309152b' stroke='%231b396b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .millida-card-skin:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23102447' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 /* Card 3: Friends - Emerald / Forest theme */
 .millida-card-friends {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230a1a0f' stroke='%23194024' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .millida-card-friends:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230f2918' stroke='%2322c55e' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .millida-card-art-box {
@@ -7717,22 +7717,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 6px 18px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231d5dc7' stroke='%232563eb' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   cursor: pointer;
   text-align: left;
@@ -7744,7 +7744,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .millida-dock-version-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23256ae3' stroke='%233b82f6' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .millida-dock-cube-icon {
@@ -7877,22 +7877,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 0 16px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%239f75ff' stroke='%238b5cf6' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #000000;
   font-size: 18px;
@@ -7910,7 +7910,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .millida-dock-play-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23b28fff' stroke='%23a78bfa' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .millida-dock-play-btn:active {
@@ -7919,13 +7919,13 @@ input[type="color"]::-webkit-color-swatch {
 
 .millida-dock-play-btn.running {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23e11d48' stroke='%23fb7185' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
 .millida-dock-play-btn.running:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23f43f5e' stroke='%23fda4af' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .millida-play-icon {
