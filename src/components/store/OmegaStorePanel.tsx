@@ -9,11 +9,9 @@ import {
   IconTrash,
   IconSearch,
   IconX,
+  IconClock,
+  IconHistory,
 } from "../../ui/icons";
-import {
-  PRESET_SKINS,
-  type PresetSkin,
-} from "./storePresets";
 import {
   ipc,
   type MinecraftInsideSkinItem,
@@ -28,7 +26,24 @@ interface OmegaStorePanelProps {
 }
 
 type StoreTab = "skins" | "accessories";
-type SkinsCatalogTab = "inside" | "presets";
+type SkinsCatalogTab = "catalog" | "recent";
+
+export interface RecentSkinItem {
+  id: string;
+  nickname: string;
+  skinUrl: string;
+  renderUrl?: string;
+  model: SkinModel;
+  wornAt: number;
+}
+
+function formatWornTime(time: number): string {
+  const diff = Math.floor((Date.now() - time) / 1000);
+  if (diff < 60) return "Только что";
+  if (diff < 3600) return `${Math.floor(diff / 60)} мин. назад`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} ч. назад`;
+  return `${Math.floor(diff / 86400)} дн. назад`;
+}
 
 export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
   t,
@@ -37,17 +52,16 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
   showToast,
 }) => {
   const [activeTab, setActiveTab] = useState<StoreTab>("skins");
-  const [catalogSubTab, setCatalogSubTab] = useState<SkinsCatalogTab>("inside");
+  const [catalogSubTab, setCatalogSubTab] = useState<SkinsCatalogTab>("catalog");
   const [characterAngle, setCharacterAngle] = useState<number>(0);
   const skinFileInputRef = useRef<HTMLInputElement | null>(null);
   const capeFileInputRef = useRef<HTMLInputElement | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Search state
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Minecraft Inside catalog state
+  // Catalog state
   const [insideSkins, setInsideSkins] = useState<MinecraftInsideSkinItem[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -58,9 +72,54 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
   // Interaction & Preview state
   const [previewSkinUrl, setPreviewSkinUrl] = useState<string | null>(null);
   const [applyingNick, setApplyingNick] = useState<string | null>(null);
-  const [isSyncingMs, setIsSyncingMs] = useState(false);
 
-  // Fetch Minecraft Inside catalog when page or search query changes
+  // Recent skins state (stored in localStorage)
+  const [recentSkins, setRecentSkins] = useState<RecentSkinItem[]>(() => {
+    try {
+      const raw = localStorage.getItem("omega:recent_skins");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const saveRecentSkin = (item: Omit<RecentSkinItem, "wornAt">) => {
+    setRecentSkins((prev) => {
+      const filtered = prev.filter(
+        (s) => s.id !== item.id && s.skinUrl !== item.skinUrl,
+      );
+      const updated: RecentSkinItem[] = [
+        { ...item, wornAt: Date.now() },
+        ...filtered,
+      ].slice(0, 30);
+      try {
+        localStorage.setItem("omega:recent_skins", JSON.stringify(updated));
+      } catch {
+        // ignore quota errors
+      }
+      return updated;
+    });
+  };
+
+  const handleRemoveRecentSkin = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRecentSkins((prev) => {
+      const updated = prev.filter((s) => s.id !== id);
+      try {
+        localStorage.setItem("omega:recent_skins", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const handleClearAllRecent = () => {
+    setRecentSkins([]);
+    try {
+      localStorage.removeItem("omega:recent_skins");
+    } catch {}
+  };
+
+  // Fetch catalog when page or search query changes
   useEffect(() => {
     let isCancelled = false;
     setIsLoadingInside(true);
@@ -95,7 +154,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
     setSearchQuery(clean);
     setCurrentPage(1);
     setPageJumpInput("1");
-    setCatalogSubTab("inside");
+    setCatalogSubTab("catalog");
   };
 
   const handleClearSearch = () => {
@@ -105,11 +164,11 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
     setPageJumpInput("1");
   };
 
+  // Do NOT scroll to top when changing pages, staying smoothly in view
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
     setCurrentPage(newPage);
     setPageJumpInput(String(newPage));
-    scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handlePageJumpSubmit = (e: React.FormEvent) => {
@@ -134,7 +193,11 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
     }
   };
 
-  // Apply Minecraft Inside skin (NEVER change account nickname)
+  const handlePreviewRecentSkin = (recent: RecentSkinItem) => {
+    setPreviewSkinUrl(recent.skinUrl);
+  };
+
+  // Apply catalog skin (NEVER change account nickname, automatically syncs with Microsoft if licensed)
   const handleApplyInsideSkin = async (skin: MinecraftInsideSkinItem) => {
     setApplyingNick(skin.nickname);
     try {
@@ -156,6 +219,39 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
         skinApi.setSkinSource("microsoft");
       }
 
+      saveRecentSkin({
+        id: skin.nickname,
+        nickname: skin.nickname,
+        skinUrl: finalSkinData,
+        renderUrl: skin.renderUrl,
+        model: modelToUse,
+      });
+
+      showToast("Скин применён!", "success");
+    } catch (err: any) {
+      showToast(
+        `Скин сохранён локально, но ошибка отправки в Microsoft: ${err?.message || err}`,
+        "error",
+      );
+    } finally {
+      setApplyingNick(null);
+    }
+  };
+
+  // Re-equip a recent skin
+  const handleApplyRecentSkin = async (recent: RecentSkinItem) => {
+    setApplyingNick(recent.nickname);
+    try {
+      const modelToUse = recent.model === "auto" ? "classic" : recent.model;
+      skinApi.setPresetSkin(recent.skinUrl, recent.model);
+      setPreviewSkinUrl(null);
+
+      if (account.type === "microsoft") {
+        await ipc.uploadMicrosoftSkin(recent.skinUrl, modelToUse);
+        skinApi.setSkinSource("microsoft");
+      }
+
+      saveRecentSkin(recent);
       showToast("Скин применён!", "success");
     } catch (err: any) {
       showToast(
@@ -192,6 +288,14 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
         skinApi.setSkinSource("microsoft");
       }
 
+      saveRecentSkin({
+        id: clean,
+        nickname: clean,
+        skinUrl: finalData,
+        renderUrl: `https://minotar.net/avatar/${encodeURIComponent(clean)}/100`,
+        model: modelToUse,
+      });
+
       showToast("Скин применён!", "success");
     } catch (err: any) {
       showToast(
@@ -201,26 +305,6 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
     } finally {
       setApplyingNick(null);
     }
-  };
-
-  const handleSelectPresetSkin = async (preset: PresetSkin) => {
-    const modelToUse = preset.model === "slim" ? "slim" : "classic";
-    skinApi.setPresetSkin(preset.url, preset.model);
-    setPreviewSkinUrl(null);
-
-    if (account.type === "microsoft") {
-      try {
-        await ipc.uploadMicrosoftSkin(preset.url, modelToUse);
-        skinApi.setSkinSource("microsoft");
-      } catch (err: any) {
-        showToast(
-          `Скин применён, но ошибка загрузки в Microsoft: ${err?.message || err}`,
-          "error",
-        );
-        return;
-      }
-    }
-    showToast(`${preset.nameRu}: скин применён!`, "success");
   };
 
   const handleSkinUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -246,6 +330,15 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
           return;
         }
       }
+
+      saveRecentSkin({
+        id: `custom-${Date.now()}`,
+        nickname: "Свой скин",
+        skinUrl: dataUrl,
+        renderUrl: dataUrl,
+        model: modelToUse,
+      });
+
       showToast("Скин применён!", "success");
     };
     reader.readAsDataURL(file);
@@ -257,25 +350,6 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
       void skinApi.uploadCape(file).then(() => {
         showToast("Плащ применён!", "success");
       });
-    }
-  };
-
-  const handleSyncToMicrosoft = async () => {
-    const skinToUpload = skinApi.customSkinUrl || skinApi.activeSkinUrl;
-    if (!skinToUpload) {
-      showToast("Нет активного скина для сохранения", "error");
-      return;
-    }
-    setIsSyncingMs(true);
-    try {
-      const modelToUse = skinApi.skinModel === "slim" ? "slim" : "classic";
-      await ipc.uploadMicrosoftSkin(skinToUpload, modelToUse);
-      skinApi.setSkinSource("microsoft");
-      showToast("Скин применён!", "success");
-    } catch (err: any) {
-      showToast(`Ошибка сохранения в Microsoft: ${err?.message || err}`, "error");
-    } finally {
-      setIsSyncingMs(false);
     }
   };
 
@@ -319,13 +393,13 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
         {/* TAB 1: SKINS */}
         {activeTab === "skins" && (
           <div className="store-split-layout">
-            <div className="store-scroll-col" ref={scrollContainerRef}>
-              {/* Redesigned Search by Nickname Card (from Minecraft Inside) */}
+            <div className="store-scroll-col">
+              {/* Redesigned Search by Nickname Card */}
               <div className="store-section-card store-inside-search-card">
                 <div className="section-card-header">
                   <div className="section-card-header-left">
                     <h3>Поиск скинов по никам</h3>
-                    <span className="section-card-tag">Minecraft Inside</span>
+                    <span className="section-card-tag">Онлайн база</span>
                   </div>
                   {searchQuery && (
                     <button
@@ -346,7 +420,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                     <input
                       type="text"
                       className="inside-search-input"
-                      placeholder="Какой скин ты ищешь? (например: zefaa, creeper, anime...)"
+                      placeholder="Какой скин ты ищешь? (например: Notch, creeper, anime...)"
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
                     />
@@ -390,42 +464,58 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                 )}
               </div>
 
-              {/* Sub-Tabs: Minecraft Inside Catalog vs Legends vs Custom Upload */}
+              {/* Sub-Tabs: Skins Catalog vs Recent Skins */}
               <div className="store-section-card store-catalog-main-card">
                 <div className="section-card-header">
                   <div className="catalog-tab-switchers">
                     <button
                       type="button"
-                      className={`catalog-tab-btn ${catalogSubTab === "inside" ? "active" : ""}`}
-                      onClick={() => setCatalogSubTab("inside")}
+                      className={`catalog-tab-btn ${catalogSubTab === "catalog" ? "active" : ""}`}
+                      onClick={() => setCatalogSubTab("catalog")}
                     >
-                      <span>Каталог Minecraft Inside</span>
+                      <IconShirt />
+                      <span>Каталог скинов</span>
                       <span className="catalog-pill-count">50 000+</span>
                     </button>
                     <button
                       type="button"
-                      className={`catalog-tab-btn ${catalogSubTab === "presets" ? "active" : ""}`}
-                      onClick={() => setCatalogSubTab("presets")}
+                      className={`catalog-tab-btn ${catalogSubTab === "recent" ? "active" : ""}`}
+                      onClick={() => setCatalogSubTab("recent")}
                     >
-                      <span>Популярные скины</span>
-                      <span className="catalog-pill-count">{PRESET_SKINS.length}</span>
+                      <IconHistory />
+                      <span>Недавние скины</span>
+                      {recentSkins.length > 0 && (
+                        <span className="catalog-pill-count">{recentSkins.length}</span>
+                      )}
                     </button>
                   </div>
 
-                  {catalogSubTab === "inside" && (
+                  {catalogSubTab === "catalog" && (
                     <span className="section-card-tag">
                       Стр. {currentPage} из {totalPages}
                     </span>
                   )}
+
+                  {catalogSubTab === "recent" && recentSkins.length > 0 && (
+                    <button
+                      type="button"
+                      className="store-clear-history-btn"
+                      onClick={handleClearAllRecent}
+                      title="Очистить историю недавних скинов"
+                    >
+                      <IconTrash size={12} />
+                      <span>Очистить историю</span>
+                    </button>
+                  )}
                 </div>
 
-                {/* SubTab 1: Minecraft Inside Live Catalog */}
-                {catalogSubTab === "inside" && (
+                {/* SubTab 1: Live Catalog */}
+                {catalogSubTab === "catalog" && (
                   <div className="inside-catalog-content">
                     {isLoadingInside ? (
                       <div className="inside-catalog-loading">
                         <div className="inside-loading-spinner" />
-                        <span>Загрузка скинов из Minecraft Inside...</span>
+                        <span>Загрузка скинов...</span>
                       </div>
                     ) : insideError ? (
                       <div className="inside-catalog-error">
@@ -475,7 +565,6 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                                     className="inside-skin-render-img"
                                     loading="lazy"
                                     onError={(e) => {
-                                      // Fallback to Minotar avatar if 3D render fails
                                       (e.target as HTMLImageElement).src = `https://minotar.net/avatar/${encodeURIComponent(skin.nickname)}/100`;
                                     }}
                                   />
@@ -512,7 +601,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                           })}
                         </div>
 
-                        {/* Pagination Bar */}
+                        {/* Minecraft Themed Pagination Bar */}
                         <div className="inside-pagination-bar">
                           <button
                             type="button"
@@ -556,6 +645,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                             Последняя »
                           </button>
 
+                          {/* Stepped Notched Page Jump Form */}
                           <form
                             className="inside-page-jump-form"
                             onSubmit={handlePageJumpSubmit}
@@ -567,6 +657,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                               className="inside-page-jump-input"
                               value={pageJumpInput}
                               onChange={(e) => setPageJumpInput(e.target.value)}
+                              title="Номер страницы"
                             />
                             <button type="submit" className="inside-page-jump-submit">
                               Перейти
@@ -578,61 +669,99 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                   </div>
                 )}
 
-                {/* SubTab 2: Preset Skins (Legends) */}
-                {catalogSubTab === "presets" && (
-                  <div className="store-presets-grid">
-                    {PRESET_SKINS.map((preset) => {
-                      const isCurrent =
-                        skinApi.activeSkinUrl === preset.url ||
-                        skinApi.customSkinUrl === preset.url;
-
-                      return (
-                        <div
-                          key={preset.id}
-                          className={`store-preset-card ${
-                            isCurrent ? "current-active" : ""
-                          }`}
+                {/* SubTab 2: Recent Skins */}
+                {catalogSubTab === "recent" && (
+                  <div className="recent-skins-container">
+                    {recentSkins.length === 0 ? (
+                      <div className="inside-catalog-empty">
+                        <IconClock size={36} />
+                        <p style={{ fontSize: "14px", fontWeight: 700, margin: "4px 0" }}>
+                          История недавних скинов пуста
+                        </p>
+                        <span style={{ fontSize: "12px", color: "#64748b", maxWidth: "340px", marginBottom: "8px" }}>
+                          Скины, которые вы надеваете в лаунчере, будут сохраняться здесь для быстрого переключения.
+                        </span>
+                        <button
+                          type="button"
+                          className="inside-retry-btn"
+                          onClick={() => setCatalogSubTab("catalog")}
                         >
-                          <div className="preset-avatar-box">
-                            <img
-                              src={preset.avatarUrl}
-                              alt={preset.nameRu}
-                              className="preset-avatar-img"
-                              loading="lazy"
-                            />
-                            <span className="preset-badge-tag">{preset.tag}</span>
-                          </div>
+                          Перейти в каталог скинов
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="inside-skins-grid">
+                        {recentSkins.map((recent) => {
+                          const isCurrent =
+                            skinApi.activeSkinUrl === recent.skinUrl ||
+                            skinApi.customSkinUrl === recent.skinUrl;
+                          const isPreviewing = previewSkinUrl === recent.skinUrl;
+                          const isApplyingThis = applyingNick === recent.nickname;
 
-                          <div className="preset-card-meta">
-                            <div className="preset-card-title-row">
-                              <span className="preset-title">{preset.nameRu}</span>
-                              <span className="preset-model-type">
-                                {preset.model === "slim" ? "Slim" : "Classic"}
-                              </span>
-                            </div>
-                            <div className="preset-nick-tag">Ник: {preset.nickname}</div>
-                            <p className="preset-desc">{preset.descriptionRu}</p>
-                          </div>
-
-                          <div className="preset-card-action">
-                            {isCurrent ? (
-                              <div className="preset-active-label">
-                                <IconCheck size={16} />
-                                <span>{t.storeActiveBadge || "Надет"}</span>
-                              </div>
-                            ) : (
+                          return (
+                            <div
+                              key={`${recent.id}-${recent.wornAt}`}
+                              className={`inside-skin-card recent-skin-card ${isCurrent ? "current-active" : ""} ${isPreviewing ? "previewing" : ""}`}
+                              onClick={() => handlePreviewRecentSkin(recent)}
+                              title={`Кликните для 3D предпросмотра ${recent.nickname}`}
+                            >
                               <button
                                 type="button"
-                                className="preset-select-btn"
-                                onClick={() => handleSelectPresetSkin(preset)}
+                                className="recent-skin-remove-btn"
+                                onClick={(e) => handleRemoveRecentSkin(recent.id, e)}
+                                title="Удалить из недавних"
                               >
-                                <span>Применить</span>
+                                <IconX size={10} />
                               </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+
+                              <div className="inside-skin-render-wrap">
+                                <img
+                                  src={recent.renderUrl || recent.skinUrl}
+                                  alt={recent.nickname}
+                                  className="inside-skin-render-img"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = `https://minotar.net/avatar/${encodeURIComponent(recent.nickname)}/100`;
+                                  }}
+                                />
+                              </div>
+
+                              <div className="inside-skin-meta">
+                                <span className="inside-skin-nick" title={recent.nickname}>
+                                  {recent.nickname}
+                                </span>
+                                <span className="recent-skin-date">
+                                  {formatWornTime(recent.wornAt)}
+                                </span>
+                              </div>
+
+                              <div className="inside-skin-actions">
+                                {isCurrent ? (
+                                  <div className="inside-skin-active-tag">
+                                    <IconCheck size={13} />
+                                    <span>Надет</span>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="inside-skin-equip-btn"
+                                    disabled={isApplyingThis}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleApplyRecentSkin(recent);
+                                    }}
+                                  >
+                                    <span>
+                                      {isApplyingThis ? "..." : "Надеть"}
+                                    </span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -663,19 +792,6 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                   >
                     <span>{t.storeUploadSkinBtn || "Загрузить скин (PNG)"}</span>
                   </button>
-
-                  {account.type === "microsoft" && (skinApi.customSkinUrl || skinApi.activeSkinUrl) && (
-                    <button
-                      type="button"
-                      className="store-upload-btn"
-                      style={{ background: "#0078d4", borderColor: "#2893e3" }}
-                      disabled={isSyncingMs}
-                      onClick={handleSyncToMicrosoft}
-                      title="Сохранить скин в ваш официальный аккаунт Microsoft"
-                    >
-                      <span>{isSyncingMs ? "Синхронизация..." : "Сохранить в Microsoft"}</span>
-                    </button>
-                  )}
 
                   {skinApi.customSkinUrl && (
                     <button
