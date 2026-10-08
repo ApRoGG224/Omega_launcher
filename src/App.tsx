@@ -573,7 +573,6 @@ function App() {
               setFullscreenOnStart(v);
               setStoredFullscreenOnStart(v);
             }}
-            account={accountsApi.account}
             onOpenStore={() => setActiveTab("store")}
           />
         )}

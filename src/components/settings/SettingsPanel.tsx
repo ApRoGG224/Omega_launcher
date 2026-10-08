@@ -1,7 +1,6 @@
 import React from "react";
-import type { Account, Language, VersionFilterState } from "../../types";
+import type { Language, VersionFilterState } from "../../types";
 import { ipc } from "../../services/ipc";
-import { Skin3DViewer } from "./Skin3DViewer";
 import {
   IconCpu,
   IconDownload,
@@ -9,10 +8,8 @@ import {
   IconFolder,
   IconHistory,
   IconLayers,
-  IconPalette,
   IconSearch,
   IconSettings,
-  IconShirt,
   IconSparkles,
   IconTag,
   IconUsers,
@@ -263,7 +260,7 @@ const SettingsSection = React.memo(
 );
 
 type SettingsTab =
-  "customization" | "files" | "runtime" | "network" | "library" | "session";
+  "files" | "runtime" | "network" | "library" | "session";
 
 const SETTINGS_TABS: Array<{
   id: SettingsTab;
@@ -271,12 +268,6 @@ const SETTINGS_TABS: Array<{
   labelKeyRu: string;
   labelKeyEn: string;
 }> = [
-  {
-    id: "customization",
-    icon: <IconPalette />,
-    labelKeyRu: "Кастомизация",
-    labelKeyEn: "Customization",
-  },
   {
     id: "files",
     icon: <IconFolder />,
@@ -333,7 +324,6 @@ export const SettingsPanel = React.memo(
     setCloseOnLaunch,
     fullscreenOnStart,
     setFullscreenOnStart,
-    account,
     onOpenStore,
   }: {
     t: any;
@@ -361,208 +351,10 @@ export const SettingsPanel = React.memo(
     setCloseOnLaunch: (v: boolean) => void;
     fullscreenOnStart: boolean;
     setFullscreenOnStart: (v: boolean) => void;
-    account?: Account;
     onOpenStore: () => void;
   }) => {
     const [activeTab, setActiveTab] =
-      React.useState<SettingsTab>("customization");
-    const [skinSource, setSkinSource] = React.useState<
-      "ely" | "microsoft" | "custom"
-    >(() => {
-      return (localStorage.getItem("omega:skinSource") as any) || "ely";
-    });
-    const [skinModel, setSkinModel] = React.useState<
-      "auto" | "classic" | "slim"
-    >(() => {
-      return (localStorage.getItem("omega:skinModel") as any) || "auto";
-    });
-    const [customSkinUrl, setCustomSkinUrl] = React.useState<string | null>(
-      () => {
-        return localStorage.getItem("omega:customSkin") || null;
-      },
-    );
-    const [capeEnabled, setCapeEnabled] = React.useState<boolean>(() => {
-      return localStorage.getItem("omega:capeEnabled") === "true";
-    });
-    const [customCapeUrl, setCustomCapeUrl] = React.useState<string | null>(
-      () => {
-        return localStorage.getItem("omega:customCape") || null;
-      },
-    );
-    const [neonTheme, setNeonTheme] = React.useState<string>(() => {
-      return localStorage.getItem("omega:neonTheme") || "cyber";
-    });
-    const [baseTheme, setBaseTheme] = React.useState<string>(() => {
-      return localStorage.getItem("omega:baseTheme") || "cappuccino";
-    });
-
-    const [viewerAnimation, setViewerAnimation] = React.useState<
-      "idle" | "walk" | "none"
-    >("idle");
-    const [active3dSkinUrl, setActive3dSkinUrl] = React.useState<string | null>(
-      null,
-    );
-    const [active3dCapeUrl, setActive3dCapeUrl] = React.useState<string | null>(
-      null,
-    );
-    const [skinLoading, setSkinLoading] = React.useState(false);
-
-    React.useEffect(() => {
-      let cancelled = false;
-      const timer = setTimeout(() => {
-        setSkinLoading(true);
-        void resolveSkin();
-      }, 250);
-
-      const resolveSkin = async () => {
-        const name = (account?.name || "Steve").trim();
-        if (skinSource === "custom") {
-          if (!cancelled) {
-            setActive3dSkinUrl(customSkinUrl);
-            setActive3dCapeUrl(capeEnabled ? customCapeUrl : null);
-            setSkinLoading(false);
-          }
-          return;
-        }
-
-        if (skinSource === "microsoft") {
-          try {
-            const officialUrl = await ipc
-              .getMicrosoftSkin(name)
-              .catch(() => null);
-            if (officialUrl && !cancelled) {
-              setActive3dSkinUrl(officialUrl.replace(/^http:\/\//, "https://"));
-              setActive3dCapeUrl(null);
-              setSkinLoading(false);
-              return;
-            }
-          } catch {
-            // fallback
-          }
-
-          if (!cancelled) {
-            setActive3dSkinUrl(
-              `https://minotar.net/skin/${encodeURIComponent(name)}`,
-            );
-            setActive3dCapeUrl(null);
-            setSkinLoading(false);
-          }
-          return;
-        }
-
-        if (skinSource === "ely") {
-          try {
-            const res = await fetch(
-              `https://skinsystem.ely.by/textures/${encodeURIComponent(name)}`,
-            );
-            if (res.ok) {
-              const data = await res.json();
-              if (data?.SKIN?.url && !cancelled) {
-                const url = data.SKIN.url.replace(/^http:\/\//, "https://");
-                setActive3dSkinUrl(url);
-                if (data?.CAPE?.url && capeEnabled) {
-                  setActive3dCapeUrl(
-                    data.CAPE.url.replace(/^http:\/\//, "https://"),
-                  );
-                } else {
-                  setActive3dCapeUrl(null);
-                }
-                setSkinLoading(false);
-                return;
-              }
-            }
-          } catch {
-            // fallback
-          }
-
-          if (!cancelled) {
-            // Fallback to official mojang skin if Ely.by does not have custom texture
-            setActive3dSkinUrl(
-              `https://minotar.net/skin/${encodeURIComponent(name)}`,
-            );
-            setActive3dCapeUrl(null);
-            setSkinLoading(false);
-          }
-          return;
-        }
-      };
-
-      return () => {
-        cancelled = true;
-        clearTimeout(timer);
-      };
-    }, [skinSource, account?.name, customSkinUrl, customCapeUrl, capeEnabled]);
-
-    React.useEffect(() => {
-      const savedNeon = localStorage.getItem("omega:neonTheme") || "cyber";
-      const savedBase = localStorage.getItem("omega:baseTheme") || "cappuccino";
-      applyNeonTheme(savedNeon);
-      applyBaseTheme(savedBase);
-    }, []);
-
-    const handleSelectNeon = (id: string) => {
-      setNeonTheme(id);
-      applyNeonTheme(id);
-    };
-
-    const handleSelectBaseTheme = (id: string) => {
-      setBaseTheme(id);
-      applyBaseTheme(id);
-    };
-
-    const handleSkinUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const dataUrl = event.target?.result as string;
-        if (!dataUrl) return;
-        setCustomSkinUrl(dataUrl);
-        setSkinSource("custom");
-        localStorage.setItem("omega:customSkin", dataUrl);
-        localStorage.setItem("omega:skinSource", "custom");
-
-        if (account?.type === "microsoft") {
-          try {
-            const modelToUse = skinModel === "slim" ? "slim" : "classic";
-            await ipc.uploadMicrosoftSkin(dataUrl, modelToUse);
-            setSkinSource("microsoft");
-            localStorage.setItem("omega:skinSource", "microsoft");
-          } catch {
-            // Keep custom fallback
-          }
-        }
-      };
-      reader.readAsDataURL(file);
-    };
-
-    const handleCapeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const dataUrl = event.target?.result as string;
-        setCustomCapeUrl(dataUrl);
-        setCapeEnabled(true);
-        localStorage.setItem("omega:customCape", dataUrl);
-        localStorage.setItem("omega:capeEnabled", "true");
-      };
-      reader.readAsDataURL(file);
-    };
-
-    const handleResetSkin = () => {
-      setCustomSkinUrl(null);
-      setSkinSource("ely");
-      localStorage.removeItem("omega:customSkin");
-      localStorage.setItem("omega:skinSource", "ely");
-    };
-
-    const handleResetCape = () => {
-      setCustomCapeUrl(null);
-      setCapeEnabled(false);
-      localStorage.removeItem("omega:customCape");
-      localStorage.setItem("omega:capeEnabled", "false");
-    };
+      React.useState<SettingsTab>("files");
 
     const [javaDetectMsg, setJavaDetectMsg] = React.useState<string | null>(
       null,
@@ -644,248 +436,6 @@ export const SettingsPanel = React.memo(
           </aside>
 
           <main className="settings-rewrite-main">
-            {activeTab === "customization" && (
-              <SettingsSection
-                id="settings-customization"
-                icon={<IconPalette />}
-                iconColor="#b388ff"
-                title={isRussian ? "Кастомизация" : "Customization"}
-                description={
-                  isRussian
-                    ? "Управление скинами, плащами и цветовой темой лаунчера"
-                    : "Manage player skins, capes and launcher color theme"
-                }
-                aside={
-                  <span className="settings-rewrite-section-tag">
-                    {isRussian ? "СТИЛЬ" : "STYLE"}
-                  </span>
-                }
-              >
-                <div className="settings-custom-grid">
-                  <div className="settings-custom-card">
-                    <div className="settings-custom-card-title">
-                      <IconShirt />
-                      <span>
-                        {isRussian
-                          ? "Гардероб (Скин и Плащ)"
-                          : "Wardrobe (Skin & Cape)"}
-                      </span>
-                    </div>
-
-                    <div className="settings-custom-controls">
-                      <div className="settings-custom-row">
-                        <label>
-                          {isRussian ? "Сервис скина" : "Skin service"}
-                        </label>
-                        <div className="settings-custom-pill-group">
-                          <button
-                            type="button"
-                            className={skinSource === "ely" ? "active" : ""}
-                            onClick={() => {
-                              setSkinSource("ely");
-                              localStorage.setItem("omega:skinSource", "ely");
-                            }}
-                          >
-                            Ely.by
-                          </button>
-                          <button
-                            type="button"
-                            className={
-                              skinSource === "microsoft" ? "active" : ""
-                            }
-                            onClick={() => {
-                              setSkinSource("microsoft");
-                              localStorage.setItem(
-                                "omega:skinSource",
-                                "microsoft",
-                              );
-                            }}
-                          >
-                            Microsoft
-                          </button>
-                          <button
-                            type="button"
-                            className={skinSource === "custom" ? "active" : ""}
-                            onClick={() => {
-                              setSkinSource("custom");
-                              localStorage.setItem(
-                                "omega:skinSource",
-                                "custom",
-                              );
-                            }}
-                          >
-                            {isRussian ? "Свой PNG" : "Custom"}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="settings-custom-row">
-                        <label>{isRussian ? "Модель" : "Model"}</label>
-                        <div className="settings-custom-pill-group">
-                          <button
-                            type="button"
-                            className={skinModel === "auto" ? "active" : ""}
-                            onClick={() => {
-                              setSkinModel("auto");
-                              localStorage.setItem("omega:skinModel", "auto");
-                            }}
-                          >
-                            {isRussian ? "Авто" : "Auto"}
-                          </button>
-                          <button
-                            type="button"
-                            className={skinModel === "classic" ? "active" : ""}
-                            onClick={() => {
-                              setSkinModel("classic");
-                              localStorage.setItem(
-                                "omega:skinModel",
-                                "classic",
-                              );
-                            }}
-                          >
-                            Steve (4px)
-                          </button>
-                          <button
-                            type="button"
-                            className={skinModel === "slim" ? "active" : ""}
-                            onClick={() => {
-                              setSkinModel("slim");
-                              localStorage.setItem("omega:skinModel", "slim");
-                            }}
-                          >
-                            Alex (3px)
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="settings-custom-actions">
-                        <label className="settings-custom-upload-btn">
-                          <input
-                            type="file"
-                            accept="image/png"
-                            onChange={handleSkinUpload}
-                            style={{ display: "none" }}
-                          />
-                          <span>
-                            {isRussian
-                              ? "Загрузить скин (.png)"
-                              : "Upload skin (.png)"}
-                          </span>
-                        </label>
-                        <label className="settings-custom-upload-btn">
-                          <input
-                            type="file"
-                            accept="image/png"
-                            onChange={handleCapeUpload}
-                            style={{ display: "none" }}
-                          />
-                          <span>
-                            {isRussian
-                              ? "Загрузить плащ (.png)"
-                              : "Upload cape (.png)"}
-                          </span>
-                        </label>
-                        <label
-                          className="settings-rewrite-switch-label"
-                          style={{ minHeight: "auto", margin: 0 }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={capeEnabled}
-                            onChange={(e) => {
-                              setCapeEnabled(e.target.checked);
-                              localStorage.setItem(
-                                "omega:capeEnabled",
-                                String(e.target.checked),
-                              );
-                            }}
-                          />
-                          <span
-                            className="settings-rewrite-switch"
-                            aria-hidden="true"
-                          >
-                            <span />
-                          </span>
-                          <span>
-                            <strong>
-                              {isRussian ? "Плащ включён" : "Cape enabled"}
-                            </strong>
-                          </span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="settings-custom-preview-card">
-                    <div className="settings-custom-3d-box">
-                      <Skin3DViewer
-                        skinUrl={active3dSkinUrl}
-                        capeUrl={capeEnabled ? active3dCapeUrl : null}
-                        model={
-                          skinModel === "auto"
-                            ? "auto-detect"
-                            : skinModel === "slim"
-                              ? "slim"
-                              : "default"
-                        }
-                        width={230}
-                        height={250}
-                        animation={viewerAnimation}
-                        loading={skinLoading}
-                      />
-                    </div>
-
-                    <div className="settings-custom-3d-toolbar">
-                      <div className="settings-custom-anim-buttons">
-                        <button
-                          type="button"
-                          className={viewerAnimation === "idle" ? "active" : ""}
-                          onClick={() => setViewerAnimation("idle")}
-                        >
-                          {isRussian ? "Дыхание" : "Idle"}
-                        </button>
-                        <button
-                          type="button"
-                          className={viewerAnimation === "walk" ? "active" : ""}
-                          onClick={() => setViewerAnimation("walk")}
-                        >
-                          {isRussian ? "Ходьба" : "Walk"}
-                        </button>
-                        <button
-                          type="button"
-                          className={viewerAnimation === "none" ? "active" : ""}
-                          onClick={() => setViewerAnimation("none")}
-                        >
-                          {isRussian ? "Пауза" : "Pause"}
-                        </button>
-                      </div>
-                      <span className="settings-custom-hint">
-                        {isRussian
-                          ? "Вращай мышью • Масштаб колесом"
-                          : "Drag to rotate • Wheel to zoom"}
-                      </span>
-                    </div>
-
-                    {skinSource === "custom" &&
-                      (customSkinUrl || customCapeUrl) && (
-                        <button
-                          type="button"
-                          className="settings-custom-reset-btn"
-                          onClick={() => {
-                            handleResetSkin();
-                            handleResetCape();
-                          }}
-                        >
-                          {isRussian
-                            ? "Сбросить на стандартный"
-                            : "Reset to default"}
-                        </button>
-                      )}
-                  </div>
-                </div>
-              </SettingsSection>
-            )}
-
             {activeTab === "files" && (
               <SettingsSection
                 id="settings-files"
