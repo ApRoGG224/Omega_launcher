@@ -111,7 +111,7 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
               <span>!</span>
             </div>
             <div className="millida-card-art-box millida-store-art">
-              <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18"
                   stroke="#facc15"
@@ -146,7 +146,7 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
             title={t.playWithFriends || "Играть с друзьями"}
           >
             <div className="millida-card-art-box millida-friends-art">
-              <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"
                   stroke="#84cc16"
