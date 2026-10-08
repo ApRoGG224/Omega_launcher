@@ -4981,42 +4981,28 @@ input[type="color"]::-webkit-color-swatch {
   position: relative;
   width: 44px;
   height: 44px;
-  background: transparent;
-  border-style: solid;
-  border-width: 4px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23102752' stroke='%230b1c3b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
-  clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
-  );
+  background: rgba(10, 18, 32, 0.85);
+  border: 2px solid rgba(56, 189, 248, 0.35);
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   cursor: pointer;
   transition: all 0.18s ease;
+  box-sizing: border-box;
 }
 
 .assembly-hero-icon-box:hover {
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2318356d' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+  border-color: #38bdf8;
+  background: rgba(16, 28, 50, 0.95);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
 }
 
 .assembly-hero-custom-img {
   width: 32px;
   height: 32px;
-  border-radius: 4px;
+  border-radius: 0;
   object-fit: cover;
 }
 
@@ -5029,6 +5015,7 @@ input[type="color"]::-webkit-color-swatch {
   align-items: center;
   justify-content: center;
   color: #38bdf8;
+  border-radius: 0;
   transition: opacity 0.18s ease;
 }
 
@@ -8792,31 +8779,16 @@ input[type="color"]::-webkit-color-swatch {
 .preset-avatar-box {
   width: 44px;
   height: 44px;
-  background: transparent;
-  border-style: solid;
-  border-width: 4px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230a0d14' stroke='%231a2233' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
-  clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
-  );
+  background: rgba(10, 13, 20, 0.85);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .preset-avatar-img {
