@@ -80,16 +80,8 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
       if (account.type === "microsoft") {
         await ipc.uploadMicrosoftSkin(searchedSkin.url, modelToUse);
         skinApi.setSkinSource("microsoft");
-        showToast(
-          `Скин сохранён в игре и загружен в ваш аккаунт Microsoft!`,
-          "success",
-        );
-      } else {
-        showToast(
-          `Скин игрока "${searchedSkin.nickname}" успешно сохранён в игре!`,
-          "success",
-        );
       }
+      showToast("Скин применён!", "success");
     } catch (err: any) {
       showToast(
         `Скин установлен локально, но ошибка отправки в Microsoft: ${err?.message || err}`,
@@ -114,19 +106,15 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
         try {
           await ipc.uploadMicrosoftSkin(dataUrl, modelToUse);
           skinApi.setSkinSource("microsoft");
-          showToast(
-            "Скин успешно загружен в аккаунт Microsoft и сохранён в игре!",
-            "success",
-          );
         } catch (err: any) {
           showToast(
             `Скин сохранён локально, но ошибка отправки в Microsoft: ${err?.message || err}`,
             "error",
           );
+          return;
         }
-      } else {
-        showToast(t.storeSkinApplied || "Скин успешно загружен и применён!", "success");
       }
+      showToast("Скин применён!", "success");
     };
     reader.readAsDataURL(file);
   };
@@ -135,7 +123,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
     const file = e.target.files?.[0];
     if (file) {
       void skinApi.uploadCape(file).then(() => {
-        showToast(t.storeCapeApplied || "Плащ успешно загружен и применён!", "success");
+        showToast("Плащ применён!", "success");
       });
     }
   };
@@ -148,28 +136,21 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
       try {
         await ipc.uploadMicrosoftSkin(preset.url, modelToUse);
         skinApi.setSkinSource("microsoft");
-        showToast(
-          `${preset.nameRu}: скин сохранён в игре и загружен в аккаунт Microsoft!`,
-          "success",
-        );
       } catch (err: any) {
         showToast(
           `Скин применён, но ошибка загрузки в Microsoft: ${err?.message || err}`,
           "error",
         );
+        return;
       }
-    } else {
-      showToast(
-        `${t.storeSkinApplied || "Скин применён"}: ${preset.nameRu}`,
-        "success",
-      );
     }
+    showToast(`${preset.nameRu}: скин применён!`, "success");
   };
 
   const handleSyncToMicrosoft = async () => {
     const skinToUpload = skinApi.customSkinUrl || skinApi.activeSkinUrl;
     if (!skinToUpload) {
-      showToast("Нет активного скина для загрузки", "error");
+      showToast("Нет активного скина для сохранения", "error");
       return;
     }
     setIsSyncingMs(true);
@@ -177,9 +158,9 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
       const modelToUse = skinApi.skinModel === "slim" ? "slim" : "classic";
       await ipc.uploadMicrosoftSkin(skinToUpload, modelToUse);
       skinApi.setSkinSource("microsoft");
-      showToast("Скин успешно синхронизирован с аккаунтом Microsoft!", "success");
+      showToast("Скин применён!", "success");
     } catch (err: any) {
-      showToast(`Ошибка синхронизации с Microsoft: ${err?.message || err}`, "error");
+      showToast(`Ошибка сохранения в Microsoft: ${err?.message || err}`, "error");
     } finally {
       setIsSyncingMs(false);
     }
@@ -230,7 +211,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
               {/* Search by Nickname Card */}
               <div className="store-section-card">
                 <div className="section-card-header">
-                  <h3>Найти скин по нику (с сохранением в игре)</h3>
+                  <h3>Найти скин по нику</h3>
                   <span className="section-card-tag">Online API</span>
                 </div>
                 <form className="store-nick-search-form" onSubmit={handleSearchNick}>
@@ -262,7 +243,6 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                     />
                     <div className="found-skin-meta">
                       <span className="found-skin-name">{searchedSkin.nickname}</span>
-                      <span className="found-skin-sub">Скин найден и готов к установке</span>
                     </div>
                     <button
                       type="button"
@@ -270,7 +250,7 @@ export const OmegaStorePanel: React.FC<OmegaStorePanelProps> = ({
                       disabled={isApplying}
                       onClick={handleApplySearchedSkin}
                     >
-                      <span>{isApplying ? "Сохранение..." : "Надеть этот скин"}</span>
+                      <span>{isApplying ? "Применение..." : "Применить скин"}</span>
                     </button>
                   </div>
                 )}

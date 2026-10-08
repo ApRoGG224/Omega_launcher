@@ -7414,7 +7414,7 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .millida-left-card:hover {
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .millida-card-badge-exclamation {
