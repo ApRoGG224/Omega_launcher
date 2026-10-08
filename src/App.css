@@ -624,22 +624,22 @@ input[type="color"]::-webkit-color-swatch {
 .create-action-btn-primary {
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2384cc16' stroke='%23a3e635' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #071502;
   font-weight: 800;
@@ -647,36 +647,36 @@ input[type="color"]::-webkit-color-swatch {
 
 .create-action-btn-primary:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2395dc20' stroke='%23bef264' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   transform: translateY(-1px);
 }
 
 .create-action-btn-secondary {
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #cbd5e1;
 }
 
 .create-action-btn-secondary:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
@@ -810,22 +810,22 @@ input[type="color"]::-webkit-color-swatch {
 .account-modal {
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230b0f19' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   width: 440px;
   min-width: min(440px, 90vw);
@@ -882,22 +882,22 @@ input[type="color"]::-webkit-color-swatch {
 .account-modal-close {
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #94a3b8;
   cursor: pointer;
@@ -909,7 +909,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .account-modal-close:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23e11d48' stroke='%23fb7185' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
@@ -944,22 +944,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 8px 12px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2310141e' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   cursor: pointer;
   transition: all 0.18s ease;
@@ -968,12 +968,12 @@ input[type="color"]::-webkit-color-swatch {
 
 .account-item:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141a28' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .account-item.active {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e203c' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .account-item-avatar {
@@ -1142,22 +1142,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 12px 16px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2310141e' stroke='%23242e42' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   cursor: pointer;
   transition: all 0.18s ease;
@@ -1165,7 +1165,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .account-method-card:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141a28' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   transform: translateY(-1px);
 }
 
@@ -1173,22 +1173,22 @@ input[type="color"]::-webkit-color-swatch {
   width: 40px;
   height: 40px;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23151b2a' stroke='%23283248' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   display: flex;
   align-items: center;
@@ -2578,22 +2578,22 @@ input[type="color"]::-webkit-color-swatch {
   background: transparent;
   padding: 6px 20px;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230b0f19' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
   animation: dockOpacityFade 0.25s ease;
@@ -2655,22 +2655,22 @@ input[type="color"]::-webkit-color-swatch {
   height: 38px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   display: flex;
   align-items: center;
@@ -2683,13 +2683,13 @@ input[type="color"]::-webkit-color-swatch {
 
 .dock-btn:hover .dock-icon-circle {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #f1f2ff;
 }
 
 .dock-btn.active .dock-icon-circle {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2311244c' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
@@ -3535,22 +3535,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 6px 16px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #94a3b8;
   font-size: 13px;
@@ -3561,13 +3561,13 @@ input[type="color"]::-webkit-color-swatch {
 
 .friends-tab-tabs button:hover:not(.active) {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
 .friends-tab-tabs button.active {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2384cc16' stroke='%23a3e635' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #071502;
   font-weight: 800;
 }
@@ -3631,22 +3631,22 @@ input[type="color"]::-webkit-color-swatch {
   height: 40px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23090d15' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   display: flex;
   align-items: center;
@@ -3659,7 +3659,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .friend-card-avatar.online {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23111f38' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .friend-card-dot {
@@ -3729,22 +3729,22 @@ input[type="color"]::-webkit-color-swatch {
   height: 30px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #cbd5e1;
   display: flex;
@@ -3757,41 +3757,41 @@ input[type="color"]::-webkit-color-swatch {
 
 .friend-action-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
 .friend-action-btn.join {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2384cc16' stroke='%23a3e635' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #071502;
 }
 
 .friend-action-btn.join:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2395dc20' stroke='%23bef264' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .friend-action-btn.invite {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231d5dc7' stroke='%232563eb' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
 .friend-action-btn.invite:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23256ae3' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .friend-action-btn.decline {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%232b1216' stroke='%23ef4444' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #f87171;
 }
 
 .friend-action-btn.decline:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23e11d48' stroke='%23fb7185' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
@@ -3807,22 +3807,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 6px 14px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   font-size: 12px;
   font-weight: 700;
@@ -3833,24 +3833,24 @@ input[type="color"]::-webkit-color-swatch {
 
 .friends-text-btn.accept {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2384cc16' stroke='%23a3e635' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #071502;
 }
 
 .friends-text-btn.accept:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2395dc20' stroke='%23bef264' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .friends-text-btn.decline {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%232b1216' stroke='%23ef4444' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #f87171;
 }
 
 .friends-text-btn.decline:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23e11d48' stroke='%23fb7185' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
@@ -4743,22 +4743,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 0 14px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2384cc16' stroke='%23a3e635' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #071502;
   font-size: 12px;
@@ -4769,7 +4769,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .instances-create-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2395dc20' stroke='%23bef264' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .assemblies-horizontal-list {
@@ -5446,22 +5446,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 0 10px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2310141e' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #8e99b2;
   font: inherit;
@@ -5491,7 +5491,7 @@ input[type="color"]::-webkit-color-swatch {
 .settings-rewrite-nav-button:hover,
 .settings-rewrite-nav-button:focus-visible {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141a28' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #f1f2ff;
 }
 
@@ -5507,7 +5507,7 @@ input[type="color"]::-webkit-color-swatch {
 .settings-rewrite-nav button.active,
 .settings-rewrite-nav-button.active {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2311244c' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
   font-weight: 700;
 }
@@ -5950,22 +5950,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 5px 12px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #929db5;
   cursor: pointer;
@@ -5981,7 +5981,7 @@ input[type="color"]::-webkit-color-swatch {
 .settings-rewrite-language-buttons button:hover,
 .settings-rewrite-language-buttons button.active {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2311244c' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #fff;
 }
 
@@ -6072,22 +6072,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 0 12px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%232a1c0d' stroke='%23f59e0b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #fde68a;
   cursor: pointer;
@@ -6099,7 +6099,7 @@ input[type="color"]::-webkit-color-swatch {
 }
 .settings-rewrite-store-button:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%233d2812' stroke='%23fbbf24' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   transform: translateY(-1px);
 }
 .settings-rewrite-store-button svg {
@@ -6397,22 +6397,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 2px 10px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #9da7ba;
   font: inherit;
@@ -6424,13 +6424,13 @@ input[type="color"]::-webkit-color-swatch {
 
 .settings-custom-pill-group button:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #fff;
 }
 
 .settings-custom-pill-group button.active {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2311244c' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #fff;
   font-weight: 600;
 }
@@ -6452,22 +6452,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 3px 12px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #e2e8f0;
   font-size: 0.65rem;
@@ -6479,7 +6479,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .settings-custom-upload-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #fff;
 }
 
@@ -7688,22 +7688,22 @@ input[type="color"]::-webkit-color-swatch {
   align-items: center;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230b0f19' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   padding: 4px 10px;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85);
@@ -7750,25 +7750,9 @@ input[type="color"]::-webkit-color-swatch {
 .millida-dock-cube-icon {
   width: 48px;
   height: 48px;
-  background: transparent;
-  border-style: solid;
-  border-width: 4px;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23102752' stroke='%230b1c3b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
-  clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
-  );
+  background: #102752;
+  border: 2px solid #0b1c3b;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -8159,22 +8143,22 @@ input[type="color"]::-webkit-color-swatch {
   gap: 10px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e1420' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   padding: 6px 12px;
   box-sizing: border-box;
@@ -8193,22 +8177,22 @@ input[type="color"]::-webkit-color-swatch {
 .nick-search-submit-btn {
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #cbd5e1;
   font-weight: 700;
@@ -8221,7 +8205,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .nick-search-submit-btn:hover:not(:disabled) {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
@@ -8231,22 +8215,22 @@ input[type="color"]::-webkit-color-swatch {
   gap: 14px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e1420' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   padding: 10px 14px;
   margin-top: 8px;
@@ -8280,22 +8264,22 @@ input[type="color"]::-webkit-color-swatch {
 .found-skin-apply-btn {
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2384cc16' stroke='%23a3e635' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #071502;
   font-weight: 800;
@@ -8308,7 +8292,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .found-skin-apply-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2395dc20' stroke='%23bef264' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 /* ==========================================================================
@@ -8383,22 +8367,22 @@ input[type="color"]::-webkit-color-swatch {
   background: transparent;
   padding: 4px;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e1420' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
 }
 
@@ -8410,22 +8394,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 0 16px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #94a3b8;
   font-size: 13px;
@@ -8437,13 +8421,13 @@ input[type="color"]::-webkit-color-swatch {
 
 .omega-store-tab-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
 .omega-store-tab-btn.active {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231d5dc7' stroke='%232563eb' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
@@ -8502,22 +8486,22 @@ input[type="color"]::-webkit-color-swatch {
 .store-section-card {
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230b0f19' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   padding: 16px 20px;
   box-sizing: border-box;
@@ -8577,22 +8561,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 0 16px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #cbd5e1;
   font-size: 12px;
@@ -8605,13 +8589,13 @@ input[type="color"]::-webkit-color-swatch {
 .store-upload-btn:hover,
 .store-toggle-cape-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
 .store-toggle-cape-btn.active {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2384cc16' stroke='%23a3e635' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #071502;
 }
 
@@ -8624,22 +8608,22 @@ input[type="color"]::-webkit-color-swatch {
   padding: 0 14px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%232b1216' stroke='%23ef4444' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #f87171;
   font-size: 12px;
@@ -8651,7 +8635,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .store-reset-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23e11d48' stroke='%23fb7185' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
@@ -8678,22 +8662,22 @@ input[type="color"]::-webkit-color-swatch {
   height: 30px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #94a3b8;
   font-size: 12px;
@@ -8706,13 +8690,13 @@ input[type="color"]::-webkit-color-swatch {
 
 .model-chip-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
 .model-chip-btn.active {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231d5dc7' stroke='%232563eb' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
@@ -8729,22 +8713,22 @@ input[type="color"]::-webkit-color-swatch {
   gap: 12px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%2310141e' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   padding: 8px 12px;
   box-sizing: border-box;
@@ -8753,12 +8737,12 @@ input[type="color"]::-webkit-color-swatch {
 
 .store-preset-card:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141a28' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .store-preset-card.current-active {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230e2316' stroke='%2310b981' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
 }
 
 .preset-avatar-box {
@@ -8852,22 +8836,22 @@ input[type="color"]::-webkit-color-swatch {
   height: 28px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #cbd5e1;
   font-size: 11px;
@@ -8881,7 +8865,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .preset-select-btn:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 
@@ -8904,22 +8888,22 @@ input[type="color"]::-webkit-color-swatch {
   height: 100%;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%230b0f19' stroke='%231e293b' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   display: flex;
   flex-direction: column;
@@ -8948,22 +8932,22 @@ input[type="color"]::-webkit-color-swatch {
   height: 28px;
   background: transparent;
   border-style: solid;
-  border-width: 4px;
+  border-width: 6px;
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%23141822' stroke='%23283244' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    calc(100% - 2px) 2px,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    2px calc(100% - 2px),
-    0 calc(100% - 2px),
-    0 2px,
-    2px 2px
+    3px 0,
+    calc(100% - 3px) 0,
+    calc(100% - 3px) 3px,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    3px calc(100% - 3px),
+    0 calc(100% - 3px),
+    0 3px,
+    3px 3px
   );
   color: #cbd5e1;
   font-size: 11px;
@@ -8976,7 +8960,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .stage-rotate-toggle:hover {
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 1h14v4h4v14h-4v4H5v-4H1V5h4V1z' fill='%231a202e' stroke='%2338bdf8' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E")
-    4 fill stretch;
+    6 fill stretch;
   color: #ffffff;
 }
 

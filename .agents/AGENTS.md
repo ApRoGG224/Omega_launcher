@@ -25,11 +25,11 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
 - Global system CLI support (`omega` command runs `npm run tauri dev`).
 - Immersive 3D character home screen inspired by modern launchers (3D skin view, quick skin customization card, and consolidated version/play launch dock).
 - Centralized `useSkin` state management for Ely.by, Microsoft, and custom PNG skins with Steve/Alex models.
-- Authentic Minecraft stepped notched pixel-art UI styling standardized across the entire launcher with a uniform 4px border-width, 4-slice SVG (`24x24`), and 2px polygon clip-path formula, completely eliminating corner protrusion artifacts ("кусочки") on buttons, cards, docks, top bar, instances, friends, store, and settings menus.
+- Authentic Minecraft stepped notched pixel-art UI styling standardized across the entire launcher with a uniform 6px border-width, 6-slice SVG (`24x24`), and 3px polygon clip-path formula, completely eliminating corner protrusion artifacts ("кусочки") on buttons, cards, docks, top bar, instances, friends, store, and settings menus.
 - Radiant emerald Minecraft atmosphere background with dynamic radial glow, sunburst rays, and drifting sparkles.
 - Top bar with stepped notched widgets: friends online pill with red badge, user profile dropdown, square action buttons (Audio Mute, Stats, Messages with badge), bright lime-green Protection/Bug button with bottom-right cyan `+50` badge, and Settings gear button.
 - Dual left action cards: Store ("Магазин Omega") and Play with Friends ("Играть с друзьями").
-- Stepped notched Launch Dock: royal blue version selector (`#1d5dc7`) with custom 3D isometric Minecraft grass block icon, and pastel lilac/purple Play button (`#9f75ff`) with black pixel play icon (`▶`) and bold "Играть".
+- Stepped notched Launch Dock: royal blue version selector (`#1d5dc7`) with crisp square 90° icon box (`.millida-dock-cube-icon`) for the custom 3D isometric Minecraft grass block icon, and pastel lilac/purple Play button (`#9f75ff`) with black pixel play icon (`▶`) and bold "Играть".
 - Animation wheel (`AnimationWheelModal`) and skeletal Emotecraft animation listeners completely removed to ensure zero runtime lag and 60 FPS UI responsiveness.
 - Dedicated Omega Store (`OmegaStorePanel`, tab `"store"`) focused purely on Skins and Official Capes: online skin search by player nickname with in-game account synchronization and preset catalog of famous players (Notch, Dream, Technoblade, etc.), plus official Microsoft/Mojang/Minecon capes (Migrator, 15th Anniversary, Vanilla, Cherry Blossom, Twitch, TikTok, Mojang Studios, MCC Prismarine, Minecon).
 
