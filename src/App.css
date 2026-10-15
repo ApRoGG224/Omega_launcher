@@ -9745,48 +9745,24 @@ input[type="color"]::-webkit-color-swatch {
 
 /* --- Startup Shutter Curtains (Шторки под цвет фона, БЕЗ НЕОНА) --- */
 
-.startup-shutters-container {
+/* --- Startup Square Pixel Mosaic Curtain (Шторки из квадратных пикселей, БЕЗ НЕОНА) --- */
+
+.startup-pixel-mosaic-container {
   position: fixed;
   inset: 0;
   z-index: 100000;
   pointer-events: auto;
   overflow: hidden;
   user-select: none;
+  background: var(--launcher-bg, #07080e);
 }
 
-.startup-shutters-container.open {
-  pointer-events: none;
-}
-
-.startup-shutter {
+.startup-pixel-mosaic-canvas {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50%;
+  inset: 0;
+  width: 100%;
   height: 100%;
-  background-color: var(--launcher-bg, #07080e);
-  will-change: transform;
-  transition: transform 0.65s cubic-bezier(0.77, 0, 0.175, 1);
-  overflow: hidden;
-}
-
-.startup-shutter-left {
-  left: 0;
-  transform: translateX(0);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.startup-shutter-right {
-  right: 0;
-  transform: translateX(0);
-  border-left: 1px solid rgba(0, 0, 0, 0.5);
-}
-
-.startup-shutters-container.open .startup-shutter-left {
-  transform: translateX(-100%);
-}
-
-.startup-shutters-container.open .startup-shutter-right {
-  transform: translateX(100%);
+  display: block;
+  image-rendering: pixelated;
 }
 

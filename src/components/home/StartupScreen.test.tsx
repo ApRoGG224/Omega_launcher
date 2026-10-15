@@ -12,47 +12,39 @@ describe("StartupScreen", () => {
     vi.useRealTimers();
   });
 
-  it("renders shutters without any loading text", () => {
+  it("renders pixel mosaic canvas without any loading text", () => {
     const { container } = render(<StartupScreen onComplete={vi.fn()} />);
 
-    expect(container.querySelector(".startup-shutters-container")).toBeInTheDocument();
-    expect(container.querySelector(".startup-shutter-left")).toBeInTheDocument();
-    expect(container.querySelector(".startup-shutter-right")).toBeInTheDocument();
+    expect(
+      container.querySelector(".startup-pixel-mosaic-container"),
+    ).toBeInTheDocument();
+    expect(
+      container.querySelector(".startup-pixel-mosaic-canvas"),
+    ).toBeInTheDocument();
 
-    // Must NOT contain any loading text
+    // Strict rule: Must NOT contain any loading text
     expect(container.textContent).toBe("");
   });
 
-  it("opens shutters and calls onComplete after animation duration", () => {
+  it("completes and calls onComplete after transition duration", () => {
     const onComplete = vi.fn();
-    const { container } = render(<StartupScreen onComplete={onComplete} />);
-
-    // Fast-forward past initial pause and animation
-    act(() => {
-      vi.advanceTimersByTime(250);
-    });
-
-    expect(container.querySelector(".startup-shutters-container")).toHaveClass("open");
+    render(<StartupScreen onComplete={onComplete} />);
 
     act(() => {
-      vi.advanceTimersByTime(700);
+      vi.advanceTimersByTime(1100);
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
-  it("allows opening immediately on click or keydown", () => {
+  it("allows finishing immediately on click or keydown", () => {
     const onComplete = vi.fn();
     const { container } = render(<StartupScreen onComplete={onComplete} />);
 
     act(() => {
-      fireEvent.click(container.querySelector(".startup-shutters-container")!);
-    });
-
-    expect(container.querySelector(".startup-shutters-container")).toHaveClass("open");
-
-    act(() => {
-      vi.advanceTimersByTime(700);
+      fireEvent.click(
+        container.querySelector(".startup-pixel-mosaic-container")!,
+      );
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
