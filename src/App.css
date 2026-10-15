@@ -9733,20 +9733,17 @@ input[type="color"]::-webkit-color-swatch {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #a3e635;
-  text-shadow: 0 0 8px rgba(163, 230, 53, 0.4);
 }
 
 .pixel-loader-cyan .pixel-loader-text {
   color: #38bdf8;
-  text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
 }
 
 .pixel-loader-purple .pixel-loader-text {
   color: #c084fc;
-  text-shadow: 0 0 8px rgba(192, 132, 252, 0.4);
 }
 
-/* --- Startup Shutter Curtains (Шторки под цвет фона) --- */
+/* --- Startup Shutter Curtains (Шторки под цвет фона, БЕЗ НЕОНА) --- */
 
 .startup-shutters-container {
   position: fixed;
@@ -9759,24 +9756,6 @@ input[type="color"]::-webkit-color-swatch {
 
 .startup-shutters-container.open {
   pointer-events: none;
-}
-
-.startup-shutters-ambience {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(16, 185, 129, 0.22) 0%,
-    rgba(5, 150, 105, 0.1) 40%,
-    transparent 75%
-  );
-  pointer-events: none;
-  opacity: 1;
-  transition: opacity 0.5s ease;
-}
-
-.startup-shutters-container.open .startup-shutters-ambience {
-  opacity: 0;
 }
 
 .startup-shutter {
@@ -9794,25 +9773,13 @@ input[type="color"]::-webkit-color-swatch {
 .startup-shutter-left {
   left: 0;
   transform: translateX(0);
-  background: radial-gradient(
-    circle at 100% 50%,
-    rgba(16, 185, 129, 0.16) 0%,
-    rgba(7, 8, 14, 0.98) 70%
-  );
-  border-right: 1px solid rgba(132, 204, 22, 0.35);
-  box-shadow: inset -6px 0 24px rgba(132, 204, 22, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .startup-shutter-right {
   right: 0;
   transform: translateX(0);
-  background: radial-gradient(
-    circle at 0% 50%,
-    rgba(16, 185, 129, 0.16) 0%,
-    rgba(7, 8, 14, 0.98) 70%
-  );
-  border-left: 1px solid rgba(132, 204, 22, 0.35);
-  box-shadow: inset 6px 0 24px rgba(132, 204, 22, 0.1);
+  border-left: 1px solid rgba(0, 0, 0, 0.5);
 }
 
 .startup-shutters-container.open .startup-shutter-left {
@@ -9821,36 +9788,5 @@ input[type="color"]::-webkit-color-swatch {
 
 .startup-shutters-container.open .startup-shutter-right {
   transform: translateX(100%);
-}
-
-.startup-shutter-emerald-glow {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(132, 204, 22, 0.08) 0%,
-    transparent 65%
-  );
-  pointer-events: none;
-}
-
-.startup-shutter-seam {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 2px;
-  transform: translateX(-50%);
-  background: #a3e635;
-  box-shadow: 0 0 12px #84cc16, 0 0 24px rgba(132, 204, 22, 0.6);
-  opacity: 1;
-  pointer-events: none;
-  transition: opacity 0.3s ease, transform 0.65s ease;
-  z-index: 100001;
-}
-
-.startup-shutters-container.open .startup-shutter-seam {
-  opacity: 0;
-  transform: translateX(-50%) scaleY(0.7);
 }
 

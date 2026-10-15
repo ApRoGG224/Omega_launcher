@@ -48,21 +48,8 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
         onClick={handleOpen}
         aria-hidden="true"
       >
-        {/* Center ambient glow matching launcher background */}
-        <div className="startup-shutters-ambience" />
-
-        {/* Left Shutter */}
-        <div className="startup-shutter startup-shutter-left">
-          <div className="startup-shutter-emerald-glow" />
-        </div>
-
-        {/* Right Shutter */}
-        <div className="startup-shutter startup-shutter-right">
-          <div className="startup-shutter-emerald-glow" />
-        </div>
-
-        {/* Center vertical light seam */}
-        <div className="startup-shutter-seam" />
+        <div className="startup-shutter startup-shutter-left" />
+        <div className="startup-shutter startup-shutter-right" />
       </div>
     );
   },

@@ -18,7 +18,6 @@ describe("StartupScreen", () => {
     expect(container.querySelector(".startup-shutters-container")).toBeInTheDocument();
     expect(container.querySelector(".startup-shutter-left")).toBeInTheDocument();
     expect(container.querySelector(".startup-shutter-right")).toBeInTheDocument();
-    expect(container.querySelector(".startup-shutter-seam")).toBeInTheDocument();
 
     // Must NOT contain any loading text
     expect(container.textContent).toBe("");
