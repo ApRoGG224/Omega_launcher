@@ -380,6 +380,18 @@ export const translations = {
     storeApplyBtn: "Выбрать",
     storeActiveBadge: "Активен",
     storeResetBtn: "Сбросить",
+
+    startupLoading: "Запуск Omega...",
+    startupStepConfig: "Загрузка конфигурации лаунчера...",
+    startupStepProfile: "Инициализация профиля и скина...",
+    startupStepInstances: "Проверка игровых сборок и модов...",
+    startupStepCatalog: "Синхронизация каталога...",
+    startupStepReady: "Готово! Приятной игры!",
+    startupTip1: "Совет: В Магазине Omega можно выбрать официальные скины и плащи",
+    startupTip2: "Совет: Нажмите F11 для перехода в полноэкранный режим",
+    startupTip3: "Совет: Вы можете играть с друзьями прямо через лаунчер",
+    startupSkip: "Нажмите Пробел или кликните, чтобы пропустить",
+    loadingSkin: "Загрузка скина...",
   },
   en: {
     sidebarHome: "Home",
@@ -764,6 +776,18 @@ export const translations = {
     storeApplyBtn: "Select",
     storeActiveBadge: "Active",
     storeResetBtn: "Reset",
+
+    startupLoading: "Starting Omega...",
+    startupStepConfig: "Loading launcher configuration...",
+    startupStepProfile: "Initializing player profile & skin...",
+    startupStepInstances: "Checking game instances & mods...",
+    startupStepCatalog: "Syncing catalog...",
+    startupStepReady: "Ready to play!",
+    startupTip1: "Tip: You can customize official skins and capes in Omega Store",
+    startupTip2: "Tip: Press F11 to toggle fullscreen mode",
+    startupTip3: "Tip: You can play with friends directly from the launcher",
+    startupSkip: "Press Space or click to skip",
+    loadingSkin: "Loading skin...",
   },
 };
 

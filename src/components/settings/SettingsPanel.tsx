@@ -13,6 +13,7 @@ import {
   IconSparkles,
   IconTag,
   IconUsers,
+  IconX,
 } from "../../ui/icons";
 
 export interface NeonTheme {
@@ -325,6 +326,7 @@ export const SettingsPanel = React.memo(
     fullscreenOnStart,
     setFullscreenOnStart,
     onOpenStore,
+    onClose,
   }: {
     t: any;
     language: Language;
@@ -352,6 +354,7 @@ export const SettingsPanel = React.memo(
     fullscreenOnStart: boolean;
     setFullscreenOnStart: (v: boolean) => void;
     onOpenStore: () => void;
+    onClose?: () => void;
   }) => {
     const [activeTab, setActiveTab] =
       React.useState<SettingsTab>("files");
@@ -387,9 +390,22 @@ export const SettingsPanel = React.memo(
               <p>{t.settingsSubtitle}</p>
             </div>
           </div>
-          <div className="settings-rewrite-status">
-            <span className="settings-rewrite-status-dot" />
-            <span>{isRussian ? "Локальный профиль" : "Local profile"}</span>
+          <div className="settings-rewrite-header-actions">
+            <div className="settings-rewrite-status">
+              <span className="settings-rewrite-status-dot" />
+              <span>{isRussian ? "Локальный профиль" : "Local profile"}</span>
+            </div>
+            {onClose && (
+              <button
+                type="button"
+                className="settings-rewrite-close-btn"
+                onClick={onClose}
+                title={isRussian ? "Закрыть настройки" : "Close settings"}
+              >
+                <IconX size={16} />
+                <span>{isRussian ? "Закрыть" : "Close"}</span>
+              </button>
+            )}
           </div>
         </header>
 
@@ -457,47 +473,55 @@ export const SettingsPanel = React.memo(
                     <label htmlFor="settings-export-path">
                       {t.settingsExportPath}
                     </label>
-                    <div className="settings-rewrite-input">
+                    <div className="settings-rewrite-input-group">
                       <input
                         id="settings-export-path"
                         type="text"
                         value={exportPath}
                         onChange={(e) => setExportPath(e.target.value)}
+                        className="settings-rewrite-input-control"
                       />
                       <button
                         type="button"
+                        className="settings-rewrite-action-btn"
                         title={t.openFolderShort}
                         aria-label={t.openFolderShort}
                         onClick={() => void ipc.openPath(exportPath)}
                       >
                         <IconFolder />
+                        <span>{isRussian ? "Открыть" : "Open"}</span>
                       </button>
                     </div>
                   </div>
                   <div className="settings-rewrite-field">
                     <label htmlFor="settings-java-path">{t.javaLabel}</label>
-                    <div className="settings-rewrite-input">
+                    <div className="settings-rewrite-input-group">
                       <input
                         id="settings-java-path"
                         type="text"
                         value={javaPath}
                         onChange={(e) => setJavaPath(e.target.value)}
+                        className="settings-rewrite-input-control"
                       />
                       <button
                         type="button"
+                        className="settings-rewrite-action-btn settings-rewrite-action-btn-detect"
                         title={t.javaAutoDetect}
                         aria-label={t.javaAutoDetect}
                         onClick={() => void detectJava()}
                       >
                         <IconSearch />
+                        <span>{isRussian ? "Поиск" : "Find"}</span>
                       </button>
                       <button
                         type="button"
+                        className="settings-rewrite-action-btn"
                         title={t.openFolderShort}
                         aria-label={t.openFolderShort}
                         onClick={() => void ipc.openPath(javaPath)}
                       >
                         <IconFolder />
+                        <span>{isRussian ? "Открыть" : "Open"}</span>
                       </button>
                     </div>
                     {javaDetectMsg && (
@@ -511,20 +535,23 @@ export const SettingsPanel = React.memo(
                   </div>
                   <div className="settings-rewrite-field">
                     <label htmlFor="settings-game-path">{t.gameFolder}</label>
-                    <div className="settings-rewrite-input">
+                    <div className="settings-rewrite-input-group">
                       <input
                         id="settings-game-path"
                         type="text"
                         value={gamePath}
                         onChange={(e) => setGamePath(e.target.value)}
+                        className="settings-rewrite-input-control"
                       />
                       <button
                         type="button"
+                        className="settings-rewrite-action-btn"
                         title={t.openFolderShort}
                         aria-label={t.openFolderShort}
                         onClick={() => void ipc.openPath(gamePath)}
                       >
                         <IconFolder />
+                        <span>{isRussian ? "Открыть" : "Open"}</span>
                       </button>
                     </div>
                   </div>
@@ -586,6 +613,24 @@ export const SettingsPanel = React.memo(
                     <strong>4–8 GB</strong>
                   </div>
                 </div>
+
+                <div className="settings-rewrite-ram-presets-card">
+                  <span className="settings-rewrite-presets-title">
+                    {isRussian ? "Быстрый выбор памяти:" : "Quick memory select:"}
+                  </span>
+                  <div className="settings-rewrite-ram-buttons">
+                    {[2, 4, 6, 8, 12, 16].map((gb) => (
+                      <button
+                        key={gb}
+                        type="button"
+                        className={`settings-rewrite-ram-btn ${ram === gb ? "active" : ""}`}
+                        onClick={() => setRam(gb)}
+                      >
+                        {gb} GB
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </SettingsSection>
             )}
 
@@ -608,13 +653,26 @@ export const SettingsPanel = React.memo(
               >
                 <div className="settings-rewrite-inline-field">
                   <label htmlFor="settings-server-ip">{t.serverIpLabel}</label>
-                  <input
-                    id="settings-server-ip"
-                    type="text"
-                    placeholder="mc.hypixel.net"
-                    value={serverIp}
-                    onChange={(e) => setServerIp(e.target.value)}
-                  />
+                  <div className="settings-rewrite-input-group" style={{ flex: 1 }}>
+                    <input
+                      id="settings-server-ip"
+                      type="text"
+                      placeholder="mc.hypixel.net"
+                      value={serverIp}
+                      onChange={(e) => setServerIp(e.target.value)}
+                      className="settings-rewrite-input-control"
+                    />
+                    {serverIp && (
+                      <button
+                        type="button"
+                        className="settings-rewrite-action-btn settings-rewrite-btn-danger"
+                        onClick={() => setServerIp("")}
+                        title={isRussian ? "Очистить IP" : "Clear IP"}
+                      >
+                        <span>{isRussian ? "Очистить" : "Clear"}</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </SettingsSection>
             )}
@@ -680,14 +738,14 @@ export const SettingsPanel = React.memo(
                   <div className="settings-rewrite-language-buttons">
                     <button
                       type="button"
-                      className={language === "ru" ? "active" : ""}
+                      className={`settings-rewrite-lang-btn ${language === "ru" ? "active" : ""}`}
                       onClick={() => changeLanguage("ru")}
                     >
                       <b>RU</b> Русский
                     </button>
                     <button
                       type="button"
-                      className={language === "en" ? "active" : ""}
+                      className={`settings-rewrite-lang-btn ${language === "en" ? "active" : ""}`}
                       onClick={() => changeLanguage("en")}
                     >
                       <b>EN</b> English

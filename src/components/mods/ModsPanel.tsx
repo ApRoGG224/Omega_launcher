@@ -9,6 +9,7 @@ import { ModCard } from "./ModCard";
 import { InstallTargetModal } from "./InstallTargetModal";
 import { WorldSelectModal, type WorldSelectState } from "./WorldSelectModal";
 import { ShaderInstallModal, type ShaderInstallState } from "./ShaderInstallModal";
+import { PixelLoader } from "../../ui/PixelLoader";
 
 const LOADER_OPTIONS = ["", "fabric", "forge", "quilt", "neoforge"];
 
@@ -287,7 +288,7 @@ export const ModsPanel = React.memo(({
           ))}
           {search.loading && (
             <div style={{ width: "100%", gridColumn: "1 / -1", textAlign: "center", padding: "20px" }}>
-              <div className="spinner" />
+              <PixelLoader size="md" variant="emerald" text={t.loading} />
             </div>
           )}
         </div>

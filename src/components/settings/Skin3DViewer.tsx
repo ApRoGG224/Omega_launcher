@@ -10,6 +10,7 @@ import {
   resetEmoteJoints,
   type AnimationId,
 } from "../../utils/skinAnimations";
+import { PixelLoader } from "../../ui/PixelLoader";
 
 export const FALLBACK_STEVE_SKIN = "https://minotar.net/skin/MHF_Steve";
 
@@ -180,7 +181,7 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = React.memo(
         />
         {loading && (
           <div className="skin-3d-loading">
-            <div className="spinner" />
+            <PixelLoader size="md" variant="emerald" />
           </div>
         )}
       </div>

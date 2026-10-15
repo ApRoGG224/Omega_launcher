@@ -39,6 +39,7 @@ import {
   applyNeonTheme,
 } from "./components/settings/SettingsPanel";
 import { OmegaStorePanel } from "./components/store/OmegaStorePanel";
+import { StartupScreen } from "./components/home/StartupScreen";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   getStoredFullscreenOnStart,
@@ -104,6 +105,7 @@ function App() {
   const [newVer, setNewVer] = useState("1.21.4");
   const [newLoader, setNewLoader] = useState("Fabric");
   const [soundMuted, setSoundMuted] = useState(false);
+  const [startupLoading, setStartupLoading] = useState(true);
 
   const [themeHex, setThemeHex] = useState(() => getStoredTheme());
   const [closeOnLaunch, setCloseOnLaunch] = useState(() =>
@@ -689,6 +691,14 @@ function App() {
         progress={instancesApi.installProgress}
         onClose={() => setImportPopupHidden(true)}
       />
+
+      {startupLoading && (
+        <StartupScreen
+          t={t}
+          isReady={instancesApi.instancesLoaded && !skinApi.skinLoading}
+          onComplete={() => setStartupLoading(false)}
+        />
+      )}
     </div>
   );
 }
