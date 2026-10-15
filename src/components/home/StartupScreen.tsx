@@ -24,16 +24,22 @@ interface PixelBlock {
 }
 
 export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
-  ({ onComplete }) => {
+  ({ onComplete, isReady = true }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const onCompleteRef = useRef(onComplete);
+    onCompleteRef.current = onComplete;
+
     const completeCalledRef = useRef(false);
+    const hasStartedOpeningRef = useRef(false);
+    const startWaveFnRef = useRef<(() => void) | null>(null);
 
     const finish = useCallback(() => {
       if (completeCalledRef.current) return;
       completeCalledRef.current = true;
-      onComplete();
-    }, [onComplete]);
+      onCompleteRef.current();
+    }, []);
 
+    // Set up canvas and initial closed mosaic (runs once on mount)
     useEffect(() => {
       const canvas = canvasRef.current;
       if (!canvas) {
@@ -44,8 +50,12 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
       const ctx = canvas.getContext("2d", { alpha: true });
       if (!ctx) {
         // Fallback for headless environments or jsdom
-        const timer = setTimeout(finish, 850);
-        return () => clearTimeout(timer);
+        startWaveFnRef.current = () => {
+          if (hasStartedOpeningRef.current) return;
+          hasStartedOpeningRef.current = true;
+          setTimeout(finish, 400);
+        };
+        return;
       }
 
       let animationFrameId: number;
@@ -101,7 +111,6 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
       const DURATION = 850;
       const WAVE_WIDTH = maxDistance * 0.42;
       let startTime: number | null = null;
-      let startDelayTimer: ReturnType<typeof setTimeout> | null = null;
 
       const renderFrame = (timestamp: number) => {
         if (startTime === null) startTime = timestamp;
@@ -160,10 +169,11 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
         }
       };
 
-      // Brief hold to allow initial frame to stabilize
-      startDelayTimer = setTimeout(() => {
+      startWaveFnRef.current = () => {
+        if (hasStartedOpeningRef.current) return;
+        hasStartedOpeningRef.current = true;
         animationFrameId = requestAnimationFrame(renderFrame);
-      }, 50);
+      };
 
       const handleResize = () => {
         width = canvas.width = window.innerWidth || 1280;
@@ -173,12 +183,34 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
       window.addEventListener("resize", handleResize);
 
       return () => {
-        if (startDelayTimer) clearTimeout(startDelayTimer);
         cancelAnimationFrame(animationFrameId);
         window.removeEventListener("resize", handleResize);
+        startWaveFnRef.current = null;
       };
     }, [finish]);
 
+    // Trigger wave start when isReady becomes true
+    useEffect(() => {
+      if (!isReady || hasStartedOpeningRef.current) return;
+      const startTimer = setTimeout(() => {
+        if (startWaveFnRef.current) {
+          startWaveFnRef.current();
+        }
+      }, 50);
+      return () => clearTimeout(startTimer);
+    }, [isReady]);
+
+    // Safety fallback: if isReady never turns true within 1200ms, start opening anyway
+    useEffect(() => {
+      const safetyTimer = setTimeout(() => {
+        if (!hasStartedOpeningRef.current && startWaveFnRef.current) {
+          startWaveFnRef.current();
+        }
+      }, 1200);
+      return () => clearTimeout(safetyTimer);
+    }, []);
+
+    // Skip immediately on click or keyboard
     useEffect(() => {
       const handleKeyDown = () => {
         finish();

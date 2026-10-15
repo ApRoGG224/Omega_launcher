@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ipc } from "../services/ipc";
 
 export type SkinSource = "ely" | "microsoft" | "custom";
@@ -43,7 +43,8 @@ export function useSkin(accountName?: string): SkinApi {
 
   const [activeSkinUrl, setActiveSkinUrl] = useState<string | null>(null);
   const [activeCapeUrl, setActiveCapeUrl] = useState<string | null>(null);
-  const [skinLoading, setSkinLoading] = useState(false);
+  const [skinLoading, setSkinLoading] = useState(true);
+  const isInitialMountRef = useRef(true);
 
   const setSkinSource = useCallback((source: SkinSource) => {
     setSkinSourceState(source);
@@ -137,10 +138,6 @@ export function useSkin(accountName?: string): SkinApi {
 
   useEffect(() => {
     let cancelled = false;
-    const timer = setTimeout(() => {
-      setSkinLoading(true);
-      void resolveSkin();
-    }, 200);
 
     const resolveSkin = async () => {
       const name = (accountName || "Steve").trim();
@@ -223,9 +220,22 @@ export function useSkin(accountName?: string): SkinApi {
       }
     };
 
+    const run = () => {
+      setSkinLoading(true);
+      void resolveSkin();
+    };
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      run();
+    } else {
+      timer = setTimeout(run, 200);
+    }
+
     return () => {
       cancelled = true;
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
     };
   }, [skinSource, accountName, customSkinUrl, customCapeUrl, capeEnabled]);
 

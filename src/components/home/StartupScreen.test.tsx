@@ -49,4 +49,27 @@ describe("StartupScreen", () => {
 
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
+
+  it("waits while isReady is false and completes once isReady becomes true", () => {
+    const onComplete = vi.fn();
+    const { rerender } = render(
+      <StartupScreen isReady={false} onComplete={onComplete} />,
+    );
+
+    // After 300ms, still waiting because isReady is false
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    expect(onComplete).not.toHaveBeenCalled();
+
+    // Now launcher data finished loading
+    rerender(<StartupScreen isReady={true} onComplete={onComplete} />);
+
+    // Fast-forward opening wave
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
 });

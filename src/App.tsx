@@ -107,6 +107,10 @@ function App() {
   const [soundMuted, setSoundMuted] = useState(false);
   const [startupLoading, setStartupLoading] = useState(true);
 
+  const handleStartupComplete = useCallback(() => {
+    setStartupLoading(false);
+  }, []);
+
   const [themeHex, setThemeHex] = useState(() => getStoredTheme());
   const [closeOnLaunch, setCloseOnLaunch] = useState(() =>
     getStoredCloseOnLaunch(),
@@ -695,7 +699,7 @@ function App() {
       {startupLoading && (
         <StartupScreen
           isReady={instancesApi.instancesLoaded && !skinApi.skinLoading}
-          onComplete={() => setStartupLoading(false)}
+          onComplete={handleStartupComplete}
         />
       )}
     </div>
