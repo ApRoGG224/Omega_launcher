@@ -106,9 +106,14 @@ function App() {
   const [newLoader, setNewLoader] = useState("Fabric");
   const [soundMuted, setSoundMuted] = useState(false);
   const [startupLoading, setStartupLoading] = useState(true);
+  const [skin3DReady, setSkin3DReady] = useState(false);
 
   const handleStartupComplete = useCallback(() => {
     setStartupLoading(false);
+  }, []);
+
+  const handleSkinReady = useCallback(() => {
+    setSkin3DReady(true);
   }, []);
 
   const [themeHex, setThemeHex] = useState(() => getStoredTheme());
@@ -420,6 +425,7 @@ function App() {
             onSelectVersion={() => setActiveTab("modpacks")}
             onOpenStore={() => setActiveTab("store")}
             onOpenFriends={() => setActiveTab("friends")}
+            onSkinReady={handleSkinReady}
           />
         )}
 
@@ -698,7 +704,11 @@ function App() {
 
       {startupLoading && (
         <StartupScreen
-          isReady={instancesApi.instancesLoaded && !skinApi.skinLoading}
+          isReady={
+            instancesApi.instancesLoaded &&
+            !skinApi.skinLoading &&
+            (skin3DReady || !skinApi.activeSkinUrl)
+          }
           onComplete={handleStartupComplete}
         />
       )}

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 export interface StartupScreenProps {
   onComplete: () => void;
@@ -17,6 +17,9 @@ const MATTE_PALETTE = [
   "#111626",
 ];
 
+// Minimum display duration (in ms) to allow 3D character, textures, and shaders to fully compile
+const MIN_LOADING_TIME_MS = 650;
+
 interface PixelBlock {
   x: number;
   y: number;
@@ -29,9 +32,11 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
     const onCompleteRef = useRef(onComplete);
     onCompleteRef.current = onComplete;
 
+    const [isRevealing, setIsRevealing] = useState(false);
     const completeCalledRef = useRef(false);
     const hasStartedOpeningRef = useRef(false);
     const startWaveFnRef = useRef<(() => void) | null>(null);
+    const mountTimeRef = useRef(Date.now());
 
     const finish = useCallback(() => {
       if (completeCalledRef.current) return;
@@ -53,6 +58,7 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
         startWaveFnRef.current = () => {
           if (hasStartedOpeningRef.current) return;
           hasStartedOpeningRef.current = true;
+          setIsRevealing(true);
           setTimeout(finish, 400);
         };
         return;
@@ -172,6 +178,7 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
       startWaveFnRef.current = () => {
         if (hasStartedOpeningRef.current) return;
         hasStartedOpeningRef.current = true;
+        setIsRevealing(true);
         animationFrameId = requestAnimationFrame(renderFrame);
       };
 
@@ -189,24 +196,27 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
       };
     }, [finish]);
 
-    // Trigger wave start when isReady becomes true
+    // Trigger wave start when isReady becomes true AND minimum loading time has passed
     useEffect(() => {
       if (!isReady || hasStartedOpeningRef.current) return;
+      const elapsed = Date.now() - mountTimeRef.current;
+      const delay = Math.max(50, MIN_LOADING_TIME_MS - elapsed);
+
       const startTimer = setTimeout(() => {
         if (startWaveFnRef.current) {
           startWaveFnRef.current();
         }
-      }, 50);
+      }, delay);
       return () => clearTimeout(startTimer);
     }, [isReady]);
 
-    // Safety fallback: if isReady never turns true within 1200ms, start opening anyway
+    // Safety fallback: if isReady never turns true within 1400ms, start opening anyway
     useEffect(() => {
       const safetyTimer = setTimeout(() => {
         if (!hasStartedOpeningRef.current && startWaveFnRef.current) {
           startWaveFnRef.current();
         }
-      }, 1200);
+      }, 1400);
       return () => clearTimeout(safetyTimer);
     }, []);
 
@@ -221,7 +231,7 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
 
     return (
       <div
-        className="startup-pixel-mosaic-container"
+        className={`startup-pixel-mosaic-container ${isRevealing ? "revealing" : ""}`}
         onClick={finish}
         aria-hidden="true"
       >

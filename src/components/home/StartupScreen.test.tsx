@@ -31,7 +31,7 @@ describe("StartupScreen", () => {
     render(<StartupScreen onComplete={onComplete} />);
 
     act(() => {
-      vi.advanceTimersByTime(1100);
+      vi.advanceTimersByTime(1300);
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
@@ -65,9 +65,9 @@ describe("StartupScreen", () => {
     // Now launcher data finished loading
     rerender(<StartupScreen isReady={true} onComplete={onComplete} />);
 
-    // Fast-forward opening wave
+    // Fast-forward past minimum display time and opening wave
     act(() => {
-      vi.advanceTimersByTime(600);
+      vi.advanceTimersByTime(1000);
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);

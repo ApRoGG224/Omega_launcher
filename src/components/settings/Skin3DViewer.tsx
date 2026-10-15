@@ -24,6 +24,7 @@ export interface Skin3DViewerProps {
   loading?: boolean;
   cameraDistance?: number;
   rotationY?: number;
+  onReady?: () => void;
 }
 
 export const Skin3DViewer: React.FC<Skin3DViewerProps> = React.memo(
@@ -37,6 +38,7 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = React.memo(
     loading = false,
     cameraDistance = 58,
     rotationY = 0,
+    onReady,
   }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const viewerRef = useRef<SkinViewer | null>(null);
@@ -123,14 +125,20 @@ export const Skin3DViewer: React.FC<Skin3DViewerProps> = React.memo(
         .loadSkin(targetSkin, {
           model: targetModel,
         })
+        .then(() => {
+          onReady?.();
+        })
         .catch(() => {
           if (targetSkin !== FALLBACK_STEVE_SKIN) {
             viewer
               .loadSkin(FALLBACK_STEVE_SKIN, { model: "default" })
-              .catch(() => {});
+              .then(() => onReady?.())
+              .catch(() => onReady?.());
+          } else {
+            onReady?.();
           }
         });
-    }, [skinUrl, model]);
+    }, [skinUrl, model, onReady]);
 
     // Update cape
     useEffect(() => {

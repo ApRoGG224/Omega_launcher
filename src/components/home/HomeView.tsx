@@ -15,6 +15,7 @@ interface HomeViewProps {
   onSelectVersion: () => void;
   onOpenStore?: () => void;
   onOpenFriends?: () => void;
+  onSkinReady?: () => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = React.memo(
@@ -28,6 +29,7 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
     onSelectVersion,
     onOpenStore,
     onOpenFriends,
+    onSkinReady,
   }) => {
     const [sunburstEnabled, setSunburstEnabled] = useState<boolean>(
       () => localStorage.getItem("omega:atmosphereSunburst") !== "false",
@@ -197,6 +199,7 @@ export const HomeView: React.FC<HomeViewProps> = React.memo(
               }
               animation="idle"
               loading={skinApi.skinLoading}
+              onReady={onSkinReady}
             />
             <div className="millida-skin-shadow" aria-hidden="true" />
           </div>
