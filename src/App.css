@@ -9754,7 +9754,7 @@ input[type="color"]::-webkit-color-swatch {
   pointer-events: auto;
   overflow: hidden;
   user-select: none;
-  background: var(--launcher-bg, #07080e);
+  background: transparent;
 }
 
 .startup-pixel-mosaic-canvas {

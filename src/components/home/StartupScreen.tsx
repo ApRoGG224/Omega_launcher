@@ -5,10 +5,10 @@ export interface StartupScreenProps {
   isReady?: boolean;
 }
 
-const PIXEL_SIZE = 20;
+const PIXEL_SIZE = 24;
 
 // Authentic matte Minecraft bedrock & obsidian tones matching --launcher-bg (#07080e)
-// Strict rule: NO NEON.
+// Strict design rule: NO NEON.
 const MATTE_PALETTE = [
   "#07080e",
   "#090c14",
@@ -16,6 +16,12 @@ const MATTE_PALETTE = [
   "#0e1321",
   "#111626",
 ];
+
+interface PixelBlock {
+  x: number;
+  y: number;
+  dist: number;
+}
 
 export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
   ({ onComplete }) => {
@@ -35,7 +41,7 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
         return;
       }
 
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d", { alpha: true });
       if (!ctx) {
         // Fallback for headless environments or jsdom
         const timer = setTimeout(finish, 850);
@@ -43,8 +49,8 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
       }
 
       let animationFrameId: number;
-      let width = (canvas.width = window.innerWidth);
-      let height = (canvas.height = window.innerHeight);
+      let width = (canvas.width = window.innerWidth || 1280);
+      let height = (canvas.height = window.innerHeight || 720);
 
       const cols = Math.ceil(width / PIXEL_SIZE);
       const rows = Math.ceil(height / PIXEL_SIZE);
@@ -55,15 +61,12 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
         Math.max(centerY, height - centerY),
       );
 
-      interface PixelBlock {
-        x: number;
-        y: number;
-        color: string;
-        dist: number;
-      }
+      // Pre-allocate color buckets to eliminate canvas state changes (ctx.fillStyle)
+      const buckets: PixelBlock[][] = Array.from(
+        { length: MATTE_PALETTE.length },
+        () => [],
+      );
 
-      // Pre-compute block positions and distances from screen center
-      const blocks: PixelBlock[] = [];
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           const x = c * PIXEL_SIZE;
@@ -72,76 +75,99 @@ export const StartupScreen: React.FC<StartupScreenProps> = React.memo(
             x + PIXEL_SIZE / 2 - centerX,
             y + PIXEL_SIZE / 2 - centerY,
           );
-          const color = MATTE_PALETTE[(r * 7 + c * 13) % MATTE_PALETTE.length];
-          blocks.push({ x, y, color, dist });
+          const colorIndex = (r * 7 + c * 13) % MATTE_PALETTE.length;
+          buckets[colorIndex].push({ x, y, dist });
         }
       }
 
-      // Draw initial fully closed pixel mosaic curtain
-      for (const b of blocks) {
-        ctx.fillStyle = b.color;
-        ctx.fillRect(b.x, b.y, PIXEL_SIZE, PIXEL_SIZE);
+      // Sort each bucket by distance ascending for O(1) amortized block culling
+      for (let c = 0; c < MATTE_PALETTE.length; c++) {
+        buckets[c].sort((a, b) => a.dist - b.dist);
+      }
+
+      // Track the first non-dissolved block index for each color bucket
+      const startIndices = new Int32Array(MATTE_PALETTE.length);
+
+      // Initial synchronous render: cover screen with opaque pixel blocks immediately
+      for (let c = 0; c < MATTE_PALETTE.length; c++) {
+        ctx.fillStyle = MATTE_PALETTE[c];
+        const bucket = buckets[c];
+        for (let i = 0; i < bucket.length; i++) {
+          const b = bucket[i];
+          ctx.fillRect(b.x, b.y, PIXEL_SIZE, PIXEL_SIZE);
+        }
       }
 
       const DURATION = 850;
-      const WAVE_WIDTH = maxDistance * 0.35;
+      const WAVE_WIDTH = maxDistance * 0.42;
       let startTime: number | null = null;
       let startDelayTimer: ReturnType<typeof setTimeout> | null = null;
 
       const renderFrame = (timestamp: number) => {
-        if (!startTime) startTime = timestamp;
+        if (startTime === null) startTime = timestamp;
         const elapsed = timestamp - startTime;
         const progress = Math.min(1, elapsed / DURATION);
 
-        // Smooth cubic ease curve for measured opening
-        const ease =
-          progress < 0.5
-            ? 2 * progress * progress
-            : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-
+        // Smooth cubic ease-out curve for fluid, responsive opening
+        const ease = 1 - Math.pow(1 - progress, 3);
         const currentFront = ease * (maxDistance + WAVE_WIDTH);
+        const dissolveLimit = currentFront - WAVE_WIDTH;
 
         ctx.clearRect(0, 0, width, height);
 
-        let activeCount = 0;
-        for (const b of blocks) {
-          if (b.dist < currentFront - WAVE_WIDTH) {
-            // Block completely dissolved
+        let remainingBlocks = 0;
+
+        for (let c = 0; c < MATTE_PALETTE.length; c++) {
+          const bucket = buckets[c];
+          let start = startIndices[c];
+
+          // Advance start index past all completely dissolved blocks
+          while (start < bucket.length && bucket[start].dist < dissolveLimit) {
+            start++;
+          }
+          startIndices[c] = start;
+
+          if (start >= bucket.length) {
             continue;
           }
 
-          let scale = 1;
-          if (b.dist < currentFront) {
-            const rawScale =
-              (b.dist - (currentFront - WAVE_WIDTH)) / WAVE_WIDTH;
-            // Discrete pixel stepping (1.0 -> 0.75 -> 0.5 -> 0.25 -> 0)
-            scale = Math.floor(rawScale * 4) / 4;
-          }
+          remainingBlocks += bucket.length - start;
+          // Set fillStyle only once per bucket (maximum 5 times per frame total)
+          ctx.fillStyle = MATTE_PALETTE[c];
 
-          if (scale > 0) {
-            activeCount++;
-            ctx.fillStyle = b.color;
-            const size = PIXEL_SIZE * scale;
-            const offset = (PIXEL_SIZE - size) / 2;
-            ctx.fillRect(b.x + offset, b.y + offset, size, size);
+          for (let i = start; i < bucket.length; i++) {
+            const b = bucket[i];
+
+            if (b.dist <= currentFront) {
+              // Within the active dissolving wave
+              const rawScale = (b.dist - dissolveLimit) / WAVE_WIDTH;
+              const size = Math.round(PIXEL_SIZE * rawScale);
+              if (size > 0) {
+                const offset = (PIXEL_SIZE - size) >> 1;
+                ctx.fillRect(b.x + offset, b.y + offset, size, size);
+              }
+            } else {
+              // Outer blocks not reached yet: draw full size
+              ctx.fillRect(b.x, b.y, PIXEL_SIZE, PIXEL_SIZE);
+            }
           }
         }
 
-        if (progress < 1 && activeCount > 0) {
+        if (progress < 1 && remainingBlocks > 0) {
           animationFrameId = requestAnimationFrame(renderFrame);
         } else {
           finish();
         }
       };
 
-      // Brief hold before dissolving wave begins
+      // Brief hold to allow initial frame to stabilize
       startDelayTimer = setTimeout(() => {
         animationFrameId = requestAnimationFrame(renderFrame);
-      }, 140);
+      }, 50);
 
       const handleResize = () => {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
+        width = canvas.width = window.innerWidth || 1280;
+        height = canvas.height = window.innerHeight || 720;
       };
 
       window.addEventListener("resize", handleResize);
