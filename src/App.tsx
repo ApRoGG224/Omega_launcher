@@ -694,7 +694,6 @@ function App() {
 
       {startupLoading && (
         <StartupScreen
-          t={t}
           isReady={instancesApi.instancesLoaded && !skinApi.skinLoading}
           onComplete={() => setStartupLoading(false)}
         />

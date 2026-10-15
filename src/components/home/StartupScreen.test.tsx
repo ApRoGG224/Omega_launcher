@@ -1,19 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, fireEvent, act } from "@testing-library/react";
 import React from "react";
 import { StartupScreen } from "./StartupScreen";
 
 describe("StartupScreen", () => {
-  const mockTranslations = {
-    startupStepConfig: "Загрузка конфигурации лаунчера...",
-    startupStepProfile: "Инициализация профиля и скина...",
-    startupStepInstances: "Проверка игровых сборок и модов...",
-    startupStepCatalog: "Синхронизация каталога...",
-    startupStepReady: "Готово! Приятной игры!",
-    startupTip1: "Совет: В Магазине Omega можно выбрать официальные скины и плащи",
-    startupSkip: "Нажмите Пробел или кликните, чтобы войти",
-  };
-
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -22,46 +12,48 @@ describe("StartupScreen", () => {
     vi.useRealTimers();
   });
 
-  it("renders branding, 3D block, and progress bar", () => {
-    render(<StartupScreen t={mockTranslations} onComplete={vi.fn()} />);
+  it("renders shutters without any loading text", () => {
+    const { container } = render(<StartupScreen onComplete={vi.fn()} />);
 
-    expect(screen.getByText("OMEGA")).toBeInTheDocument();
-    expect(screen.getByText("LAUNCHER")).toBeInTheDocument();
-    expect(screen.getByRole("progressbar")).toBeInTheDocument();
-    expect(screen.getByText(/Загрузка конфигурации/i)).toBeInTheDocument();
+    expect(container.querySelector(".startup-shutters-container")).toBeInTheDocument();
+    expect(container.querySelector(".startup-shutter-left")).toBeInTheDocument();
+    expect(container.querySelector(".startup-shutter-right")).toBeInTheDocument();
+    expect(container.querySelector(".startup-shutter-seam")).toBeInTheDocument();
+
+    // Must NOT contain any loading text
+    expect(container.textContent).toBe("");
   });
 
-  it("progresses and calls onComplete automatically", () => {
+  it("opens shutters and calls onComplete after animation duration", () => {
     const onComplete = vi.fn();
-    render(<StartupScreen t={mockTranslations} onComplete={onComplete} />);
+    const { container } = render(<StartupScreen onComplete={onComplete} />);
+
+    // Fast-forward past initial pause and animation
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(container.querySelector(".startup-shutters-container")).toHaveClass("open");
 
     act(() => {
-      vi.advanceTimersByTime(2500);
+      vi.advanceTimersByTime(700);
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
-  it("allows skipping via Space keydown", () => {
+  it("allows opening immediately on click or keydown", () => {
     const onComplete = vi.fn();
-    render(<StartupScreen t={mockTranslations} onComplete={onComplete} />);
+    const { container } = render(<StartupScreen onComplete={onComplete} />);
 
     act(() => {
-      fireEvent.keyDown(window, { key: " " });
-      vi.advanceTimersByTime(500);
+      fireEvent.click(container.querySelector(".startup-shutters-container")!);
     });
 
-    expect(onComplete).toHaveBeenCalledTimes(1);
-  });
+    expect(container.querySelector(".startup-shutters-container")).toHaveClass("open");
 
-  it("allows skipping via click on skip button", () => {
-    const onComplete = vi.fn();
-    render(<StartupScreen t={mockTranslations} onComplete={onComplete} />);
-
-    const skipBtn = screen.getByTitle(/Нажмите Пробел или кликните/i);
     act(() => {
-      fireEvent.click(skipBtn);
-      vi.advanceTimersByTime(500);
+      vi.advanceTimersByTime(700);
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
