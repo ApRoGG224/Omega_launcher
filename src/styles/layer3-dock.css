@@ -1,0 +1,325 @@
+/* Hallmark: modern-minimal / app / tactical-tech / dock */
+/* ==========================================================================
+   LAYER 3: BOTTOM LAUNCH DOCK
+   Minecraft Rust (Beta) Card Style Dock
+   ========================================================================== */
+
+:root {
+  --dock-bg: #05070d;
+  --dock-card: #0e1118;
+  --dock-card-b: rgba(255, 255, 255, 0.08);
+  --dock-btn: rgba(255, 255, 255, 0.05);
+  --dock-btn-b: rgba(255, 255, 255, 0.09);
+  --dock-btn-hover: rgba(255, 255, 255, 0.1);
+  --dock-text: #f2f4f8;
+  --dock-muted: #7d8594;
+  --dock-accent: #9b5cff;
+  --dock-accent-bg: rgba(155, 92, 255, 0.14);
+  --dock-rust: #c9a8ff;
+  --dock-rust-bg: rgba(155, 92, 255, 0.14);
+  --dock-rust-border: rgba(155, 92, 255, 0.3);
+  --dock-play: #c9ced8;
+  --dock-stop: #b3423f;
+  --dock-stop-hover: #c44e4b;
+  --dock-stop-active: #9c3735;
+}
+
+.layer-dock {
+  position: absolute;
+  bottom: 28px;
+  left: 0;
+  right: 0;
+  z-index: var(--layer-3-z, 30);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  transition: opacity var(--speed-normal, 0.2s) ease, justify-content 0.2s ease, padding 0.2s ease;
+  font-family: var(--font-primary) !important;
+  box-sizing: border-box;
+}
+
+.layer-dock.dock-align-center {
+  justify-content: center;
+}
+
+.layer-dock.dock-align-left {
+  justify-content: flex-start;
+  padding-left: 36px;
+}
+
+.layer-dock.dock-align-right {
+  justify-content: flex-end;
+  padding-right: 36px;
+}
+
+.layer-dock.dock-align-space-between {
+  justify-content: center;
+  padding: 0 36px;
+}
+
+.layer-dock.dock-align-space-between .dock-container.dock-card {
+  max-width: 860px;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.dock-item-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-align: left;
+  user-select: none;
+  color: inherit;
+  font-family: var(--font-primary) !important;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.dock-item-btn:hover {
+  opacity: 0.92;
+}
+
+.dock-title-btn {
+  flex: 1;
+  min-width: 0;
+}
+
+.dock-tags-btn {
+  display: flex;
+  align-items: center;
+}
+
+.dock-info-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.layer-dock.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 1. Main Dock Card Container */
+.dock-container.dock-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 560px;
+  padding: 12px;
+  background: var(--dock-card);
+  border: 1px solid var(--dock-card-b);
+  border-radius: 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75);
+  pointer-events: auto;
+  box-sizing: border-box;
+  font-family: var(--font-primary) !important;
+}
+
+/* 2. Interactive Instance Selector */
+.dock-instance-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-align: left;
+  user-select: none;
+  color: inherit;
+  font-family: var(--font-primary) !important;
+  border-radius: 6px;
+  transition: opacity 0.15s ease;
+}
+
+.dock-instance-btn:hover {
+  opacity: 0.92;
+}
+
+.dock-instance-btn:focus-visible {
+  outline: 2px solid var(--dock-accent);
+  outline-offset: 4px;
+}
+
+/* 3. Icon (64x64px, rounded 12px, #0a0c12) */
+.dock-icon {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  border-radius: 12px;
+  background: #0a0c12;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: grid;
+  place-items: center;
+}
+
+.dock-icon svg,
+.dock-icon-svg {
+  width: 36px;
+  height: 36px;
+}
+
+/* 4. Info Section (Title & Tags) */
+.dock-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dock-title {
+  font-family: var(--font-primary) !important;
+  font-size: 20px;
+  line-height: 1.15;
+  margin: 0 0 8px;
+  font-weight: 700;
+  color: var(--dock-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dock-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--dock-muted);
+  font-family: var(--font-primary) !important;
+  white-space: nowrap;
+}
+
+.dock-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: var(--dock-btn);
+  border: 1px solid var(--dock-btn-b);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--dock-text);
+  font-family: var(--font-primary) !important;
+  letter-spacing: 0.02em;
+}
+
+.dock-chip.rust,
+.dock-chip.loader-rust,
+.dock-chip.loader.loader-rust {
+  background: var(--dock-rust-bg);
+  border: 1px solid var(--dock-rust-border);
+  color: var(--dock-rust);
+}
+
+.dock-chip.loader {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: var(--text-pure, #ffffff);
+}
+
+.dock-chip.version {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--text-pure, #ffffff);
+}
+
+.dock-playtime {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dock-muted);
+  font-family: var(--font-primary) !important;
+}
+
+/* 5. Play / Stop Button */
+.dock-play {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 64px;
+  padding: 0 32px;
+  min-width: 184px;
+  box-sizing: border-box;
+  border-radius: 14px;
+  border: 1px solid #c9ced8;
+  background: #c9ced8;
+  box-shadow: 0 0 4px rgba(201, 206, 216, 0.35), 0 0 12px rgba(201, 206, 216, 0.15);
+  color: #0e1118;
+  font-family: var(--font-primary) !important;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.dock-play:hover {
+  background: #d6dae2;
+  box-shadow: 0 0 5px rgba(201, 206, 216, 0.45), 0 0 16px rgba(201, 206, 216, 0.2);
+}
+
+.dock-play:active {
+  background: #b8bdc8;
+  transform: translateY(1px);
+}
+
+.dock-play:focus-visible {
+  outline: 2px solid var(--dock-accent);
+  outline-offset: 2px;
+}
+
+.dock-play svg,
+.dock-play-svg {
+  width: 22px;
+  height: 22px;
+  fill: #0e1118;
+  flex-shrink: 0;
+}
+
+/* Replicated Stop State from Minecraft Rust (Beta)(1).html */
+.dock-play.running {
+  border-radius: 14px;
+  border: 1px solid #b3423f;
+  background: #b3423f;
+  box-shadow: 0 0 4px rgba(179, 66, 63, 0.35), 0 0 12px rgba(179, 66, 63, 0.15);
+  color: #ffffff;
+  font-family: var(--font-primary) !important;
+}
+
+.dock-play.running:hover {
+  background: #c44e4b;
+  border-color: #c44e4b;
+  box-shadow: 0 0 5px rgba(179, 66, 63, 0.45), 0 0 16px rgba(179, 66, 63, 0.2);
+}
+
+.dock-play.running:active {
+  background: #9c3735;
+  border-color: #9c3735;
+  transform: translateY(1px);
+}
+
+.dock-play.running svg,
+.dock-play.running .dock-play-svg {
+  fill: #ffffff;
+}
+
+@media (max-width: 480px) {
+  .dock-container.dock-card {
+    flex-wrap: wrap;
+  }
+  .dock-play {
+    width: 100%;
+    justify-content: center;
+  }
+}

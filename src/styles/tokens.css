@@ -1,0 +1,109 @@
+/* Hallmark: modern-minimal / app / tactical-tech / tokens */
+:root {
+  /* ==========================================================================
+     COLOR TOKENS (Base: Obsidian / Cold Graphite / Tactical Slate — Zero Neon)
+     ========================================================================== */
+  --bg-deep: #06080d;
+  --bg-canvas: #090d16;
+  --bg-surface: #0e1422;
+  --bg-surface-hover: #131b2c;
+  --bg-plate: #141f33;
+  --bg-plate-hover: #1a2840;
+  --bg-plate-active: #20314f;
+
+  --border-dim: #152033;
+  --border-subtle: #1c2b44;
+  --border-medium: #273b5c;
+  --border-bright: #38537f;
+
+  --text-pure: #f8fafc;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-accent: #93c5fd;
+
+  /* ==========================================================================
+     TACTICAL TECH BUTTON & CONTROL PRESETS (launcher_buttons_tektur_font standard)
+     Strictly matte, 0 8px 0 8px asymmetric radius, L-corner brackets, no neon.
+     ========================================================================== */
+  /* Default / Secondary Tactical Slate */
+  --btn-bg-default: #101726;
+  --btn-bc-default: #25364e;
+  --btn-kc-default: #709164;
+  --btn-text-default: #e6edf7;
+
+  /* Primary Action / Play / Connect (Tactical Green Field) */
+  --btn-bg-play: #4a6839;
+  --btn-bc-play: #698852;
+  --btn-kc-play: #c0d6ad;
+  --btn-text-play: #f4f6ee;
+
+  /* Danger / Stop / Cancel (Tactical Crimson) */
+  --btn-bg-stop: #7e3230;
+  --btn-bc-stop: #9e4a46;
+  --btn-kc-stop: #e2b4b1;
+  --btn-text-stop: #faefee;
+
+  /* Selection / Instance Focus (Tactical Royal Blue) */
+  --btn-bg-instance: #0f1d33;
+  --btn-bc-instance: #204975;
+  --btn-kc-instance: #5796dc;
+  --btn-text-instance: #f0f6ff;
+
+  /* Beta / Warning (Tactical Amber) */
+  --btn-bg-amber: #2a1b10;
+  --btn-bc-amber: #784415;
+  --btn-kc-amber: #e09f4a;
+  --btn-text-amber: #fef3c7;
+
+  /* Destructive Delete Button (Matte Crimson Tint) */
+  --btn-bg-delete: rgba(239, 68, 68, 0.14);
+  --btn-bg-delete-hover: rgba(239, 68, 68, 0.28);
+  --btn-border-delete: rgba(248, 113, 113, 0.35);
+  --btn-border-delete-hover: #ef4444;
+  --btn-text-delete: #f87171;
+  --btn-text-delete-hover: #faefee;
+
+  /* Universal Focus Indicator (Instant, High Contrast, 3:1+) */
+  --focus-ring: #5796dc;
+
+  /* Unified Clean Tactical Blue Accent (Matte Slate / Royal Blue — No Glow) */
+  --accent: #2563eb;
+  --accent-light: #3b82f6;
+  --accent-bright: #60a5fa;
+  --accent-dark: #1d4ed8;
+  --accent-bg-subtle: rgba(37, 99, 235, 0.12);
+  --accent-bg-hover: rgba(37, 99, 235, 0.22);
+  --accent-border: #1e40af;
+
+  /* Status Colors (Matte) */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-cyan: #06b6d4;
+
+  /* Layer Hierarchy Z-Indices */
+  --layer-0-z: 1;    /* Atmosphere / Background */
+  --layer-1-z: 10;   /* 3D Character Viewport */
+  --layer-2-z: 30;   /* HUD & Navigation Cards */
+  --layer-3-z: 40;   /* Launch Dock */
+  --layer-4-z: 100;  /* Fullscreen Screens & Overlays */
+  --layer-modal-z: 500; /* Modal Dialogs & Backdrops */
+  --layer-toasts-z: 600; /* System Toasts */
+
+  /* Typography - Strictly Exo 2 Interface + Unbounded Brand Badge Only */
+  --font-primary: 'Exo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-brand: 'Unbounded', 'Tektur', 'Exo 2', sans-serif;
+  --font-minecraft: 'Exo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Exo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Exo 2', sans-serif;
+  --font-pixel: 'Exo 2', sans-serif;
+  --font-display: 'Unbounded', 'Exo 2', sans-serif;
+
+  /* Transitions */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --speed-fast: 0.12s;
+  --speed-normal: 0.2s;
+  --speed-slow: 0.35s;
+}

@@ -40,9 +40,9 @@ export function useVersions(): VersionsApi {
   }, [allVersionsRaw, versionFilters]);
 
   const toggleVersionFilter = useCallback((key: keyof VersionFilterState, checked: boolean) => {
-    setVersionFilters((prev) => {
+    setVersionFilters((prev: VersionFilterState) => {
       const next = { ...prev, [key]: checked };
-      localStorage.setItem("vf_" + key, checked ? "true" : "false");
+      localStorage.setItem("vf_" + String(key), checked ? "true" : "false");
       return next;
     });
   }, []);

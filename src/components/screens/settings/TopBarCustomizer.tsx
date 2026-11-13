@@ -1,0 +1,625 @@
+import React, { useState, useEffect, useRef } from "react";
+import {
+  type TopBarItemId,
+  DEFAULT_TOPBAR_LAYOUT,
+  TOPBAR_ITEMS_META,
+} from "../../../constants/launcherLayout";
+import {
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Package,
+  Puzzle,
+  Server,
+  ShoppingBag,
+  Terminal,
+  Users,
+  Settings,
+  Sparkles,
+  Check,
+  Trash2,
+  Plus,
+  Palette,
+} from "lucide-react";
+import { SkinHeadAvatar } from "../../common/SkinHeadAvatar";
+import { InstanceAvatarIcon } from "../../icons/MinecraftIcons";
+import type { AccountData, InstanceData } from "../../../types";
+import type { ZoneCustomizationConfig } from "../../../types/menuCustomization";
+import { rgbaString, computePanelTheme } from "../../../utils/colorUtils";
+
+interface TopBarCustomizerProps {
+  layout?: TopBarItemId[];
+  onSave?: (layout: TopBarItemId[]) => void;
+  onReset?: () => void;
+  account?: AccountData | null;
+  skinUrl?: string;
+  selectedInstance?: InstanceData | null;
+  instances?: InstanceData[];
+  onFeedback?: (msg: string) => void;
+  topBarCustomization?: ZoneCustomizationConfig;
+  onOpenCustomizer?: () => void;
+}
+
+export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
+  layout = DEFAULT_TOPBAR_LAYOUT,
+  onSave,
+  onReset,
+  account,
+  skinUrl = "/skins/dream.png",
+  selectedInstance,
+  instances = [],
+  onFeedback,
+  topBarCustomization,
+  onOpenCustomizer,
+}) => {
+  const [draftLayout, setDraftLayout] = useState<TopBarItemId[]>(() => [...layout]);
+  const [selectedId, setSelectedId] = useState<TopBarItemId | null>(null);
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const dockRef = useRef<HTMLElement>(null);
+  const [scale, setScale] = useState<number>(1);
+
+  // Auto-fit calculation: guarantees dock is 100% visible on screen with zero horizontal scrolling
+  useEffect(() => {
+    const updateScale = () => {
+      if (canvasRef.current && dockRef.current) {
+        dockRef.current.style.transform = "none";
+        const availableWidth = canvasRef.current.clientWidth - 24;
+        const naturalWidth = dockRef.current.scrollWidth;
+        if (availableWidth > 0 && naturalWidth > 0) {
+          if (naturalWidth > availableWidth) {
+            const fitScale = Math.max(0.6, availableWidth / naturalWidth);
+            setScale(fitScale);
+            dockRef.current.style.transform = `scale(${fitScale})`;
+          } else {
+            setScale(1);
+            dockRef.current.style.transform = "none";
+          }
+        }
+      }
+    };
+
+    updateScale();
+    const ro = new ResizeObserver(updateScale);
+    if (canvasRef.current) ro.observe(canvasRef.current);
+    window.addEventListener("resize", updateScale);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", updateScale);
+    };
+  }, [draftLayout]);
+
+  useEffect(() => {
+    setDraftLayout([...layout]);
+  }, [layout]);
+
+  // Global keydown listener for selected item: Delete/Backspace to delete, ArrowLeft/Right to nudge
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      if (!selectedId) return;
+
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        deleteItem(selectedId);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        const idx = draftLayout.indexOf(selectedId);
+        if (idx > 0) nudgeItem(idx, -1);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        const idx = draftLayout.indexOf(selectedId);
+        if (idx !== -1 && idx < draftLayout.length - 1) nudgeItem(idx, 1);
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [selectedId, draftLayout]);
+
+  const hasUnsavedChanges = JSON.stringify(draftLayout) !== JSON.stringify(layout);
+
+  // Deleted / hidden items that can be restored
+  const deletedItems = DEFAULT_TOPBAR_LAYOUT.filter((id) => !draftLayout.includes(id));
+
+  // Move item from one position to another
+  const moveItem = (fromIdx: number, toIdx: number) => {
+    if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || fromIdx >= draftLayout.length || toIdx >= draftLayout.length) {
+      return;
+    }
+    setDraftLayout((prev) => {
+      const next = [...prev];
+      const [removed] = next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, removed);
+      return next;
+    });
+  };
+
+  // Nudge item by direction (-1: left, 1: right)
+  const nudgeItem = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= draftLayout.length) return;
+    moveItem(index, target);
+  };
+
+  // Delete an item from the top bar
+  const deleteItem = (idToDelete: TopBarItemId) => {
+    setDraftLayout((prev) => prev.filter((id) => id !== idToDelete));
+    if (selectedId === idToDelete) {
+      setSelectedId(null);
+    }
+  };
+
+  // Restore a deleted item
+  const restoreItem = (idToRestore: TopBarItemId) => {
+    setDraftLayout((prev) => [...prev, idToRestore]);
+  };
+
+  // Save changes
+  const handleSave = () => {
+    onSave?.(draftLayout);
+  };
+
+  // Reset to default
+  const handleReset = () => {
+    setDraftLayout([...DEFAULT_TOPBAR_LAYOUT]);
+    setSelectedId(null);
+    onReset?.();
+  };
+
+  // Click on item in preview
+  const handleItemClick = (id: TopBarItemId, index: number) => {
+    if (selectedId && selectedId !== id) {
+      // Automatic swap: clicking an element when another is selected automatically places it there!
+      const fromIdx = draftLayout.indexOf(selectedId);
+      if (fromIdx !== -1) {
+        moveItem(fromIdx, index);
+        setSelectedId(null);
+        return;
+      }
+    }
+    setSelectedId((prev) => (prev === id ? null : id));
+  };
+
+  // Drag and drop with live auto-shift
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggingIdx(index);
+    e.dataTransfer.setData("text/plain", index.toString());
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragEnter = (targetIndex: number) => {
+    // Automatic live repositioning as mouse hovers over elements
+    if (draggingIdx !== null && draggingIdx !== targetIndex) {
+      moveItem(draggingIdx, targetIndex);
+      setDraggingIdx(targetIndex);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggingIdx(null);
+  };
+
+  // Render individual preview item
+  const renderDockItemContent = (id: TopBarItemId) => {
+    switch (id) {
+      case "profile":
+        return (
+          <div className="hud-dock-profile-btn" style={{ pointerEvents: "none" }}>
+            <ChevronRight size={13} className="hud-dock-profile-chevron" style={{ transform: "rotate(90deg)" }} />
+            <span className="hud-dock-profile-name">{account?.name ?? "Гость"}</span>
+            <div className="hud-dock-profile-avatar">
+              <SkinHeadAvatar skinUrl={skinUrl} size={26} />
+            </div>
+          </div>
+        );
+
+      case "divider_profile":
+      case "divider_shortcuts":
+      case "divider_friends":
+        return (
+          <div
+            className={id === "divider_profile" ? "hud-dock-divider-mini" : "hud-dock-divider"}
+            style={{ pointerEvents: "none" }}
+          />
+        );
+
+      case "play":
+        return (
+          <div className="hud-dock-btn hud-dock-play active" style={{ pointerEvents: "none" }}>
+            <Play size={16} fill="currentColor" />
+          </div>
+        );
+
+      case "settings":
+        return (
+          <div className="hud-dock-btn" style={{ pointerEvents: "none" }}>
+            <Settings size={18} />
+          </div>
+        );
+
+      case "modrinth":
+        return (
+          <div className="hud-dock-btn" style={{ pointerEvents: "none" }}>
+            <Puzzle size={18} />
+          </div>
+        );
+
+      case "instances":
+        return (
+          <div className="hud-dock-btn" style={{ pointerEvents: "none" }}>
+            <Package size={18} />
+          </div>
+        );
+
+      case "servers":
+        return (
+          <div className="hud-dock-btn" style={{ pointerEvents: "none" }}>
+            <Server size={18} />
+          </div>
+        );
+
+      case "store":
+        return (
+          <div className="hud-dock-btn" style={{ pointerEvents: "none" }}>
+            <ShoppingBag size={18} />
+          </div>
+        );
+
+      case "console":
+        return (
+          <div className="hud-dock-btn" style={{ pointerEvents: "none" }}>
+            <Terminal size={18} />
+          </div>
+        );
+
+      case "shortcuts":
+        return (
+          <div className="hud-dock-shortcuts" style={{ pointerEvents: "none" }}>
+            {(instances.length > 0 ? instances.slice(0, 4) : [
+              { id: "inst_rust_beta", name: "Minecraft Rust (Beta)", icon: "obsidian" },
+              { id: "inst_1", name: "test1", icon: "end_crystal" },
+              { id: "inst_2", name: "Survival 1.20", icon: "diamond_pickaxe" },
+              { id: "inst_3", name: "Omega PvP Pack", icon: "diamond_sword" },
+            ]).map((inst) => (
+              <div key={inst.id} className="hud-dock-shortcut-btn">
+                <div className={`hud-shortcut-badge ${inst.icon || "diamond_sword"}`}>
+                  <InstanceAvatarIcon icon={inst.icon} size={22} />
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+
+      case "friends":
+        return (
+          <div className="hud-dock-btn" style={{ pointerEvents: "none" }}>
+            <Users size={18} />
+            <span className="hud-dock-badge">2</span>
+          </div>
+        );
+
+      case "chevron":
+        return (
+          <div className="hud-dock-btn hud-dock-chevron" style={{ pointerEvents: "none" }}>
+            <ChevronRight size={16} />
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="customizer-container customizer-rounded-theme">
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
+        <div>
+          <h2>Настройка верхней панели навигации</h2>
+          <div className="customizer-sub">
+            Нажимайте на стрелки или перетаскивайте для автоматического перемещения. Нажмите правой кнопкой мыши или Delete для удаления любого элемента.
+          </div>
+        </div>
+
+        {onOpenCustomizer && (
+          <button
+            type="button"
+            className={`catalog-customizer-btn ${topBarCustomization?.enabled ? "active" : ""}`}
+            onClick={onOpenCustomizer}
+            title="Настроить цвет, интенсивность и текстуру панели"
+          >
+            <Palette size={14} />
+            <span>Кастомизация стиля</span>
+            {topBarCustomization?.enabled && (
+              <span style={{ fontSize: "11px", opacity: 0.85 }}>({topBarCustomization.intensity}%)</span>
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* Interactive Live Drag-and-Drop Preview Showcase */}
+      <div className="customizer-preview-box">
+        <div className="customizer-preview-header">
+          <div className="customizer-preview-title">
+            <Sparkles size={14} />
+            <span>Предварительный просмотр верхней панели</span>
+          </div>
+          <span className="customizer-preview-hint">
+            ПКМ или Delete — удалить элемент | Клик или стрелки — автоперемещение
+          </span>
+        </div>
+
+        <div className="customizer-preview-canvas" ref={canvasRef}>
+          <nav
+            ref={dockRef}
+            className={`hud-top-dock customizer-dock-preview ${topBarCustomization?.enabled ? "custom-theme-active" : ""}`}
+            style={
+              topBarCustomization?.enabled
+                ? (() => {
+                    const t = computePanelTheme(
+                      topBarCustomization.color,
+                      topBarCustomization.intensity,
+                      topBarCustomization.patternIntensity,
+                      topBarCustomization.mode
+                    );
+                    return {
+                      backgroundColor: t.panelBg,
+                      borderColor: t.panelBorder,
+                      ["--custom-topbar-bg" as any]: t.panelBg,
+                      ["--custom-topbar-border" as any]: t.panelBorder,
+                      ["--custom-topbar-pattern" as any]: t.panelPattern,
+                      ["--custom-topbar-pattern-size" as any]: t.panelPatternSize,
+                      ["--custom-topbar-pattern-pos" as any]: t.panelPatternPosition,
+                      ["--custom-topbar-pattern-opacity" as any]: t.panelPatternOpacity,
+                      ["--custom-topbar-btn-bg" as any]: t.itemBg,
+                      ["--custom-topbar-btn-border" as any]: t.itemBorder,
+                      ["--custom-topbar-btn-hover" as any]: t.itemHover,
+                      ["--custom-topbar-btn-active" as any]: t.itemActive,
+                      ["--custom-topbar-btn-play" as any]: t.itemPlay,
+                      ["--custom-topbar-btn-active-border" as any]: t.itemActiveBorder,
+                      ["--custom-topbar-accent" as any]: t.accentColor,
+                    };
+                  })()
+                : undefined
+            }
+            aria-label="Интерактивная панель"
+          >
+            {draftLayout.map((id, index) => {
+              const isSelected = selectedId === id;
+              const isDragging = draggingIdx === index;
+              const isDivider = id.startsWith("divider_");
+              const meta = TOPBAR_ITEMS_META[id] || { title: id, description: "" };
+
+              return (
+                <div
+                  key={`${id}-${index}`}
+                  tabIndex={0}
+                  className={`customizer-dock-item-wrapper ${isDivider ? "customizer-divider-slot" : ""} ${isSelected ? "selected" : ""} ${isDragging ? "dragging" : ""}`}
+                  draggable={true}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragEnter={() => handleDragEnter(index)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDragEnd={handleDragEnd}
+                  onClick={() => handleItemClick(id, index)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    deleteItem(id);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Delete" || e.key === "Backspace") {
+                      e.preventDefault();
+                      deleteItem(id);
+                    } else if (e.key === "ArrowLeft") {
+                      e.preventDefault();
+                      nudgeItem(index, -1);
+                    } else if (e.key === "ArrowRight") {
+                      e.preventDefault();
+                      nudgeItem(index, 1);
+                    }
+                  }}
+                  title={`${meta.title} (Кликните для выбора, стрелки ◀/▶ для сдвига, ПКМ для удаления)`}
+                >
+                  {/* Floating Action Controls on Hover/Selection */}
+                  <div className="customizer-dock-item-controls">
+                    <button
+                      type="button"
+                      className="dock-item-nudge-btn"
+                      disabled={index === 0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nudgeItem(index, -1);
+                      }}
+                      title="Сдвинуть влево"
+                    >
+                      <ChevronLeft size={12} />
+                    </button>
+
+                    <button
+                      type="button"
+                      className="dock-item-delete-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteItem(id);
+                      }}
+                      title="Удалить этот элемент (ПКМ / Delete)"
+                    >
+                      <Trash2 size={11} />
+                    </button>
+
+                    <button
+                      type="button"
+                      className="dock-item-nudge-btn"
+                      disabled={index === draftLayout.length - 1}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nudgeItem(index, 1);
+                      }}
+                      title="Сдвинуть вправо"
+                    >
+                      <ChevronRight size={12} />
+                    </button>
+                  </div>
+
+                  {/* Actual Button Visual */}
+                  <div className="customizer-dock-item-body">
+                    {renderDockItemContent(id)}
+                  </div>
+                </div>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Selected Item Instant Action Toolbar (automatic 1-click nudge without dragging) */}
+        {selectedId && (
+          <div className="customizer-active-item-bar">
+            <div className="customizer-active-label">
+              <span className="customizer-active-tag">Выбран элемент:</span>
+              <span className="customizer-active-name">{TOPBAR_ITEMS_META[selectedId]?.title || selectedId}</span>
+            </div>
+            <div className="customizer-active-actions">
+              <button
+                type="button"
+                className="customizer-active-btn"
+                disabled={draftLayout.indexOf(selectedId) === 0}
+                onClick={() => {
+                  const idx = draftLayout.indexOf(selectedId);
+                  if (idx > 0) nudgeItem(idx, -1);
+                }}
+                title="Сдвинуть влево"
+              >
+                <ChevronLeft size={14} />
+                <span>Влево</span>
+              </button>
+
+              <button
+                type="button"
+                className="customizer-active-btn"
+                disabled={draftLayout.indexOf(selectedId) === draftLayout.length - 1}
+                onClick={() => {
+                  const idx = draftLayout.indexOf(selectedId);
+                  if (idx !== -1 && idx < draftLayout.length - 1) nudgeItem(idx, 1);
+                }}
+                title="Сдвинуть вправо"
+              >
+                <span>Вправо</span>
+                <ChevronRight size={14} />
+              </button>
+
+              <button
+                type="button"
+                className="customizer-active-btn customizer-active-delete"
+                onClick={() => deleteItem(selectedId)}
+                title="Удалить этот элемент (Delete / Backspace / ПКМ)"
+              >
+                <Trash2 size={13} />
+                <span>Удалить (Del / ПКМ)</span>
+              </button>
+
+              <button
+                type="button"
+                className="customizer-active-btn customizer-active-deselect"
+                onClick={() => setSelectedId(null)}
+                title="Снять выделение"
+              >
+                <span>Снять выделение</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Save and Reset Action Controls: Placed BELOW the preview */}
+      <div className="customizer-bottom-actions-bar">
+        <div className="customizer-actions-left">
+          <button
+            type="button"
+            className="customizer-rounded-btn customizer-save-btn"
+            onClick={handleSave}
+            title="Сохранить изменения верхней панели"
+          >
+            <Check size={16} />
+            <span>Сохранить изменения</span>
+          </button>
+
+          <button
+            type="button"
+            className="customizer-rounded-btn customizer-reset-btn"
+            onClick={handleReset}
+            title="Сбросить порядок и вернуть все удаленные элементы"
+          >
+            <RotateCcw size={14} />
+            <span>Сбросить по умолчанию</span>
+          </button>
+
+          {hasUnsavedChanges && (
+            <span className="customizer-dirty-badge">Есть несохраненные изменения</span>
+          )}
+        </div>
+
+        {/* Quick Presets */}
+        <div className="customizer-presets-rounded">
+          <button
+            type="button"
+            className="customizer-preset-rounded-btn"
+            onClick={() => {
+              setDraftLayout([...DEFAULT_TOPBAR_LAYOUT]);
+            }}
+          >
+            По умолчанию
+          </button>
+          <button
+            type="button"
+            className="customizer-preset-rounded-btn"
+            onClick={() => {
+              const filtered = draftLayout.filter((id) => id !== "play" && id !== "profile" && id !== "divider_profile");
+              setDraftLayout(["play", "profile", "divider_profile", ...filtered]);
+            }}
+          >
+            Играть первой
+          </button>
+          <button
+            type="button"
+            className="customizer-preset-rounded-btn"
+            onClick={() => {
+              setDraftLayout(draftLayout.filter((id) => !id.startsWith("divider_")));
+            }}
+          >
+            Без разделителей
+          </button>
+        </div>
+      </div>
+
+      {/* Restore Deleted Elements Shelf (if any item was deleted) */}
+      {deletedItems.length > 0 && (
+        <div className="customizer-deleted-shelf">
+          <div className="customizer-deleted-header">
+            <span>Удаленные элементы (нажмите для возврата в панель):</span>
+          </div>
+          <div className="customizer-deleted-items">
+            {deletedItems.map((id) => {
+              const meta = TOPBAR_ITEMS_META[id] || { title: id, description: "" };
+              return (
+                <button
+                  key={`restore-${id}`}
+                  type="button"
+                  className="customizer-restore-chip"
+                  onClick={() => restoreItem(id)}
+                  title={`Вернуть «${meta.title}» в панель`}
+                >
+                  <Plus size={13} />
+                  <span>{meta.title}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

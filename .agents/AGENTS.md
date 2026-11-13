@@ -25,6 +25,15 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
 - Global system CLI support (`omega` command runs `npm run tauri dev`).
 - Immersive 3D character home screen inspired by modern launchers (3D skin view, quick skin customization card, and consolidated version/play launch dock).
 - Centralized `useSkin` state management for Ely.by, Microsoft, and custom PNG skins with Steve/Alex models.
+- **Layered UI Architecture (5 Layers):**
+  1. `AtmosphereLayer` (Layer 0): Matte dark obsidian atmosphere with Minecraft landscape screenshots, subtle floating particles and zero neon.
+  2. `Stage3DLayer` (Layer 1): Three.js interactive skinview3d stage with physical platform detection, articulated limbs, mouse grabbing and physics momentum.
+  3. `HudLayer` (Layer 2): Modular top navigation bar with profile dropdown, mute, online friends, and direct navigation to all MVP screens.
+  4. `DockLayer` (Layer 3): Launch dock with 3D isometric cube/avatar icon, loader tags, version, playtime, and animated PLAY / STOP control.
+  5. `ScreensLayer` (Layer 4): 8 full-featured screens (Store, Instances, Modrinth, Accounts, Friends, Servers, Console, Settings).
+- Full backend integration with Tauri v2 Rust commands (`launch_minecraft`, `kill_minecraft`, `db_load_instances`, `db_save_instances`, `db_delete_instance`, `db_load_accounts`, `db_save_accounts`, `db_load_servers`, `db_save_server`, `db_delete_server`, `ping_server`, `find_system_java`, `open_folder`, `create_shortcut`, `count_installed_mods`, `login_microsoft`, `get_cached_microsoft_account`, `open_ely_login`, `translate_text`, `download_mod`).
+- Live console monitoring (`ConsoleScreen`) receiving real-time `"download-progress"` and `"auth-log"` events with log filters (`INFO`, `WARN`, `ERROR`, `AUTH`), copy and file export.
+- Roadmap and missing native endpoints documented in `BACKEND_TODO.md`.
 - Authentic Minecraft stepped notched pixel-art UI styling standardized across the entire launcher with a uniform 6px border-width, 6-slice SVG (`24x24`), and 3px polygon clip-path formula, completely eliminating corner protrusion artifacts ("кусочки") on buttons, cards, docks, top bar, instances, friends, store, and settings menus.
 - Radiant emerald Minecraft atmosphere background with dynamic radial glow, sunburst rays, and drifting sparkles.
 - Top bar with stepped notched widgets: friends online pill with red badge, user profile dropdown, square action buttons (Audio Mute, Stats, Messages with badge), bright lime-green Protection/Bug button with bottom-right cyan `+50` badge, and Settings gear button.

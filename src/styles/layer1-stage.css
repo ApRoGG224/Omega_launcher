@@ -1,0 +1,49 @@
+/* Hallmark: modern-minimal / app / tactical-tech / stage */
+/* ==========================================================================
+   LAYER 1: 3D CHARACTER STAGE & VIEWPORT
+   Fullscreen roaming 3D stage with physical button platforms
+   ========================================================================== */
+.layer-stage {
+  position: absolute;
+  inset: 0;
+  /* z-index 50 places the 3D character in front of Dock (40) and HUD (30)
+     so he stands visibly on top of the solid buttons! */
+  z-index: 50;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  transition: opacity var(--speed-normal) ease;
+}
+
+.layer-stage.hidden {
+  opacity: 0;
+  display: none !important;
+}
+
+.stage-viewport-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.stage-canvas-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.stage-canvas-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  outline: none;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.75));
+}

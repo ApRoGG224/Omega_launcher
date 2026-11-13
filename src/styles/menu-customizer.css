@@ -1,0 +1,830 @@
+/* ==========================================================================
+   MENU CUSTOMIZER WIDGET & MODAL
+   Pixel-faithful implementation of screenshot UI:
+   - Modes (✦, ☼, ☾)
+   - Textured micro-dot canvas with interactive rings
+   - Swatches palette with pagination
+   - Wavy intensity slider + Rotary pattern knob
+   - Zone-specific toggles: TopBar, Background, Catalog
+   ========================================================================== */
+
+.menu-customizer-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(8, 10, 15, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: customizerFadeIn 0.2s ease-out;
+}
+
+@keyframes customizerFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.menu-customizer-card {
+  width: 100%;
+  max-width: 400px;
+  background: #14171d;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  padding: 16px 18px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  user-select: none;
+  font-family: var(--font-primary), 'Exo 2', sans-serif !important;
+  color: #f1f5f9;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Zone Switcher Header Bar */
+.customizer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.customizer-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customizer-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.customizer-zone-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+/* Master Toggle Switch (Вкл / Выкл) */
+.customizer-toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.customizer-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  height: 28px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #1e2430;
+  color: #94a3b8;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.customizer-toggle-btn.on {
+  background: #15803d;
+  border-color: #22c55e;
+  color: #ffffff;
+}
+
+.customizer-toggle-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #64748b;
+  transition: background 0.18s ease;
+}
+
+.customizer-toggle-btn.on .customizer-toggle-indicator {
+  background: #ffffff;
+}
+
+.customizer-close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #141822;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.customizer-close-btn:hover {
+  background: #1c2230;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+/* Zone Tabs Bar (Верхняя панель | Задний фон | Каталог) */
+.customizer-zone-pills {
+  display: flex;
+  gap: 6px;
+  background: #0d1015;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.customizer-zone-pill-btn {
+  flex: 1;
+  height: 32px;
+  border-radius: 8px;
+  background: #121620;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: #8b919c;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.customizer-zone-pill-btn:hover {
+  color: #e2e8f0;
+  background: #1a202c;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.customizer-zone-pill-btn.active {
+  background: #252e3e;
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* 3 Mode Icons (✦ Sparkles, ☼ Sun, ☾ Moon) */
+.customizer-modes-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 2px 0 6px 0;
+}
+
+.customizer-mode-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #121620;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #717d91;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.customizer-mode-btn:hover {
+  color: #cbd5e1;
+  background: #1a202c;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.customizer-mode-btn.active {
+  color: #ffffff;
+  background: #252e3e;
+  border-color: rgba(255, 255, 255, 0.26);
+}
+
+/* Interactive Canvas Area (Zen Browser Color Pad System) */
+.customizer-canvas {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 290px;
+  border-radius: 16px;
+  background-color: #0c0e12;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7);
+  contain: layout paint;
+}
+
+.customizer-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: var(--canvas-pattern, url('/textures/menu_pattern.png'));
+  background-repeat: repeat;
+  background-size: var(--canvas-pattern-size, 180px 180px);
+  background-position: var(--canvas-pattern-pos, 0 0);
+  opacity: var(--canvas-pattern-opacity, 0);
+  mix-blend-mode: overlay;
+  z-index: 0;
+}
+
+.customizer-canvas.dragging {
+  cursor: grabbing;
+}
+
+/* Zen Browser Orbital Guides */
+.zen-canvas-orbit-guide {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 76%;
+  height: 76%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.zen-canvas-center-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.25);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* Zen Browser Colored Balls (Dots) with spring physics */
+.zen-ball {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  pointer-events: auto;
+  will-change: left, top;
+  transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 0.15s ease,
+              background-color 0.2s ease;
+}
+
+.customizer-canvas.dragging .zen-ball,
+.customizer-canvas.dragging *,
+.menu-customizer-card.is-dragging .zen-ball,
+.zen-ball.active-drag,
+.zen-ball.dragging {
+  transition: none !important;
+}
+
+.zen-ball:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.zen-ball.active-drag,
+.zen-ball:active {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.16) !important;
+  z-index: 10 !important;
+}
+
+.zen-ball.primary {
+  width: 44px;
+  height: 44px;
+  border: 4.5px solid #ffffff;
+  z-index: 5;
+}
+
+.zen-ball.secondary,
+.zen-ball.tertiary {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #ffffff;
+  z-index: 4;
+}
+
+/* Canvas Tools: + , - , ∴ (matching Zen Browser action bar) */
+.canvas-tools-bar {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  pointer-events: auto;
+  z-index: 6;
+}
+
+.canvas-tool-btn {
+  background: #141822;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #8b97ab;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 8px;
+  line-height: 1;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.canvas-tool-btn:hover:not(:disabled) {
+  color: #ffffff;
+  background: #1c2230;
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: scale(1.08);
+}
+
+.canvas-tool-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+/* Legacy fallback classes */
+.canvas-circle-large {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 4.5px solid #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  z-index: 3;
+}
+.canvas-circle-small,
+.canvas-circle-medium {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.65);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  z-index: 2;
+}
+
+/* Swatches Palette Row */
+.customizer-swatches-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.swatch-nav-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #141822;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.swatch-nav-btn:hover {
+  color: #ffffff;
+  background: #1c2230;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.swatches-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: 1;
+}
+
+.color-swatch-item {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+  flex-shrink: 0;
+  outline: none;
+}
+
+.color-swatch-item:hover {
+  transform: scale(1.18);
+}
+
+.color-swatch-item.active {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 2px #14171d, 0 0 0 4.5px #ffffff;
+}
+
+/* Bottom Controls: Wavy Slider + Rotary Knob */
+.customizer-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Wavy Slider Container */
+.wavy-slider-container {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wavy-slider-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.wavy-slider-label-row b {
+  min-width: 36px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  display: inline-block;
+  font-family: var(--font-primary), 'Exo 2', sans-serif !important;
+}
+
+.wavy-slider-track-wrap {
+  position: relative;
+  width: 100%;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.wavy-slider-svg {
+  width: 100%;
+  height: 28px;
+  overflow: visible;
+}
+
+.wavy-slider-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 13px;
+  height: 30px;
+  border-radius: 7px;
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(0, 0, 0, 0.2);
+  cursor: grab;
+  transition: transform 0.08s ease, width 0.1s ease;
+  pointer-events: none;
+  will-change: left, transform;
+}
+
+.wavy-slider-track-wrap.dragging .wavy-slider-thumb,
+.menu-customizer-card.is-dragging .wavy-slider-thumb {
+  transition: none !important;
+}
+
+.wavy-slider-track-wrap:active .wavy-slider-thumb {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+/* Rotary Dial Knob */
+.rotary-knob-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 86px;
+  width: 86px;
+  min-width: 86px;
+  max-width: 86px;
+  box-sizing: border-box;
+}
+
+.rotary-knob-wrap {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Outer tick dots circle */
+.rotary-ticks-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.rotary-inner-dial {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #252a36 0%, #151821 70%, #0d0f14 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  position: relative;
+  will-change: transform;
+}
+
+.rotary-knob-wrap.dragging .rotary-inner-dial,
+.menu-customizer-card.is-dragging .rotary-inner-dial {
+  transition: none !important;
+}
+
+.rotary-notch-pip {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  width: 3px;
+  height: 7px;
+  background: #ffffff;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.rotary-label-val {
+  font-size: 10.5px;
+  color: #94a3b8;
+  font-weight: 600;
+  width: 86px;
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  font-family: var(--font-primary), 'Exo 2', sans-serif !important;
+  user-select: none;
+  display: block;
+}
+
+/* Footer Actions */
+.customizer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.customizer-reset-btn {
+  background: #141822;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #8b97ab;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.customizer-reset-btn:hover {
+  color: #e2e8f0;
+  background: #1c2230;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.customizer-status-pill {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.customizer-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #64748b;
+}
+
+.customizer-status-dot.active {
+  background: #22c55e;
+}
+
+/* Live panel surface preview inside customizer modal */
+.customizer-panel-live-preview {
+  position: relative;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.customizer-panel-live-preview::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: var(--preview-pattern, url('/textures/menu_pattern.png'));
+  background-repeat: repeat;
+  background-size: var(--preview-pattern-size, 180px 180px);
+  background-position: var(--preview-pattern-pos, 0 0);
+  opacity: var(--preview-pattern-opacity, 0);
+  mix-blend-mode: overlay;
+  z-index: 0;
+}
+
+.menu-customizer-card.is-dragging .customizer-panel-live-preview {
+  transition: none !important;
+}
+
+.customizer-preview-inner-label {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+/* ==========================================================================
+   DYNAMIC STYLING HOOKS FOR LAUNCHER SECTIONS
+   Applied when customization is enabled:
+   The PANEL BACKGROUND ITSELF is customized, not just a border!
+   ========================================================================== */
+
+/* TopBar Dock Customization */
+.hud-top-dock.custom-theme-active {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--custom-topbar-bg, #2b331f) !important;
+  border-color: var(--custom-topbar-border, rgba(255, 255, 255, 0.2)) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+.hud-top-dock.custom-theme-active::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: var(--custom-topbar-pattern, url('/textures/menu_pattern.png'));
+  background-repeat: repeat;
+  background-size: var(--custom-topbar-pattern-size, 180px 180px);
+  background-position: var(--custom-topbar-pattern-pos, 0 0);
+  opacity: var(--custom-topbar-pattern-opacity, 0);
+  mix-blend-mode: overlay;
+  z-index: 0;
+}
+
+.hud-top-dock.custom-theme-active > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* 
+ * Keep buttons solid and tactile (never transparent) inside custom dock,
+ * dynamically adapting their color to match the selected customization theme!
+ */
+.hud-top-dock.custom-theme-active .hud-dock-btn,
+.hud-top-dock.custom-theme-active .hud-dock-profile-btn,
+.hud-top-dock.custom-theme-active .dock-chip,
+.customizer-dock-preview.custom-theme-active .hud-dock-btn,
+.customizer-dock-preview.custom-theme-active .hud-dock-profile-btn {
+  background-color: var(--custom-topbar-btn-bg, #111622) !important;
+  border-color: var(--custom-topbar-btn-border, rgba(255, 255, 255, 0.14)) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.hud-top-dock.custom-theme-active .hud-dock-btn:hover,
+.hud-top-dock.custom-theme-active .hud-dock-profile-btn:hover,
+.customizer-dock-preview.custom-theme-active .hud-dock-btn:hover,
+.customizer-dock-preview.custom-theme-active .hud-dock-profile-btn:hover {
+  background-color: var(--custom-topbar-btn-hover, #1a2232) !important;
+  border-color: var(--custom-topbar-btn-border, rgba(255, 255, 255, 0.24)) !important;
+}
+
+.hud-top-dock.custom-theme-active .hud-dock-btn.active,
+.hud-top-dock.custom-theme-active .hud-dock-profile-btn.open,
+.customizer-dock-preview.custom-theme-active .hud-dock-btn.active {
+  background-color: var(--custom-topbar-btn-active, #252f42) !important;
+  border-color: var(--custom-topbar-btn-active-border, rgba(255, 255, 255, 0.35)) !important;
+}
+
+.hud-top-dock.custom-theme-active .hud-dock-btn.hud-dock-play:not(.running) {
+  background-color: var(--custom-topbar-btn-play, var(--custom-topbar-btn-bg, #1e2634)) !important;
+  border-color: var(--custom-topbar-btn-border, rgba(255, 255, 255, 0.18)) !important;
+}
+
+.hud-top-dock.custom-theme-active .hud-dock-btn.hud-dock-play:not(.running):hover {
+  background-color: var(--custom-topbar-btn-hover, #273245) !important;
+}
+
+.hud-top-dock.custom-theme-active .hud-dock-divider,
+.hud-top-dock.custom-theme-active .hud-dock-divider-mini {
+  background-color: var(--custom-topbar-btn-border, rgba(255, 255, 255, 0.15)) !important;
+}
+
+/* Background Atmosphere Tint Customization */
+.atmosphere-custom-tint-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* 
+ * Zone Customizer Trigger Button in Settings
+ */
+.catalog-customizer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 9px;
+  background: #121620;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: var(--font-primary), 'Exo 2', sans-serif !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.catalog-customizer-btn:hover {
+  background: #1c2230;
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.catalog-customizer-btn.active {
+  background: #252e40;
+  border-color: #59d4a4;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}

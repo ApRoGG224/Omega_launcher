@@ -111,7 +111,7 @@ export function useAccounts(
         persistAccounts(merged);
         syncAccountsToDb(merged);
         setSavedAccounts(merged);
-        setAccount((prev) => {
+        setAccount((prev: Account) => {
           if (prev.type === "microsoft") {
             const ms = merged.find((a) => a.type === "microsoft");
             return ms || prev;
@@ -257,7 +257,7 @@ export function useAccounts(
 
     if (current.type === "omega" && omega?.profile?.username === current.name) {
       try {
-        await omega.logout();
+        if (omega) await omega.logout();
       } catch {
         // Ignore cleanup failures and still clear local selection.
       }

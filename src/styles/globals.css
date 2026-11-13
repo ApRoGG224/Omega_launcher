@@ -1,0 +1,166 @@
+/* Hallmark: modern-minimal / app / tactical-tech / globals */
+@import "./fonts.css";
+@import "./tokens.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-primary) !important;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overflow-x: clip;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-primary) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  letter-spacing: 0.2px;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+button,
+input,
+textarea,
+select,
+label,
+span,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+div {
+  font-family: var(--font-primary) !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-wrap: balance;
+}
+
+button {
+  border: none;
+  background: none;
+  outline: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+input,
+textarea,
+select {
+  color: inherit;
+  outline: none;
+}
+
+/* Instant High-Contrast Focus Visible */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Custom Tactical Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(8, 12, 20, 0.65);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-bright);
+}
+
+/* Base Master Canvas */
+.launcher-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 960px;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #06090f;
+}
+
+/* Strictly Centered Toast Notification (Tactical Matte Slate) */
+@keyframes toast-drop-in {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.toast-notification {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  color: var(--text-pure);
+  padding: 8px 24px;
+  font-size: 13px;
+  font-weight: 700;
+  z-index: var(--layer-toasts-z);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.85);
+  animation: toast-drop-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Modal Open: Hide persistent HUD topbar and flanks to prevent clipping */
+body.modal-open-hide-hud .hud-topbar,
+body.modal-open-hide-hud .hud-flank-left,
+body.modal-open-hide-hud .hud-flank-right {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.15s ease;
+}
+
+/* Accessibility: Prefers Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

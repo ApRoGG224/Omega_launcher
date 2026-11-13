@@ -1,0 +1,696 @@
+/* Hallmark: modern-minimal / app / tactical-tech / hud */
+/* ==========================================================================
+   LAYER 2: HUD & NAVIGATION
+   Rotated Top Navigation Dock (Screenshot Aesthetic) + Side Flank (Zero Neon)
+   ========================================================================== */
+.layer-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 120;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  transition: opacity var(--speed-normal) ease;
+}
+
+.layer-hud.hidden {
+  opacity: 0;
+}
+
+/* ==========================================================================
+   2.1 ROTATED TOP NAVIGATION DOCK
+   Turned horizontally at the top center, matching screenshot design & buttons
+   ========================================================================== */
+.hud-topbar {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  user-select: none;
+  z-index: 120;
+}
+
+.hud-top-dock {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(14, 18, 26, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 5px 8px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  pointer-events: auto;
+}
+
+/* Profile Button on Top Dock: Nickname (left) + Arrow + Avatar (right) */
+.hud-dock-profile-container {
+  position: relative;
+}
+
+.hud-dock-profile-btn {
+  position: relative;
+  height: 38px;
+  padding: 0 5px 0 12px;
+  border-radius: 10px;
+  background: #111622;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-primary) !important;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+  box-sizing: border-box;
+}
+
+.hud-dock-profile-btn:hover,
+.hud-dock-profile-btn.open {
+  background: #1a2232;
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.hud-dock-profile-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.hud-dock-profile-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
+  font-family: var(--font-primary) !important;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.hud-dock-profile-chevron {
+  color: #94a3b8;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.hud-dock-profile-btn:hover .hud-dock-profile-chevron {
+  color: #ffffff;
+}
+
+.hud-dock-profile-chevron.open {
+  transform: rotate(180deg);
+  color: #38bdf8;
+}
+
+.hud-dock-profile-avatar {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 0;
+  overflow: hidden;
+  background: #080d17;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+
+
+
+/* Base Dock Button (Solid tactical button, not transparent) */
+.hud-dock-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 10px;
+  background: #111622;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font-primary) !important;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.08s ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.hud-dock-btn:hover {
+  background: #1a2232;
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.hud-dock-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.hud-dock-btn.active {
+  background: #252f42;
+  border-color: rgba(255, 255, 255, 0.26);
+  color: #ffffff;
+}
+
+.hud-dock-indicator {
+  display: none !important;
+}
+
+/* Play / Stop Button with Signature Style */
+.hud-dock-btn.hud-dock-play {
+  background: #1e2634;
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f8fafc;
+}
+
+.hud-dock-btn.hud-dock-play:hover {
+  background: #273245;
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+}
+
+.hud-dock-btn.hud-dock-play.running {
+  background: #7e3230;
+  border-color: #9e4a46;
+  color: #faefee;
+}
+
+.hud-dock-btn.hud-dock-play.running .hud-dock-indicator {
+  background: #faefee;
+}
+
+/* Dock Dividers */
+.hud-dock-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 3px;
+  flex-shrink: 0;
+}
+
+.hud-dock-divider-mini {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 0 1px;
+  flex-shrink: 0;
+}
+
+/* Shortcut Badges (Modpacks / Servers) */
+.hud-dock-shortcuts {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.hud-dock-shortcut-btn {
+  position: relative;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: transform 0.12s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-dock-shortcut-btn:hover {
+  transform: scale(1.08);
+  z-index: 200;
+}
+
+.hud-dock-shortcut-btn:active {
+  transform: scale(0.96);
+}
+
+/* Floating tooltip underneath on hover for all dock buttons & tabs ("вылазит менюшка как называется") */
+.hud-dock-tooltip,
+.hud-shortcut-tooltip {
+  position: absolute;
+  top: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  background: rgba(14, 18, 26, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  font-family: var(--font-primary) !important;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  z-index: 9999;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.hud-dock-tooltip::before,
+.hud-shortcut-tooltip::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 6px;
+  height: 6px;
+  background: rgba(14, 18, 26, 0.96);
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.hud-dock-btn:hover .hud-dock-tooltip,
+.hud-dock-btn:focus-visible .hud-dock-tooltip,
+.hud-dock-profile-btn:hover .hud-dock-tooltip,
+.hud-dock-profile-btn:focus-visible .hud-dock-tooltip,
+.hud-dock-shortcut-btn:hover .hud-shortcut-tooltip,
+.hud-dock-shortcut-btn:focus-visible .hud-shortcut-tooltip,
+.hud-dock-shortcut-btn.is-hovered .hud-shortcut-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.hud-dock-profile-btn.open .hud-dock-tooltip {
+  display: none !important;
+}
+
+.hud-shortcut-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease, filter 0.15s ease, transform 0.1s ease;
+  box-sizing: border-box;
+  background: #111a2a;
+  border: 1px solid #2c3b57;
+}
+
+/* Diamond Sword Avatar Badge */
+.hud-shortcut-badge.diamond_sword,
+.hud-shortcut-badge.pvp {
+  background: linear-gradient(135deg, #10272b 0%, #08171a 100%);
+  border: 1px solid rgba(50, 219, 203, 0.4);
+  box-shadow: inset 0 1px 0 rgba(164, 255, 255, 0.15);
+}
+
+.hud-dock-shortcut-btn.selected .hud-shortcut-badge.diamond_sword,
+.hud-dock-shortcut-btn.selected .hud-shortcut-badge.pvp {
+  border-color: #32dbcb;
+  box-shadow: inset 0 0 0 1.5px #32dbcb, 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Diamond Pickaxe Avatar Badge */
+.hud-shortcut-badge.diamond_pickaxe {
+  background: linear-gradient(135deg, #0e2429 0%, #061619 100%);
+  border: 1px solid rgba(50, 219, 203, 0.4);
+  box-shadow: inset 0 1px 0 rgba(164, 255, 255, 0.15);
+}
+
+.hud-dock-shortcut-btn.selected .hud-shortcut-badge.diamond_pickaxe {
+  border-color: #32dbcb;
+  box-shadow: inset 0 0 0 1.5px #32dbcb, 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+/* End Crystal Avatar Badge */
+.hud-shortcut-badge.end_crystal {
+  background: linear-gradient(135deg, #24102c 0%, #120618 100%);
+  border: 1px solid rgba(192, 132, 252, 0.45);
+  box-shadow: inset 0 1px 0 rgba(245, 208, 254, 0.15);
+}
+
+.hud-dock-shortcut-btn.selected .hud-shortcut-badge.end_crystal {
+  border-color: #c084fc;
+  box-shadow: inset 0 0 0 1.5px #c084fc, 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Obsidian Avatar Badge */
+.hud-shortcut-badge.obsidian,
+.hud-shortcut-badge.rust {
+  background: linear-gradient(135deg, #1b1228 0%, #0b0712 100%);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  box-shadow: inset 0 1px 0 rgba(192, 132, 252, 0.12);
+}
+
+.hud-dock-shortcut-btn.selected .hud-shortcut-badge.obsidian,
+.hud-dock-shortcut-btn.selected .hud-shortcut-badge.rust {
+  border-color: #a855f7;
+  box-shadow: inset 0 0 0 1.5px #a855f7, 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Dock Notification Badge */
+.hud-dock-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 8.5px;
+  font-weight: 800;
+  font-family: var(--font-primary) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #7f1d1d;
+  pointer-events: none;
+}
+
+/* Chevron button */
+.hud-dock-btn.hud-dock-chevron {
+  color: #64748b;
+}
+
+.hud-dock-btn.hud-dock-chevron:hover {
+  color: #e2e8f0;
+}
+
+/* ==========================================================================
+   2.2 LEFT FLANK: Project GitHub Link (No button background)
+   ========================================================================== */
+.hud-flank-left {
+  position: absolute;
+  left: 24px;
+  top: 14px;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 120;
+}
+
+.hud-github-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none;
+  box-shadow: none !important;
+  color: #94a3b8;
+  opacity: 0.85;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 8px;
+  text-decoration: none;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+  transition: color 0.15s ease, opacity 0.15s ease, transform 0.12s ease, filter 0.15s ease;
+  user-select: none;
+  font-family: var(--font-primary) !important;
+}
+
+.hud-github-btn:hover {
+  color: #ffffff;
+  opacity: 1;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.75));
+  transform: translateY(-1px) scale(1.08);
+}
+
+.hud-github-btn:active {
+  transform: translateY(0) scale(0.96);
+  color: #cbd5e1;
+}
+
+.hud-github-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+
+.hud-github-btn:hover .hud-dock-tooltip,
+.hud-github-btn:focus-visible .hud-dock-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ==========================================================================
+   2.3 RIGHT FLANK: Quick Controls (Sound & Particles)
+   ========================================================================== */
+.hud-flank-right {
+  position: absolute;
+  right: 24px;
+  top: 14px;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 120;
+}
+
+/* Quick Utility Control Buttons */
+.hud-side-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-flank-btn {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 17, 26, 0.88);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+  font-family: var(--font-primary) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.hud-flank-btn:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  background: rgba(20, 27, 40, 0.94);
+  transform: translateY(-1px);
+}
+
+.hud-flank-btn.muted {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.hud-flank-btn.active {
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+/* ==========================================================================
+   AUTHENTIC COMMAND PROFILE DROPDOWN MENU (Мои аккаунты 1-in-1)
+   ========================================================================== */
+.hud-profile-dropdown,
+.hud-profile-dropdown.panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  width: 260px;
+  max-width: 260px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 1000;
+  background: var(--card, #0e1118);
+  border: 1px solid var(--card-b, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9);
+  animation: dropdown-pop 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  text-align: left;
+  font-family: var(--font-primary) !important;
+}
+
+.hud-profile-dropdown.align-left {
+  left: 0;
+}
+
+@keyframes dropdown-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hud-profile-dropdown .title {
+  margin: 2px 2px 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--muted, #7d8594);
+  font-family: var(--font-primary) !important;
+  text-transform: uppercase;
+}
+
+.hud-profile-dropdown .title.omega {
+  color: #c9a8ff;
+  margin-top: 8px;
+}
+
+.hud-profile-dropdown .acc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: var(--text, #f2f4f8);
+  font-family: var(--font-primary) !important;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.hud-profile-dropdown .acc:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.hud-profile-dropdown .acc:focus-visible,
+.hud-profile-dropdown .btn:focus-visible {
+  outline: 2px solid var(--accent, #9b5cff);
+  outline-offset: 2px;
+}
+
+.hud-profile-dropdown .acc.sel {
+  border-color: rgba(155, 92, 255, 0.6);
+  background: rgba(155, 92, 255, 0.14);
+}
+
+.hud-profile-dropdown .ava {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #0a0c12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-profile-dropdown .ava canvas,
+.hud-profile-dropdown .ava img,
+.hud-profile-dropdown .ava svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  shape-rendering: crispEdges;
+}
+
+.hud-profile-dropdown .meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.hud-profile-dropdown .name {
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text, #f2f4f8);
+  font-family: var(--font-primary) !important;
+}
+
+.hud-profile-dropdown .type {
+  font-size: 11px;
+  color: var(--muted, #7d8594);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-primary) !important;
+}
+
+.hud-profile-dropdown .ms {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  display: block;
+}
+
+.hud-profile-dropdown .check {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  fill: none;
+  stroke: #c9a8ff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hud-profile-dropdown .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  font-family: var(--font-primary) !important;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text, #f2f4f8);
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  transition: background 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.hud-profile-dropdown .btn:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.hud-profile-dropdown .btn.green {
+  border-color: #3f6b2e;
+  background: rgba(63, 107, 46, 0.22);
+}
+
+.hud-profile-dropdown .btn.green:hover {
+  background: rgba(63, 107, 46, 0.34);
+  border-color: #4d7f3a;
+}

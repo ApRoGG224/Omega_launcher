@@ -1,13 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
-import DebugWindow from "./Debug";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-
-const currentWindow = getCurrentWindow();
+import { App } from "./App";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    {currentWindow.label === "debug_window" ? <DebugWindow /> : <App />}
+    <App />
   </React.StrictMode>
 );

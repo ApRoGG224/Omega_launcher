@@ -1,749 +1,1050 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import type { Language, ModpackInstance } from "./types";
-import { translations } from "./i18n";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { AtmosphereLayer } from "./components/layers/AtmosphereLayer";
+import { MINECRAFT_BACKGROUNDS } from "./constants/backgrounds";
+import { Stage3DLayer } from "./components/layers/Stage3DLayer";
+import { PRESET_SKINS } from "./constants/skinPresets";
+import { HudLayer } from "./components/layers/HudLayer";
+import { DockLayer } from "./components/layers/DockLayer";
+import { ScreensLayer, type ScreenId } from "./components/layers/ScreensLayer";
+import { OmegaLoginModal } from "./components/modals/OmegaLoginModal";
+import { MenuCustomizerModal } from "./components/common/MenuCustomizerModal";
 import {
-  IconArrowLeft,
-  IconBox,
-  IconChevronDown,
-  IconMicrosoft,
-  IconSettings,
-  IconVolumeX,
-  IconVolume2,
-  IconMessageSquare,
-} from "./ui/icons";
-import { SkinHeadPreview } from "./components/home/SkinHeadPreview";
-import { FloatingDock } from "./components/navigation/FloatingDock";
-import { CatalogTabs } from "./components/catalog/CatalogTabs";
-import { ToastProvider, useToast } from "./ui/ToastProvider";
-import { useSkin } from "./hooks/useSkin";
-import { HomeView } from "./components/home/HomeView";
-import { useInstances } from "./hooks/useInstances";
-import { useAccounts } from "./hooks/useAccounts";
-import { useOmegaAuth } from "./hooks/useOmegaAuth";
-import { useFriends } from "./hooks/useFriends";
-import { usePresence, type InviteInfo } from "./hooks/usePresence";
-import { useVersions } from "./hooks/useVersions";
-import { useGameSession } from "./hooks/useGameSession";
-import { useSmoothScrolling } from "./hooks/useSmoothScrolling";
-import { ipc } from "./services/ipc";
-import { CreateInstanceModal } from "./components/home/CreateInstanceModal";
-import { ModsPanel } from "./components/mods/ModsPanel";
-import { InstancesPanel } from "./components/instances/InstancesPanel";
-import { ImportModal } from "./components/instances/ImportModal";
-import { ImportProgressPopup } from "./components/instances/ImportProgressPopup";
-import { AccountModal } from "./components/accounts/AccountModal";
-import { FriendsTab } from "./components/friends/FriendsTab";
+  type MenusCustomizationState,
+  type CustomizerZoneId,
+  DEFAULT_MENUS_CUSTOMIZATION,
+} from "./types/menuCustomization";
+import { computePanelTheme } from "./utils/colorUtils";
 import {
-  SettingsPanel,
-  applyBaseTheme,
-  applyNeonTheme,
-} from "./components/settings/SettingsPanel";
-import { OmegaStorePanel } from "./components/store/OmegaStorePanel";
-import { StartupScreen } from "./components/home/StartupScreen";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import {
-  getStoredFullscreenOnStart,
-  getStoredLanguage,
-  getStoredTheme,
-  setStoredFullscreenOnStart,
-  setStoredLanguage,
-  setStoredTheme,
-  getStoredCloseOnLaunch,
-  setStoredCloseOnLaunch,
-} from "./services/storage";
-import "./App.css";
+  type TopBarItemId,
+  type BottomBarItemId,
+  type BottomBarAlignment,
+  type ButtonShapePreset,
+  DEFAULT_TOPBAR_LAYOUT,
+  DEFAULT_BOTTOMBAR_LAYOUT,
+  DEFAULT_BOTTOMBAR_ALIGNMENT,
+  DEFAULT_BUTTON_SHAPE_PRESET,
+  sanitizeTopBarLayout,
+  sanitizeBottomBarLayout,
+} from "./constants/launcherLayout";
+import { ipc, type DbInstance } from "./services/ipc";
+import { listen } from "@tauri-apps/api/event";
+import type { LogEntry } from "./components/screens/ConsoleScreen";
+import type {
+  ActiveModal,
+  InstanceData,
+  AccountData,
+  OmegaAccountState,
+  InstanceAvatarVariant,
+} from "./types";
+import "./styles/globals.css";
+import "./design-system/pixelPlates.css";
+import "./styles/menu-customizer.css";
 
-const launcherWindow = getCurrentWindow();
+const FALLBACK_ACCOUNT: AccountData = {
+  id: "guest",
+  name: "Гость",
+  type: "offline",
+  isOnline: false,
+  skinUrl: "/skins/steve.png",
+};
 
-function App() {
-  useSmoothScrolling();
+const DEFAULT_INSTANCES: InstanceData[] = [
+  {
+    id: "inst_rust_beta",
+    name: "Minecraft Rust (Beta)",
+    mcVersion: "26.3",
+    loader: "Rust",
+    playTimeMinutes: 0,
+    modCount: 0,
+    isReady: true,
+    folderId: "folder_rust",
+    icon: "obsidian",
+    description: "Нативная версия Minecraft на языке Rust. Высокая скорость, низкий оверхед по памяти.",
+  },
+  {
+    id: "inst_1",
+    name: "test1",
+    mcVersion: "1.21.4",
+    loader: "Fabric",
+    playTimeMinutes: 0,
+    modCount: 26,
+    isReady: true,
+    folderId: "folder_modpacks",
+    icon: "end_crystal",
+  },
+  {
+    id: "inst_2",
+    name: "Survival 1.20",
+    mcVersion: "1.20.1",
+    loader: "Forge",
+    playTimeMinutes: 140,
+    modCount: 42,
+    isReady: true,
+    folderId: "folder_survival",
+    icon: "diamond_pickaxe",
+  },
+  {
+    id: "inst_3",
+    name: "Omega PvP Pack",
+    mcVersion: "1.21.4",
+    loader: "NeoForge",
+    playTimeMinutes: 35,
+    modCount: 18,
+    isReady: true,
+    folderId: "folder_pvp",
+    icon: "diamond_sword",
+  },
+  {
+    id: "inst_4",
+    name: "Vanilla 1.21.4",
+    mcVersion: "1.21.4",
+    loader: "Vanilla",
+    playTimeMinutes: 60,
+    modCount: 0,
+    isReady: true,
+    folderId: "folder_vanilla",
+    icon: "obsidian",
+  },
+  {
+    id: "inst_5",
+    name: "Hardcore 1.20",
+    mcVersion: "1.20.1",
+    loader: "Fabric",
+    playTimeMinutes: 85,
+    modCount: 12,
+    isReady: true,
+    folderId: "folder_survival",
+    icon: "diamond_sword",
+  },
+];
 
-  const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
-  const t = translations[language];
-  const { showToast } = useToast();
-  const instancesApiRef = useRef<ReturnType<typeof useInstances> | null>(null);
-  const game = useGameSession(
-    useCallback((id: string, ms: number) => {
-      instancesApiRef.current?.recordPlaySession(id, ms);
-    }, []),
-  );
+const DEFAULT_ACCOUNTS: AccountData[] = [
+  {
+    id: "acc_1",
+    name: "I_Sky2Fly_I",
+    type: "offline",
+    isOnline: true,
+    skinUrl: "/skins/dream.png",
+  },
+  {
+    id: "acc_2",
+    name: "Steve_Official",
+    type: "microsoft",
+    isOnline: true,
+    skinUrl: "/skins/steve.png",
+  },
+  {
+    id: "acc_3",
+    name: "Alex_Gamer",
+    type: "offline",
+    isOnline: true,
+    skinUrl: "/skins/alex.png",
+  },
+];
 
-  const changeLanguage = useCallback((lang: Language) => {
-    setLanguage(lang);
-    setStoredLanguage(lang);
-  }, []);
+const loadStorage = <T,>(key: string, fallback: T): T => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+};
 
-  const instancesApi = useInstances(game.pushLog, showToast, t);
-  instancesApiRef.current = instancesApi;
-  const omegaAuth = useOmegaAuth();
-  const omegaConnected = Boolean(omegaAuth.profile);
-  const [invites, setInvites] = useState<InviteInfo[]>([]);
-  const presenceApi = usePresence(omegaAuth, (invite) => {
-    setInvites((prev) =>
-      prev.some((i) => i.fromId === invite.fromId) ? prev : [...prev, invite],
-    );
-    showToast(
-      `${invite.fromName} ${t.friendsInvite} (${invite.hostPort})`,
-      "success",
-    );
+export const App: React.FC = () => {
+  // Current active screen (Home + 8 full MVP screens from FEATURES.md)
+  const [activeScreen, setActiveScreen] = useState<ScreenId>(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const screen = urlParams.get("screen") as ScreenId;
+      if (screen && ["home", "store", "instances", "modrinth", "servers", "friends", "settings", "console", "accounts"].includes(screen)) {
+        return screen;
+      }
+    } catch {}
+    return "home";
   });
-  const accountsApi = useAccounts(t, game.pushLog, omegaAuth);
-  const skinApi = useSkin(accountsApi.account?.name);
-  const friendsApi = useFriends(omegaAuth);
 
-  const {
-    currentVersionsList,
-    versionFilters,
-    toggleVersionFilter,
-    manifestError,
-  } = useVersions();
+  // Sound state
+  const [soundMuted, setSoundMuted] = useState<boolean>(false);
 
-  const [activeTab, setActiveTab] = useState("home");
-  const [isCreating, setIsCreating] = useState(false);
-  const [importPopupHidden, setImportPopupHidden] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newVer, setNewVer] = useState("1.21.4");
-  const [newLoader, setNewLoader] = useState("Fabric");
-  const [soundMuted, setSoundMuted] = useState(false);
-  const [startupLoading, setStartupLoading] = useState(true);
-  const [skin3DReady, setSkin3DReady] = useState(false);
+  // Minecraft Background Atmosphere state (persisted)
+  const [bgIndex, setBgIndex] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem("omega_launcher_bg_index");
+      if (saved !== null) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && parsed >= 0 && parsed < MINECRAFT_BACKGROUNDS.length) {
+          return parsed;
+        }
+      }
+    } catch {}
+    return 0;
+  });
 
-  const handleStartupComplete = useCallback(() => {
-    setStartupLoading(false);
-  }, []);
+  const [isBgAutoPlay, setIsBgAutoPlay] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem("omega_launcher_bg_autoplay");
+      if (saved !== null) {
+        return saved === "true";
+      }
+    } catch {}
+    return true;
+  });
 
-  const handleSkinReady = useCallback(() => {
-    setSkin3DReady(true);
-  }, []);
-
-  const [themeHex, setThemeHex] = useState(() => getStoredTheme());
-  const [closeOnLaunch, setCloseOnLaunch] = useState(() =>
-    getStoredCloseOnLaunch(),
-  );
-  const [fullscreenOnStart, setFullscreenOnStart] = useState(() =>
-    getStoredFullscreenOnStart(),
-  );
-
-  useEffect(() => {
-    void launcherWindow.setFullscreen(fullscreenOnStart).catch((error) => {
-      console.warn("Unable to change launcher fullscreen state", error);
-    });
-  }, [fullscreenOnStart]);
-
-  useEffect(() => {
-    const handleFullscreenShortcut = (event: KeyboardEvent) => {
-      if (event.key !== "F11") return;
-      event.preventDefault();
-
-      void launcherWindow
-        .isFullscreen()
-        .then((isFullscreen) => launcherWindow.setFullscreen(!isFullscreen))
-        .catch((error) => {
-          console.warn("Unable to toggle launcher fullscreen state", error);
-        });
-    };
-
-    window.addEventListener("keydown", handleFullscreenShortcut);
-    return () =>
-      window.removeEventListener("keydown", handleFullscreenShortcut);
-  }, []);
-
-  useEffect(() => {
-    if (instancesApi.importing) setImportPopupHidden(false);
-  }, [instancesApi.importing]);
-
-  const applyTheme = useCallback((hex: string) => {
-    setThemeHex(hex);
-    setStoredTheme(hex);
-    document.documentElement.style.setProperty("--accent-color", hex);
-
-    let r = 0,
-      g = 0,
-      b = 0;
-    if (hex.length === 4) {
-      r = parseInt(hex[1] + hex[1], 16);
-      g = parseInt(hex[2] + hex[2], 16);
-      b = parseInt(hex[3] + hex[3], 16);
-    } else if (hex.length === 7) {
-      r = parseInt(hex[1] + hex[2], 16);
-      g = parseInt(hex[3] + hex[4], 16);
-      b = parseInt(hex[5] + hex[6], 16);
+  const handleSelectBg = (index: number) => {
+    if (index >= 0 && index < MINECRAFT_BACKGROUNDS.length) {
+      setBgIndex(index);
+      try {
+        localStorage.setItem("omega_launcher_bg_index", index.toString());
+      } catch {}
     }
-    document.documentElement.style.setProperty(
-      "--accent-color-rgb",
-      `${r}, ${g}, ${b}`,
-    );
-  }, []);
-
-  useEffect(() => {
-    const savedNeon = localStorage.getItem("omega:neonTheme") || "omega";
-    const savedBase = localStorage.getItem("omega:baseTheme") || "cappuccino";
-    applyNeonTheme(savedNeon);
-    applyBaseTheme(savedBase);
-    applyTheme(themeHex);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Escape closes any open overlay.
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      if (isCreating) setIsCreating(false);
-      if (accountsApi.profileMenuOpen) accountsApi.setProfileMenuOpen(false);
-      if (instancesApi.importModalOpen) instancesApi.setImportModalOpen(false);
-      if (instancesApi.editModalOpen) instancesApi.setEditModalOpen(null);
-    };
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isCreating, instancesApi, accountsApi.profileMenuOpen]);
-
-  const handleCreateInstance = () => {
-    if (!newName) return;
-    const newInst: ModpackInstance = {
-      id: Date.now().toString(),
-      name: newName,
-      mcVersion: newVer,
-      loader: newLoader,
-      x: 24 + Math.random() * 120,
-      y: 24 + Math.random() * 120,
-    };
-    instancesApi.addInstance(newInst);
-    instancesApi.setSelectedInstanceId(newInst.id);
-    setIsCreating(false);
-    setNewName("");
   };
 
-  const playSelected = useCallback(() => {
-    const inst = instancesApi.selectedInstance;
-    if (!inst) return alert(t.alertNoInstance);
-    instancesApi.moveInstanceToTop(inst.id);
-    presenceApi.setGameStatus({ instanceName: inst.name });
-    void game.playInstance(inst, accountsApi.account.name, t);
-  }, [
-    instancesApi.selectedInstance,
-    game,
-    accountsApi.account,
-    presenceApi,
-    t,
-  ]);
+  const handleNextBg = () => {
+    setBgIndex((curr) => {
+      const next = (curr + 1) % MINECRAFT_BACKGROUNDS.length;
+      try {
+        localStorage.setItem("omega_launcher_bg_index", next.toString());
+      } catch {}
+      return next;
+    });
+  };
 
-  const playInstanceById = useCallback(
-    (instanceId: string) => {
-      const inst = instancesApi.instances.find((i) => i.id === instanceId);
-      if (!inst) return;
-      instancesApi.moveInstanceToTop(instanceId);
-      presenceApi.setGameStatus({ instanceName: inst.name });
-      void game.playInstance(inst, accountsApi.account.name, t);
-    },
-    [instancesApi.instances, game, accountsApi.account, presenceApi, t],
+  const handlePrevBg = () => {
+    setBgIndex((curr) => {
+      const prev = (curr - 1 + MINECRAFT_BACKGROUNDS.length) % MINECRAFT_BACKGROUNDS.length;
+      try {
+        localStorage.setItem("omega_launcher_bg_index", prev.toString());
+      } catch {}
+      return prev;
+    });
+  };
+
+  const handleToggleBgAutoPlay = () => {
+    setIsBgAutoPlay((curr) => {
+      const next = !curr;
+      try {
+        localStorage.setItem("omega_launcher_bg_autoplay", next.toString());
+      } catch {}
+      return next;
+    });
+  };
+
+  // Toast notifications disabled per user request
+  const showToast = (_msg: string) => {};
+
+  // 3D Skin & Cape state
+  const [activeSkinUrl, setActiveSkinUrl] = useState<string>(PRESET_SKINS.dream);
+  const [skinModel, setSkinModel] = useState<"default" | "slim">("slim");
+  const [activeCapeUrl, setActiveCapeUrl] = useState<string | null>(null);
+
+  // Instances state (Persisted in localStorage)
+  const [instances, setInstances] = useState<InstanceData[]>(() => {
+    const loaded = loadStorage<InstanceData[]>("omega_instances", DEFAULT_INSTANCES);
+    // Ensure default Rust (beta) instance is present even if user had older localStorage
+    const hasRustInstance = loaded.some(
+      (i) => i.id === "inst_rust_beta" || i.folderId === "folder_rust" || i.loader === "Rust"
+    );
+    let list = loaded;
+    if (!hasRustInstance) {
+      const defaultRust = DEFAULT_INSTANCES.find((i) => i.id === "inst_rust_beta");
+      if (defaultRust) {
+        list = [defaultRust, ...loaded];
+      }
+    }
+    // Enforce that Rust instances always have version 26.3 and ensure icon is populated
+    return list.map((inst) => {
+      let icon = inst.icon;
+      if (!icon) {
+        if (inst.loader === "Rust" || inst.id === "inst_rust_beta") icon = "obsidian";
+        else if (inst.id === "inst_3" || inst.name.toLowerCase().includes("pvp")) icon = "diamond_sword";
+        else if (inst.id === "inst_2" || inst.name.toLowerCase().includes("survival")) icon = "diamond_pickaxe";
+        else if (inst.id === "inst_1") icon = "end_crystal";
+        else icon = "diamond_sword";
+      }
+      let name = inst.name;
+      if (name === "Моя сборка 1.21") name = "Моя версия 1.21";
+      if (name === "Импортированная сборка") name = "Импортированная версия";
+
+      return {
+        ...inst,
+        name,
+        icon,
+        mcVersion:
+          inst.loader === "Rust" || inst.id === "inst_rust_beta" || inst.folderId === "folder_rust"
+            ? "26.3"
+            : inst.mcVersion,
+      };
+    });
+  });
+  const [selectedInstanceId, setSelectedInstanceId] = useState<string>(() => {
+    const saved = localStorage.getItem("omega_selected_instance_id");
+    return saved || "inst_1";
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("omega_instances", JSON.stringify(instances));
+    } catch {}
+  }, [instances]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("omega_selected_instance_id", selectedInstanceId);
+    } catch {}
+  }, [selectedInstanceId]);
+
+  // Accounts state (Persisted in localStorage)
+  const [accounts, setAccounts] = useState<AccountData[]>(() =>
+    loadStorage<AccountData[]>("omega_accounts", DEFAULT_ACCOUNTS)
   );
+  const [activeAccountId, setActiveAccountId] = useState<string>(() => {
+    const saved = localStorage.getItem("omega_active_account_id");
+    return saved || "acc_1";
+  });
 
-  const handleServerLaunch = useCallback(
-    (instanceId: string, serverHostPort: string) => {
-      const inst = instancesApi.instances.find((i) => i.id === instanceId);
-      if (!inst) return;
-      instancesApi.moveInstanceToTop(instanceId);
-      presenceApi.setGameStatus({
-        instanceName: inst.name,
-        serverHost: serverHostPort,
-      });
-      void game.playInstance(inst, accountsApi.account.name, t, serverHostPort);
-    },
-    [instancesApi.instances, game, accountsApi.account, presenceApi, t],
+  useEffect(() => {
+    try {
+      localStorage.setItem("omega_accounts", JSON.stringify(accounts));
+    } catch {}
+  }, [accounts]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("omega_active_account_id", activeAccountId);
+    } catch {}
+  }, [activeAccountId]);
+
+  // Live console logs from Minecraft and Tauri IPC
+  const [liveLogs, setLiveLogs] = useState<LogEntry[]>([]);
+
+  const pushLog = useCallback((message: string, tag: LogEntry["tag"] = "INFO") => {
+    const now = new Date();
+    const time = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`;
+    setLiveLogs((prev) => [
+      ...prev.slice(-300),
+      { id: `${Date.now()}_${Math.random()}`, time, tag, message },
+    ]);
+  }, []);
+
+  // Listen to Tauri events (process stdout, stderr, auth logs)
+  useEffect(() => {
+    let unlistenProg: (() => void) | null = null;
+    let unlistenAuth: (() => void) | null = null;
+
+    listen<string>("download-progress", (event) => {
+      const line = event.payload;
+      if (line.includes("Minecraft process spawned with PID:")) {
+        setIsRunning(true);
+      }
+      if (line.includes("Minecraft process exited")) {
+        setIsRunning(false);
+      }
+      const tag: LogEntry["tag"] = line.includes("[ERROR]")
+        ? "ERROR"
+        : line.includes("[WARN]")
+        ? "WARN"
+        : line.includes("[MS_AUTH]")
+        ? "AUTH"
+        : "INFO";
+      pushLog(line, tag);
+    })
+      .then((u) => {
+        unlistenProg = u;
+      })
+      .catch(() => {});
+
+    listen<string>("auth-log", (event) => {
+      pushLog(event.payload, "AUTH");
+    })
+      .then((u) => {
+        unlistenAuth = u;
+      })
+      .catch(() => {});
+
+    return () => {
+      unlistenProg?.();
+      unlistenAuth?.();
+    };
+  }, [pushLog]);
+
+  // Load instances from SQLite on mount & sync mod counts
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const dbInstances = await ipc.dbLoadInstances();
+        if (cancelled) return;
+        if (dbInstances && dbInstances.length > 0) {
+          const mapped: InstanceData[] = dbInstances.map((db) => ({
+            id: db.id,
+            name: db.name,
+            mcVersion: db.mcVersion,
+            loader: (db.loader as InstanceData["loader"]) || "Fabric",
+            playTimeMinutes: Math.round((db.playTimeMs || 0) / 60000),
+            modCount: 0,
+            isReady: true,
+            folderId: db.groupName || undefined,
+            icon: (db.icon as InstanceAvatarVariant) || "diamond_sword",
+          }));
+          setInstances(mapped);
+
+          for (const inst of mapped) {
+            void ipc.countInstalledMods(inst.id).then((count) => {
+              if (count > 0 && !cancelled) {
+                setInstances((prev) =>
+                  prev.map((i) => (i.id === inst.id ? { ...i, modCount: count } : i))
+                );
+              }
+            }).catch(() => {});
+          }
+        }
+      } catch {}
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Sync instances to SQLite
+  useEffect(() => {
+    try {
+      localStorage.setItem("omega_instances", JSON.stringify(instances));
+    } catch {}
+    const dbList: DbInstance[] = instances.map((inst, idx) => ({
+      id: inst.id,
+      name: inst.name,
+      mcVersion: inst.mcVersion,
+      loader: inst.loader,
+      x: idx * 100,
+      y: 0,
+      icon: typeof inst.icon === "string" ? inst.icon : undefined,
+      groupName: inst.folderId,
+      playTimeMs: (inst.playTimeMinutes || 0) * 60000,
+    }));
+    void ipc.dbSaveInstances(dbList).catch(() => {});
+  }, [instances]);
+
+  // Load accounts from SQLite & reconcile with cached Microsoft account
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const dbAccounts = await ipc.dbLoadAccounts();
+        if (cancelled) return;
+        if (dbAccounts && dbAccounts.length > 0) {
+          const mapped: AccountData[] = dbAccounts.map((a, idx) => ({
+            id: `acc_db_${idx}_${a.name}`,
+            name: a.name,
+            type: a.type as AccountData["type"],
+            isOnline: true,
+            skinUrl: a.type === "microsoft" ? "/skins/steve.png" : undefined,
+          }));
+          setAccounts(mapped);
+        }
+      } catch {}
+
+      try {
+        const cachedMs = await ipc.getCachedMicrosoftAccount();
+        if (cachedMs && cachedMs.name && !cancelled) {
+          setAccounts((prev) => {
+            const exists = prev.find((a) => a.type === "microsoft");
+            if (exists) {
+              return prev.map((a) => (a.type === "microsoft" ? { ...a, name: cachedMs.name } : a));
+            } else {
+              return [
+                ...prev,
+                {
+                  id: "acc_ms_cached",
+                  name: cachedMs.name,
+                  type: "microsoft",
+                  isOnline: true,
+                  skinUrl: "/skins/steve.png",
+                },
+              ];
+            }
+          });
+
+          void ipc.getMicrosoftSkin(cachedMs.name).then((skin) => {
+            if (skin && !cancelled) {
+              setActiveSkinUrl(skin);
+              setAccounts((prev) =>
+                prev.map((a) => (a.type === "microsoft" ? { ...a, skinUrl: skin } : a))
+              );
+            }
+          }).catch(() => {});
+        }
+      } catch {}
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Sync accounts to SQLite
+  useEffect(() => {
+    void ipc.dbSaveAccounts(accounts.map((a) => ({ name: a.name, type: a.type }))).catch(() => {});
+  }, [accounts]);
+
+  const activeAccount =
+    accounts.find((a) => a.id === activeAccountId) || accounts[0] || FALLBACK_ACCOUNT;
+
+  const selectedInstance =
+    instances.find((i) => i.id === selectedInstanceId) || instances[0] || null;
+
+  // Omega Network Account state (linked to base account for playing with friends)
+  const [omegaAccount, setOmegaAccount] = useState<OmegaAccountState>(() =>
+    loadStorage("omega_network_account", { isLinked: false })
   );
 
   useEffect(() => {
-    if (!game.runningInstanceId) presenceApi.setGameStatus(null);
-  }, [game.runningInstanceId, presenceApi]);
+    try {
+      localStorage.setItem("omega_network_account", JSON.stringify(omegaAccount));
+    } catch {}
+  }, [omegaAccount]);
+
+  const [isOmegaModalOpen, setIsOmegaModalOpen] = useState<boolean>(false);
+
+  // Game running state (Play / Stop simulation)
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+
+  // Top Navigation Dock Layout state (Persisted in localStorage)
+  const [topBarLayout, setTopBarLayout] = useState<TopBarItemId[]>(() => {
+    const loaded = loadStorage("omega_topbar_layout", DEFAULT_TOPBAR_LAYOUT);
+    return sanitizeTopBarLayout(loaded);
+  });
+
+  // Bottom Launch Dock Layout state (Persisted in localStorage)
+  const [bottomBarLayout, setBottomBarLayout] = useState<BottomBarItemId[]>(() => {
+    const loaded = loadStorage("omega_bottombar_layout", DEFAULT_BOTTOMBAR_LAYOUT);
+    return sanitizeBottomBarLayout(loaded);
+  });
+
+  // Bottom Launch Dock Alignment state (Persisted in localStorage)
+  const [bottomBarAlignment, setBottomBarAlignment] = useState<BottomBarAlignment>(() => {
+    const loaded = loadStorage<BottomBarAlignment>("omega_bottombar_alignment", DEFAULT_BOTTOMBAR_ALIGNMENT);
+    return ["center", "left", "right", "space-between"].includes(loaded) ? loaded : DEFAULT_BOTTOMBAR_ALIGNMENT;
+  });
+
+  // Button Shape Preset state (Persisted in localStorage)
+  const [buttonShapePreset, setButtonShapePreset] = useState<ButtonShapePreset>(() => {
+    const loaded = loadStorage<ButtonShapePreset>("omega_btn_shape_preset", DEFAULT_BUTTON_SHAPE_PRESET);
+    return ["tactical", "cyber", "rounded", "chamfer"].includes(loaded) ? loaded : DEFAULT_BUTTON_SHAPE_PRESET;
+  });
+
+  // Menus Customization State (TopBar, Background, Catalog)
+  const [menusCustomization, setMenusCustomization] = useState<MenusCustomizationState>(() => {
+    try {
+      const saved = localStorage.getItem("omega_menus_customization_v1");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          topbar: { ...DEFAULT_MENUS_CUSTOMIZATION.topbar, ...parsed.topbar },
+          background: { ...DEFAULT_MENUS_CUSTOMIZATION.background, ...parsed.background },
+          catalog: { ...DEFAULT_MENUS_CUSTOMIZATION.catalog, ...parsed.catalog },
+        };
+      }
+    } catch (e) {
+      console.warn("Failed to load menus customization:", e);
+    }
+    return DEFAULT_MENUS_CUSTOMIZATION;
+  });
+
+  const [menuCustomizerModal, setMenuCustomizerModal] = useState<{
+    isOpen: boolean;
+    zone: CustomizerZoneId;
+  }>({
+    isOpen: false,
+    zone: "topbar",
+  });
+
+  const menuCustomizationPersistTimeoutRef = useRef<number | null>(null);
+
+  // Sync root CSS custom properties for menus customization
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    if (menusCustomization.topbar) {
+      const theme = computePanelTheme(
+        menusCustomization.topbar.color,
+        menusCustomization.topbar.intensity,
+        menusCustomization.topbar.patternIntensity,
+        menusCustomization.topbar.mode
+      );
+      root.style.setProperty("--custom-topbar-bg", theme.panelBg);
+      root.style.setProperty("--custom-topbar-border", theme.panelBorder);
+      root.style.setProperty("--custom-topbar-pattern", theme.panelPattern);
+      root.style.setProperty("--custom-topbar-pattern-size", theme.panelPatternSize);
+      root.style.setProperty("--custom-topbar-pattern-pos", theme.panelPatternPosition);
+      root.style.setProperty("--custom-topbar-pattern-opacity", theme.panelPatternOpacity);
+      root.style.setProperty("--custom-topbar-btn-bg", theme.itemBg);
+      root.style.setProperty("--custom-topbar-btn-border", theme.itemBorder);
+      root.style.setProperty("--custom-topbar-btn-hover", theme.itemHover);
+      root.style.setProperty("--custom-topbar-btn-active", theme.itemActive);
+      root.style.setProperty("--custom-topbar-btn-play", theme.itemPlay);
+      root.style.setProperty("--custom-topbar-btn-active-border", theme.itemActiveBorder);
+      root.style.setProperty("--custom-topbar-accent", theme.accentColor);
+    }
+  }, [menusCustomization.topbar]);
+
+  const handleUpdateMenusCustomization = useCallback((newState: MenusCustomizationState) => {
+    setMenusCustomization(newState);
+    if (menuCustomizationPersistTimeoutRef.current) {
+      window.clearTimeout(menuCustomizationPersistTimeoutRef.current);
+    }
+    menuCustomizationPersistTimeoutRef.current = window.setTimeout(() => {
+      try {
+        localStorage.setItem("omega_menus_customization_v1", JSON.stringify(newState));
+      } catch {}
+    }, 250);
+  }, []);
+
+  const handleOpenMenuCustomizer = (zone: CustomizerZoneId = "topbar") => {
+    setMenuCustomizerModal({
+      isOpen: true,
+      zone,
+    });
+  };
+
+  const handleCloseMenuCustomizer = () => {
+    setMenuCustomizerModal((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const handleResetZoneCustomization = (zone: CustomizerZoneId) => {
+    setMenusCustomization((prev) => {
+      const updated = {
+        ...prev,
+        [zone]: { ...DEFAULT_MENUS_CUSTOMIZATION[zone] },
+      };
+      try {
+        localStorage.setItem("omega_menus_customization_v1", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+    showToast(
+      `Оформление "${zone === "topbar" ? "Верхней панели" : zone === "background" ? "Заднего фона" : "Каталога"}" сброшено`
+    );
+  };
+
+  const handleSaveTopBarLayout = (newLayout: TopBarItemId[]) => {
+    const sanitized = sanitizeTopBarLayout(newLayout);
+    setTopBarLayout(sanitized);
+    try {
+      localStorage.setItem("omega_topbar_layout", JSON.stringify(sanitized));
+    } catch {}
+    showToast("Порядок верхней панели сохранен!");
+  };
+
+  const handleResetTopBarLayout = () => {
+    setTopBarLayout([...DEFAULT_TOPBAR_LAYOUT]);
+    try {
+      localStorage.setItem("omega_topbar_layout", JSON.stringify(DEFAULT_TOPBAR_LAYOUT));
+    } catch {}
+    showToast("Верхняя панель сброшена по умолчанию");
+  };
+
+  const handleSaveBottomBarLayout = (newLayout: BottomBarItemId[], alignment?: BottomBarAlignment) => {
+    const sanitized = sanitizeBottomBarLayout(newLayout);
+    setBottomBarLayout(sanitized);
+    try {
+      localStorage.setItem("omega_bottombar_layout", JSON.stringify(sanitized));
+    } catch {}
+    if (alignment) {
+      setBottomBarAlignment(alignment);
+      try {
+        localStorage.setItem("omega_bottombar_alignment", JSON.stringify(alignment));
+      } catch {}
+    }
+    showToast("Настройки нижней панели сохранены!");
+  };
+
+  const handleResetBottomBarLayout = () => {
+    setBottomBarLayout([...DEFAULT_BOTTOMBAR_LAYOUT]);
+    setBottomBarAlignment(DEFAULT_BOTTOMBAR_ALIGNMENT);
+    try {
+      localStorage.setItem("omega_bottombar_layout", JSON.stringify(DEFAULT_BOTTOMBAR_LAYOUT));
+      localStorage.setItem("omega_bottombar_alignment", JSON.stringify(DEFAULT_BOTTOMBAR_ALIGNMENT));
+    } catch {}
+    showToast("Нижняя панель сброшена по умолчанию");
+  };
+
+  const handleChangeButtonShapePreset = (preset: ButtonShapePreset) => {
+    setButtonShapePreset(preset);
+    try {
+      localStorage.setItem("omega_btn_shape_preset", JSON.stringify(preset));
+    } catch {}
+    showToast(`Форма кнопок изменена: ${preset}`);
+  };
+
+  const handleTogglePlay = useCallback(async () => {
+    if (!selectedInstance) return;
+    if (isRunning) {
+      pushLog(`[launcher/INFO] Запрос остановки Minecraft для "${selectedInstance.name}"...`, "INFO");
+      try {
+        await ipc.killMinecraft(selectedInstance.id);
+      } catch (e: any) {
+        pushLog(`[launcher/ERROR] Ошибка остановки: ${e?.message || e}`, "ERROR");
+      }
+      setIsRunning(false);
+      return;
+    }
+
+    setIsRunning(true);
+    pushLog(
+      `[launcher/INFO] Запуск "${selectedInstance.name}" (Minecraft ${selectedInstance.mcVersion}, ${selectedInstance.loader}) от имени "${activeAccount.name}"...`,
+      "INFO"
+    );
+    try {
+      await ipc.launchMinecraft({
+        version: selectedInstance.mcVersion,
+        server: "",
+        username: activeAccount.name,
+        ram: selectedInstance.ramGb || 4,
+        instanceId: selectedInstance.id,
+      });
+    } catch (e: any) {
+      pushLog(`[launcher/ERROR] Ошибка запуска: ${e?.message || e}`, "ERROR");
+      setIsRunning(false);
+    }
+  }, [selectedInstance, isRunning, activeAccount.name, pushLog]);
+
+  const handleToggleSound = () => {
+    setSoundMuted((prev) => {
+      const next = !prev;
+      showToast(next ? "Системные звуки отключены" : "Системные звуки включены");
+      return next;
+    });
+  };
+
+  const handleEquipSkin = (url: string, model: "default" | "slim") => {
+    setActiveSkinUrl(url);
+    setSkinModel(model);
+    showToast("Скин успешно надет на 3D модель!");
+  };
+
+  const handleEquipCape = (url: string | null) => {
+    setActiveCapeUrl(url);
+    showToast(url ? "Плащ успешно экипирован!" : "Плащ снят");
+  };
+
+  const handleInstallMod = useCallback(
+    async (modName: string) => {
+      if (!selectedInstance) {
+        showToast(`Сначала выберите или создайте версию для установки мода "${modName}"`);
+        return;
+      }
+      pushLog(`[MODS] Установка мода "${modName}" в версию "${selectedInstance.name}"...`, "INFO");
+      try {
+        await ipc.downloadMod({
+          modId: modName.toLowerCase().replace(/\s+/g, "-"),
+          mcVersion: selectedInstance.mcVersion,
+          loader: selectedInstance.loader.toLowerCase(),
+          instanceId: selectedInstance.id,
+          projectType: "mod",
+        });
+        const count = await ipc.countInstalledMods(selectedInstance.id);
+        setInstances((prev) =>
+          prev.map((i) => (i.id === selectedInstance.id ? { ...i, modCount: count } : i))
+        );
+        pushLog(`[MODS] Мод "${modName}" успешно установлен!`, "INFO");
+        showToast(`Мод "${modName}" успешно установлен в версию "${selectedInstance.name}"!`);
+      } catch (err: any) {
+        pushLog(`[MODS] Ошибка загрузки мода "${modName}": ${err?.message || err}`, "ERROR");
+      }
+    },
+    [selectedInstance, pushLog]
+  );
+
+  const handleInstallModpack = (pack: {
+    title: string;
+    author?: string;
+    desc?: string;
+    loaders?: string[];
+  }) => {
+    const primaryLoader = (pack.loaders?.[0] as InstanceData["loader"]) || "Fabric";
+    const newInst: InstanceData = {
+      id: "inst_pack_" + Date.now(),
+      name: pack.title,
+      mcVersion: "1.20.1",
+      loader: primaryLoader,
+      playTimeMinutes: 0,
+      modCount: Math.floor(Math.random() * 80) + 70,
+      isReady: true,
+      folderId: "folder_modpacks",
+      icon: "diamond_sword",
+    };
+    setInstances((prev) => [newInst, ...prev]);
+    setSelectedInstanceId(newInst.id);
+    showToast(`Сборка "${pack.title}" успешно скачана из каталога и добавлена в ваши версии!`);
+  };
+
+  const handleUpdateInstance = (updated: InstanceData) => {
+    setInstances((prev) =>
+      prev.map((inst) => (inst.id === updated.id ? updated : inst))
+    );
+  };
+
+  const handleDeleteInstance = useCallback((id: string) => {
+    void ipc.dbDeleteInstance(id).catch(() => {});
+    setInstances((prev) => {
+      const next = prev.filter((i) => i.id !== id);
+      if (selectedInstanceId === id) {
+        setSelectedInstanceId(next[0]?.id || "");
+      }
+      return next;
+    });
+    showToast("Версия удалена");
+  }, [selectedInstanceId]);
+
+  const handleDeleteAccount = (id: string) => {
+    setAccounts((prev) => {
+      const next = prev.filter((a) => a.id !== id);
+      if (activeAccountId === id) {
+        setActiveAccountId(next[0]?.id || "");
+      }
+      return next;
+    });
+    showToast("Профиль удален");
+  };
+
+  const handleDirectConnect = useCallback(
+    async (serverName: string, ip: string) => {
+      const inst = selectedInstance || instances[0];
+      if (!inst) return;
+      setIsRunning(true);
+      setActiveScreen("home");
+      pushLog(`[launcher/INFO] Прямое подключение к серверу "${serverName}" (${ip})...`, "INFO");
+      try {
+        await ipc.launchMinecraft({
+          version: inst.mcVersion,
+          server: ip,
+          username: activeAccount.name,
+          ram: inst.ramGb || 4,
+          instanceId: inst.id,
+        });
+      } catch (e: any) {
+        pushLog(`[launcher/ERROR] Ошибка прямого подключения: ${e?.message || e}`, "ERROR");
+        setIsRunning(false);
+      }
+    },
+    [selectedInstance, instances, activeAccount.name, pushLog]
+  );
+
+  const handleLoginMicrosoft = useCallback(async () => {
+    pushLog("[MS_AUTH] Запуск официальной Microsoft OAuth2 авторизации...", "AUTH");
+    try {
+      const res = await ipc.loginMicrosoft();
+      pushLog(`[MS_AUTH] Авторизация Microsoft успешна: ${res}`, "AUTH");
+      const cached = await ipc.getCachedMicrosoftAccount();
+      if (cached && cached.name) {
+        const msAcc: AccountData = {
+          id: "acc_ms_" + Date.now(),
+          name: cached.name,
+          type: "microsoft",
+          isOnline: true,
+          skinUrl: "/skins/steve.png",
+        };
+        setAccounts((prev) => [...prev.filter((a) => a.type !== "microsoft"), msAcc]);
+        setActiveAccountId(msAcc.id);
+        const skin = await ipc.getMicrosoftSkin(cached.name);
+        if (skin) {
+          setActiveSkinUrl(skin);
+        }
+      }
+    } catch (err: any) {
+      pushLog(`[MS_AUTH] Ошибка авторизации Microsoft: ${err?.message || err}`, "ERROR");
+    }
+  }, [pushLog]);
+
+  const handleLoginEly = useCallback(async () => {
+    pushLog("[ELY_AUTH] Открытие окна авторизации Ely.by...", "AUTH");
+    try {
+      await ipc.openElyLogin();
+    } catch (err: any) {
+      pushLog(`[ELY_AUTH] Ошибка: ${err?.message || err}`, "ERROR");
+    }
+  }, [pushLog]);
+
+  const handleSelectAccount = (acc: AccountData) => {
+    setActiveAccountId(acc.id);
+    if (acc.skinUrl) {
+      setActiveSkinUrl(acc.skinUrl);
+      setSkinModel(acc.name === "Alex_Gamer" ? "slim" : "default");
+    }
+    showToast(`Активен профиль: ${acc.name} (${acc.type === "microsoft" ? "Microsoft" : "Офлайн"})`);
+  };
+
+  const handleCreateOfflineAccount = (name: string) => {
+    const newAcc: AccountData = {
+      id: "acc_" + Date.now(),
+      name,
+      type: "offline",
+      isOnline: true,
+      skinUrl: "/skins/steve.png",
+    };
+    setAccounts((prev) => [...prev, newAcc]);
+    handleSelectAccount(newAcc);
+    showToast(`Создан новый офлайн профиль: ${name}`);
+  };
+
+  const handleOpenOmegaLogin = () => {
+    setIsOmegaModalOpen(true);
+  };
+
+  const handleLoginOmega = (username: string) => {
+    setOmegaAccount({
+      isLinked: true,
+      omegaUsername: username,
+    });
+    showToast(`Аккаунт Omega "${username}" успешно подключен! Доступна совместная игра с друзьями.`);
+  };
+
+  const handleUnlinkOmega = () => {
+    setOmegaAccount({ isLinked: false });
+    showToast("Аккаунт Omega отключен.");
+  };
 
   return (
-    <div
-      className="app-container"
-      onCopy={(e) => {
-        if (!(e.target as HTMLElement).closest(".copyable-console")) {
-          e.preventDefault();
-        }
-      }}
-      onCut={(e) => {
-        if (!(e.target as HTMLElement).closest(".copyable-console")) {
-          e.preventDefault();
-        }
-      }}
-      onDragStart={(e) => e.preventDefault()}
-    >
-      <header className="millida-top-bar">
-        <div className="millida-top-left">
-          {activeTab !== "home" && (
-            <button
-              type="button"
-              className="millida-back-home-btn"
-              onClick={() => setActiveTab("home")}
-              title={t.backToHome || "На главную"}
-            >
-              <IconArrowLeft />
-              <span>{t.backToHome || "На главную"}</span>
-            </button>
-          )}
-
-          {/* Friends online pill moved to the left */}
-          <div className="millida-pill-wrapper">
-            <button
-              type="button"
-              className="millida-top-friends-pill"
-              onClick={() => setActiveTab("friends")}
-              title={t.friendsTitle || "Друзья"}
-            >
-              <div className="millida-friends-heads-row">
-                <div className="mini-head mini-head-1">
-                  <SkinHeadPreview
-                    skinUrl={skinApi.activeSkinUrl}
-                    fallback="steve"
-                    size={20}
-                  />
-                </div>
-                <div className="mini-head mini-head-2">
-                  <SkinHeadPreview fallback="steve" size={20} />
-                </div>
-                <div className="mini-head mini-head-3">
-                  <SkinHeadPreview fallback="alex" size={20} />
-                </div>
-              </div>
-              <div className="millida-friends-online-text">
-                <span className="millida-friends-online-num">
-                  {Object.keys(presenceApi.presences).length ||
-                    friendsApi.friends.length ||
-                    3}
-                </span>
-                <span className="millida-friends-online-label">
-                  {t.friendsOnlineBadge || "в сети"}
-                </span>
-              </div>
-            </button>
-            <div className="millida-pill-badge" aria-hidden="true">
-              <span>{invites.length || 2}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="millida-top-center">
-          <div className="millida-title-badge">
-            <div className="millida-logo-dot" />
-            <span>OMEGA LAUNCHER</span>
-          </div>
-        </div>
-
-        <div className="millida-top-right">
-          {/* User profile dropdown widget */}
-          <div
-            className="millida-user-profile"
-            onClick={() => {
-              accountsApi.setProfileMenuOpen(true);
-              accountsApi.setAccountModalView("list");
-            }}
-          >
-            <div className="avatar">
-              {accountsApi.account.type === "microsoft" ? (
-                <IconMicrosoft />
-              ) : (
-                <SkinHeadPreview skinUrl={skinApi.activeSkinUrl} size={24} />
-              )}
-            </div>
-            <div className="user-info">
-              <span className="user-name">{accountsApi.account.name}</span>
-              <span className="user-status">
-                {accountsApi.account.type === "microsoft"
-                  ? t.microsoftAccountSubtitle || "Аккаунт Microsoft"
-                  : accountsApi.account.type === "omega"
-                    ? t.omegaAccountSubtitle || "Аккаунт Omega"
-                    : t.offlineAccountSubtitle || "Оффлайн профиль"}
-              </span>
-            </div>
-            <IconChevronDown size={14} className="dropdown-arrow" />
-          </div>
-
-          {/* Sound mute toggle */}
-          <button
-            type="button"
-            className="millida-top-action-btn"
-            onClick={() => {
-              setSoundMuted((prev) => {
-                const next = !prev;
-                showToast(next ? t.soundMuted : t.soundUnmuted);
-                return next;
-              });
-            }}
-            title={soundMuted ? t.soundMuted : t.soundUnmuted}
-          >
-            {soundMuted ? <IconVolumeX size={18} /> : <IconVolume2 size={18} />}
-          </button>
-
-          {/* Messages / Notifications */}
-          <div className="millida-btn-relative">
-            <button
-              type="button"
-              className="millida-top-action-btn"
-              onClick={() => setActiveTab("friends")}
-              title={t.notifications || "Уведомления"}
-            >
-              <IconMessageSquare size={18} />
-            </button>
-            <div className="millida-action-badge" aria-hidden="true">
-              <span>3</span>
-            </div>
-          </div>
-
-          {/* Settings */}
-          <button
-            type="button"
-            className={`millida-top-action-btn ${activeTab === "settings" ? "active" : ""}`}
-            onClick={() =>
-              setActiveTab(activeTab === "settings" ? "home" : "settings")
-            }
-            title={t.sidebarSettings || "Настройки"}
-          >
-            <IconSettings />
-          </button>
-        </div>
-      </header>
-
-      <main
-        className={
-          activeTab === "home"
-            ? "main-content-home"
-            : "main-content main-content-route"
-        }
-      >
-        {activeTab === "home" && (
-          <HomeView
-            t={t}
-            account={accountsApi.account}
-            selectedInstance={instancesApi.selectedInstance}
-            isRunning={game.isRunning}
-            skinApi={skinApi}
-            onPlay={playSelected}
-            onStop={() => void game.stopGame()}
-            onSelectVersion={() => setActiveTab("modpacks")}
-            onOpenStore={() => setActiveTab("store")}
-            onOpenFriends={() => setActiveTab("friends")}
-            onSkinReady={handleSkinReady}
-          />
-        )}
-
-        {activeTab === "store" && (
-          <OmegaStorePanel
-            t={t}
-            skinApi={skinApi}
-            account={accountsApi.account}
-            onBack={() => setActiveTab("home")}
-            showToast={showToast}
-          />
-        )}
-
-        {activeTab === "modpacks" && (
-          <InstancesPanel
-            visibleInstances={instancesApi.visibleInstances}
-            selectedInstanceId={instancesApi.selectedInstanceId}
-            selectedInstance={instancesApi.selectedInstance}
-            modCount={instancesApi.modCount}
-            fileInputRef={instancesApi.fileInputRef}
-            t={t}
-            modals={{
-              editModalOpen: instancesApi.editModalOpen,
-              editNameInput: instancesApi.editNameInput,
-              setEditNameInput: instancesApi.setEditNameInput,
-              editVersionInput: instancesApi.editVersionInput,
-              setEditVersionInput: instancesApi.setEditVersionInput,
-              editLoaderInput: instancesApi.editLoaderInput,
-              setEditLoaderInput: instancesApi.setEditLoaderInput,
-            }}
-            onSelectInstance={(id) => instancesApi.setSelectedInstanceId(id)}
-            onIconChange={instancesApi.handleIconChange}
-            onPlay={playSelected}
-            onOpenFolder={(instanceId) => void ipc.openFolder(instanceId)}
-            onEditInstance={(id) => instancesApi.openEditModal(id)}
-            onDeleteInstance={(id) => instancesApi.deleteInstance(id)}
-            onSaveEdit={instancesApi.saveEdit}
-            onCloseEdit={() => instancesApi.setEditModalOpen(null)}
-            onCreate={() => setIsCreating(true)}
-            onDropMod={(instanceId, payload) =>
-              void instancesApi.installModByDrag(instanceId, payload)
-            }
-            installProgress={instancesApi.installProgress}
-            onOpenCatalog={() => setActiveTab("catalog")}
-          />
-        )}
-
-        {["mods", "resourcepacks", "shaders", "datapacks", "catalog"].includes(
-          activeTab,
-        ) && (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-              flex: 1,
-              minHeight: 0,
-              height: "100%",
-              paddingBottom: "20px",
-              boxSizing: "border-box",
-            }}
-          >
-            <CatalogTabs
-              t={t}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
-
-            {activeTab === "mods" && (
-              <ModsPanel
-                instances={instancesApi.instances}
-                t={t}
-                language={language}
-                projectType="mod"
-                versionsList={currentVersionsList}
-              />
-            )}
-            {activeTab === "resourcepacks" && (
-              <ModsPanel
-                instances={instancesApi.instances}
-                t={t}
-                language={language}
-                projectType="resourcepack"
-                versionsList={currentVersionsList}
-              />
-            )}
-            {activeTab === "shaders" && (
-              <ModsPanel
-                instances={instancesApi.instances}
-                t={t}
-                language={language}
-                projectType="shader"
-                versionsList={currentVersionsList}
-              />
-            )}
-            {activeTab === "datapacks" && (
-              <ModsPanel
-                instances={instancesApi.instances}
-                t={t}
-                language={language}
-                projectType="datapack"
-                versionsList={currentVersionsList}
-              />
-            )}
-            {activeTab === "catalog" && (
-              <ModsPanel
-                instances={instancesApi.instances}
-                t={t}
-                language={language}
-                projectType="modpack"
-                onCreateModpack={(name, mcVer, loader, iconUrl, projectId) => {
-                  setActiveTab("home");
-                  void instancesApi.createFromCatalog(
-                    name,
-                    mcVer,
-                    loader,
-                    iconUrl,
-                    projectId,
-                  );
-                }}
-                versionsList={currentVersionsList}
-              />
-            )}
-          </div>
-        )}
-
-        {activeTab === "settings" && (
-          <SettingsPanel
-            t={t}
-            language={language}
-            changeLanguage={changeLanguage}
-            exportPath={instancesApi.exportPath}
-            setExportPath={(v) => {
-              instancesApi.setExportPath(v);
-              localStorage.setItem("exportPath", v);
-            }}
-            ram={game.ram}
-            setRam={game.setRam}
-            sliderStyle={game.sliderStyle}
-            serverIp={game.serverIp}
-            setServerIp={game.setServerIp}
-            javaPath={game.javaPath}
-            setJavaPath={game.setJavaPath}
-            gamePath={game.gamePath}
-            setGamePath={game.setGamePath}
-            versionFilters={versionFilters}
-            currentVersionsList={currentVersionsList}
-            toggleVersionFilter={toggleVersionFilter}
-            manifestError={manifestError}
-            closeOnLaunch={closeOnLaunch}
-            setCloseOnLaunch={(v) => {
-              setCloseOnLaunch(v);
-              setStoredCloseOnLaunch(v);
-            }}
-            fullscreenOnStart={fullscreenOnStart}
-            setFullscreenOnStart={(v) => {
-              setFullscreenOnStart(v);
-              setStoredFullscreenOnStart(v);
-            }}
-            onOpenStore={() => setActiveTab("store")}
-          />
-        )}
-
-        {activeTab === "friends" && (
-          <FriendsTab
-            t={t}
-            friends={friendsApi}
-            presence={presenceApi}
-            instances={instancesApi.instances}
-            invites={invites}
-            onDismissInvite={(fromId) =>
-              setInvites((prev) => prev.filter((i) => i.fromId !== fromId))
-            }
-            onLaunch={handleServerLaunch}
-            onNotify={showToast}
-            onOpenAccounts={() => {
-              accountsApi.setProfileMenuOpen(true);
-              accountsApi.setAccountModalView("list");
-            }}
-          />
-        )}
-
-        {isCreating && (
-          <CreateInstanceModal
-            t={t}
-            versionsList={currentVersionsList}
-            newName={newName}
-            setNewName={setNewName}
-            newVer={newVer}
-            setNewVer={setNewVer}
-            newLoader={newLoader}
-            setNewLoader={setNewLoader}
-            onCreate={handleCreateInstance}
-            onImport={() => {
-              setIsCreating(false);
-              instancesApi.setImportModalOpen(true);
-            }}
-            onClose={() => setIsCreating(false)}
-          />
-        )}
-      </main>
-
-      {accountsApi.profileMenuOpen && (
-        <AccountModal
-          t={t}
-          accountModalView={accountsApi.accountModalView}
-          account={accountsApi.account}
-          savedAccounts={accountsApi.savedAccounts}
-          newUsernameInput={accountsApi.newUsernameInput}
-          setNewUsernameInput={accountsApi.setNewUsernameInput}
-          omegaMode={accountsApi.omegaMode}
-          setOmegaMode={accountsApi.setOmegaMode}
-          omegaEmail={accountsApi.omegaEmail}
-          setOmegaEmail={accountsApi.setOmegaEmail}
-          omegaUsername={accountsApi.omegaUsername}
-          setOmegaUsername={accountsApi.setOmegaUsername}
-          omegaPassword={accountsApi.omegaPassword}
-          setOmegaPassword={accountsApi.setOmegaPassword}
-          omegaBusy={accountsApi.omegaBusy}
-          omegaError={accountsApi.omegaError}
-          omegaConnected={omegaConnected}
-          onBack={() => accountsApi.setAccountModalView("list")}
-          onSelectAccount={accountsApi.handleSelectAccount}
-          onDeleteAccount={accountsApi.handleDeleteAccount}
-          onLogoutCurrentAccount={() =>
-            void accountsApi.handleLogoutCurrentAccount()
-          }
-          onLogoutOmega={() => void omegaAuth.logout()}
-          onAddOffline={accountsApi.handleAddOffline}
-          onAddMicrosoft={() => void accountsApi.handleAddMicrosoft()}
-          onAddOmega={() => void accountsApi.handleAddOmega()}
-          onChangeView={accountsApi.setAccountModalView}
-          onClose={() => accountsApi.setProfileMenuOpen(false)}
-        />
-      )}
-
-      {instancesApi.importModalOpen && (
-        <ImportModal
-          t={t}
-          step={instancesApi.importStep}
-          onSelectStep={instancesApi.setImportStep}
-          onImport={(kind, path) =>
-            void instancesApi.importFromArchive(kind, path)
-          }
-          onClose={() => instancesApi.setImportModalOpen(false)}
-        />
-      )}
-
-      {activeTab !== "home" && (
-        <FloatingDock
-          activeTab={activeTab}
-          isHome={false}
-          isRunning={game.isRunning}
-          selectedVersionLabel={
-            instancesApi.selectedInstance
-              ? instancesApi.selectedInstance.mcVersion
-              : "1.20.1"
-          }
-          onHome={() => setActiveTab("home")}
-          onCatalog={() => setActiveTab("mods")}
-          onModpacks={() => setActiveTab("modpacks")}
-          onSettings={() => setActiveTab("settings")}
-          onFriends={() => setActiveTab("friends")}
-          onPlay={playSelected}
-          onStop={() => void game.stopGame()}
-          t={t}
-        />
-      )}
-
-      <ImportProgressPopup
-        t={t}
-        visible={instancesApi.importing && !importPopupHidden}
-        progress={instancesApi.installProgress}
-        onClose={() => setImportPopupHidden(true)}
+    <div className={`launcher-viewport btn-shape-${buttonShapePreset}`}>
+      {/* Layer 0: Background Atmosphere (Minecraft Screenshots) */}
+      <AtmosphereLayer
+        visible={activeScreen === "home"}
+        activeIndex={bgIndex}
+        isAutoPlay={isBgAutoPlay}
+        onNextBg={handleNextBg}
+        backgroundCustomization={menusCustomization.background}
       />
 
-      {startupLoading && (
-        <StartupScreen
-          isReady={
-            instancesApi.instancesLoaded &&
-            !skinApi.skinLoading &&
-            (skin3DReady || !skinApi.activeSkinUrl)
+      {/* Layer 1: 3D Character Stage (Kept mounted to preserve WebGL context; pauses rendering when not on home) */}
+      <Stage3DLayer
+        visible={activeScreen === "home" && !menuCustomizerModal.isOpen && !isOmegaModalOpen}
+        skinUrl={activeSkinUrl}
+        capeUrl={activeCapeUrl}
+        model={skinModel}
+      />
+
+      {/* Layer 2: HUD & Navigation (Configurable Top Dock) */}
+      <HudLayer
+        visible={true}
+        account={activeAccount}
+        accounts={accounts}
+        omegaAccount={omegaAccount}
+        onSelectAccount={handleSelectAccount}
+        onOpenOmegaLogin={handleOpenOmegaLogin}
+        onUnlinkOmega={handleUnlinkOmega}
+        soundMuted={soundMuted}
+        activeScreen={activeScreen}
+        skinUrl={activeSkinUrl}
+        onNavigate={(screen) => setActiveScreen(screen as ScreenId)}
+        onToggleSound={handleToggleSound}
+        onOpenModal={(modal: ActiveModal) => {
+          if (modal) setActiveScreen(modal as ScreenId);
+        }}
+        selectedInstance={selectedInstance}
+        instances={instances}
+        isRunning={isRunning}
+        onTogglePlay={handleTogglePlay}
+        onSelectInstanceById={(id) => {
+          const inst = instances.find((i) => i.id === id);
+          if (inst) {
+            setSelectedInstanceId(inst.id);
           }
-          onComplete={handleStartupComplete}
-        />
-      )}
+        }}
+        onDirectConnect={handleDirectConnect}
+        topBarLayout={topBarLayout}
+        topBarCustomization={menusCustomization.topbar}
+      />
+
+      {/* Layer 3: Launch Dock (Configurable Bottom Bar) */}
+      <DockLayer
+        visible={activeScreen === "home"}
+        selectedInstance={selectedInstance}
+        isRunning={isRunning}
+        onTogglePlay={handleTogglePlay}
+        onOpenInstancesModal={() => setActiveScreen("instances")}
+        bottomBarLayout={bottomBarLayout}
+        bottomBarAlignment={bottomBarAlignment}
+      />
+
+      {/* Layer 4: Screen Overlays (Full MVP Screens from FEATURES.md) */}
+      <ScreensLayer
+        activeScreen={activeScreen}
+        onNavigate={setActiveScreen}
+        onEquipSkin={handleEquipSkin}
+        onEquipCape={handleEquipCape}
+        instances={instances}
+        selectedInstanceId={selectedInstanceId}
+        onSelectInstance={(inst) => {
+          setSelectedInstanceId(inst.id);
+        }}
+        onCreateInstance={(inst) => {
+          setInstances((prev) => [...prev, inst]);
+          setSelectedInstanceId(inst.id);
+          showToast(`Версия "${inst.name}" создана!`);
+        }}
+        onDeleteInstance={handleDeleteInstance}
+        onUpdateInstance={handleUpdateInstance}
+        onDeleteAccount={handleDeleteAccount}
+        onLaunchInstance={(inst) => {
+          setSelectedInstanceId(inst.id);
+          handleTogglePlay();
+        }}
+        account={activeAccount}
+        accounts={accounts}
+        omegaAccount={omegaAccount}
+        onSelectAccount={handleSelectAccount}
+        onOpenOmegaLogin={handleOpenOmegaLogin}
+        onUnlinkOmega={handleUnlinkOmega}
+        onCreateOfflineAccount={handleCreateOfflineAccount}
+        onLoginMicrosoft={handleLoginMicrosoft}
+        onLoginEly={handleLoginEly}
+        logs={liveLogs}
+        onClearLogs={() => setLiveLogs([])}
+        onDirectConnect={handleDirectConnect}
+        isRunning={isRunning}
+        bgIndex={bgIndex}
+        isBgAutoPlay={isBgAutoPlay}
+        onSelectBg={handleSelectBg}
+        onNextBg={handleNextBg}
+        onPrevBg={handlePrevBg}
+        onToggleBgAutoPlay={handleToggleBgAutoPlay}
+        onInstallMod={handleInstallMod}
+        onInstallModpack={handleInstallModpack}
+        topBarLayout={topBarLayout}
+        onSaveTopBarLayout={handleSaveTopBarLayout}
+        onResetTopBarLayout={handleResetTopBarLayout}
+        bottomBarLayout={bottomBarLayout}
+        onSaveBottomBarLayout={handleSaveBottomBarLayout}
+        onResetBottomBarLayout={handleResetBottomBarLayout}
+        bottomBarAlignment={bottomBarAlignment}
+        onChangeBottomBarAlignment={setBottomBarAlignment}
+        buttonShapePreset={buttonShapePreset}
+        onChangeButtonShapePreset={handleChangeButtonShapePreset}
+        skinUrl={activeSkinUrl}
+        selectedInstance={selectedInstance}
+        menusCustomization={menusCustomization}
+        onOpenMenuCustomizer={handleOpenMenuCustomizer}
+        onUpdateMenusCustomization={handleUpdateMenusCustomization}
+        onResetZoneCustomization={handleResetZoneCustomization}
+      />
+
+      {/* Omega Account Login Modal */}
+      <OmegaLoginModal
+        isOpen={isOmegaModalOpen}
+        onClose={() => setIsOmegaModalOpen(false)}
+        onLogin={handleLoginOmega}
+        baseAccountName={activeAccount?.name ?? "Гость"}
+      />
+
+      {/* Interactive Menu & Theme Customizer Modal */}
+      <MenuCustomizerModal
+        isOpen={menuCustomizerModal.isOpen}
+        onClose={handleCloseMenuCustomizer}
+        initialZone={menuCustomizerModal.zone}
+        state={menusCustomization}
+        onChange={handleUpdateMenusCustomization}
+        onResetZone={handleResetZoneCustomization}
+      />
     </div>
   );
-}
-
-function formatPlayTime(ms: number | undefined, t: any): string {
-  const totalMin = Math.floor((ms || 0) / 60000);
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  if (h > 0) return `${h} ${t.timeH} ${m} ${t.timeMin}`;
-  if (m > 0) return `${m} ${t.timeMin}`;
-  return `0 ${t.timeMin}`;
-}
-
-function formatLastLaunch(
-  iso: string | undefined,
-  language: Language,
-  t: any,
-): string {
-  if (!iso) return t.neverLaunched;
-  return new Date(iso).toLocaleString(language === "ru" ? "ru-RU" : "en-US", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-export default function AppWithToast() {
-  return (
-    <ToastProvider>
-      <App />
-    </ToastProvider>
-  );
-}
+};
