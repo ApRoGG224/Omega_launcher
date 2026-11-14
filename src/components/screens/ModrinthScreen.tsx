@@ -1,4 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import {
+  searchCatalog,
+  CatalogItem,
+  CatalogSource,
+  CatalogTab,
+  CatalogLoader,
+  CatalogSort,
+} from "../../services/catalogService";
+import { IsometricCube } from "../icons/IsometricCube";
 import "../../styles/screens.css";
 
 interface ModrinthScreenProps {
@@ -7,282 +16,99 @@ interface ModrinthScreenProps {
   onInstallModpack?: (modpack: CatalogItem) => void;
 }
 
-interface CatalogItem {
-  title: string;
-  author: string;
-  desc: string;
-  downloads: number;
-  loaders: string[];
-  icon: "layers" | "bolt" | "compass" | "heart" | "sun" | "cube";
-}
-
 interface SourceItem {
-  name: string;
+  name: CatalogSource;
   color: string;
-  mult: number;
 }
 
 const SOURCES: SourceItem[] = [
-  { name: "Modrinth", color: "#7fd69e", mult: 1 },
-  { name: "CurseForge", color: "#e3946b", mult: 1.28 },
+  { name: "Modrinth", color: "#7fd69e" },
+  { name: "CurseForge", color: "#e3946b" },
 ];
 
 const CATEGORIES: Array<{
-  id: "modpacks" | "mods" | "shaders" | "tex" | "pets" | "cosmetics";
+  id: CatalogTab;
   label: string;
 }> = [
   { id: "modpacks", label: "Сборки" },
   { id: "mods", label: "Моды" },
   { id: "shaders", label: "Шейдеры" },
   { id: "tex", label: "Текстуры" },
-  { id: "pets", label: "Питомцы" },
-  { id: "cosmetics", label: "Косметика" },
 ];
-
-const CATALOG_DATA: Record<"modpacks" | "mods" | "shaders" | "tex" | "pets" | "cosmetics", CatalogItem[]> = {
-  modpacks: [
-    {
-      title: "All the Mods 9",
-      author: "ATMTeam",
-      desc: "Легендарная масштабная сборка с более чем 400 модами: технологии, магия, новые миры и глубокая система квестов.",
-      downloads: 14.8,
-      loaders: ["NeoForge"],
-      icon: "cube",
-    },
-    {
-      title: "Better MC [FABRIC]",
-      author: "SHXRKIE",
-      desc: "Ультимативная сборка нового поколения: переработанный Энд и Незер, десятки боссов, данжей и кастомная генерация.",
-      downloads: 18.5,
-      loaders: ["Fabric"],
-      icon: "compass",
-    },
-    {
-      title: "Prominence II RPG",
-      author: "Lunasa",
-      desc: "Глубокая ролевая RPG сборка с древом талантов, артефактами, магическими школами и эпическими рейдами.",
-      downloads: 9.2,
-      loaders: ["Fabric"],
-      icon: "bolt",
-    },
-    {
-      title: "RLCraft",
-      author: "Shivaxi",
-      desc: "Бескомпромиссная хардкорная сборка на выживание: жажда, температура, драконы и экстремально опасные биомы.",
-      downloads: 31.4,
-      loaders: ["Forge"],
-      icon: "heart",
-    },
-    {
-      title: "DawnCraft",
-      author: "bstylia14",
-      desc: "Приключенческая souls-like сборка с боевой системой от третьего лица, сотнями NPC-квестов и боссами.",
-      downloads: 7.9,
-      loaders: ["Forge"],
-      icon: "layers",
-    },
-    {
-      title: "Fabulously Optimized",
-      author: "RobotKoer",
-      desc: "Сборка для максимальной оптимизации FPS, плавности графики и полной поддержки современных ресурспаков.",
-      downloads: 24.1,
-      loaders: ["Fabric"],
-      icon: "sun",
-    },
-  ],
-  mods: [
-    {
-      title: "Fabric API",
-      author: "modmuss50",
-      desc: "Базовая библиотека хуков и основных функциональных возможностей для модов на Fabric.",
-      downloads: 78.2,
-      loaders: ["Fabric"],
-      icon: "layers",
-    },
-    {
-      title: "Sodium",
-      author: "jellysquid3",
-      desc: "Современный движок рендеринга для Minecraft, многократно увеличивающий производительность.",
-      downloads: 42.8,
-      loaders: ["Fabric", "NeoForge"],
-      icon: "bolt",
-    },
-    {
-      title: "JourneyMap",
-      author: "techbrew",
-      desc: "Интерактивная карта мира в реальном времени с радаром мобов, путевыми точками и многим другим.",
-      downloads: 35.1,
-      loaders: ["Forge", "Fabric", "NeoForge"],
-      icon: "compass",
-    },
-    {
-      title: "AppleSkin",
-      author: "squeek502",
-      desc: "Отображение подробной информации о сытости и насыщении едой прямо в интерфейсе.",
-      downloads: 28.5,
-      loaders: ["Fabric", "Forge", "NeoForge"],
-      icon: "heart",
-    },
-  ],
-  shaders: [
-    {
-      title: "Complementary Reimagined",
-      author: "EminGTR",
-      desc: "Универсальный шейдерпак с реалистичным освещением, водой и мягкими тенями.",
-      downloads: 12.4,
-      loaders: ["Iris"],
-      icon: "sun",
-    },
-    {
-      title: "BSL Shaders",
-      author: "CaptTatsu",
-      desc: "Классический шейдерпак с настраиваемыми облаками, отражениями и объёмным светом.",
-      downloads: 9.8,
-      loaders: ["Iris"],
-      icon: "sun",
-    },
-    {
-      title: "Rethinking Voxels",
-      author: "gri573",
-      desc: "Шейдерпак с трассировкой лучей и динамическим освещением блоков.",
-      downloads: 3.1,
-      loaders: ["Iris"],
-      icon: "sun",
-    },
-  ],
-  tex: [
-    {
-      title: "Faithful 32x",
-      author: "Faithful Team",
-      desc: "Удвоенное разрешение ванильных текстур с сохранением оригинального стиля игры.",
-      downloads: 18.2,
-      loaders: ["Java"],
-      icon: "cube",
-    },
-    {
-      title: "Fresh Animations",
-      author: "FreshLX",
-      desc: "Оживляет мобов новыми плавными анимациями без изменения их облика.",
-      downloads: 7.6,
-      loaders: ["Java"],
-      icon: "cube",
-    },
-    {
-      title: "Vanilla Tweaks",
-      author: "Vanilla Tweaks Team",
-      desc: "Набор небольших улучшений ванильных текстур, которые можно включать по одному.",
-      downloads: 5.9,
-      loaders: ["Java"],
-      icon: "cube",
-    },
-  ],
-  pets: [
-    {
-      title: "Doggy Talents Next",
-      author: "dashie",
-      desc: "Продвинутая система прокачки собак, уникальные способности, ошейники и новые породы.",
-      downloads: 14.2,
-      loaders: ["Forge", "Fabric", "NeoForge"],
-      icon: "heart",
-    },
-    {
-      title: "Inventory Pets",
-      author: "Purplicious_Cow",
-      desc: "Анимированные питомцы в инвентаре, дающие уникальные баффы, полёт и защиту.",
-      downloads: 38.6,
-      loaders: ["Forge", "NeoForge"],
-      icon: "heart",
-    },
-    {
-      title: "Mythic Mounts",
-      author: "chirp",
-      desc: "Приручаемые мифические маунты и летающие питомцы с детальными анимациями.",
-      downloads: 9.4,
-      loaders: ["Fabric", "Quilt"],
-      icon: "compass",
-    },
-    {
-      title: "Cat Companions",
-      author: "meowdev",
-      desc: "Расширенные породы котиков, трюки, анимации сна и охота на грызунов.",
-      downloads: 6.8,
-      loaders: ["Fabric", "Forge"],
-      icon: "heart",
-    },
-  ],
-  cosmetics: [
-    {
-      title: "Custom Cosmetics (Cosmetica)",
-      author: "eyevee",
-      desc: "Бесплатные 3D-шляпы, шарфы, наплечники и светящиеся крылья для всех игроков.",
-      downloads: 22.4,
-      loaders: ["Fabric", "Forge", "NeoForge"],
-      icon: "sun",
-    },
-    {
-      title: "Ears & Tails",
-      author: "unascribed",
-      desc: "Кастомизация ушек, хвостов, рожек и крыльев персонажа с физикой движения.",
-      downloads: 16.7,
-      loaders: ["Fabric", "NeoForge"],
-      icon: "layers",
-    },
-    {
-      title: "Not Enough Animations",
-      author: "tr7zw",
-      desc: "Косметические плавные анимации бега, поедания еды, лазания по лестницам и плавания.",
-      downloads: 29.8,
-      loaders: ["Fabric", "Forge"],
-      icon: "bolt",
-    },
-    {
-      title: "Emotecraft",
-      author: "kosmx",
-      desc: "Пак танцев, приветствий и более 100 выразительных эмоций и движений.",
-      downloads: 41.5,
-      loaders: ["Fabric", "Forge", "NeoForge"],
-      icon: "compass",
-    },
-  ],
-};
 
 export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
   onInstallMod,
   onInstallModpack,
 }) => {
-  const [sourceIndex, setSourceIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<
-    "modpacks" | "mods" | "shaders" | "tex" | "pets" | "cosmetics"
-  >("modpacks");
+  const [activeSource, setActiveSource] = useState<CatalogSource>("Modrinth");
+  const [activeTab, setActiveTab] = useState<CatalogTab>("modpacks");
   const [search, setSearch] = useState("");
-  const [selectedLoader, setSelectedLoader] = useState("");
-  const [sortMode, setSortMode] = useState<"p" | "n">("p");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedLoader, setSelectedLoader] = useState<CatalogLoader>("");
+  const [sortMode, setSortMode] = useState<CatalogSort>("p");
+  const [items, setItems] = useState<CatalogItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Record<string, boolean>>({});
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
 
-  const currentSource = SOURCES[sourceIndex];
-  const list = CATALOG_DATA[activeTab];
+  // Debounce search query by 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
-  const q = search.trim().toLowerCase();
-  const filtered = list.filter((item) => {
-    const matchText =
-      !q ||
-      item.title.toLowerCase().includes(q) ||
-      item.desc.toLowerCase().includes(q);
-    const matchLoader =
-      !["modpacks", "mods", "pets", "cosmetics"].includes(activeTab) ||
-      !selectedLoader ||
-      item.loaders.includes(selectedLoader);
-    return matchText && matchLoader;
-  });
+  // Request counter to ensure only the latest request updates state
+  const reqIdRef = useRef(0);
 
-  const sorted = [...filtered].sort((a, b) => {
-    if (sortMode === "n") {
-      return a.title.localeCompare(b.title);
+  const fetchItems = useCallback(async (signal?: AbortSignal) => {
+    const currentReqId = ++reqIdRef.current;
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const data = await searchCatalog(
+        {
+          source: activeSource,
+          tab: activeTab,
+          query: debouncedSearch,
+          loader: selectedLoader,
+          sort: sortMode,
+        },
+        signal
+      );
+
+      if (currentReqId === reqIdRef.current) {
+        setItems(data);
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      if (err.name === "AbortError") {
+        return;
+      }
+      if (currentReqId === reqIdRef.current) {
+        setError(err?.message || "Не удалось загрузить данные из каталога");
+        setIsLoading(false);
+      }
     }
-    return b.downloads - a.downloads;
-  });
+  }, [activeSource, activeTab, debouncedSearch, selectedLoader, sortMode]);
 
-  const renderIcon = (type: CatalogItem["icon"]) => {
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchItems(controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, [fetchItems]);
+
+  const handleImageError = (id: string) => {
+    setFailedImages((prev) => ({ ...prev, [id]: true }));
+  };
+
+  const renderFallbackIcon = (type: CatalogItem["iconFallback"]) => {
     switch (type) {
       case "layers":
         return (
@@ -300,10 +126,6 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
             <path d="m15.5 8.5-2 5-5 2 2-5z" />
           </>
         );
-      case "heart":
-        return (
-          <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
-        );
       case "sun":
         return (
           <>
@@ -312,60 +134,53 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
           </>
         );
       case "cube":
+      default:
         return (
           <>
             <path d="m12 3 8 4.500v9L12 21l-8-4.500v-9z" />
             <path d="m4 7.500 8 4.500 8-4.500M12 12v9" />
           </>
         );
-      default:
-        return null;
     }
   };
 
   return (
     <div className="screens-overlay-layer catalog-screen-overlay">
       <div className="wrap">
-        {/* Source switch dock */}
-        <div className="dock src" id="src">
-          {SOURCES.map((src, i) => (
-            <button
-              key={src.name}
-              type="button"
-              className={`f ${i === sourceIndex ? "on" : ""}`}
-              onClick={() => setSourceIndex(i)}
-            >
-              <i style={{ background: src.color }} />
-              {src.name}
-            </button>
-          ))}
-        </div>
-
-        {/* Head */}
+        {/* Navigation & Source Switch Bar */}
         <div className="head">
-          <div>
-            <h1>Каталог</h1>
-            <div className="sub" id="sub">
-              {activeTab === "modpacks"
-                ? `Готовые сборки с быстрой установкой в каталог версий · ${currentSource.name}`
-                : `Моды, шейдеры и ресурспаки с прямой установкой в активную версию · ${currentSource.name}`}
-            </div>
-          </div>
           <div className="dock" id="tabs">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
                 type="button"
                 className={`f ${cat.id === activeTab ? "on" : ""}`}
-                onClick={() => setActiveTab(cat.id)}
+                onClick={() => {
+                  setActiveTab(cat.id);
+                  setSelectedLoader("");
+                }}
               >
                 {cat.label}
               </button>
             ))}
           </div>
+
+          <div className="dock src" id="src">
+            {SOURCES.map((src) => (
+              <button
+                key={src.name}
+                type="button"
+                className={`f ${src.name === activeSource ? "on" : ""}`}
+                onClick={() => setActiveSource(src.name)}
+              >
+                <i style={{ background: src.color }} />
+                {src.name}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Tools */}
+        {/* Filter and Search Tools */}
         <div className="tools">
           <div className="sr">
             <svg viewBox="0 0 24 24">
@@ -374,59 +189,92 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
             </svg>
             <input
               id="q"
-              placeholder="Поиск по названию или описанию…"
+              placeholder={`Поиск в ${activeSource} (название или описание)...`}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
 
-          {["modpacks", "mods", "pets", "cosmetics"].includes(activeTab) && (
+          {["modpacks", "mods"].includes(activeTab) && (
             <select
               id="ld"
               value={selectedLoader}
-              onChange={(e) => setSelectedLoader(e.target.value)}
+              onChange={(e) => setSelectedLoader(e.target.value as CatalogLoader)}
             >
               <option value="">Загрузчик: Любой</option>
               <option value="Fabric">Fabric</option>
               <option value="Forge">Forge</option>
               <option value="NeoForge">NeoForge</option>
+              <option value="Quilt">Quilt</option>
             </select>
           )}
 
           <select
             id="so"
             value={sortMode}
-            onChange={(e) => setSortMode(e.target.value as "p" | "n")}
+            onChange={(e) => setSortMode(e.target.value as CatalogSort)}
           >
-            <option value="p">Сортировка: Популярные</option>
-            <option value="n">Сортировка: По названию</option>
+            <option value="p">По популярности</option>
+            <option value="n">По релевантности</option>
+            <option value="new">Недавно обновлённые</option>
           </select>
         </div>
 
-        {/* Grid */}
+        {/* Catalog Items Grid */}
         <div className="grid" id="grid">
-          {sorted.length === 0 ? (
-            <div className="empty">Ничего не найдено</div>
+          {isLoading ? (
+            <div className="catalog-loading">
+              <div className="loading-cube">
+                <IsometricCube size={48} variant={activeSource === "Modrinth" ? "emerald" : "rust"} />
+              </div>
+              <div>Поиск в {activeSource}...</div>
+            </div>
+          ) : error ? (
+            <div className="catalog-error">
+              <div>{error}</div>
+              <button
+                type="button"
+                className="catalog-retry-btn"
+                onClick={() => fetchItems()}
+              >
+                Повторить попытку
+              </button>
+            </div>
+          ) : items.length === 0 ? (
+            <div className="empty">Ничего не найдено по вашему запросу</div>
           ) : (
-            sorted.map((item) => {
-              const key = `${sourceIndex}${item.title}`;
-              const isDone = !!done[key];
+            items.map((item) => {
+              const itemKey = `${item.source}-${item.id}`;
+              const isDone = !!done[itemKey];
+              const showImg = !!item.iconUrl && !failedImages[item.id];
+
               return (
-                <div key={item.title} className="card">
+                <div key={itemKey} className="card">
                   <div className="ico">
-                    <svg viewBox="0 0 24 24">{renderIcon(item.icon)}</svg>
+                    {showImg ? (
+                      <img
+                        src={item.iconUrl}
+                        alt={item.title}
+                        loading="lazy"
+                        onError={() => handleImageError(item.id)}
+                      />
+                    ) : (
+                      <svg viewBox="0 0 24 24">
+                        {renderFallbackIcon(item.iconFallback)}
+                      </svg>
+                    )}
                   </div>
                   <div className="bd">
                     <div className="t">
                       <b>{item.title}</b>
                       <span>от {item.author}</span>
                     </div>
-                    <div className="ds">{item.desc}</div>
+                    <div className="ds" title={item.desc}>
+                      {item.desc || "Нет описания"}
+                    </div>
                     <div className="ft">
                       <div>
-                        <div className="dl">
-                          {(item.downloads * currentSource.mult).toFixed(1)}M скачиваний
-                        </div>
+                        <div className="dl">{item.downloadsFormatted}</div>
                         <div className="tags">
                           {item.loaders.map((z) => (
                             <span key={z} className={`tag ${z}`}>
@@ -440,7 +288,7 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
                         className={`b ${isDone ? "done" : ""}`}
                         onClick={() => {
                           if (!isDone) {
-                            setDone((prev) => ({ ...prev, [key]: true }));
+                            setDone((prev) => ({ ...prev, [itemKey]: true }));
                             if (activeTab === "modpacks" && onInstallModpack) {
                               onInstallModpack(item);
                             } else {

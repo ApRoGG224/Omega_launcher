@@ -60,6 +60,12 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
   - Dirty checking on articulated limb joint rotations (`setElbows`, `setKnees`) in `articulatedPlayer.ts` to avoid redundant bone matrix recalculations.
   - Frame-skipping physics accumulator with fixed 60 Hz timestep (`FIXED_STEP = 1/60`) in `roamingCharacter.ts`: completely eliminates slow motion during FPS drops or lag spikes by catching up physics in sub-steps and dropping excess time.
   - Direct WebGL rasterization bypass in `Stage3DLayer.tsx` (`viewer.render = function() { this.renderer.render(...) }`), skipping offscreen render target passes and fullscreen FXAA shaders for ~2x faster rendering.
+- **Universal Modrinth & CurseForge Catalog Integration (`ModrinthScreen.tsx`, `catalogService.ts`):**
+  - Live unified search service across Modrinth (`/v2/search`) and CurseForge (`/v1/mods/search`) supporting all 4 primary Minecraft content types: Modpacks (`modpacks`), Mods (`mods`), Shaders (`shaders`), and Resource Packs / Textures (`tex`).
+  - Pruned legacy mock categories ("Питомцы" and "Косметика") and removed redundant header texts (`Каталог` title and `Готовые сборки...` subtitle) in favor of a sleek, ergonomic dual dock header: Category tabs on the left, Source switcher on the right.
+  - Asynchronous request management with 300ms input debouncing, `AbortController` cancellation for fast typing, request sequence guarding (`reqIdRef`), and authentic discrete Minecraft `IsometricCube` loading states with zero neon.
+  - Image fallback resilience with automatic error detection falling back to authentic SVG category icons.
+  - Loader filtering for Fabric, Forge, NeoForge, and Quilt with sorting by popularity, relevance, and recently updated.
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 
