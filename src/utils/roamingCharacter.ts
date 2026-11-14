@@ -26,6 +26,27 @@ export const CHAR_HALF_WIDTH = 4.2;
 export const CHAR_FEET_OFFSET = 23.2;
 export const CHAR_HEAD_OFFSET = 8.8;
 
+/**
+ * Creates a soft radial gradient shadow texture for authentic, smooth contact shadows.
+ */
+function createSoftShadowTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, "rgba(0, 0, 0, 0.7)");
+    gradient.addColorStop(0.35, "rgba(0, 0, 0, 0.45)");
+    gradient.addColorStop(0.7, "rgba(0, 0, 0, 0.15)");
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 64, 64);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  return texture;
+}
+
 export class RoamingCharacterController {
   private player: PlayerObject;
   public limbs: ArticulatedLimbHandles;
@@ -127,19 +148,19 @@ export class RoamingCharacterController {
     if (!targetScene) return;
     this.sceneRef = targetScene;
 
-    const geo = new THREE.PlaneGeometry(10.5, 5.5);
+    const geo = new THREE.PlaneGeometry(12.0, 6.5);
     geo.rotateX(-Math.PI / 2);
 
     const mat = new THREE.MeshBasicMaterial({
-      color: 0x05060a,
+      map: createSoftShadowTexture(),
       transparent: true,
-      opacity: 0.38,
+      opacity: 0.55,
       depthWrite: false,
     });
 
     const mesh = new THREE.Mesh(geo, mat);
     mesh.name = "characterContactShadow";
-    mesh.position.set(this.currentX, this.floorY + 0.05, this.currentZ);
+    mesh.position.set(this.currentX, this.floorY - CHAR_FEET_OFFSET + 0.08, this.currentZ);
     targetScene.add(mesh);
 
     this.shadowMesh = mesh;
@@ -588,16 +609,17 @@ export class RoamingCharacterController {
     this.player.rotation.y = this.rotationY;
     this.player.rotation.z = this.rotationZ;
 
-    // Update hardware-accelerated contact shadow
+    // Update hardware-accelerated contact shadow beneath character feet
     if (this.shadowMesh && this.shadowMat) {
       const surfaceY = this.isSurfaceDirty
         ? this.findPlatformUnder(this.currentX, this.currentY).surfaceY
         : this.cachedSurfaceY;
-      const distToGround = Math.max(0, this.currentY - surfaceY);
-      this.shadowMesh.position.set(this.currentX, surfaceY + 0.05, this.currentZ);
-      const scale = Math.max(0.45, 1.0 - distToGround * 0.015);
+      const groundY = surfaceY - CHAR_FEET_OFFSET;
+      const heightAboveGround = Math.max(0, this.currentY - surfaceY);
+      this.shadowMesh.position.set(this.currentX, groundY + 0.08, this.currentZ);
+      const scale = Math.max(0.35, 1.0 - heightAboveGround * 0.02);
       this.shadowMesh.scale.set(scale, 1, scale);
-      this.shadowMat.opacity = Math.max(0.06, 0.38 - distToGround * 0.012);
+      this.shadowMat.opacity = Math.max(0, 0.55 - heightAboveGround * 0.018);
     }
   }
 
@@ -1273,7 +1295,10 @@ export class RoamingCharacterController {
     if (this.shadowMesh && this.sceneRef) {
       this.sceneRef.remove(this.shadowMesh);
       this.shadowMesh.geometry.dispose();
-      this.shadowMat?.dispose();
+      if (this.shadowMat) {
+        if (this.shadowMat.map) this.shadowMat.map.dispose();
+        this.shadowMat.dispose();
+      }
       this.shadowMesh = null;
       this.shadowMat = null;
     }
