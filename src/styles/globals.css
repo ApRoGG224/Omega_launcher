@@ -24,6 +24,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   user-select: none;
   letter-spacing: 0.2px;
+  color-scheme: dark;
 }
 
 #root {
@@ -73,6 +74,12 @@ textarea,
 select {
   color: inherit;
   outline: none;
+  color-scheme: dark;
+}
+
+select option {
+  background-color: #121620;
+  color: #e6e8ec;
 }
 
 /* Instant High-Contrast Focus Visible */

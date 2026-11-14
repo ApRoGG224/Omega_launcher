@@ -272,15 +272,18 @@ export const InstancesModal: React.FC<InstancesModalProps> = ({
                       }}
                       style={{
                         width: "100%",
-                        background: "#080d17",
+                        background: "#080d17 url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b919c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\") no-repeat right 12px center",
                         border: "1px solid var(--border-medium)",
-                        padding: "10px 12px",
+                        padding: "10px 32px 10px 12px",
                         borderRadius: "6px",
                         color: "#fff",
                         fontSize: "13px",
                         fontWeight: 600,
                         fontFamily: "var(--font-primary)",
                         cursor: "pointer",
+                        appearance: "none",
+                        WebkitAppearance: "none",
+                        colorScheme: "dark",
                       }}
                     >
                       <option value="Fabric">Fabric</option>
@@ -302,9 +305,9 @@ export const InstancesModal: React.FC<InstancesModalProps> = ({
                       disabled={newLoader === "Rust"}
                       style={{
                         width: "100%",
-                        background: "#080d17",
+                        background: "#080d17 url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b919c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\") no-repeat right 12px center",
                         border: "1px solid var(--border-medium)",
-                        padding: "10px 12px",
+                        padding: "10px 32px 10px 12px",
                         borderRadius: "6px",
                         color: "#fff",
                         fontSize: "13px",
@@ -312,6 +315,9 @@ export const InstancesModal: React.FC<InstancesModalProps> = ({
                         fontFamily: "var(--font-primary)",
                         opacity: newLoader === "Rust" ? 0.85 : 1,
                         cursor: newLoader === "Rust" ? "not-allowed" : "pointer",
+                        appearance: "none",
+                        WebkitAppearance: "none",
+                        colorScheme: "dark",
                       }}
                     >
                       {newLoader === "Rust" ? (

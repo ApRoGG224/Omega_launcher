@@ -505,8 +505,8 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 <span>{currentInstance.modCount} модов</span>
                 <span>{currentInstance.playTimeMinutes} мин в игре</span>
                 {onUpdateInstance && (
-                  <span>
-                    Папка:{" "}
+                  <span className="sb-folder-select-wrap">
+                    <span className="sb-folder-label">Папка:</span>
                     <select
                       className="sb-sel"
                       value={currentInstance.folderId || "all"}

@@ -2687,15 +2687,59 @@
   background: #9fb6d3 !important;
 }
 
-.sb-sel {
-  background: #1a1d24 !important;
-  color: #e6e8ec !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 8px !important;
-  padding: 3px 8px !important;
+.sb-folder-select-wrap {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.sb-folder-label {
+  color: #8b919c !important;
   font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.sb-sel {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background: #141822 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238b919c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center !important;
+  background-color: #141822 !important;
+  color: #e6e8ec !important;
+  color-scheme: dark !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 8px !important;
+  padding: 3px 26px 3px 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
   font-family: inherit !important;
   outline: none !important;
+  cursor: pointer !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease !important;
+  line-height: 1.4 !important;
+  height: 26px !important;
+  box-sizing: border-box !important;
+  user-select: none !important;
+}
+
+.sb-sel:hover {
+  background-color: #1b212f !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.sb-sel:focus {
+  border-color: #4f8cf6 !important;
+  box-shadow: 0 0 0 2px rgba(79, 140, 246, 0.25) !important;
+  color: #ffffff !important;
+}
+
+.sb-sel option {
+  background-color: #10141d !important;
+  color: #e6e8ec !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
 }
 
 .sb-hero-acts {
