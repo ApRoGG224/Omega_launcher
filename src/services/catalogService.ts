@@ -68,7 +68,7 @@ async function searchModrinth(
   params: CatalogSearchParams,
   signal?: AbortSignal
 ): Promise<CatalogItem[]> {
-  const { tab, query, loader, sort, limit = 24, offset = 0 } = params;
+  const { tab, query, loader, sort, limit = 30, offset = 0 } = params;
 
   // Modrinth project type mapping
   const projectTypeMap: Record<CatalogTab, string> = {
@@ -143,7 +143,7 @@ async function searchCurseForge(
   params: CatalogSearchParams,
   signal?: AbortSignal
 ): Promise<CatalogItem[]> {
-  const { tab, query, loader, sort, limit = 24, offset = 0 } = params;
+  const { tab, query, loader, sort, limit = 30, offset = 0 } = params;
 
   // CurseForge classId for Minecraft (gameId = 432)
   const classIdMap: Record<CatalogTab, number> = {
