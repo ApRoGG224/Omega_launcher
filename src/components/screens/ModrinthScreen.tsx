@@ -36,7 +36,7 @@ const CATEGORIES: Array<{
   { id: "tex", label: "Текстуры" },
 ];
 
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 15;
 
 function renderFallbackIcon(type: CatalogItem["iconFallback"]) {
   switch (type) {
