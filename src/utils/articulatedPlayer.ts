@@ -308,13 +308,25 @@ export function buildArticulatedLimbs(player: PlayerObject, isSlim: boolean = fa
     leftKneeBone: leftLegData.jointBone,
     setElbows(rAngle: number, lAngle: number) {
       // In Three.js, bending forearm forward requires negative X rotation
-      rightArmData.jointBone.rotation.x = -Math.abs(rAngle);
-      leftArmData.jointBone.rotation.x = -Math.abs(lAngle);
+      const targetR = -Math.abs(rAngle);
+      const targetL = -Math.abs(lAngle);
+      if (Math.abs(rightArmData.jointBone.rotation.x - targetR) > 0.0005) {
+        rightArmData.jointBone.rotation.x = targetR;
+      }
+      if (Math.abs(leftArmData.jointBone.rotation.x - targetL) > 0.0005) {
+        leftArmData.jointBone.rotation.x = targetL;
+      }
     },
     setKnees(rAngle: number, lAngle: number) {
       // In Three.js, bending calf backward requires positive X rotation
-      rightLegData.jointBone.rotation.x = Math.abs(rAngle);
-      leftLegData.jointBone.rotation.x = Math.abs(lAngle);
+      const targetR = Math.abs(rAngle);
+      const targetL = Math.abs(lAngle);
+      if (Math.abs(rightLegData.jointBone.rotation.x - targetR) > 0.0005) {
+        rightLegData.jointBone.rotation.x = targetR;
+      }
+      if (Math.abs(leftLegData.jointBone.rotation.x - targetL) > 0.0005) {
+        leftLegData.jointBone.rotation.x = targetL;
+      }
     },
     resetBends() {
       rightArmData.jointBone.rotation.set(0, 0, 0);

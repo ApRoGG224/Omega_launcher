@@ -99,13 +99,51 @@ export class RoamingCharacterController {
   // Visual effects: Dizzy stars above head
   private dizzyStars: THREE.Group | null = null;
 
-  constructor(player: PlayerObject, limbs: ArticulatedLimbHandles) {
+  // Hardware-accelerated contact shadow beneath character
+  private shadowMesh: THREE.Mesh | null = null;
+  private shadowMat: THREE.MeshBasicMaterial | null = null;
+  private sceneRef: THREE.Scene | null = null;
+
+  // Cached surface support for idle performance
+  private cachedSurfaceY: number = -26;
+  private cachedPlatform: WorldPlatform | null = null;
+  private isSurfaceDirty: boolean = true;
+
+  constructor(player: PlayerObject, limbs: ArticulatedLimbHandles, scene?: THREE.Scene) {
     this.player = player;
     this.limbs = limbs;
     this.initDizzyStars();
+    this.initContactShadow(scene);
     this.currentY = this.floorY;
     this.player.position.set(this.currentX, this.currentY, this.currentZ);
     this.player.rotation.set(0, this.rotationY, this.rotationZ);
+  }
+
+  /**
+   * Initializes hardware-accelerated Minecraft disc contact shadow beneath feet.
+   */
+  private initContactShadow(scene?: THREE.Scene): void {
+    const targetScene = scene || (this.player.parent as THREE.Scene | null);
+    if (!targetScene) return;
+    this.sceneRef = targetScene;
+
+    const geo = new THREE.PlaneGeometry(10.5, 5.5);
+    geo.rotateX(-Math.PI / 2);
+
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x05060a,
+      transparent: true,
+      opacity: 0.38,
+      depthWrite: false,
+    });
+
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.name = "characterContactShadow";
+    mesh.position.set(this.currentX, this.floorY + 0.05, this.currentZ);
+    targetScene.add(mesh);
+
+    this.shadowMesh = mesh;
+    this.shadowMat = mat;
   }
 
   /**
@@ -263,6 +301,7 @@ export class RoamingCharacterController {
   public startDrag(worldX: number, worldY: number): void {
     this.isDragging = true;
     this.state = "dragged";
+    this.isSurfaceDirty = true;
     this.velocityX = 0;
     this.velocityY = 0;
     this.isPunched = false;
@@ -396,6 +435,7 @@ export class RoamingCharacterController {
    */
   public punch(fromWorldX: number, _fromWorldY: number): void {
     this.triggerDamageFlash();
+    this.isSurfaceDirty = true;
 
     // Determine knockback direction based on where character was clicked
     const diffX = this.currentX - fromWorldX;
@@ -440,6 +480,7 @@ export class RoamingCharacterController {
     }
     this.targetX = Math.max(this.minX, Math.min(this.maxX, x));
     this.state = "walking";
+    this.isSurfaceDirty = true;
     this.updateTargetRotation();
   }
 
@@ -488,6 +529,7 @@ export class RoamingCharacterController {
       }
     }
     this.state = "walking";
+    this.isSurfaceDirty = true;
     this.updateTargetRotation();
   }
 
@@ -545,17 +587,37 @@ export class RoamingCharacterController {
     this.player.rotation.x = 0;
     this.player.rotation.y = this.rotationY;
     this.player.rotation.z = this.rotationZ;
+
+    // Update hardware-accelerated contact shadow
+    if (this.shadowMesh && this.shadowMat) {
+      const surfaceY = this.isSurfaceDirty
+        ? this.findPlatformUnder(this.currentX, this.currentY).surfaceY
+        : this.cachedSurfaceY;
+      const distToGround = Math.max(0, this.currentY - surfaceY);
+      this.shadowMesh.position.set(this.currentX, surfaceY + 0.05, this.currentZ);
+      const scale = Math.max(0.45, 1.0 - distToGround * 0.015);
+      this.shadowMesh.scale.set(scale, 1, scale);
+      this.shadowMat.opacity = Math.max(0.06, 0.38 - distToGround * 0.012);
+    }
   }
 
   private updateIdle(dt: number): void {
     this.stateTimer -= dt;
     this.walkCycle += dt * 2.0;
 
-    // Verify support under feet; if no support, fall down!
-    const { surfaceY, platform } = this.findPlatformUnder(this.currentX, this.currentY);
-    this.currentPlatform = platform;
+    // Verify support under feet using cached surface for 60fps performance
+    if (this.isSurfaceDirty) {
+      const res = this.findPlatformUnder(this.currentX, this.currentY);
+      this.cachedSurfaceY = res.surfaceY;
+      this.cachedPlatform = res.platform;
+      this.isSurfaceDirty = false;
+    }
+    const surfaceY = this.cachedSurfaceY;
+    this.currentPlatform = this.cachedPlatform;
+
     if (this.currentY > surfaceY + 1.5 && this.landingTimer <= 0) {
       this.state = "falling";
+      this.isSurfaceDirty = true;
       return;
     }
 
@@ -1201,6 +1263,27 @@ export class RoamingCharacterController {
       this.state = "idle";
       this.stateTimer = 2.0;
       this.limbs.resetBends();
+    }
+  }
+
+  /**
+   * Cleans up Three.js objects and materials created by the controller.
+   */
+  public dispose(): void {
+    if (this.shadowMesh && this.sceneRef) {
+      this.sceneRef.remove(this.shadowMesh);
+      this.shadowMesh.geometry.dispose();
+      this.shadowMat?.dispose();
+      this.shadowMesh = null;
+      this.shadowMat = null;
+    }
+    if (this.dizzyStars) {
+      this.dizzyStars.traverse((child: any) => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) child.material.dispose();
+      });
+      this.dizzyStars.parent?.remove(this.dizzyStars);
+      this.dizzyStars = null;
     }
   }
 }

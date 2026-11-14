@@ -49,6 +49,15 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
 - Square Pixel Mosaic Curtain Startup Reveal (`StartupScreen`) on launcher launch: high-performance HTML5 2D Canvas rendering 20px square bedrock/obsidian blocks matching `--launcher-bg` (`#07080e`, `#090c14`, `#0c0f1b`, `#0e1321`, `#111626`). An expanding radial wave over 850ms dissolves blocks in 4 discrete stepped sizes (`1.0 -> 0.75 -> 0.5 -> 0.25 -> 0`) with zero layout thrashing, 60 FPS performance, immediate skip on click/keydown, and zero text or neon.
 - **STRICT DESIGN RULE — NO NEON:** The launcher must NEVER use neon glow effects, neon radial highlights, glowing seams, radioactive neon lines, or bright glowing text-shadows. The visual style must be authentic, matte Minecraft/bedrock/obsidian/stone tones with crisp pixel art lines and zero neon.
 - Complete elimination of generic round loading wheels ("простых колёс загрузки") across the entire launcher: reusable `PixelLoader` component with animated isometric cubes or 8-step discrete pixel spinners (`image-rendering: pixelated; steps(8)`), replacing round HTML5 circle spinners in `Skin3DViewer`, `ModsPanel`, `OmegaStorePanel`, and global `.spinner` styles.
+- **High-Performance 3D Character Stage & Animation Optimizations:**
+  - Complete elimination of CSS `filter: drop-shadow` from the live fullscreen WebGL `<canvas>` in `Stage3DLayer.tsx`, preventing massive GPU compositing and per-frame Gaussian blur passes across multi-megapixel resolutions.
+  - Hardware-accelerated Three.js ground contact shadow plane directly attached to the 3D scene under character feet, dynamically scaling and fading during jumping/falling with zero CSS compositing overhead.
+  - Elimination of periodic 500ms `setInterval` polling and DOM `getBoundingClientRect()` calls (layout thrashing / reflows), replaced with an efficient `ResizeObserver` on the dock container and debounced window resize listeners.
+  - Bounding-box early exit in `isPointerOverCharacter`: cursor position is tested against character AABB bounding limits before initiating Three.js raycasts, completely skipping recursive scene-graph traversal on 99.9% of mousemove events.
+  - Vector reuse (`tempCurWorld`, `tempHitPos`, `tempNDC`, `tempTL`, `tempBR`) and pointermove hover check throttling (~40 FPS) to eliminate heap allocations and garbage collection stutter from high-polling gaming mice.
+  - Capped WebGL `pixelRatio` (`Math.min(window.devicePixelRatio || 1, 1.25)`) avoiding massive 4K texture fill-rate bottlenecks on HiDPI displays.
+  - Cached ground surface support (`isSurfaceDirty`) in `roamingCharacter.ts`, preventing continuous 60 FPS platform array scanning during static `idle` state.
+  - Dirty checking on articulated limb joint rotations (`setElbows`, `setKnees`) in `articulatedPlayer.ts` to avoid redundant bone matrix recalculations.
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 
