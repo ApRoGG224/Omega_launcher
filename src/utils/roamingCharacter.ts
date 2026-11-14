@@ -130,6 +130,10 @@ export class RoamingCharacterController {
   private cachedPlatform: WorldPlatform | null = null;
   private isSurfaceDirty: boolean = true;
 
+  // Frame-skipping fixed timestep accumulator (eliminates slow motion on low FPS)
+  private accumulator: number = 0;
+  private static readonly FIXED_STEP: number = 1 / 60; // 60 Hz physics reference
+
   constructor(player: PlayerObject, limbs: ArticulatedLimbHandles, scene?: THREE.Scene) {
     this.player = player;
     this.limbs = limbs;
@@ -556,10 +560,36 @@ export class RoamingCharacterController {
 
   /**
    * Main per-frame update loop called from the Three.js render loop.
+   * Employs fixed timestep substepping with frame-skipping:
+   * When FPS drops below 60, physics catches up in discrete steps instead of slowing down.
    */
   public update(delta: number): void {
-    const dt = Math.min(delta, 0.05);
+    // Clamp delta to prevent huge spiral-of-death jumps when tab was unfocused or system had a massive hitch (max 0.25s)
+    const clampedDelta = Math.min(Math.max(0, delta), 0.25);
+    this.accumulator += clampedDelta;
 
+    // Run fixed-step sub-ticks to catch up to real wall-clock time
+    let steps = 0;
+    while (this.accumulator >= RoamingCharacterController.FIXED_STEP && steps < 5) {
+      this.stepSimulation(RoamingCharacterController.FIXED_STEP);
+      this.accumulator -= RoamingCharacterController.FIXED_STEP;
+      steps++;
+    }
+
+    // If accumulated time is still left over after 5 steps (severe lag spike),
+    // drop the remaining time (frame skip) to prevent spiral of death
+    if (this.accumulator > RoamingCharacterController.FIXED_STEP) {
+      this.accumulator = 0;
+    }
+
+    // Apply root position, orientation and contact shadow once per rendered frame
+    this.applyTransformations();
+  }
+
+  /**
+   * Executes a single discrete physics simulation step.
+   */
+  private stepSimulation(dt: number): void {
     // Update damage flash timer
     if (this.flashTimer > 0) {
       this.flashTimer -= dt;
@@ -600,7 +630,12 @@ export class RoamingCharacterController {
         this.updateRising(dt);
         break;
     }
+  }
 
+  /**
+   * Applies root transformation and hardware-accelerated contact shadow once per rendered frame.
+   */
+  private applyTransformations(): void {
     // Apply global root position and orientation
     this.player.position.x = this.currentX;
     this.player.position.y = this.currentY;

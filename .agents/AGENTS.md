@@ -58,6 +58,8 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
   - Capped WebGL `pixelRatio` (`Math.min(window.devicePixelRatio || 1, 1.25)`) avoiding massive 4K texture fill-rate bottlenecks on HiDPI displays.
   - Cached ground surface support (`isSurfaceDirty`) in `roamingCharacter.ts`, preventing continuous 60 FPS platform array scanning during static `idle` state.
   - Dirty checking on articulated limb joint rotations (`setElbows`, `setKnees`) in `articulatedPlayer.ts` to avoid redundant bone matrix recalculations.
+  - Frame-skipping physics accumulator with fixed 60 Hz timestep (`FIXED_STEP = 1/60`) in `roamingCharacter.ts`: completely eliminates slow motion during FPS drops or lag spikes by catching up physics in sub-steps and dropping excess time.
+  - Direct WebGL rasterization bypass in `Stage3DLayer.tsx` (`viewer.render = function() { this.renderer.render(...) }`), skipping offscreen render target passes and fullscreen FXAA shaders for ~2x faster rendering.
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 

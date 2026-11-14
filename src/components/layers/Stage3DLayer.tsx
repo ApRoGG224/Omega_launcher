@@ -229,6 +229,11 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         }
       }
 
+      // Bypass heavy multi-pass EffectComposer / FXAAShader to render directly to canvas for maximum FPS
+      (viewer as any).render = function () {
+        this.renderer.render(this.scene, this.camera);
+      };
+
       viewer.animation = new PhysicalRoamingAnimation();
       viewerRef.current = viewer;
       (window as any).__skinViewer = viewer;
