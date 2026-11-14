@@ -514,7 +514,7 @@
 .hud-profile-dropdown,
 .hud-profile-dropdown.panel {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 5px);
   width: 260px;
   max-width: 260px;
   padding: 10px;
@@ -534,6 +534,10 @@
 
 .hud-profile-dropdown.align-left {
   left: 0;
+}
+
+.hud-dock-profile-container:first-child .hud-profile-dropdown.align-left {
+  left: -8px;
 }
 
 @keyframes dropdown-pop {
@@ -693,4 +697,203 @@
 .hud-profile-dropdown .btn.green:hover {
   background: rgba(63, 107, 46, 0.34);
   border-color: #4d7f3a;
+}
+
+/* Account dropdown enhanced actions & list */
+.hud-acc-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+  padding: 0 2px;
+}
+
+.hud-acc-count-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted, #94a3b8);
+}
+
+.hud-acc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.hud-acc-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.hud-acc-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+}
+
+.hud-acc-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hud-acc-divider {
+  height: 1px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+}
+
+.hud-acc-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.hud-acc-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 9px;
+  font-family: var(--font-primary) !important;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text, #f2f4f8);
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.15s ease;
+  user-select: none;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.hud-acc-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.hud-acc-action-btn.ms-btn {
+  border-color: rgba(0, 164, 239, 0.25);
+  background: rgba(0, 164, 239, 0.08);
+}
+
+.hud-acc-action-btn.ms-btn:hover {
+  background: rgba(0, 164, 239, 0.16);
+  border-color: rgba(0, 164, 239, 0.5);
+  color: #ffffff;
+}
+
+.hud-acc-action-btn.offline-btn {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.hud-acc-action-btn.offline-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.24);
+  color: #ffffff;
+}
+
+.hud-acc-spin {
+  animation: hudAccSpin 0.8s linear infinite;
+}
+
+@keyframes hudAccSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.hud-acc-offline-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.hud-acc-offline-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+}
+
+.hud-acc-offline-input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  background: #090c14;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-family: var(--font-primary) !important;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f2f4f8;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.hud-acc-offline-input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+.hud-acc-offline-btn-submit {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #2563eb;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.hud-acc-offline-btn-submit:hover {
+  background: #3b82f6;
+}
+
+.hud-acc-offline-btn-cancel {
+  width: 32px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.hud-acc-offline-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.hud-acc-offline-error {
+  font-size: 11px;
+  color: #f87171;
+  font-weight: 600;
+  padding-left: 2px;
 }

@@ -19,6 +19,9 @@ import {
   Check,
   ChevronRight,
   ChevronDown,
+  User,
+  Plus,
+  Loader2,
 } from "lucide-react";
 import { SkinHeadAvatar } from "../common/SkinHeadAvatar";
 import { InstanceAvatarIcon } from "../icons/MinecraftIcons";
@@ -39,6 +42,8 @@ interface HudLayerProps {
   onSelectAccount?: (acc: AccountData) => void;
   onOpenOmegaLogin?: () => void;
   onUnlinkOmega?: () => void;
+  onLoginMicrosoft?: () => Promise<void> | void;
+  onCreateOfflineAccount?: (name: string) => void;
   soundMuted: boolean;
   activeScreen: string;
   skinUrl?: string;
@@ -63,6 +68,8 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
   onSelectAccount,
   onOpenOmegaLogin,
   onUnlinkOmega,
+  onLoginMicrosoft,
+  onCreateOfflineAccount,
   soundMuted,
   activeScreen,
   skinUrl = "/skins/dream.png",
@@ -78,6 +85,10 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
   topBarCustomization,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoggingInMs, setIsLoggingInMs] = useState(false);
+  const [isAddingOffline, setIsAddingOffline] = useState(false);
+  const [offlineInput, setOfflineInput] = useState("");
+  const [offlineError, setOfflineError] = useState<string | null>(null);
   const dropdownRefTop = useRef<HTMLDivElement | null>(null);
 
   // Close dropdown on click outside
@@ -87,6 +98,8 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
       const clickedInsideTop = dropdownRefTop.current && dropdownRefTop.current.contains(target);
       if (!clickedInsideTop) {
         setIsDropdownOpen(false);
+        setIsAddingOffline(false);
+        setOfflineError(null);
       }
     };
     if (isDropdownOpen) {
@@ -100,63 +113,175 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
   // Check if player has a valid active base account
   const hasBaseAccount = !!account && (account.type === "microsoft" || account.type === "offline");
 
-  // Account switcher popover content (1-in-1 with Мои_аккаунты.html)
+  // Account switcher popover content with full-width action buttons
   const renderAccountDropdown = () => (
-    <div className="hud-profile-dropdown panel align-left">
-      {/* Title */}
-      <div className="title">МОИ АККАУНТЫ</div>
+    <div className="hud-profile-dropdown panel align-left" onClick={(e) => e.stopPropagation()}>
+      {/* Title Header with Counter */}
+      <div className="hud-acc-dropdown-header">
+        <span className="title">МОИ АККАУНТЫ</span>
+        <span className="hud-acc-count-badge">{accounts.length}</span>
+      </div>
 
       {/* Accounts List */}
-      {accounts.map((acc) => {
-        const isSelected = acc.id === account?.id;
-        const skin =
-          acc.skinUrl ||
-          (acc.name === "Steve_Official"
-            ? "/skins/steve.png"
-            : acc.name === "Alex_Gamer"
-            ? "/skins/alex.png"
-            : skinUrl);
+      <div className="hud-acc-list">
+        {accounts.map((acc) => {
+          const isSelected = acc.id === account?.id;
+          const skin =
+            acc.skinUrl ||
+            (acc.name === "Steve_Official"
+              ? "/skins/steve.png"
+              : acc.name === "Alex_Gamer"
+              ? "/skins/alex.png"
+              : skinUrl);
 
-        return (
-          <button
-            key={acc.id}
-            type="button"
-            className={`acc ${isSelected ? "sel" : ""}`}
-            onClick={(e) => {
+          return (
+            <button
+              key={acc.id}
+              type="button"
+              className={`acc ${isSelected ? "sel" : ""}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectAccount?.(acc);
+                setIsDropdownOpen(false);
+                setIsAddingOffline(false);
+              }}
+            >
+              <span className="ava">
+                <SkinHeadAvatar skinUrl={skin} size={30} />
+              </span>
+              <span className="meta">
+                <span className="name">{acc.name}</span>
+                <span className="type">
+                  {acc.type === "microsoft" ? (
+                    <>
+                      Microsoft
+                      <svg className="ms" viewBox="0 0 12 12" aria-hidden="true" width={11} height={11}>
+                        <rect x="0" y="0" width="5.5" height="5.5" rx="1.2" fill="#f25022" />
+                        <rect x="6.5" y="0" width="5.5" height="5.5" rx="1.2" fill="#7fba00" />
+                        <rect x="0" y="6.5" width="5.5" height="5.5" rx="1.2" fill="#00a4ef" />
+                        <rect x="6.5" y="6.5" width="5.5" height="5.5" rx="1.2" fill="#ffb900" />
+                      </svg>
+                    </>
+                  ) : (
+                    "Оффлайн профиль"
+                  )}
+                </span>
+              </span>
+              {isSelected && (
+                <svg className="check" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12.5l4.5 4.5L19 7.5" />
+                </svg>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="hud-acc-divider" />
+
+      {/* Action Buttons: Microsoft & Offline */}
+      <div className="hud-acc-actions">
+        <button
+          type="button"
+          disabled={isLoggingInMs}
+          className="hud-acc-action-btn ms-btn"
+          onClick={async (e) => {
+            e.stopPropagation();
+            if (!onLoginMicrosoft || isLoggingInMs) return;
+            setIsLoggingInMs(true);
+            try {
+              await onLoginMicrosoft();
+              setIsDropdownOpen(false);
+            } finally {
+              setIsLoggingInMs(false);
+            }
+          }}
+        >
+          {isLoggingInMs ? (
+            <>
+              <Loader2 size={14} className="hud-acc-spin" />
+              <span>Авторизация...</span>
+            </>
+          ) : (
+            <>
+              <svg viewBox="0 0 12 12" width={13} height={13} aria-hidden="true" style={{ flexShrink: 0 }}>
+                <rect x="0" y="0" width="5.5" height="5.5" rx="1.2" fill="#f25022" />
+                <rect x="6.5" y="0" width="5.5" height="5.5" rx="1.2" fill="#7fba00" />
+                <rect x="0" y="6.5" width="5.5" height="5.5" rx="1.2" fill="#00a4ef" />
+                <rect x="6.5" y="6.5" width="5.5" height="5.5" rx="1.2" fill="#ffb900" />
+              </svg>
+              <span>Войти через Microsoft</span>
+            </>
+          )}
+        </button>
+
+        {isAddingOffline ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
               e.stopPropagation();
-              onSelectAccount?.(acc);
+              const cleanNick = offlineInput.trim();
+              if (!cleanNick) return;
+              if (!/^[a-zA-Z0-9_]{3,16}$/.test(cleanNick)) {
+                setOfflineError("От 3 до 16 символов");
+                return;
+              }
+              onCreateOfflineAccount?.(cleanNick);
+              setOfflineInput("");
+              setOfflineError(null);
+              setIsAddingOffline(false);
               setIsDropdownOpen(false);
             }}
+            className="hud-acc-offline-form"
           >
-            <span className="ava">
-              <SkinHeadAvatar skinUrl={skin} size={30} />
-            </span>
-            <span className="meta">
-              <span className="name">{acc.name}</span>
-              <span className="type">
-                {acc.type === "microsoft" ? (
-                  <>
-                    Microsoft
-                    <svg className="ms" viewBox="0 0 12 12" aria-hidden="true">
-                      <rect x="0" y="0" width="5.5" height="5.5" rx="1.4" fill="#f25022" />
-                      <rect x="6.5" y="0" width="5.5" height="5.5" rx="1.4" fill="#7fba00" />
-                      <rect x="0" y="6.5" width="5.5" height="5.5" rx="1.4" fill="#00a4ef" />
-                      <rect x="6.5" y="6.5" width="5.5" height="5.5" rx="1.4" fill="#ffb900" />
-                    </svg>
-                  </>
-                ) : (
-                  "Оффлайн профиль"
-                )}
-              </span>
-            </span>
-            {isSelected && (
-              <svg className="check" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 12.5l4.5 4.5L19 7.5" />
-              </svg>
-            )}
+            <div className="hud-acc-offline-row">
+              <input
+                type="text"
+                autoFocus
+                placeholder="Никнейм игрока..."
+                value={offlineInput}
+                onChange={(e) => {
+                  setOfflineInput(e.target.value);
+                  if (offlineError) setOfflineError(null);
+                }}
+                className="hud-acc-offline-input"
+                maxLength={16}
+              />
+              <button
+                type="submit"
+                className="hud-acc-offline-btn-submit"
+                title="Добавить профиль"
+              >
+                <Plus size={14} />
+              </button>
+              <button
+                type="button"
+                className="hud-acc-offline-btn-cancel"
+                onClick={() => {
+                  setIsAddingOffline(false);
+                  setOfflineError(null);
+                }}
+                title="Отмена"
+              >
+                ✕
+              </button>
+            </div>
+            {offlineError && <div className="hud-acc-offline-error">{offlineError}</div>}
+          </form>
+        ) : (
+          <button
+            type="button"
+            className="hud-acc-action-btn offline-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsAddingOffline(true);
+            }}
+          >
+            <User size={14} />
+            <span>Оффлайн вход</span>
           </button>
-        );
-      })}
+        )}
+      </div>
     </div>
   );
 

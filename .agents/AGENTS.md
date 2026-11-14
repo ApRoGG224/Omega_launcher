@@ -73,6 +73,11 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
   - Loader filtering for Fabric, Forge, NeoForge, and Quilt with sorting by popularity, relevance, and recently updated.
 - **Custom UI Components & Native OS Dropdown Replacement:**
   - Replaced native OS/GTK HTML `<select>` elements with custom React dark obsidian dropdown menus (`.sb-folder-dropdown-container`, `.sb-folder-btn`, `.sb-folder-menu`, `.sb-folder-item`) on `InstancesScreen`, eliminating un-stylable bright blue OS popup chrome and matching the launcher's dark obsidian pixel-art aesthetic.
+- **TopBar Account Popover & Auth Actions:**
+  - Fixed dock popover clipping by removing `overflow: hidden` on `.hud-top-dock.custom-theme-active`.
+  - Account popover (`.hud-profile-dropdown`) attaches flush corner-to-corner against the top navigation bar with zero gap (`top: calc(100% + 5px)` and `left: -8px`).
+  - Added full-width Microsoft OAuth2 login button (`.ms-btn`) and inline offline account creation (`.offline-btn` / `.hud-acc-offline-form`) matching the dimensions of account items.
+  - Dynamically inherits theme colors, grain patterns, borders, and hover states configured in launcher settings (`topBarCustomization`).
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 

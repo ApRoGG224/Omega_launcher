@@ -953,6 +953,8 @@ export const App: React.FC = () => {
         onDirectConnect={handleDirectConnect}
         topBarLayout={topBarLayout}
         topBarCustomization={menusCustomization.topbar}
+        onLoginMicrosoft={handleLoginMicrosoft}
+        onCreateOfflineAccount={handleCreateOfflineAccount}
       />
 
       {/* Layer 3: Launch Dock (Configurable Bottom Bar) */}

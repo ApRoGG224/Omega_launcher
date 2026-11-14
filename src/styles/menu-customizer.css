@@ -715,10 +715,61 @@
 /* TopBar Dock Customization */
 .hud-top-dock.custom-theme-active {
   position: relative;
-  overflow: hidden;
+  overflow: visible !important;
   background-color: var(--custom-topbar-bg, #2b331f) !important;
   border-color: var(--custom-topbar-border, rgba(255, 255, 255, 0.2)) !important;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Allow account dropdown menu to inherit settings style */
+.hud-top-dock.custom-theme-active .hud-profile-dropdown {
+  background-color: var(--custom-topbar-bg, #0e1118) !important;
+  border-color: var(--custom-topbar-border, rgba(255, 255, 255, 0.14)) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9), 0 0 0 1px var(--custom-topbar-border, rgba(255, 255, 255, 0.1)) !important;
+}
+
+.hud-top-dock.custom-theme-active .hud-profile-dropdown::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: var(--custom-topbar-pattern, url('/textures/menu_pattern.png'));
+  background-repeat: repeat;
+  background-size: var(--custom-topbar-pattern-size, 180px 180px);
+  background-position: var(--custom-topbar-pattern-pos, 0 0);
+  opacity: var(--custom-topbar-pattern-opacity, 0);
+  mix-blend-mode: overlay;
+  z-index: 0;
+}
+
+.hud-top-dock.custom-theme-active .hud-profile-dropdown > * {
+  position: relative;
+  z-index: 2;
+}
+
+.hud-top-dock.custom-theme-active .hud-profile-dropdown .acc,
+.hud-top-dock.custom-theme-active .hud-profile-dropdown .hud-acc-action-btn,
+.hud-top-dock.custom-theme-active .hud-profile-dropdown .hud-acc-offline-input {
+  background-color: var(--custom-topbar-btn-bg, #111622) !important;
+  border-color: var(--custom-topbar-btn-border, rgba(255, 255, 255, 0.12)) !important;
+  color: #f2f4f8 !important;
+}
+
+.hud-top-dock.custom-theme-active .hud-profile-dropdown .acc:hover,
+.hud-top-dock.custom-theme-active .hud-profile-dropdown .hud-acc-action-btn:hover {
+  background-color: var(--custom-topbar-btn-hover, #1a2232) !important;
+  border-color: var(--custom-topbar-btn-border, rgba(255, 255, 255, 0.24)) !important;
+  color: #ffffff !important;
+}
+
+.hud-top-dock.custom-theme-active .hud-profile-dropdown .acc.sel {
+  background-color: var(--custom-topbar-btn-active, #252f42) !important;
+  border-color: var(--custom-topbar-btn-active-border, var(--custom-topbar-accent, #60a5fa)) !important;
+}
+
+.hud-top-dock.custom-theme-active .hud-profile-dropdown .title {
+  color: var(--custom-topbar-accent, #9b5cff) !important;
 }
 
 .hud-top-dock.custom-theme-active::before {
