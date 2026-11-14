@@ -71,6 +71,8 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
   - Compact vertical loader badge stack (Fabric, Forge, NeoForge, Quilt, etc.) positioned directly under the mod's avatar icon, keeping footers clean and perfectly aligned.
   - Image fallback resilience with automatic error detection falling back to authentic SVG category icons.
   - Loader filtering for Fabric, Forge, NeoForge, and Quilt with sorting by popularity, relevance, and recently updated.
+- **Custom UI Components & Native OS Dropdown Replacement:**
+  - Replaced native OS/GTK HTML `<select>` elements with custom React dark obsidian dropdown menus (`.sb-folder-dropdown-container`, `.sb-folder-btn`, `.sb-folder-menu`, `.sb-folder-item`) on `InstancesScreen`, eliminating un-stylable bright blue OS popup chrome and matching the launcher's dark obsidian pixel-art aesthetic.
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 

@@ -176,6 +176,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
     }
   });
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
+  const [isFolderMenuOpen, setIsFolderMenuOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [importStatus, setImportStatus] = useState<string | null>(null);
@@ -507,26 +508,70 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 {onUpdateInstance && (
                   <span className="sb-folder-select-wrap">
                     <span className="sb-folder-label">Папка:</span>
-                    <select
-                      className="sb-sel"
-                      value={currentInstance.folderId || "all"}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        onUpdateInstance({
-                          ...currentInstance,
-                          folderId: val === "all" ? undefined : val,
-                        });
-                      }}
-                    >
-                      <option value="all">Без папки</option>
-                      {folders
-                        .filter((f) => !f.isSystem)
-                        .map((f) => (
-                          <option key={f.id} value={f.id}>
-                            {f.name}
-                          </option>
-                        ))}
-                    </select>
+                    <div className="sb-folder-dropdown-container">
+                      <button
+                        type="button"
+                        className={`sb-folder-btn ${isFolderMenuOpen ? "open" : ""}`}
+                        onClick={() => setIsFolderMenuOpen((prev) => !prev)}
+                        title="Выбрать папку"
+                      >
+                        <span className="sb-folder-name">
+                          {currentInstance.folderId
+                            ? folders.find((f) => f.id === currentInstance.folderId)?.name || "Без папки"
+                            : "Без папки"}
+                        </span>
+                        <ChevronDown size={12} className="sb-folder-chevron" />
+                      </button>
+
+                      {isFolderMenuOpen && (
+                        <>
+                          <div
+                            className="sb-folder-backdrop"
+                            onClick={() => setIsFolderMenuOpen(false)}
+                          />
+                          <div className="sb-folder-menu">
+                            <button
+                              type="button"
+                              className={`sb-folder-item ${!currentInstance.folderId || currentInstance.folderId === "all" ? "active" : ""}`}
+                              onClick={() => {
+                                onUpdateInstance({
+                                  ...currentInstance,
+                                  folderId: undefined,
+                                });
+                                setIsFolderMenuOpen(false);
+                              }}
+                            >
+                              <span>Без папки</span>
+                              {(!currentInstance.folderId || currentInstance.folderId === "all") && (
+                                <Check size={13} className="sb-folder-check" />
+                              )}
+                            </button>
+                            {folders
+                              .filter((f) => !f.isSystem)
+                              .map((f) => {
+                                const isSelected = currentInstance.folderId === f.id;
+                                return (
+                                  <button
+                                    key={f.id}
+                                    type="button"
+                                    className={`sb-folder-item ${isSelected ? "active" : ""}`}
+                                    onClick={() => {
+                                      onUpdateInstance({
+                                        ...currentInstance,
+                                        folderId: f.id,
+                                      });
+                                      setIsFolderMenuOpen(false);
+                                    }}
+                                  >
+                                    <span>{f.name}</span>
+                                    {isSelected && <Check size={13} className="sb-folder-check" />}
+                                  </button>
+                                );
+                              })}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </span>
                 )}
               </div>
