@@ -36,6 +36,8 @@ const CATEGORIES: Array<{
   { id: "tex", label: "Текстуры" },
 ];
 
+const PAGE_SIZE = 24;
+
 export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
   onInstallMod,
   onInstallModpack,
@@ -48,11 +50,16 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
   const [sortMode, setSortMode] = useState<CatalogSort>("p");
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
 
-  // Debounce search query by 300ms
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const reqIdRef = useRef(0);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
@@ -60,12 +67,11 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Request counter to ensure only the latest request updates state
-  const reqIdRef = useRef(0);
-
   const fetchItems = useCallback(async (signal?: AbortSignal) => {
     const currentReqId = ++reqIdRef.current;
     setIsLoading(true);
+    setIsLoadingMore(false);
+    setHasMore(true);
     setError(null);
 
     try {
@@ -76,13 +82,19 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
           query: debouncedSearch,
           loader: selectedLoader,
           sort: sortMode,
+          limit: PAGE_SIZE,
+          offset: 0,
         },
         signal
       );
 
       if (currentReqId === reqIdRef.current) {
         setItems(data);
+        setHasMore(data.length >= PAGE_SIZE);
         setIsLoading(false);
+        if (wrapRef.current) {
+          wrapRef.current.scrollTop = 0;
+        }
       }
     } catch (err: any) {
       if (err.name === "AbortError") {
@@ -103,6 +115,83 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
       controller.abort();
     };
   }, [fetchItems]);
+
+  const loadMore = useCallback(async () => {
+    if (isLoading || isLoadingMore || !hasMore) return;
+
+    const currentReqId = reqIdRef.current;
+    setIsLoadingMore(true);
+
+    try {
+      const data = await searchCatalog({
+        source: activeSource,
+        tab: activeTab,
+        query: debouncedSearch,
+        loader: selectedLoader,
+        sort: sortMode,
+        limit: PAGE_SIZE,
+        offset: items.length,
+      });
+
+      if (currentReqId === reqIdRef.current) {
+        if (data.length < PAGE_SIZE) {
+          setHasMore(false);
+        }
+        setItems((prev) => {
+          const seen = new Set(prev.map((i) => `${i.source}-${i.id}`));
+          const newItems = data.filter((i) => !seen.has(`${i.source}-${i.id}`));
+          return [...prev, ...newItems];
+        });
+        setIsLoadingMore(false);
+      }
+    } catch {
+      if (currentReqId === reqIdRef.current) {
+        setIsLoadingMore(false);
+      }
+    }
+  }, [
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    items.length,
+    activeSource,
+    activeTab,
+    debouncedSearch,
+    selectedLoader,
+    sortMode,
+  ]);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !wrap) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading && !isLoadingMore) {
+          loadMore();
+        }
+      },
+      {
+        root: wrap,
+        rootMargin: "300px",
+        threshold: 0.05,
+      }
+    );
+
+    observer.observe(sentinel);
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, isLoading, isLoadingMore, loadMore]);
+
+  const handleScroll = useCallback(() => {
+    const wrap = wrapRef.current;
+    if (!wrap || isLoading || isLoadingMore || !hasMore) return;
+    if (wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 400) {
+      loadMore();
+    }
+  }, [isLoading, isLoadingMore, hasMore, loadMore]);
 
   const handleImageError = (id: string) => {
     setFailedImages((prev) => ({ ...prev, [id]: true }));
@@ -146,7 +235,7 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
 
   return (
     <div className="screens-overlay-layer catalog-screen-overlay">
-      <div className="wrap">
+      <div className="wrap" ref={wrapRef} onScroll={handleScroll}>
         {/* Navigation & Source Switch Bar */}
         <div className="head">
           <div className="dock" id="tabs">
@@ -250,39 +339,63 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
 
               return (
                 <div key={itemKey} className="card">
-                  <div className="ico">
+                  <div className="card-ambient-blur" aria-hidden="true">
                     {showImg ? (
                       <img
                         src={item.iconUrl}
-                        alt={item.title}
-                        loading="lazy"
+                        alt=""
                         onError={() => handleImageError(item.id)}
                       />
                     ) : (
-                      <svg viewBox="0 0 24 24">
-                        {renderFallbackIcon(item.iconFallback)}
-                      </svg>
+                      <div className={`ambient-fallback ${item.iconFallback}`} />
                     )}
                   </div>
+
+                  <div className="card-left">
+                    <div className="ico">
+                      {showImg ? (
+                        <img
+                          src={item.iconUrl}
+                          alt={item.title}
+                          loading="lazy"
+                          onError={() => handleImageError(item.id)}
+                        />
+                      ) : (
+                        <svg viewBox="0 0 24 24">
+                          {renderFallbackIcon(item.iconFallback)}
+                        </svg>
+                      )}
+                    </div>
+
+                    {item.loaders && item.loaders.length > 0 && (
+                      <div className="card-loaders">
+                        {item.loaders.slice(0, 2).map((loader) => (
+                          <span key={loader} className={`tag ${loader}`} title={loader}>
+                            {loader}
+                          </span>
+                        ))}
+                        {item.loaders.length > 2 && (
+                          <span
+                            className="tag more"
+                            title={item.loaders.slice(2).join(", ")}
+                          >
+                            +{item.loaders.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="bd">
                     <div className="t">
-                      <b>{item.title}</b>
-                      <span>от {item.author}</span>
+                      <b title={item.title}>{item.title}</b>
+                      <span title={`от ${item.author}`}>от {item.author}</span>
                     </div>
                     <div className="ds" title={item.desc}>
                       {item.desc || "Нет описания"}
                     </div>
                     <div className="ft">
-                      <div>
-                        <div className="dl">{item.downloadsFormatted}</div>
-                        <div className="tags">
-                          {item.loaders.map((z) => (
-                            <span key={z} className={`tag ${z}`}>
-                              {z}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                      <div className="dl">{item.downloadsFormatted}</div>
                       <button
                         type="button"
                         className={`b ${isDone ? "done" : ""}`}
@@ -312,6 +425,26 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
             })
           )}
         </div>
+
+        <div
+          ref={sentinelRef}
+          style={{ height: "1px", width: "100%", pointerEvents: "none" }}
+          aria-hidden="true"
+        />
+
+        {isLoadingMore && (
+          <div className="catalog-load-more">
+            <div className="spin-cube">
+              <IsometricCube
+                size={24}
+                variant={activeSource === "Modrinth" ? "emerald" : "rust"}
+              />
+            </div>
+            <span>
+              Загрузка ещё {activeTab === "modpacks" ? "сборок" : activeTab === "mods" ? "модов" : activeTab === "shaders" ? "шейдеров" : "текстур"}...
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

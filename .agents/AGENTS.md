@@ -64,6 +64,10 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
   - Live unified search service across Modrinth (`/v2/search`) and CurseForge (`/v1/mods/search`) supporting all 4 primary Minecraft content types: Modpacks (`modpacks`), Mods (`mods`), Shaders (`shaders`), and Resource Packs / Textures (`tex`).
   - Pruned legacy mock categories ("Питомцы" and "Косметика") and removed redundant header texts (`Каталог` title and `Готовые сборки...` subtitle) in favor of a sleek, ergonomic dual dock header: Category tabs on the left, Source switcher on the right.
   - Asynchronous request management with 300ms input debouncing, `AbortController` cancellation for fast typing, request sequence guarding (`reqIdRef`), and authentic discrete Minecraft `IsometricCube` loading states with zero neon.
+  - Seamless infinite scrolling pagination (`PAGE_SIZE = 24`) powered by IntersectionObserver and scroll listeners, appending new items smoothly with an animated spinning IsometricCube loading indicator.
+  - Strictly uniform card frames (`142px` fixed height) across all mods, modpacks, shaders, and resource packs, with multi-line description truncation ending in ellipsis (`...`) preventing layout shift.
+  - Ambient blurred avatar backdrop (`.card-ambient-blur`) softly casting the mod's artwork colors behind and next to the description with zero neon violation.
+  - Compact vertical loader badge stack (Fabric, Forge, NeoForge, Quilt, etc.) positioned directly under the mod's avatar icon, keeping footers clean and perfectly aligned.
   - Image fallback resilience with automatic error detection falling back to authentic SVG category icons.
   - Loader filtering for Fabric, Forge, NeoForge, and Quilt with sorting by popularity, relevance, and recently updated.
 
