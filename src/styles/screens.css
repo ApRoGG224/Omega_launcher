@@ -369,6 +369,8 @@
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  transform: translateZ(0);
+  -webkit-overflow-scrolling: touch;
 }
 
 .catalog-screen-overlay .wrap::-webkit-scrollbar {
@@ -546,9 +548,6 @@
   max-height: 142px;
   box-sizing: border-box;
   overflow: hidden;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 142px;
-  contain: layout style paint;
 }
 
 .catalog-screen-overlay .card:hover {
@@ -562,38 +561,43 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 68%;
+  width: 65%;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
   z-index: 0;
-  mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.25) 20%, rgba(0, 0, 0, 0.85) 65%, rgba(0, 0, 0, 1) 100%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.25) 20%, rgba(0, 0, 0, 0.85) 65%, rgba(0, 0, 0, 1) 100%);
 }
 
 .catalog-screen-overlay .card-ambient-img {
   position: absolute;
-  top: -30%;
-  right: -15%;
-  width: 140%;
-  height: 160%;
+  top: -10px;
+  right: -10px;
+  width: 32px;
+  height: 32px;
   object-fit: cover;
-  filter: blur(16px);
-  opacity: 0.32;
-  transform: translate3d(0, 0, 0);
-  transition: opacity 0.2s ease, filter 0.2s ease;
+  transform: scale(9) translateZ(0);
+  transform-origin: top right;
+  filter: blur(2px);
+  opacity: 0.35;
+  transition: opacity 0.2s ease;
 }
 
 .catalog-screen-overlay .card:hover .card-ambient-img {
-  opacity: 0.46;
-  filter: blur(14px);
+  opacity: 0.55;
+}
+
+.catalog-screen-overlay .card-ambient-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #0d1117 0%, rgba(13, 17, 23, 0.7) 40%, rgba(13, 17, 23, 0.15) 100%);
+  pointer-events: none;
 }
 
 .catalog-screen-overlay .card-ambient-fallback {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 80% 50%, rgba(127, 214, 158, 0.35) 0%, rgba(13, 17, 23, 0) 70%);
-  opacity: 0.3;
+  background: radial-gradient(circle at 85% 50%, rgba(127, 214, 158, 0.35) 0%, rgba(13, 17, 23, 0) 70%);
+  opacity: 0.4;
 }
 
 .catalog-screen-overlay .card-left {

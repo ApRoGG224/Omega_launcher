@@ -79,13 +79,22 @@ interface CatalogCardProps {
   isDone: boolean;
   failedImage: boolean;
   onImageError: (id: string) => void;
-  onInstall: () => void;
+  onInstall: (item: CatalogItem, itemKey: string) => void;
   activeTab: CatalogTab;
 }
 
 const CatalogCard = React.memo<CatalogCardProps>(
   ({ item, isDone, failedImage, onImageError, onInstall, activeTab }) => {
+    const itemKey = `${item.source}-${item.id}`;
     const showImg = !!item.iconUrl && !failedImage;
+
+    const handleInstallClick = useCallback(() => {
+      onInstall(item, itemKey);
+    }, [item, itemKey, onInstall]);
+
+    const handleImgError = useCallback(() => {
+      onImageError(item.id);
+    }, [item.id, onImageError]);
 
     return (
       <div className="card">
@@ -96,11 +105,12 @@ const CatalogCard = React.memo<CatalogCardProps>(
               alt=""
               className="card-ambient-img"
               loading="lazy"
-              onError={() => onImageError(item.id)}
+              onError={handleImgError}
             />
           ) : (
             <div className="card-ambient-fallback" />
           )}
+          <div className="card-ambient-overlay" />
         </div>
 
         <div className="card-left">
@@ -110,7 +120,7 @@ const CatalogCard = React.memo<CatalogCardProps>(
                 src={item.iconUrl}
                 alt={item.title}
                 loading="lazy"
-                onError={() => onImageError(item.id)}
+                onError={handleImgError}
               />
             ) : (
               <svg viewBox="0 0 24 24">{renderFallbackIcon(item.iconFallback)}</svg>
@@ -149,7 +159,7 @@ const CatalogCard = React.memo<CatalogCardProps>(
             <button
               type="button"
               className={`b ${isDone ? "done" : ""}`}
-              onClick={onInstall}
+              onClick={handleInstallClick}
             >
               {isDone
                 ? activeTab === "modpacks"
@@ -331,7 +341,7 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
       },
       {
         root: wrap,
-        rootMargin: "400px",
+        rootMargin: "120px",
         threshold: 0,
       }
     );
@@ -472,7 +482,7 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
                   isDone={!!done[itemKey]}
                   failedImage={!!failedImages[item.id]}
                   onImageError={handleImageError}
-                  onInstall={() => handleInstall(item, itemKey)}
+                  onInstall={handleInstall}
                   activeTab={activeTab}
                 />
               );
