@@ -1287,6 +1287,136 @@
   grid-column: 1 / -1;
 }
 
+.store-screen-overlay .store-subtabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 2px;
+  flex-wrap: wrap;
+}
+
+.store-screen-overlay .store-subtab-btn {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--mut);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.store-screen-overlay .store-subtab-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--tx);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.store-screen-overlay .store-subtab-btn.active {
+  background: #1c2433;
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.store-screen-overlay .store-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 0 12px 0;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.store-screen-overlay .store-page-btn {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 9px;
+  background: #121620;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--tx);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.store-screen-overlay .store-page-btn:hover:not(:disabled) {
+  background: #1c2230;
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.store-screen-overlay .store-page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.store-screen-overlay .store-page-info {
+  color: var(--mut);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.store-screen-overlay .store-page-jump {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.store-screen-overlay .store-page-jump input {
+  width: 68px;
+  height: 36px;
+  text-align: center;
+  padding: 0 4px;
+  border-radius: 8px;
+}
+
+.store-screen-overlay .store-loading-state,
+.store-screen-overlay .store-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px 20px;
+  color: var(--mut);
+  font-size: 14px;
+  text-align: center;
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.store-screen-overlay .store-retry-btn {
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 9px;
+  background: #1a2233;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.store-screen-overlay .store-retry-btn:hover {
+  background: #252e42;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
 /* ==========================================================================
    SERVERS MONITOR (Exact 1:1 match to Серверы.html)
    ========================================================================== */

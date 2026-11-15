@@ -153,6 +153,7 @@ export const ScreensLayer: React.FC<ScreensLayerProps> = React.memo(({
           onBack={() => onNavigate("home")}
           onEquipSkin={onEquipSkin}
           onEquipCape={onEquipCape}
+          currentSkinUrl={skinUrl}
         />
       )}
 
