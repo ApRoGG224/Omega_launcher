@@ -638,16 +638,14 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
         {/* Tools row */}
         {(activeTab === "skins" || activeTab === "capes" || activeTab === "pets" || activeTab === "cos") && (
           <div className="tools" id="tools">
-            {activeTab !== "capes" && (
+            {activeTab !== "capes" && activeTab !== "cos" && (
               <div className="q">
                 <input
                   id="q"
                   placeholder={
                     activeTab === "skins"
                       ? "Какой скин ты ищешь? (например: zefaa, Dream, Steve, anime...)"
-                      : activeTab === "pets"
-                      ? "Поиск питомца по имени или типу…"
-                      : "Поиск косметики по названию или категории…"
+                      : "Поиск питомца по имени или типу…"
                   }
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
