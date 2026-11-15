@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { PRESET_SKINS, PRESET_CAPES } from "../../constants/skinPresets";
 import { ipc, type MinecraftInsideSkinItem } from "../../services/ipc";
 import { IsometricCube } from "../icons/IsometricCube";
@@ -143,6 +143,48 @@ function formatRelativeTime(timestamp: number): string {
   return `${days} дн. назад`;
 }
 
+/**
+ * High-performance memoized skin card to prevent re-rendering when new pages are appended
+ */
+const InsideSkinCard = React.memo<{
+  skin: MinecraftInsideSkinItem;
+  isEquipped: boolean;
+  isApplying: boolean;
+  onEquip: (skin: MinecraftInsideSkinItem) => void;
+}>(({ skin, isEquipped, isApplying, onEquip }) => {
+  return (
+    <div className="card ctr">
+      <div className="pv">
+        <img
+          src={skin.renderUrl}
+          alt={skin.nickname}
+          style={{
+            width: "72px",
+            height: "106px",
+            objectFit: "contain",
+            imageRendering: "pixelated",
+          }}
+          loading="lazy"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = `https://minotar.net/skin/${encodeURIComponent(skin.nickname)}`;
+          }}
+        />
+      </div>
+      <div className="nm" title={skin.nickname}>{skin.nickname}</div>
+      <div className="ms">Скин по нику</div>
+      <button
+        type="button"
+        className={`b ${isEquipped ? "on" : ""}`}
+        disabled={isApplying}
+        onClick={() => onEquip(skin)}
+      >
+        {isEquipped ? "✓ Надет" : isApplying ? "..." : "Примерить в 3D"}
+      </button>
+    </div>
+  );
+});
+InsideSkinCard.displayName = "InsideSkinCard";
+
 export const StoreScreen: React.FC<StoreScreenProps> = ({
   onEquipSkin,
   onEquipCape,
@@ -160,14 +202,23 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [nick, setNick] = useState("");
 
-  // Live Minecraft Inside catalog state
+  // Live Minecraft Inside infinite scroll state
   const [insideSkins, setInsideSkins] = useState<MinecraftInsideSkinItem[]>([]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
   const [isLoadingInside, setIsLoadingInside] = useState<boolean>(false);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [hasMore, setHasMore] = useState<boolean>(true);
   const [insideError, setInsideError] = useState<string | null>(null);
-  const [pageJumpInput, setPageJumpInput] = useState<string>("1");
   const [isApplying, setIsApplying] = useState<string | null>(null);
+
+  // Synchronous pagination locks (matching ModrinthScreen pattern)
+  const currentPageRef = useRef<number>(1);
+  const totalPagesRef = useRef<number>(1);
+  const isLoadingRef = useRef<boolean>(false);
+  const isLoadingMoreRef = useRef<boolean>(false);
+  const hasMoreRef = useRef<boolean>(true);
+  const reqIdRef = useRef<number>(0);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
 
   // Recent skins state with persistent localStorage
   const [recentList, setRecentList] = useState<RecentSkinItem[]>(() => {
@@ -188,7 +239,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   });
 
   const [toast, setToast] = useState<string | null>(null);
-  const wrapRef = useRef<HTMLDivElement | null>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -199,37 +249,126 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setDebouncedSearch(search.trim());
-      setCurrentPage(1);
-      setPageJumpInput("1");
     }, 350);
     return () => window.clearTimeout(timer);
   }, [search]);
 
-  // Fetch skins from Minecraft Inside API
-  useEffect(() => {
+  // Initial load of Page 1 when tab, subtab, or debounced search changes
+  const fetchInitialSkins = useCallback(async () => {
     if (activeTab !== "skins" || skinsSubTab !== "inside") return;
 
-    let isCancelled = false;
+    const currentReqId = ++reqIdRef.current;
+    currentPageRef.current = 1;
+    hasMoreRef.current = true;
+    setHasMore(true);
+    isLoadingRef.current = true;
     setIsLoadingInside(true);
     setInsideError(null);
 
-    ipc.fetchMinecraftInsideSkins(currentPage, debouncedSearch || undefined)
-      .then((pageData) => {
-        if (isCancelled) return;
+    try {
+      const pageData = await ipc.fetchMinecraftInsideSkins(1, debouncedSearch || undefined);
+      if (currentReqId === reqIdRef.current) {
         setInsideSkins(pageData?.skins || []);
-        setTotalPages(Math.max(1, pageData?.totalPages || 1));
-        setIsLoadingInside(false);
-      })
-      .catch((err) => {
-        if (isCancelled) return;
+        totalPagesRef.current = Math.max(1, pageData?.totalPages || 1);
+        const more = (pageData?.hasNext ?? false) || (pageData?.currentPage < (pageData?.totalPages || 1));
+        hasMoreRef.current = more;
+        setHasMore(more);
+      }
+    } catch (err: any) {
+      if (currentReqId === reqIdRef.current) {
         setInsideError(err?.message || String(err));
+      }
+    } finally {
+      if (currentReqId === reqIdRef.current) {
+        isLoadingRef.current = false;
         setIsLoadingInside(false);
-      });
+      }
+    }
+  }, [activeTab, skinsSubTab, debouncedSearch]);
 
+  useEffect(() => {
+    fetchInitialSkins();
+  }, [fetchInitialSkins]);
+
+  // Infinite scroll: fetch next page when user reaches bottom
+  const loadMore = useCallback(async () => {
+    if (
+      isLoadingRef.current ||
+      isLoadingMoreRef.current ||
+      !hasMoreRef.current ||
+      activeTab !== "skins" ||
+      skinsSubTab !== "inside"
+    ) {
+      return;
+    }
+
+    const nextPage = currentPageRef.current + 1;
+    if (nextPage > totalPagesRef.current) {
+      hasMoreRef.current = false;
+      setHasMore(false);
+      return;
+    }
+
+    isLoadingMoreRef.current = true;
+    setIsLoadingMore(true);
+    const currentReqId = reqIdRef.current;
+
+    try {
+      const pageData = await ipc.fetchMinecraftInsideSkins(nextPage, debouncedSearch || undefined);
+      if (currentReqId === reqIdRef.current) {
+        currentPageRef.current = nextPage;
+        totalPagesRef.current = Math.max(totalPagesRef.current, pageData?.totalPages || 1);
+        const more = (pageData?.hasNext ?? false) || (nextPage < totalPagesRef.current);
+        hasMoreRef.current = more;
+        setHasMore(more);
+
+        setInsideSkins((prev) => {
+          const seen = new Set(prev.map((s) => s.skinUrl));
+          const newSkins = (pageData?.skins || []).filter((s) => !seen.has(s.skinUrl));
+          return [...prev, ...newSkins];
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to load more skins:", err);
+    } finally {
+      if (currentReqId === reqIdRef.current) {
+        isLoadingMoreRef.current = false;
+        setIsLoadingMore(false);
+      }
+    }
+  }, [activeTab, skinsSubTab, debouncedSearch]);
+
+  // Native IntersectionObserver for 60 FPS Infinite Scroll (matching ModrinthScreen)
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !wrap || activeTab !== "skins" || skinsSubTab !== "inside") return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (
+          entry &&
+          entry.isIntersecting &&
+          !isLoadingRef.current &&
+          !isLoadingMoreRef.current &&
+          hasMoreRef.current
+        ) {
+          loadMore();
+        }
+      },
+      {
+        root: wrap,
+        rootMargin: "250px",
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinel);
     return () => {
-      isCancelled = true;
+      observer.disconnect();
     };
-  }, [activeTab, skinsSubTab, currentPage, debouncedSearch]);
+  }, [loadMore, activeTab, skinsSubTab]);
 
   const saveRecentSkin = (
     name: string,
@@ -262,25 +401,8 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     showToast("История очищена");
   };
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
-    setCurrentPage(newPage);
-    setPageJumpInput(String(newPage));
-    wrapRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handlePageJump = (e: React.FormEvent) => {
-    e.preventDefault();
-    const parsed = parseInt(pageJumpInput, 10);
-    if (!isNaN(parsed) && parsed >= 1 && parsed <= totalPages) {
-      handlePageChange(parsed);
-    } else {
-      setPageJumpInput(String(currentPage));
-    }
-  };
-
   // Equip skin from Minecraft Inside live catalog
-  const handleEquipInsideSkin = async (skin: MinecraftInsideSkinItem) => {
+  const handleEquipInsideSkin = useCallback(async (skin: MinecraftInsideSkinItem) => {
     setIsApplying(skin.nickname);
     try {
       let finalDataUrl = skin.skinUrl;
@@ -298,7 +420,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     } finally {
       setIsApplying(null);
     }
-  };
+  }, [onEquipSkin]);
 
   // Direct nickname equip
   const handleNickEquip = async (e: React.FormEvent) => {
@@ -505,12 +627,11 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
               className={`store-subtab-btn ${skinsSubTab === "inside" ? "active" : ""}`}
               onClick={() => {
                 setSkinsSubTab("inside");
-                setCurrentPage(1);
               }}
             >
               <span>Каталог по никам (54 000+)</span>
-              {insideSkins.length > 0 && !isLoadingInside && (
-                <span style={{ opacity: 0.7 }}>· Стр. {currentPage}/{totalPages}</span>
+              {insideSkins.length > 0 && (
+                <span style={{ opacity: 0.7 }}>· Загружено: {insideSkins.length}</span>
               )}
             </button>
             <button
@@ -541,7 +662,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                       <button
                         type="button"
                         className="store-retry-btn"
-                        onClick={() => setCurrentPage((p) => p)}
+                        onClick={fetchInitialSkins}
                       >
                         Повторить попытку
                       </button>
@@ -572,83 +693,32 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                           const isApplyingThis = isApplying === skin.nickname;
 
                           return (
-                            <div key={`${skin.nickname}-${skin.skinUrl}`} className="card ctr">
-                              <div className="pv">
-                                <img
-                                  src={skin.renderUrl}
-                                  alt={skin.nickname}
-                                  style={{
-                                    width: "72px",
-                                    height: "106px",
-                                    objectFit: "contain",
-                                    imageRendering: "pixelated",
-                                  }}
-                                  loading="lazy"
-                                  onError={(e) => {
-                                    // Fallback to minotar skin preview if render fails
-                                    (e.target as HTMLImageElement).src = `https://minotar.net/skin/${encodeURIComponent(skin.nickname)}`;
-                                  }}
-                                />
-                              </div>
-                              <div className="nm" title={skin.nickname}>{skin.nickname}</div>
-                              <div className="ms">Скин по нику</div>
-                              <button
-                                type="button"
-                                className={`b ${isEquipped ? "on" : ""}`}
-                                disabled={isApplyingThis}
-                                onClick={() => handleEquipInsideSkin(skin)}
-                              >
-                                {isEquipped ? "✓ Надет" : isApplyingThis ? "..." : "Примерить в 3D"}
-                              </button>
-                            </div>
+                            <InsideSkinCard
+                              key={`${skin.nickname}-${skin.skinUrl}`}
+                              skin={skin}
+                              isEquipped={isEquipped}
+                              isApplying={isApplyingThis}
+                              onEquip={handleEquipInsideSkin}
+                            />
                           );
                         })}
                       </div>
 
-                      {/* Pagination Bar */}
-                      <div className="store-pagination">
-                        <button
-                          type="button"
-                          className="store-page-btn"
-                          disabled={currentPage <= 1 || isLoadingInside}
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          title="Предыдущая страница"
-                        >
-                          « Назад
-                        </button>
+                      {/* Sentinel element to trigger automatic infinite scroll */}
+                      <div
+                        ref={sentinelRef}
+                        style={{ height: "1px", width: "100%", pointerEvents: "none" }}
+                        aria-hidden="true"
+                      />
 
-                        <span className="store-page-info">
-                          Страница {currentPage} из {totalPages}
-                        </span>
-
-                        <form onSubmit={handlePageJump} className="store-page-jump">
-                          <input
-                            type="number"
-                            min="1"
-                            max={totalPages}
-                            value={pageJumpInput}
-                            onChange={(e) => setPageJumpInput(e.target.value)}
-                            aria-label="Номер страницы"
-                          />
-                          <button
-                            type="submit"
-                            className="store-page-btn"
-                            disabled={isLoadingInside}
-                          >
-                            Перейти
-                          </button>
-                        </form>
-
-                        <button
-                          type="button"
-                          className="store-page-btn"
-                          disabled={currentPage >= totalPages || isLoadingInside}
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          title="Следующая страница"
-                        >
-                          Вперед »
-                        </button>
-                      </div>
+                      {isLoadingMore && (
+                        <div className="store-load-more">
+                          <div className="spin-cube">
+                            <IsometricCube size={24} variant="emerald" />
+                          </div>
+                          <span>Загрузка ещё скинов...</span>
+                        </div>
+                      )}
                     </>
                   )}
                 </>

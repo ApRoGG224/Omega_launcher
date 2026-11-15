@@ -1137,6 +1137,8 @@
   border: 1px solid var(--line);
   border-radius: 16px;
   transition: 0.15s;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 170px 220px;
 }
 
 .store-screen-overlay .card:hover {
@@ -1415,6 +1417,35 @@
 .store-screen-overlay .store-retry-btn:hover {
   background: #252e42;
   border-color: rgba(255, 255, 255, 0.3);
+}
+
+.store-screen-overlay .store-load-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 20px;
+  margin: 12px 0 24px 0;
+  background: #0d1117;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--mut);
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.store-screen-overlay .store-load-more .spin-cube {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: storeCubeSpin 1.8s linear infinite;
+}
+
+@keyframes storeCubeSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* ==========================================================================
