@@ -31,9 +31,9 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
   focusZoneRef.current = focusZone;
 
   // Camera targets for smooth cinematic lerp transitions
-  const curPosRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.2, 70.0));
+  const curPosRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.2, 48.0));
   const curLookRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.0, 0));
-  const targetPosRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.2, 70.0));
+  const targetPosRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.2, 48.0));
   const targetLookRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.0, 0));
 
   // Initialize static 3D SkinViewer
@@ -94,7 +94,7 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
           break;
         case "full":
         default:
-          targetPosRef.current.set(0, 3.2, 70.0);
+          targetPosRef.current.set(0, 3.2, 48.0);
           targetLookRef.current.set(0, 3.0, 0);
           break;
       }

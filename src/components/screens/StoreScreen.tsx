@@ -216,10 +216,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   const [activeCos, setActiveCos] = useState<string>(() => {
     return localStorage.getItem("omega:equipped_cosmetic") || "Корона Монарха";
   });
-  const [wardrobeFocus, setWardrobeFocus] = useState<WardrobeFocusZone>(() => {
-    const saved = localStorage.getItem("omega:equipped_cosmetic") || "Корона Монарха";
-    return saved === "Корона Монарха" ? "head" : "full";
-  });
+  const [wardrobeFocus, setWardrobeFocus] = useState<WardrobeFocusZone>("full");
 
   // Microsoft capes state
   const [msCapes, setMsCapes] = useState<MicrosoftCapeItem[]>([]);
