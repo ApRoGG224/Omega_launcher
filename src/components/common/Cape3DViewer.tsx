@@ -17,8 +17,8 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
   capeUrl,
   width = 120,
   height = 140,
-  interactive = true,
-  animated = true,
+  interactive = false,
+  animated = false,
   className = "",
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -31,7 +31,7 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
   const rotXRef = useRef<number>(0);
   const isDraggingRef = useRef<boolean>(false);
   const prevPointerRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const hoverOffsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const renderSceneRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -77,11 +77,25 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
     // Cape Object from skinview3d
     const cape = new CapeObject();
     // Base orientation: Minecraft capes have the decorated outside facing -Z.
-    // By default, rotate 180 degrees so the back faces +Z towards the camera,
-    // with a slight 3D isometric tilt (~22 degrees) to show depth and edge thickness.
-    cape.rotation.y = Math.PI - 0.38;
-    cape.rotation.x = 0.12;
+    // Rotate 180 degrees so the back faces +Z towards the camera,
+    // with a crisp 3D isometric tilt (~22 degrees) to show depth and edge thickness.
+    const baseY = Math.PI - 0.38;
+    const baseX = 0.12;
+    cape.rotation.y = baseY;
+    cape.rotation.x = baseX;
     scene.add(cape);
+
+    // Direct render call
+    const renderScene = () => {
+      if (disposed) return;
+      cape.rotation.y = baseY + rotYRef.current;
+      cape.rotation.x = baseX + rotXRef.current;
+      renderer.render(scene, camera);
+    };
+    renderSceneRef.current = renderScene;
+
+    // Initial render placeholder
+    renderScene();
 
     // Fetch and load cape texture as data URL to bypass any CORS restrictions
     const loadTexture = async () => {
@@ -116,6 +130,7 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
 
             cape.map = tex;
             setLoading(false);
+            renderScene();
           },
           undefined,
           (err) => {
@@ -134,35 +149,29 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
 
     void loadTexture();
 
-    // Render loop
-    let startTime = performance.now();
-    const renderFrame = (now: number) => {
-      if (disposed) return;
-
-      const elapsed = (now - startTime) / 1000;
-
-      // Gentle ambient floating wave when animated and not actively dragged
-      let waveY = 0;
-      let waveX = 0;
-      if (animated && !isDraggingRef.current) {
-        waveY = Math.sin(elapsed * 1.6) * 0.12;
-        waveX = Math.cos(elapsed * 1.3) * 0.03;
-      }
-
-      const baseY = Math.PI - 0.38;
-      const baseX = 0.12;
-
-      cape.rotation.y = baseY + waveY + rotYRef.current + hoverOffsetRef.current.x;
-      cape.rotation.x = baseX + waveX + rotXRef.current + hoverOffsetRef.current.y;
-
-      renderer.render(scene, camera);
+    // Optional animation loop only if explicitly requested
+    if (animated) {
+      let startTime = performance.now();
+      const renderFrame = (now: number) => {
+        if (disposed) return;
+        const elapsed = (now - startTime) / 1000;
+        let waveY = 0;
+        let waveX = 0;
+        if (!isDraggingRef.current) {
+          waveY = Math.sin(elapsed * 1.6) * 0.12;
+          waveX = Math.cos(elapsed * 1.3) * 0.03;
+        }
+        cape.rotation.y = baseY + waveY + rotYRef.current;
+        cape.rotation.x = baseX + waveX + rotXRef.current;
+        renderer.render(scene, camera);
+        animId = requestAnimationFrame(renderFrame);
+      };
       animId = requestAnimationFrame(renderFrame);
-    };
-
-    animId = requestAnimationFrame(renderFrame);
+    }
 
     return () => {
       disposed = true;
+      renderSceneRef.current = null;
       if (animId !== null) {
         cancelAnimationFrame(animId);
       }
@@ -183,7 +192,7 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
     };
   }, [capeUrl, width, height, animated]);
 
-  // Pointer interactions for 360-degree inspection
+  // Optional manual pointer interactions if interactive is true
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!interactive) return;
     isDraggingRef.current = true;
@@ -192,25 +201,17 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!interactive) return;
-    if (isDraggingRef.current) {
-      const deltaX = e.clientX - prevPointerRef.current.x;
-      const deltaY = e.clientY - prevPointerRef.current.y;
-      prevPointerRef.current = { x: e.clientX, y: e.clientY };
+    if (!interactive || !isDraggingRef.current) return;
+    const deltaX = e.clientX - prevPointerRef.current.x;
+    const deltaY = e.clientY - prevPointerRef.current.y;
+    prevPointerRef.current = { x: e.clientX, y: e.clientY };
 
-      rotYRef.current += deltaX * 0.02;
-      rotXRef.current += deltaY * 0.02;
-      // Clamp vertical pitch to avoid flipping upside down
-      rotXRef.current = Math.max(-0.9, Math.min(0.9, rotXRef.current));
-    } else {
-      // Subtle parallax response to cursor hover
-      const rect = e.currentTarget.getBoundingClientRect();
-      const relX = (e.clientX - rect.left) / rect.width - 0.5;
-      const relY = (e.clientY - rect.top) / rect.height - 0.5;
-      hoverOffsetRef.current = {
-        x: relX * 0.25,
-        y: relY * 0.15,
-      };
+    rotYRef.current += deltaX * 0.02;
+    rotXRef.current += deltaY * 0.02;
+    rotXRef.current = Math.max(-0.9, Math.min(0.9, rotXRef.current));
+
+    if (renderSceneRef.current) {
+      renderSceneRef.current();
     }
   };
 
@@ -225,13 +226,16 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
   };
 
   const handlePointerLeave = () => {
-    hoverOffsetRef.current = { x: 0, y: 0 };
     isDraggingRef.current = false;
   };
 
   const handleDoubleClick = () => {
+    if (!interactive) return;
     rotYRef.current = 0;
     rotXRef.current = 0;
+    if (renderSceneRef.current) {
+      renderSceneRef.current();
+    }
   };
 
   return (
@@ -243,7 +247,6 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerLeave}
       onDoubleClick={handleDoubleClick}
-      title={interactive ? "Потяните для вращения в 3D (двойной клик для сброса)" : undefined}
       style={{
         position: "relative",
         width: `${width}px`,

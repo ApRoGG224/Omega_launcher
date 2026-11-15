@@ -1471,11 +1471,7 @@
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
   overflow: hidden;
-  cursor: grab;
-}
-
-.store-screen-overlay .pv.cape-3d-pv:active {
-  cursor: grabbing;
+  cursor: default;
 }
 
 .store-screen-overlay .store-page-jump input {

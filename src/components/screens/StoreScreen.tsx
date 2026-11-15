@@ -916,8 +916,8 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                             capeUrl={c.url}
                             width={130}
                             height={150}
-                            interactive={true}
-                            animated={true}
+                            interactive={false}
+                            animated={false}
                           />
                         </div>
                         <div className="nm" title={details.title}>
