@@ -440,6 +440,7 @@ pub async fn launch_minecraft(
     username: String,
     ram: u32,
     instance_id: String,
+    custom_jvm_args: Option<String>,
 ) -> Result<String, String> {
     let data_dir = app_data_dir(&app);
     let vanilla_version: String = version
@@ -684,6 +685,20 @@ pub async fn launch_minecraft(
     if crate::java::required_java_version(&vanilla_version) >= 24 {
         // LWJGL 3.4.1 still uses sun.misc.Unsafe on Java 24+.
         command.arg("--sun-misc-unsafe-memory-access=allow");
+    }
+
+    // Custom user JVM arguments from launcher settings (e.g. -XX:+UseZGC, -XX:+UseG1GC, etc.)
+    if let Some(user_args) = &custom_jvm_args {
+        let trimmed_user = user_args.trim();
+        if !trimmed_user.is_empty() {
+            emit_line(&app, &format!("[launcher/INFO] Using custom JVM arguments: {}", trimmed_user));
+            for arg in trimmed_user.split_whitespace() {
+                let trimmed = arg.trim();
+                if !trimmed.is_empty() {
+                    command.arg(trimmed);
+                }
+            }
+        }
     }
 
     let resolved_jvm: Vec<String> = config.jvm_args.iter().map(|a| arg_replace(a, &config)).collect();

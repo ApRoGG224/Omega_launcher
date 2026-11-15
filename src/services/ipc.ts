@@ -79,6 +79,7 @@ export const ipc = {
     username: string;
     ram: number;
     instanceId: string;
+    customJvmArgs?: string;
   }): Promise<void> {
     await invoke("launch_minecraft", args);
   },

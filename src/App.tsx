@@ -689,9 +689,22 @@ export const App: React.FC = () => {
       return;
     }
 
+    const settings = (() => {
+      try {
+        const raw = localStorage.getItem("omega_launcher_settings");
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    })();
+    const customJvmArgs = typeof settings?.jvmArgs === "string" && settings.jvmArgs.trim()
+      ? settings.jvmArgs.trim()
+      : "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions";
+    const ramToUse = selectedInstance.ramGb || settings?.ram || 4;
+
     setIsRunning(true);
     pushLog(
-      `[launcher/INFO] Запуск "${selectedInstance.name}" (Minecraft ${selectedInstance.mcVersion}, ${selectedInstance.loader}) от имени "${activeAccount.name}"...`,
+      `[launcher/INFO] Запуск "${selectedInstance.name}" (Minecraft ${selectedInstance.mcVersion}, ${selectedInstance.loader}) от имени "${activeAccount.name}" [RAM: ${ramToUse}G, JVM: ${customJvmArgs}]...`,
       "INFO"
     );
     try {
@@ -699,8 +712,9 @@ export const App: React.FC = () => {
         version: selectedInstance.mcVersion,
         server: "",
         username: activeAccount.name,
-        ram: selectedInstance.ramGb || 4,
+        ram: ramToUse,
         instanceId: selectedInstance.id,
+        customJvmArgs,
       });
     } catch (e: any) {
       pushLog(`[launcher/ERROR] Ошибка запуска: ${e?.message || e}`, "ERROR");
@@ -811,16 +825,30 @@ export const App: React.FC = () => {
     async (serverName: string, ip: string) => {
       const inst = selectedInstance || instances[0];
       if (!inst) return;
+      const settings = (() => {
+        try {
+          const raw = localStorage.getItem("omega_launcher_settings");
+          return raw ? JSON.parse(raw) : null;
+        } catch {
+          return null;
+        }
+      })();
+      const customJvmArgs = typeof settings?.jvmArgs === "string" && settings.jvmArgs.trim()
+        ? settings.jvmArgs.trim()
+        : "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions";
+      const ramToUse = inst.ramGb || settings?.ram || 4;
+
       setIsRunning(true);
       setActiveScreen("home");
-      pushLog(`[launcher/INFO] Прямое подключение к серверу "${serverName}" (${ip})...`, "INFO");
+      pushLog(`[launcher/INFO] Прямое подключение к серверу "${serverName}" (${ip}) [RAM: ${ramToUse}G, JVM: ${customJvmArgs}]...`, "INFO");
       try {
         await ipc.launchMinecraft({
           version: inst.mcVersion,
           server: ip,
           username: activeAccount.name,
-          ram: inst.ramGb || 4,
+          ram: ramToUse,
           instanceId: inst.id,
+          customJvmArgs,
         });
       } catch (e: any) {
         pushLog(`[launcher/ERROR] Ошибка прямого подключения: ${e?.message || e}`, "ERROR");

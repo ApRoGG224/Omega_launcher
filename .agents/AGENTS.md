@@ -78,6 +78,10 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
   - Account popover (`.hud-profile-dropdown`) attaches flush corner-to-corner against the top navigation bar with zero gap (`top: calc(100% + 5px)` and `left: -8px`).
   - Added full-width Microsoft OAuth2 login button (`.ms-btn`) and inline offline account creation (`.offline-btn` / `.hud-acc-offline-form`) matching the dimensions of account items.
   - Dynamically inherits theme colors, grain patterns, borders, and hover states configured in launcher settings (`topBarCustomization`).
+- **JVM Arguments & Custom Garbage Collector Execution:**
+  - Connected `SettingsScreen` GC presets (`G1GC`, `ZGC`, `Shenandoah`) and custom `jvmArgs` to the native game launch process.
+  - `App.tsx` reads persisted launcher settings and forwards `customJvmArgs` through `ipc.launchMinecraft`.
+  - Tauri Rust backend (`src-tauri/src/launch.rs`) parses, logs (`[launcher/INFO] Using custom JVM arguments: ...`), and injects custom JVM arguments directly into the spawning `std::process::Command` alongside instance RAM limits.
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 
