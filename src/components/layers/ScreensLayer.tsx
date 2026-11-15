@@ -73,6 +73,8 @@ interface ScreensLayerProps {
   buttonShapePreset?: import("../../constants/launcherLayout").ButtonShapePreset;
   onChangeButtonShapePreset?: (preset: import("../../constants/launcherLayout").ButtonShapePreset) => void;
   skinUrl?: string;
+  capeUrl?: string | null;
+  model?: "default" | "slim";
   selectedInstance?: InstanceData | null;
   menusCustomization?: import("../../types/menuCustomization").MenusCustomizationState;
   onOpenMenuCustomizer?: (zone: import("../../types/menuCustomization").CustomizerZoneId) => void;
@@ -125,6 +127,8 @@ export const ScreensLayer: React.FC<ScreensLayerProps> = React.memo(({
   buttonShapePreset,
   onChangeButtonShapePreset,
   skinUrl,
+  capeUrl,
+  model,
   selectedInstance,
   menusCustomization,
   onOpenMenuCustomizer,
@@ -154,6 +158,8 @@ export const ScreensLayer: React.FC<ScreensLayerProps> = React.memo(({
           onEquipSkin={onEquipSkin}
           onEquipCape={onEquipCape}
           currentSkinUrl={skinUrl}
+          currentCapeUrl={capeUrl}
+          skinModel={model}
           account={account}
           onLoginMicrosoft={onLoginMicrosoft}
         />

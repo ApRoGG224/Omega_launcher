@@ -8,6 +8,7 @@ import {
 import { IsometricCube } from "../icons/IsometricCube";
 import { Cape3DViewer } from "../common/Cape3DViewer";
 import { Crown3DViewer } from "../common/Crown3DViewer";
+import { Wardrobe3DViewer, type WardrobeFocusZone } from "../common/Wardrobe3DViewer";
 import type { AccountData } from "../../types";
 import "../../styles/screens.css";
 
@@ -16,6 +17,8 @@ interface StoreScreenProps {
   onEquipSkin: (skinUrl: string, model: "default" | "slim") => void;
   onEquipCape: (capeUrl: string | null) => void;
   currentSkinUrl?: string;
+  currentCapeUrl?: string | null;
+  skinModel?: "default" | "slim";
   account?: AccountData;
   onLoginMicrosoft?: () => Promise<void>;
 }
@@ -128,13 +131,8 @@ const PT: Array<[string, string, string, string]> = [
   ["Слаймик-кубик", "Редкий", "Прыгучий · Слайм", "Полупрозрачный изумрудный слайм, забавно подпрыгивающий в такт шагам."],
 ];
 
-const CS: Array<[string, string, string, string]> = [
-  ["Крылья Архангела", "Легендарный", "Крылья", "Светящиеся белые крылья с динамической физикой взмахов при прыжках."],
-  ["Корона Монарха", "Эпический", "Головной убор", "Золотая инкрустированная рубинами корона истинного короля серверов."],
-  ["Наушники Neko Neon", "Эпический", "Головной убор", "Тактические чёрные наушники с анимированными светящимися кошачьими ушками."],
-  ["Тактический визор", "Редкий", "Маска", "Киберспортивный визор с бегущей строкой данных в реальном времени."],
-  ["Шарф Пустоты", "Редкий", "Аксессуар", "Длинный струящийся шарф из ткани тёмной материи с частицами звёздной пыли."],
-  ["Ореол Пламени", "Легендарный", "Аура", "Кружащие огненные искры и спирали вокруг персонажа."],
+const CS: string[] = [
+  "Корона Монарха",
 ];
 
 const TB = [
@@ -206,6 +204,8 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   onEquipSkin,
   onEquipCape,
   currentSkinUrl,
+  currentCapeUrl,
+  skinModel = "default",
   account,
   onLoginMicrosoft,
 }) => {
@@ -215,6 +215,10 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   const [activePet, setActivePet] = useState<string>("Малая панда");
   const [activeCos, setActiveCos] = useState<string>(() => {
     return localStorage.getItem("omega:equipped_cosmetic") || "Корона Монарха";
+  });
+  const [wardrobeFocus, setWardrobeFocus] = useState<WardrobeFocusZone>(() => {
+    const saved = localStorage.getItem("omega:equipped_cosmetic") || "Корона Монарха";
+    return saved === "Корона Монарха" ? "head" : "full";
   });
 
   // Microsoft capes state
@@ -718,6 +722,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                   localStorage.removeItem("omega:equipped_cosmetic");
                   localStorage.setItem("omega:equipped_cosmetics", JSON.stringify({ head: null }));
                   window.dispatchEvent(new CustomEvent("omega:cosmetics_updated", { detail: { head: null, name: "" } }));
+                  setWardrobeFocus("full");
                   showToast("Аксессуары сняты");
                 }}
               >
@@ -1000,73 +1005,93 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
             </div>
           )}
 
-          {/* COSMETICS TAB */}
+          {/* COSMETICS TAB WITH 3D WARDROBE SHOWCASE */}
           {activeTab === "cos" && (
-            <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))" }}>
-              {CS.filter((x) => !q || x.join(" ").toLowerCase().includes(q)).map((x) => {
-                const isEquipped = activeCos === x[0];
-                const isCrown = x[0] === "Корона Монарха";
-                return (
-                  <div key={x[0]} className="card" style={{ display: "flex", flexDirection: "column" }}>
-                    {isCrown && (
-                      <div
-                        style={{
-                          width: "100%",
-                          height: "140px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          background: "#080a10",
-                          borderRadius: "10px",
-                          overflow: "hidden",
-                          marginBottom: "12px",
-                        }}
-                      >
-                        <Crown3DViewer width={140} height={120} interactive={false} animated={true} />
-                      </div>
-                    )}
-                    <div className="it">
-                      <div className="ico">
-                        <svg viewBox="0 0 24 24">
-                          <path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <div className="top">
-                          <span className="nm">{x[0]}</span>
-                          <span className="tag" style={{ background: RC[x[1]] }}>
-                            {x[1]}
-                          </span>
+            <div className="store-cosmetics-wardrobe-container">
+              {/* Left Column: Cosmetics Cards (Only Crown, Title & Action) */}
+              <div className="store-cosmetics-catalog">
+                <div className="store-cosmetics-grid">
+                  {CS.filter((name) => !q || name.toLowerCase().includes(q)).map((name) => {
+                    const isEquipped = activeCos === name;
+                    return (
+                      <div key={name} className="card store-cosmetic-card">
+                        <div className="store-cosmetic-pv-box">
+                          <Crown3DViewer width={180} height={145} interactive={false} animated={true} />
                         </div>
-                        <div className="ms">{x[2]}</div>
+                        <div className="store-cosmetic-title">{name}</div>
+                        <button
+                          type="button"
+                          className={`b ${isEquipped ? "on" : ""}`}
+                          onClick={() => {
+                            if (isEquipped) {
+                              setActiveCos("");
+                              localStorage.removeItem("omega:equipped_cosmetic");
+                              localStorage.setItem("omega:equipped_cosmetics", JSON.stringify({ head: null }));
+                              window.dispatchEvent(
+                                new CustomEvent("omega:cosmetics_updated", { detail: { head: null, name: "" } })
+                              );
+                              setWardrobeFocus("full");
+                              showToast(`Аксессуар "${name}" снят`);
+                            } else {
+                              setActiveCos(name);
+                              localStorage.setItem("omega:equipped_cosmetic", name);
+                              const headVal = name === "Корона Монарха" ? "crown" : null;
+                              localStorage.setItem("omega:equipped_cosmetics", JSON.stringify({ head: headVal }));
+                              window.dispatchEvent(
+                                new CustomEvent("omega:cosmetics_updated", { detail: { head: headVal, name } })
+                              );
+                              setWardrobeFocus("head");
+                              showToast(`Аксессуар "${name}" надет!`);
+                            }
+                          }}
+                        >
+                          {isEquipped ? "✓ Надет на игрока" : "Примерить аксессуар"}
+                        </button>
                       </div>
-                    </div>
-                    <div className="ds">{x[3]}</div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right Column: 3D Wardrobe Stage */}
+              <div className="store-wardrobe-showcase">
+                <div className="store-wardrobe-header">
+                  <div className="store-wardrobe-title">Примерочная 3D</div>
+                  <div className="store-wardrobe-angle-tabs">
                     <button
                       type="button"
-                      className={`b ${isEquipped ? "on" : ""}`}
-                      onClick={() => {
-                        if (isEquipped) {
-                          setActiveCos("");
-                          localStorage.removeItem("omega:equipped_cosmetic");
-                          localStorage.setItem("omega:equipped_cosmetics", JSON.stringify({ head: null }));
-                          window.dispatchEvent(new CustomEvent("omega:cosmetics_updated", { detail: { head: null, name: "" } }));
-                          showToast(`Аксессуар "${x[0]}" снят`);
-                        } else {
-                          setActiveCos(x[0]);
-                          localStorage.setItem("omega:equipped_cosmetic", x[0]);
-                          const headVal = x[0] === "Корона Монарха" ? "crown" : null;
-                          localStorage.setItem("omega:equipped_cosmetics", JSON.stringify({ head: headVal }));
-                          window.dispatchEvent(new CustomEvent("omega:cosmetics_updated", { detail: { head: headVal, name: x[0] } }));
-                          showToast(`Аксессуар "${x[0]}" надет!`);
-                        }
-                      }}
+                      className={`store-wardrobe-tab ${wardrobeFocus === "head" ? "active" : ""}`}
+                      onClick={() => setWardrobeFocus("head")}
                     >
-                      {isEquipped ? "✓ Надет на игрока" : "Примерить аксессуар"}
+                      Голова
+                    </button>
+                    <button
+                      type="button"
+                      className={`store-wardrobe-tab ${wardrobeFocus === "full" ? "active" : ""}`}
+                      onClick={() => setWardrobeFocus("full")}
+                    >
+                      Во весь рост
+                    </button>
+                    <button
+                      type="button"
+                      className={`store-wardrobe-tab ${wardrobeFocus === "back" ? "active" : ""}`}
+                      onClick={() => setWardrobeFocus("back")}
+                    >
+                      Спина
                     </button>
                   </div>
-                );
-              })}
+                </div>
+
+                <div className="store-wardrobe-stage-card">
+                  <Wardrobe3DViewer
+                    skinUrl={currentSkinUrl}
+                    capeUrl={currentCapeUrl}
+                    model={skinModel}
+                    focusZone={wardrobeFocus}
+                    equippedHead={activeCos === "Корона Монарха" ? "crown" : null}
+                  />
+                </div>
+              </div>
             </div>
           )}
 

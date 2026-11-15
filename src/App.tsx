@@ -1051,6 +1051,8 @@ export const App: React.FC = () => {
         buttonShapePreset={buttonShapePreset}
         onChangeButtonShapePreset={handleChangeButtonShapePreset}
         skinUrl={activeSkinUrl}
+        capeUrl={activeCapeUrl}
+        model={skinModel}
         selectedInstance={selectedInstance}
         menusCustomization={menusCustomization}
         onOpenMenuCustomizer={handleOpenMenuCustomizer}
