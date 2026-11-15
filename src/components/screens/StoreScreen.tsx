@@ -11,15 +11,6 @@ interface StoreScreenProps {
   currentSkinUrl?: string;
 }
 
-interface SkinData {
-  name: string;
-  category: string;
-  palette: string[];
-  whiteEyes?: boolean;
-  url: string;
-  model: "default" | "slim";
-}
-
 interface RecentSkinItem {
   name: string;
   url: string;
@@ -34,52 +25,6 @@ const RC: Record<string, string> = {
   Эпический: "#b9a3c7",
   Легендарный: "#d4a088",
 };
-
-const SK: SkinData[] = [
-  {
-    name: "Dream",
-    category: "Ютубер",
-    palette: ["#ece8dc", "#7fbf5a", "#7fbf5a", "#e6e6e6"],
-    url: PRESET_SKINS.dream,
-    model: "slim",
-  },
-  {
-    name: "Classic Steve",
-    category: "Классика",
-    palette: ["#c58c6b", "#4a3320", "#3aa6b0", "#3b3f9a"],
-    url: PRESET_SKINS.steve,
-    model: "default",
-  },
-  {
-    name: "Slim Alex",
-    category: "Классика (3px)",
-    palette: ["#c58c6b", "#b5622f", "#6aa84f", "#7a5a3a"],
-    url: PRESET_SKINS.alex,
-    model: "slim",
-  },
-  {
-    name: "Technoblade",
-    category: "Легенда",
-    palette: ["#e8a9a0", "#e0c040", "#b83a3a", "#333840"],
-    url: PRESET_SKINS.technoblade,
-    model: "default",
-  },
-  {
-    name: "Herobrine",
-    category: "Крипи",
-    palette: ["#c58c6b", "#4a3320", "#3aa6b0", "#3b3f9a"],
-    whiteEyes: true,
-    url: "https://minotar.net/skin/MHF_Herobrine",
-    model: "default",
-  },
-  {
-    name: "Notch",
-    category: "Создатель",
-    palette: ["#e8a9a0", "#2e2e2e", "#6b4a2e", "#8e9298"],
-    url: "https://minotar.net/skin/Notch",
-    model: "default",
-  },
-];
 
 const CP = [
   {
@@ -191,7 +136,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   currentSkinUrl,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>("skins");
-  const [skinsSubTab, setSkinsSubTab] = useState<"inside" | "presets">("inside");
   const [activeSkin, setActiveSkin] = useState<string>("Dream");
   const [activeCape, setActiveCape] = useState<string>("");
   const [activePet, setActivePet] = useState<string>("Малая панда");
@@ -253,9 +197,9 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     return () => window.clearTimeout(timer);
   }, [search]);
 
-  // Initial load of Page 1 when tab, subtab, or debounced search changes
+  // Initial load of Page 1 when tab or debounced search changes
   const fetchInitialSkins = useCallback(async () => {
-    if (activeTab !== "skins" || skinsSubTab !== "inside") return;
+    if (activeTab !== "skins") return;
 
     const currentReqId = ++reqIdRef.current;
     currentPageRef.current = 1;
@@ -284,7 +228,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
         setIsLoadingInside(false);
       }
     }
-  }, [activeTab, skinsSubTab, debouncedSearch]);
+  }, [activeTab, debouncedSearch]);
 
   useEffect(() => {
     fetchInitialSkins();
@@ -296,8 +240,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
       isLoadingRef.current ||
       isLoadingMoreRef.current ||
       !hasMoreRef.current ||
-      activeTab !== "skins" ||
-      skinsSubTab !== "inside"
+      activeTab !== "skins"
     ) {
       return;
     }
@@ -336,39 +279,60 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
         setIsLoadingMore(false);
       }
     }
-  }, [activeTab, skinsSubTab, debouncedSearch]);
+  }, [activeTab, debouncedSearch]);
 
-  // Native IntersectionObserver for 60 FPS Infinite Scroll (matching ModrinthScreen)
+  // Dual-trigger infinite scroll (IntersectionObserver + Scroll Listener for 100% reliability)
   useEffect(() => {
     const wrap = wrapRef.current;
-    const sentinel = sentinelRef.current;
-    if (!sentinel || !wrap || activeTab !== "skins" || skinsSubTab !== "inside") return;
+    if (!wrap || activeTab !== "skins") return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (
-          entry &&
-          entry.isIntersecting &&
-          !isLoadingRef.current &&
-          !isLoadingMoreRef.current &&
-          hasMoreRef.current
-        ) {
+    // 1. Passive scroll listener
+    const handleScroll = () => {
+      if (
+        !isLoadingRef.current &&
+        !isLoadingMoreRef.current &&
+        hasMoreRef.current
+      ) {
+        const scrollBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight;
+        if (scrollBottom < 350) {
           loadMore();
         }
-      },
-      {
-        root: wrap,
-        rootMargin: "250px",
-        threshold: 0,
       }
-    );
-
-    observer.observe(sentinel);
-    return () => {
-      observer.disconnect();
     };
-  }, [loadMore, activeTab, skinsSubTab]);
+
+    wrap.addEventListener("scroll", handleScroll, { passive: true });
+
+    // 2. IntersectionObserver on sentinel
+    let observer: IntersectionObserver | null = null;
+    const sentinel = sentinelRef.current;
+    if (sentinel && typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          if (
+            entry &&
+            entry.isIntersecting &&
+            !isLoadingRef.current &&
+            !isLoadingMoreRef.current &&
+            hasMoreRef.current
+          ) {
+            loadMore();
+          }
+        },
+        {
+          root: wrap,
+          rootMargin: "300px",
+          threshold: 0,
+        }
+      );
+      observer.observe(sentinel);
+    }
+
+    return () => {
+      wrap.removeEventListener("scroll", handleScroll);
+      if (observer) observer.disconnect();
+    };
+  }, [loadMore, activeTab, insideSkins.length]);
 
   const saveRecentSkin = (
     name: string,
@@ -448,36 +412,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     } finally {
       setIsApplying(null);
     }
-  };
-
-  const renderFigure = (p: string[], w?: boolean, headOnly?: boolean) => {
-    const eyeColor = w ? "#fff" : "#2a2a2a";
-    if (headOnly) {
-      return (
-        <svg viewBox="4 0 8 8" shapeRendering="crispEdges">
-          <rect x="4" y="0" width="8" height="8" fill={p[0]} />
-          <rect x="4" y="0" width="8" height="3" fill={p[1]} />
-          <rect x="5" y="4" width="2" height="1" fill={eyeColor} />
-          <rect x="9" y="4" width="2" height="1" fill={eyeColor} />
-        </svg>
-      );
-    }
-    return (
-      <svg viewBox="0 0 16 32" shapeRendering="crispEdges">
-        <rect x="4" y="0" width="8" height="8" fill={p[0]} />
-        <rect x="4" y="0" width="8" height="3" fill={p[1]} />
-        <rect x="5" y="4" width="2" height="1" fill={eyeColor} />
-        <rect x="9" y="4" width="2" height="1" fill={eyeColor} />
-        <rect x="4" y="8" width="8" height="12" fill={p[2]} />
-        <rect x="0" y="8" width="4" height="12" fill={p[2]} />
-        <rect x="12" y="8" width="4" height="12" fill={p[2]} />
-        <rect x="0" y="17" width="4" height="3" fill={p[0]} />
-        <rect x="12" y="17" width="4" height="3" fill={p[0]} />
-        <rect x="4" y="20" width="4" height="12" fill={p[3]} />
-        <rect x="8" y="20" width="4" height="12" fill={p[3]} />
-        <rect x="4" y="29" width="8" height="3" fill="#4a4f58" />
-      </svg>
-    );
   };
 
   const q = search.trim().toLowerCase();
@@ -619,140 +553,80 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
           </div>
         )}
 
-        {/* SKINS SUB-TABS */}
-        {activeTab === "skins" && (
-          <div className="store-subtabs">
-            <button
-              type="button"
-              className={`store-subtab-btn ${skinsSubTab === "inside" ? "active" : ""}`}
-              onClick={() => {
-                setSkinsSubTab("inside");
-              }}
-            >
-              <span>Каталог по никам (54 000+)</span>
-              {insideSkins.length > 0 && (
-                <span style={{ opacity: 0.7 }}>· Загружено: {insideSkins.length}</span>
-              )}
-            </button>
-            <button
-              type="button"
-              className={`store-subtab-btn ${skinsSubTab === "presets" ? "active" : ""}`}
-              onClick={() => setSkinsSubTab("presets")}
-            >
-              <span>Популярные пресеты ({SK.length})</span>
-            </button>
-          </div>
-        )}
-
         {/* Content output */}
         <div id="out">
-          {/* SKINS TAB */}
+          {/* SKINS TAB (Infinite Scroll direct live catalog) */}
           {activeTab === "skins" && (
             <>
-              {skinsSubTab === "inside" ? (
+              {isLoadingInside ? (
+                <div className="store-loading-state">
+                  <IsometricCube size={48} variant="emerald" />
+                  <div>Загрузка каталога скинов по никам...</div>
+                </div>
+              ) : insideError ? (
+                <div className="store-error-state">
+                  <p>Не удалось подключиться к базе скинов: {insideError}</p>
+                  <button
+                    type="button"
+                    className="store-retry-btn"
+                    onClick={fetchInitialSkins}
+                  >
+                    Повторить попытку
+                  </button>
+                </div>
+              ) : insideSkins.length === 0 ? (
+                <div className="store-error-state">
+                  <p>Скинов не найдено по запросу «{debouncedSearch}»</p>
+                  {debouncedSearch && (
+                    <button
+                      type="button"
+                      className="store-retry-btn"
+                      onClick={() => setSearch("")}
+                    >
+                      Сбросить поиск
+                    </button>
+                  )}
+                </div>
+              ) : (
                 <>
-                  {isLoadingInside ? (
-                    <div className="store-loading-state">
-                      <IsometricCube size={48} variant="emerald" />
-                      <div>Загрузка каталога скинов по никам...</div>
-                    </div>
-                  ) : insideError ? (
-                    <div className="store-error-state">
-                      <p>Не удалось подключиться к базе скинов: {insideError}</p>
-                      <button
-                        type="button"
-                        className="store-retry-btn"
-                        onClick={fetchInitialSkins}
-                      >
-                        Повторить попытку
-                      </button>
-                    </div>
-                  ) : insideSkins.length === 0 ? (
-                    <div className="store-error-state">
-                      <p>Скинов не найдено по запросу «{debouncedSearch}»</p>
-                      {debouncedSearch && (
-                        <button
-                          type="button"
-                          className="store-retry-btn"
-                          onClick={() => setSearch("")}
-                        >
-                          Сбросить поиск
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <>
-                      <div
-                        className="grid"
-                        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))" }}
-                      >
-                        {insideSkins.map((skin) => {
-                          const isEquipped =
-                            activeSkin.toLowerCase() === skin.nickname.toLowerCase() ||
-                            currentSkinUrl === skin.skinUrl;
-                          const isApplyingThis = isApplying === skin.nickname;
+                  <div
+                    className="grid"
+                    style={{ gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))" }}
+                  >
+                    {insideSkins.map((skin) => {
+                      const isEquipped =
+                        activeSkin.toLowerCase() === skin.nickname.toLowerCase() ||
+                        currentSkinUrl === skin.skinUrl;
+                      const isApplyingThis = isApplying === skin.nickname;
 
-                          return (
-                            <InsideSkinCard
-                              key={`${skin.nickname}-${skin.skinUrl}`}
-                              skin={skin}
-                              isEquipped={isEquipped}
-                              isApplying={isApplyingThis}
-                              onEquip={handleEquipInsideSkin}
-                            />
-                          );
-                        })}
+                      return (
+                        <InsideSkinCard
+                          key={`${skin.nickname}-${skin.skinUrl}`}
+                          skin={skin}
+                          isEquipped={isEquipped}
+                          isApplying={isApplyingThis}
+                          onEquip={handleEquipInsideSkin}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {/* Sentinel element to trigger automatic infinite scroll */}
+                  <div
+                    ref={sentinelRef}
+                    style={{ height: "4px", width: "100%", pointerEvents: "none" }}
+                    aria-hidden="true"
+                  />
+
+                  {isLoadingMore && (
+                    <div className="store-load-more">
+                      <div className="spin-cube">
+                        <IsometricCube size={24} variant="emerald" />
                       </div>
-
-                      {/* Sentinel element to trigger automatic infinite scroll */}
-                      <div
-                        ref={sentinelRef}
-                        style={{ height: "1px", width: "100%", pointerEvents: "none" }}
-                        aria-hidden="true"
-                      />
-
-                      {isLoadingMore && (
-                        <div className="store-load-more">
-                          <div className="spin-cube">
-                            <IsometricCube size={24} variant="emerald" />
-                          </div>
-                          <span>Загрузка ещё скинов...</span>
-                        </div>
-                      )}
-                    </>
+                      <span>Загрузка ещё скинов...</span>
+                    </div>
                   )}
                 </>
-              ) : (
-                /* PRESETS SUBTAB */
-                <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))" }}>
-                  {SK.filter(
-                    (s) =>
-                      !q ||
-                      s.name.toLowerCase().includes(q) ||
-                      s.category.toLowerCase().includes(q)
-                  ).map((s) => {
-                    const isEquipped = activeSkin === s.name || currentSkinUrl === s.url;
-                    return (
-                      <div key={s.name} className="card ctr">
-                        <div className="pv">{renderFigure(s.palette, s.whiteEyes)}</div>
-                        <div className="nm">{s.name}</div>
-                        <div className="ms">{s.category}</div>
-                        <button
-                          type="button"
-                          className={`b ${isEquipped ? "on" : ""}`}
-                          onClick={() => {
-                            setActiveSkin(s.name);
-                            onEquipSkin(s.url, s.model);
-                            saveRecentSkin(s.name, s.url, undefined, s.model);
-                            showToast(`Скин ${s.name} надет!`);
-                          }}
-                        >
-                          {isEquipped ? "✓ Надет" : "Примерить в 3D"}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
               )}
             </>
           )}
