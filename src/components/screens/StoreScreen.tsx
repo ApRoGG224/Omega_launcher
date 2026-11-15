@@ -91,6 +91,14 @@ const CAPE_METADATA: Record<string, { title: string; desc: string }> = {
     title: "Follower Cape",
     desc: "Эксклюзивный плащ подписчика сообщества Minecraft",
   },
+  pan: {
+    title: "Pancake Cape",
+    desc: "Эксклюзивный плащ со сковородой и блинчиками",
+  },
+  pancake: {
+    title: "Pancake Cape",
+    desc: "Эксклюзивный плащ со сковородой и блинчиками",
+  },
 };
 
 function getCapeDetails(cape: MicrosoftCapeItem): { title: string; desc: string } {

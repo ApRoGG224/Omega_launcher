@@ -27,6 +27,7 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Rotation and dragging state refs
+  const baseYRef = useRef<number>(Math.PI - 0.38);
   const rotYRef = useRef<number>(0);
   const rotXRef = useRef<number>(0);
   const isDraggingRef = useRef<boolean>(false);
@@ -48,53 +49,50 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
 
     // Three.js Scene, Camera, and Renderer
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(32, aspect, 0.1, 100);
-    camera.position.set(0, -8, 29);
+    const camera = new THREE.PerspectiveCamera(30, aspect, 0.1, 100);
+    camera.position.set(0, -8, 33);
     camera.lookAt(0, -8, 0);
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
       alpha: true,
-      antialias: false,
-      powerPreference: "low-power",
+      antialias: true,
+      powerPreference: "high-performance",
     });
     renderer.setSize(currentW, currentH);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0x000000, 0);
 
-    // Subtle, authentic Minecraft directional & ambient lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
+    // Balanced Minecraft lighting to preserve true texture colors without washing them out
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(ambientLight);
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 0.7);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 0.20);
     mainLight.position.set(12, 18, 20);
     scene.add(mainLight);
 
-    const fillLight = new THREE.DirectionalLight(0x8ba0be, 0.4);
+    const fillLight = new THREE.DirectionalLight(0x708090, 0.1);
     fillLight.position.set(-15, -12, -15);
     scene.add(fillLight);
 
     // Cape Object from skinview3d
     const cape = new CapeObject();
-    // Base orientation: Minecraft capes have the decorated outside facing -Z.
-    // Rotate 180 degrees so the back faces +Z towards the camera,
-    // with a crisp 3D isometric tilt (~22 degrees) to show depth and edge thickness.
-    const baseY = Math.PI - 0.38;
     const baseX = 0.12;
-    cape.rotation.y = baseY;
     cape.rotation.x = baseX;
+    cape.rotation.y = baseYRef.current;
     scene.add(cape);
 
     // Direct render call
     const renderScene = () => {
       if (disposed) return;
-      cape.rotation.y = baseY + rotYRef.current;
+      cape.rotation.y = baseYRef.current + rotYRef.current;
       cape.rotation.x = baseX + rotXRef.current;
       renderer.render(scene, camera);
     };
     renderSceneRef.current = renderScene;
 
-    // Initial render placeholder
+    // Initial placeholder render
     renderScene();
 
     // Fetch and load cape texture as data URL to bypass any CORS restrictions
@@ -113,35 +111,74 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
 
         if (disposed) return;
 
-        const loader = new THREE.TextureLoader();
-        loader.load(
-          finalUrl,
-          (tex) => {
-            if (disposed) {
-              tex.dispose();
-              return;
-            }
-            tex.magFilter = THREE.NearestFilter;
-            tex.minFilter = THREE.NearestFilter;
-            tex.generateMipmaps = false;
-            tex.colorSpace = THREE.SRGBColorSpace;
-            tex.needsUpdate = true;
-            textureToDispose = tex;
+        // Load into HTML Image to analyze pixel colors and normalize UV dimensions
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error("Ошибка загрузки текстуры"));
+          img.src = finalUrl;
+        });
 
-            cape.map = tex;
-            setLoading(false);
-            renderScene();
-          },
-          undefined,
-          (err) => {
-            if (disposed) return;
-            console.error("Failed to load 3D cape texture:", err);
-            setError("Ошибка текстуры");
-            setLoading(false);
+        if (disposed) return;
+
+        // Normalize cape image into 64x32 Minecraft cape UV coordinate space
+        const offCanvas = document.createElement("canvas");
+        offCanvas.width = 64;
+        offCanvas.height = 32;
+        const ctx = offCanvas.getContext("2d", { willReadFrequently: true });
+        if (!ctx) throw new Error("Canvas 2D context unavailable");
+
+        ctx.imageSmoothingEnabled = false;
+        ctx.clearRect(0, 0, 64, 32);
+        ctx.drawImage(img, 0, 0, 64, 32);
+
+        // Detect whether the main decorated artwork is located on Face 1 (x: 1..10, y: 1..16)
+        // or Face 2 (x: 12..21, y: 1..16).
+        // For Bedrock/Pan Capes, the design is in Face 1.
+        // For standard Java Capes, the design is in Face 2.
+        const f1Data = ctx.getImageData(1, 1, 10, 16).data;
+        const f2Data = ctx.getImageData(12, 1, 10, 16).data;
+
+        const f1Colors = new Set<string>();
+        const f2Colors = new Set<string>();
+        for (let i = 0; i < f1Data.length; i += 4) {
+          if (f1Data[i + 3] > 10) {
+            f1Colors.add(`${f1Data[i]},${f1Data[i + 1]},${f1Data[i + 2]}`);
           }
-        );
+        }
+        for (let i = 0; i < f2Data.length; i += 4) {
+          if (f2Data[i + 3] > 10) {
+            f2Colors.add(`${f2Data[i]},${f2Data[i + 1]},${f2Data[i + 2]}`);
+          }
+        }
+
+        // If Face 1 has more distinct colors than Face 2, Face 1 contains the artwork (+Z face).
+        // Otherwise Face 2 contains the artwork (-Z face).
+        const showF1 = f1Colors.size > f2Colors.size;
+        baseYRef.current = showF1 ? -0.38 : Math.PI - 0.38;
+
+        const tex = new THREE.CanvasTexture(offCanvas);
+        tex.magFilter = THREE.NearestFilter;
+        tex.minFilter = THREE.NearestFilter;
+        tex.generateMipmaps = false;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.needsUpdate = true;
+        textureToDispose = tex;
+
+        cape.map = tex;
+        const capeMesh = cape.children[0] as THREE.Mesh | undefined;
+        if (capeMesh && capeMesh.material instanceof THREE.MeshStandardMaterial) {
+          capeMesh.material.roughness = 1.0;
+          capeMesh.material.metalness = 0.0;
+          capeMesh.material.needsUpdate = true;
+        }
+
+        setLoading(false);
+        renderScene();
       } catch (err: any) {
         if (disposed) return;
+        console.error("Failed to load 3D cape texture:", err);
         setError(err?.message || "Ошибка загрузки");
         setLoading(false);
       }
@@ -161,7 +198,7 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
           waveY = Math.sin(elapsed * 1.6) * 0.12;
           waveX = Math.cos(elapsed * 1.3) * 0.03;
         }
-        cape.rotation.y = baseY + waveY + rotYRef.current;
+        cape.rotation.y = baseYRef.current + waveY + rotYRef.current;
         cape.rotation.x = baseX + waveX + rotXRef.current;
         renderer.render(scene, camera);
         animId = requestAnimationFrame(renderFrame);
@@ -265,7 +302,6 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
           width: "100%",
           height: "100%",
           display: "block",
-          imageRendering: "pixelated",
         }}
       />
 
