@@ -52,44 +52,80 @@ export async function fetchProjectVersions(projectId: string): Promise<any[]> {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-interface CachedManifest {
-  fetchedAt: number;
-  versions: any[];
+export interface MojangVersionItem {
+  id: string;
+  type: "release" | "snapshot" | "old_beta" | "old_alpha";
+  url: string;
+  time: string;
+  releaseTime: string;
+  sha1?: string;
+  complianceLevel?: number;
 }
 
-function readCachedManifest(): any[] | null {
+export interface MojangVersionManifestData {
+  latest: {
+    release: string;
+    snapshot: string;
+  };
+  versions: MojangVersionItem[];
+}
+
+interface CachedManifest {
+  fetchedAt: number;
+  latest: {
+    release: string;
+    snapshot: string;
+  };
+  versions: MojangVersionItem[];
+}
+
+function readCachedManifest(): MojangVersionManifestData | null {
   const cached = localStorage.getItem(MANIFEST_CACHE_KEY);
   if (!cached) return null;
   try {
     const parsed: CachedManifest = JSON.parse(cached);
     if (Date.now() - parsed.fetchedAt > MANIFEST_TTL_MS) return null;
     if (!Array.isArray(parsed.versions) || parsed.versions.length === 0) return null;
-    return parsed.versions;
+    return {
+      latest: parsed.latest || { release: "26.3", snapshot: "26.4-snapshot-8" },
+      versions: parsed.versions,
+    };
   } catch {
     return null;
   }
 }
 
-function cacheManifest(versions: any[]) {
+function cacheManifest(data: MojangVersionManifestData) {
   try {
-    const payload: CachedManifest = { fetchedAt: Date.now(), versions };
+    const payload: CachedManifest = {
+      fetchedAt: Date.now(),
+      latest: data.latest,
+      versions: data.versions,
+    };
     localStorage.setItem(MANIFEST_CACHE_KEY, JSON.stringify(payload));
   } catch {
     // Cache is best-effort; ignore quota issues.
   }
 }
 
-export async function fetchVersionManifest(retries = 2): Promise<any[]> {
+export async function fetchFullVersionManifest(retries = 2): Promise<MojangVersionManifestData> {
   const cached = readCachedManifest();
   if (cached) return cached;
 
   // Prefer the native 24h file cache inside app_cache_dir.
   try {
     const { ipc } = await import("./ipc");
-    const data = (await ipc.getCachedVersionManifest()) as { versions?: any[] };
+    const data = (await ipc.getCachedVersionManifest()) as {
+      latest?: { release: string; snapshot: string };
+      versions?: MojangVersionItem[];
+    };
     if (data && Array.isArray(data.versions) && data.versions.length > 0) {
-      cacheManifest(data.versions);
-      return data.versions;
+      const result: MojangVersionManifestData = {
+        latest: data.latest || { release: "26.3", snapshot: "26.4-snapshot-8" },
+        versions: data.versions,
+      };
+      cacheManifest(result);
+      return result;
     }
   } catch {
     // Native cache unavailable (browser dev) - fall through to network fetch.
@@ -102,8 +138,12 @@ export async function fetchVersionManifest(retries = 2): Promise<any[]> {
       if (!res.ok) throw new Error(`Version manifest request failed (${res.status})`);
       const data = await res.json();
       if (data && Array.isArray(data.versions)) {
-        cacheManifest(data.versions);
-        return data.versions;
+        const result: MojangVersionManifestData = {
+          latest: data.latest || { release: "26.3", snapshot: "26.4-snapshot-8" },
+          versions: data.versions,
+        };
+        cacheManifest(result);
+        return result;
       }
       throw new Error("Version manifest has no versions array");
     } catch (e) {
@@ -112,4 +152,9 @@ export async function fetchVersionManifest(retries = 2): Promise<any[]> {
     }
   }
   throw lastError;
+}
+
+export async function fetchVersionManifest(retries = 2): Promise<MojangVersionItem[]> {
+  const full = await fetchFullVersionManifest(retries);
+  return full.versions;
 }

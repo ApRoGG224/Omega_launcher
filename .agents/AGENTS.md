@@ -110,6 +110,14 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
     - Synchronized heights of the left tools bar and right wardrobe header (32px), with enlarged full-height framing (camera `Z = 48.0`, card height 440px, width 460px) filling ~88% of vertical viewport without cutoffs or scrolling.
     - Dynamic camera glide & focus: smoothly lerps camera position to close-up head focus when equipping the Crown, with manual toggle tabs for "Голова", "Во весь рост", and "Спина".
     - Single-click equipping/unequipping with instant `omega:cosmetics_updated` event dispatch and persistent storage in `localStorage` (`omega:equipped_cosmetics`).
+- **Complete Minecraft Version & Snapshot Catalog Integration (`useVersions.ts`, `api.ts`, `InstancesScreen.tsx`, `InstancesModal.tsx`, `java.rs`):**
+  - Integrated official Mojang Version Manifest V2 (`https://piston-meta.mojang.com/mc/game/version_manifest_v2.json`) providing live access to all 923+ official Minecraft versions (103 releases from `26.3` down to `1.0`, 759 weekly snapshots from `26.4-snapshot-8` down to `11w47a`, and 61 historical beta/alpha versions).
+  - Dynamic smart tagging with visual badges: `ПОСЛЕДНИЙ РЕЛИЗ` (emerald), `НОВЫЙ СНАПШОТ` (violet), `СТАБИЛЬНАЯ` (`1.20.1`), `КЛАССИКА` (`1.16.5`), `FORGE LEGACY` (`1.12.2`), `РЕЛИЗ`, `СНАПШОТ`, `BETA`, `ALPHA`.
+  - Comprehensive built-in offline fallback list containing all 103 releases and top 20 modern snapshots, ensuring zero UI blank states during offline mode.
+  - High-performance UI pagination (60 versions chunking with "Показать ещё" button) and real-time search filtering by version number, year, or tag name.
+  - Snapshot toggle filter with live count badge (`Показать снапшоты (759)`), allowing seamless switching between stable releases and experimental snapshots.
+  - Multi-tier 24h caching in `app_cache_dir/versions.json` and `localStorage` for instantaneous offline/startup loads.
+  - Enhanced Java detection in `src-tauri/src/java.rs` parsing weekly snapshots (e.g. `25w06a`, `24w45a`) and accurately provisioning Java 21 / 25 runtimes.
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 

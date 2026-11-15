@@ -5,7 +5,24 @@ use tauri::AppHandle;
 use crate::util::{emit_line, extract_zip};
 
 pub fn required_java_version(mc_version: &str) -> u32 {
-    let parts: Vec<&str> = mc_version.split('.').collect();
+    let clean = mc_version.trim();
+    // Handle weekly snapshots like 25w06a, 24w45a, 20w14a
+    if let Some(pos) = clean.find('w') {
+        if let Ok(year) = clean[..pos].parse::<u32>() {
+            if year >= 26 {
+                return 25;
+            } else if year >= 24 {
+                return 21;
+            } else if year >= 21 {
+                return 17;
+            } else if year >= 20 {
+                return 16;
+            } else {
+                return 8;
+            }
+        }
+    }
+    let parts: Vec<&str> = clean.split('.').collect();
     let major: u32 = parts.get(0).and_then(|p| p.parse().ok()).unwrap_or(0);
     let minor: u32 = parts.get(1).and_then(|p| p.parse().ok()).unwrap_or(0);
     let patch: u32 = parts.get(2).and_then(|p| p.parse().ok()).unwrap_or(0);

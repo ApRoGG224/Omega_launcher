@@ -3624,6 +3624,60 @@
   font-weight: 700 !important;
 }
 
+.nc-tag-badge {
+  padding: 2px 7px !important;
+  border-radius: 4px !important;
+  font-size: 10px !important;
+  letter-spacing: 0.06em !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  transition: 0.15s !important;
+}
+
+.nc-tag-badge.tag-latest {
+  color: #34d399 !important;
+  background: rgba(52, 211, 153, 0.14) !important;
+  border: 1px solid rgba(52, 211, 153, 0.35) !important;
+}
+
+.nc-tag-badge.tag-new-snap {
+  color: #a78bfa !important;
+  background: rgba(167, 139, 250, 0.14) !important;
+  border: 1px solid rgba(167, 139, 250, 0.35) !important;
+}
+
+.nc-tag-badge.tag-rust {
+  color: #f97316 !important;
+  background: rgba(249, 115, 22, 0.14) !important;
+  border: 1px solid rgba(249, 115, 22, 0.35) !important;
+}
+
+.nc-versions-count {
+  font-size: 11px !important;
+  color: #8b919c !important;
+  font-weight: 500 !important;
+  margin-left: auto !important;
+}
+
+.nc-load-more-btn {
+  width: 100% !important;
+  padding: 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: #9ca3af !important;
+  border: none !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  text-align: center !important;
+}
+
+.nc-load-more-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
 .nc-none {
   padding: 18px !important;
   text-align: center !important;

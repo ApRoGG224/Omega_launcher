@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { IsometricCube } from "../icons/IsometricCube";
 import type { InstanceData } from "../../types";
+import { useVersions } from "../../hooks/useVersions";
 
 interface InstancesModalProps {
   onClose: () => void;
@@ -22,6 +23,7 @@ export const InstancesModal: React.FC<InstancesModalProps> = ({
   const [newName, setNewName] = useState("");
   const [newVersion, setNewVersion] = useState("1.21.4");
   const [newLoader, setNewLoader] = useState<InstanceData["loader"]>("Fabric");
+  const { allVersions } = useVersions();
 
   const currentInstance =
     instances.find((i) => i.id === selectedInstanceId) || instances[0];
@@ -321,14 +323,13 @@ export const InstancesModal: React.FC<InstancesModalProps> = ({
                       }}
                     >
                       {newLoader === "Rust" ? (
-                        <option value="26.3">26.3</option>
+                        <option value="26.3">26.3 (Rust Client)</option>
                       ) : (
-                        <>
-                          <option value="1.21.4">1.21.4 (Latest)</option>
-                          <option value="1.20.1">1.20.1 (Stable)</option>
-                          <option value="1.19.2">1.19.2</option>
-                          <option value="1.16.5">1.16.5 (Classic Forge)</option>
-                        </>
+                        allVersions.map((v) => (
+                          <option key={v.version} value={v.version}>
+                            {v.version} ({v.tag})
+                          </option>
+                        ))
                       )}
                     </select>
                   </div>
