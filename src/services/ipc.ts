@@ -22,6 +22,13 @@ export interface MinecraftInsideSkinItem {
   renderUrl: string;
 }
 
+export interface MicrosoftCapeItem {
+  id: string;
+  state: "ACTIVE" | "INACTIVE" | string;
+  url: string;
+  alias: string;
+}
+
 export interface MinecraftInsidePage {
   skins: MinecraftInsideSkinItem[];
   currentPage: number;
@@ -53,6 +60,18 @@ export const ipc = {
 
   async getCachedMicrosoftAccount(): Promise<{ name: string; uuid: string; type: "microsoft" } | null> {
     return invoke<{ name: string; uuid: string; type: "microsoft" } | null>("get_cached_microsoft_account");
+  },
+
+  async getMicrosoftCapes(): Promise<MicrosoftCapeItem[]> {
+    return invoke<MicrosoftCapeItem[]>("get_microsoft_capes");
+  },
+
+  async equipMicrosoftCape(capeId: string): Promise<string> {
+    return invoke<string>("equip_microsoft_cape", { capeId });
+  },
+
+  async unequipMicrosoftCape(): Promise<string> {
+    return invoke<string>("unequip_microsoft_cape");
   },
 
   async uploadMicrosoftSkin(skinData: string, variant: string): Promise<string> {

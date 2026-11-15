@@ -251,6 +251,209 @@ pub async fn get_microsoft_skin(app: AppHandle, username: String) -> Result<Opti
         }))
 }
 
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
+pub struct MicrosoftCapeItem {
+    pub id: String,
+    pub state: String,
+    pub url: String,
+    pub alias: String,
+}
+
+/// Retrieves all official Minecraft capes owned by the logged-in Microsoft account.
+#[tauri::command]
+pub async fn get_microsoft_capes(app: AppHandle) -> Result<Vec<MicrosoftCapeItem>, String> {
+    try_refresh_cached_token(&app).await?;
+    let auth = read_cached_auth(&app).ok_or("NO_MICROSOFT_ACCOUNT")?;
+    let mut access_token = auth
+        .get("access_token")
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+        .ok_or("NO_MICROSOFT_ACCOUNT")?
+        .to_string();
+
+    let client = auth_client()?;
+    let mut response = send_with_retry(
+        || {
+            client
+                .get("https://api.minecraftservices.com/minecraft/profile")
+                .header(ACCEPT, "application/json")
+                .header(ACCEPT_ENCODING, "identity")
+                .bearer_auth(&access_token)
+        },
+        "Microsoft capes profile",
+        Some(&app),
+    )
+    .await?;
+
+    if response.status() == reqwest::StatusCode::UNAUTHORIZED {
+        emit_auth_log(&app, "[MS_AUTH]: Токен истёк при получении плащей, обновляем авторизацию...");
+        if try_refresh_cached_token_forced(&app).await.is_ok() {
+            if let Some(fresh_auth) = read_cached_auth(&app) {
+                if let Some(fresh_tok) = fresh_auth.get("access_token").and_then(|v| v.as_str()) {
+                    access_token = fresh_tok.to_string();
+                    response = send_with_retry(
+                        || {
+                            client
+                                .get("https://api.minecraftservices.com/minecraft/profile")
+                                .header(ACCEPT, "application/json")
+                                .header(ACCEPT_ENCODING, "identity")
+                                .bearer_auth(&access_token)
+                        },
+                        "Microsoft capes profile (retry)",
+                        Some(&app),
+                    )
+                    .await?;
+                }
+            }
+        }
+    }
+
+    let profile = json_response(response, "Microsoft capes profile").await?;
+
+    let mut capes = Vec::new();
+    if let Some(cape_list) = profile.get("capes").and_then(|v| v.as_array()) {
+        for c in cape_list {
+            let id = c.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
+            let state = c.get("state").and_then(|v| v.as_str()).unwrap_or("INACTIVE").to_string();
+            let raw_url = c.get("url").and_then(|v| v.as_str()).unwrap_or("");
+            let alias = c.get("alias").and_then(|v| v.as_str()).unwrap_or("Official Cape").to_string();
+            if !id.is_empty() && !raw_url.is_empty() {
+                let url = raw_url.replacen("http://", "https://", 1);
+                capes.push(MicrosoftCapeItem {
+                    id,
+                    state,
+                    url,
+                    alias,
+                });
+            }
+        }
+    }
+
+    Ok(capes)
+}
+
+/// Equips the specified official cape on the player's Microsoft Minecraft profile.
+#[tauri::command]
+pub async fn equip_microsoft_cape(app: AppHandle, cape_id: String) -> Result<String, String> {
+    try_refresh_cached_token(&app).await?;
+    let auth = read_cached_auth(&app).ok_or("NO_MICROSOFT_ACCOUNT")?;
+    let mut access_token = auth
+        .get("access_token")
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+        .ok_or("NO_MICROSOFT_ACCOUNT")?
+        .to_string();
+
+    let client = auth_client()?;
+    let body = serde_json::json!({ "capeId": cape_id });
+
+    let mut response = send_with_retry(
+        || {
+            client
+                .put("https://api.minecraftservices.com/minecraft/profile/capes/active")
+                .header(ACCEPT, "application/json")
+                .header(ACCEPT_ENCODING, "identity")
+                .bearer_auth(&access_token)
+                .json(&body)
+        },
+        "Equip Microsoft cape",
+        Some(&app),
+    )
+    .await?;
+
+    if response.status() == reqwest::StatusCode::UNAUTHORIZED {
+        emit_auth_log(&app, "[MS_AUTH]: Токен истёк при установке плаща, обновляем авторизацию...");
+        if try_refresh_cached_token_forced(&app).await.is_ok() {
+            if let Some(fresh_auth) = read_cached_auth(&app) {
+                if let Some(fresh_tok) = fresh_auth.get("access_token").and_then(|v| v.as_str()) {
+                    access_token = fresh_tok.to_string();
+                    response = send_with_retry(
+                        || {
+                            client
+                                .put("https://api.minecraftservices.com/minecraft/profile/capes/active")
+                                .header(ACCEPT, "application/json")
+                                .header(ACCEPT_ENCODING, "identity")
+                                .bearer_auth(&access_token)
+                                .json(&body)
+                        },
+                        "Equip Microsoft cape (retry)",
+                        Some(&app),
+                    )
+                    .await?;
+                }
+            }
+        }
+    }
+
+    let status = response.status();
+    if status.is_success() {
+        emit_auth_log(&app, "[MS_AUTH]: Плащ успешно установлен на аккаунте Microsoft!");
+        Ok("Плащ успешно надет".to_string())
+    } else {
+        let body_text = response.text().await.unwrap_or_default();
+        Err(format!("Ошибка установки плаща ({status}): {body_text}"))
+    }
+}
+
+/// Unequips the currently active cape from the player's Microsoft Minecraft profile.
+#[tauri::command]
+pub async fn unequip_microsoft_cape(app: AppHandle) -> Result<String, String> {
+    try_refresh_cached_token(&app).await?;
+    let auth = read_cached_auth(&app).ok_or("NO_MICROSOFT_ACCOUNT")?;
+    let mut access_token = auth
+        .get("access_token")
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+        .ok_or("NO_MICROSOFT_ACCOUNT")?
+        .to_string();
+
+    let client = auth_client()?;
+    let mut response = send_with_retry(
+        || {
+            client
+                .delete("https://api.minecraftservices.com/minecraft/profile/capes/active")
+                .header(ACCEPT, "application/json")
+                .header(ACCEPT_ENCODING, "identity")
+                .bearer_auth(&access_token)
+        },
+        "Unequip Microsoft cape",
+        Some(&app),
+    )
+    .await?;
+
+    if response.status() == reqwest::StatusCode::UNAUTHORIZED {
+        emit_auth_log(&app, "[MS_AUTH]: Токен истёк при снятии плаща, обновляем авторизацию...");
+        if try_refresh_cached_token_forced(&app).await.is_ok() {
+            if let Some(fresh_auth) = read_cached_auth(&app) {
+                if let Some(fresh_tok) = fresh_auth.get("access_token").and_then(|v| v.as_str()) {
+                    access_token = fresh_tok.to_string();
+                    response = send_with_retry(
+                        || {
+                            client
+                                .delete("https://api.minecraftservices.com/minecraft/profile/capes/active")
+                                .header(ACCEPT, "application/json")
+                                .header(ACCEPT_ENCODING, "identity")
+                                .bearer_auth(&access_token)
+                        },
+                        "Unequip Microsoft cape (retry)",
+                        Some(&app),
+                    )
+                    .await?;
+                }
+            }
+        }
+    }
+
+    let status = response.status();
+    if status.is_success() {
+        emit_auth_log(&app, "[MS_AUTH]: Плащ успешно снят с аккаунта Microsoft.");
+        Ok("Плащ снят".to_string())
+    } else {
+        let body_text = response.text().await.unwrap_or_default();
+        Err(format!("Ошибка снятия плаща ({status}): {body_text}"))
+    }
+}
+
 #[tauri::command]
 pub fn logout_microsoft(app: AppHandle) -> Result<(), String> {
     let path = app_data_dir(&app).join("ms_auth.json");

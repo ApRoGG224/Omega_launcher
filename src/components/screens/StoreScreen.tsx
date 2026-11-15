@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { PRESET_SKINS, PRESET_CAPES } from "../../constants/skinPresets";
-import { ipc, type MinecraftInsideSkinItem } from "../../services/ipc";
+import {
+  ipc,
+  type MinecraftInsideSkinItem,
+  type MicrosoftCapeItem,
+} from "../../services/ipc";
 import { IsometricCube } from "../icons/IsometricCube";
+import { Cape3DViewer } from "../common/Cape3DViewer";
+import type { AccountData } from "../../types";
 import "../../styles/screens.css";
 
 interface StoreScreenProps {
@@ -9,6 +15,8 @@ interface StoreScreenProps {
   onEquipSkin: (skinUrl: string, model: "default" | "slim") => void;
   onEquipCape: (capeUrl: string | null) => void;
   currentSkinUrl?: string;
+  account?: AccountData;
+  onLoginMicrosoft?: () => Promise<void>;
 }
 
 interface RecentSkinItem {
@@ -26,26 +34,81 @@ const RC: Record<string, string> = {
   Легендарный: "#d4a088",
 };
 
-const CP = [
-  {
-    name: "15th Anniversary Cape",
-    desc: "Официальный плащ к 15-летию Minecraft",
-    color: "#9d83c4",
-    url: PRESET_CAPES.anniversary,
+const CAPE_METADATA: Record<string, { title: string; desc: string }> = {
+  migrator: {
+    title: "Migrator Cape",
+    desc: "Официальный плащ за миграцию аккаунта Mojang в Microsoft",
   },
-  {
-    name: "Migrator Cape",
-    desc: "Плащ за миграцию аккаунта Mojang",
-    color: "#b5524a",
-    url: PRESET_CAPES.migrator,
+  "15th anniversary": {
+    title: "15th Anniversary Cape",
+    desc: "Праздничный плащ к 15-летию Minecraft (2024)",
   },
-  {
-    name: "Vanilla Cape",
+  "15_year": {
+    title: "15th Anniversary Cape",
+    desc: "Праздничный плащ к 15-летию Minecraft (2024)",
+  },
+  vanilla: {
+    title: "Vanilla Cape",
     desc: "Эксклюзивный плащ для владельцев Java & Bedrock",
-    color: "#8f6fb8",
-    url: PRESET_CAPES.vanilla,
   },
-];
+  "cherry blossom": {
+    title: "Cherry Blossom Cape",
+    desc: "Плащ цветения сакуры в честь голосования мобов Minecraft Live 2023",
+  },
+  cherry: {
+    title: "Cherry Blossom Cape",
+    desc: "Плащ цветения сакуры в честь голосования мобов Minecraft Live 2023",
+  },
+  "purple heart": {
+    title: "Twitch Purple Heart Cape",
+    desc: "Эксклюзивный фиолетовый плащ за поддержку стримеров на Twitch",
+  },
+  twitch: {
+    title: "Twitch Cape",
+    desc: "Официальный плащ Twitch за просмотр трансляций Minecraft",
+  },
+  tiktok: {
+    title: "TikTok Cape",
+    desc: "Эксклюзивный плащ коллаборации с TikTok",
+  },
+  "mojang studios": {
+    title: "Mojang Studios Cape",
+    desc: "Официальный плащ разработчиков и сотрудников Mojang Studios",
+  },
+  mojang: {
+    title: "Mojang Studios Cape",
+    desc: "Официальный плащ разработчиков и сотрудников Mojang Studios",
+  },
+  prismarine: {
+    title: "MCC Prismarine Cape",
+    desc: "Плащ совместного 15-летия Minecraft и чемпионата MCC",
+  },
+  mcc: {
+    title: "MCC Prismarine Cape",
+    desc: "Плащ совместного 15-летия Minecraft и чемпионата MCC",
+  },
+  follower: {
+    title: "Follower Cape",
+    desc: "Эксклюзивный плащ подписчика сообщества Minecraft",
+  },
+};
+
+function getCapeDetails(cape: MicrosoftCapeItem): { title: string; desc: string } {
+  const rawAlias = (cape.alias || "").trim();
+  const lower = rawAlias.toLowerCase();
+  if (CAPE_METADATA[lower]) {
+    return CAPE_METADATA[lower];
+  }
+  for (const [key, meta] of Object.entries(CAPE_METADATA)) {
+    if (lower.includes(key)) {
+      return meta;
+    }
+  }
+  return {
+    title: rawAlias ? `${rawAlias} Cape` : "Minecraft Cape",
+    desc: "Официальный плащ учётной записи Microsoft Mojang",
+  };
+}
 
 const PT: Array<[string, string, string, string]> = [
   ["Малая панда", "Эпический", "Компаньон · Панда", "Очаровательная панда, следующая за игроком и кувыркающаяся при отдыхе."],
@@ -134,12 +197,21 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   onEquipSkin,
   onEquipCape,
   currentSkinUrl,
+  account,
+  onLoginMicrosoft,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>("skins");
   const [activeSkin, setActiveSkin] = useState<string>("Dream");
   const [activeCape, setActiveCape] = useState<string>("");
   const [activePet, setActivePet] = useState<string>("Малая панда");
   const [activeCos, setActiveCos] = useState<string>("Крылья Архангела");
+
+  // Microsoft capes state
+  const [msCapes, setMsCapes] = useState<MicrosoftCapeItem[]>([]);
+  const [isLoadingCapes, setIsLoadingCapes] = useState<boolean>(false);
+  const [capesError, setCapesError] = useState<string | null>(null);
+  const [equippingCapeId, setEquippingCapeId] = useState<string | null>(null);
+  const [isLoggingInMs, setIsLoggingInMs] = useState<boolean>(false);
 
   // Search state
   const [search, setSearch] = useState("");
@@ -414,6 +486,87 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     }
   };
 
+  // Fetch Microsoft capes
+  const fetchMicrosoftCapes = useCallback(async () => {
+    if (!account || account.type !== "microsoft") {
+      setMsCapes([]);
+      setIsLoadingCapes(false);
+      return;
+    }
+
+    setIsLoadingCapes(true);
+    setCapesError(null);
+    try {
+      const capes = await ipc.getMicrosoftCapes();
+      setMsCapes(capes || []);
+      const active = (capes || []).find((c) => c.state === "ACTIVE");
+      if (active) {
+        setActiveCape(active.id);
+      }
+    } catch (err: any) {
+      console.warn("Failed to fetch Microsoft capes:", err);
+      setCapesError(err?.message || String(err));
+    } finally {
+      setIsLoadingCapes(false);
+    }
+  }, [account]);
+
+  useEffect(() => {
+    if (activeTab === "capes") {
+      void fetchMicrosoftCapes();
+    }
+  }, [activeTab, fetchMicrosoftCapes]);
+
+  const handleEquipCape = async (cape: MicrosoftCapeItem) => {
+    setEquippingCapeId(cape.id);
+    try {
+      await ipc.equipMicrosoftCape(cape.id);
+      setActiveCape(cape.id);
+      onEquipCape(cape.url);
+      setMsCapes((prev) =>
+        prev.map((c) => ({
+          ...c,
+          state: c.id === cape.id ? "ACTIVE" : "INACTIVE",
+        }))
+      );
+      const details = getCapeDetails(cape);
+      showToast(`Плащ «${details.title}» надет!`);
+    } catch (err: any) {
+      showToast(`Ошибка установки плаща: ${err?.message || err}`);
+    } finally {
+      setEquippingCapeId(null);
+    }
+  };
+
+  const handleUnequipCape = async () => {
+    try {
+      await ipc.unequipMicrosoftCape();
+      setActiveCape("");
+      onEquipCape(null);
+      setMsCapes((prev) =>
+        prev.map((c) => ({
+          ...c,
+          state: "INACTIVE",
+        }))
+      );
+      showToast("Плащ снят");
+    } catch (err: any) {
+      showToast(`Ошибка снятия плаща: ${err?.message || err}`);
+    }
+  };
+
+  const handleLoginMsFromCapes = async () => {
+    if (!onLoginMicrosoft) return;
+    setIsLoggingInMs(true);
+    try {
+      await onLoginMicrosoft();
+    } catch (err: any) {
+      showToast(`Ошибка входа в Microsoft: ${err?.message || err}`);
+    } finally {
+      setIsLoggingInMs(false);
+    }
+  };
+
   const q = search.trim().toLowerCase();
 
   return (
@@ -508,19 +661,26 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
               </form>
             )}
 
-            {activeTab === "capes" && (
-              <button
-                type="button"
-                className="b rm"
-                id="rm"
-                onClick={() => {
-                  setActiveCape("");
-                  onEquipCape(null);
-                  showToast("Плащ снят");
-                }}
-              >
-                Снять плащ
-              </button>
+            {activeTab === "capes" && account?.type === "microsoft" && (
+              <div style={{ display: "flex", gap: "8px", marginLeft: "auto", alignItems: "center" }}>
+                <button
+                  type="button"
+                  className="b"
+                  disabled={isLoadingCapes}
+                  onClick={fetchMicrosoftCapes}
+                  title="Обновить список плащей из Microsoft"
+                >
+                  {isLoadingCapes ? "..." : "↻ Обновить"}
+                </button>
+                <button
+                  type="button"
+                  className="b rm"
+                  id="rm"
+                  onClick={handleUnequipCape}
+                >
+                  Снять плащ
+                </button>
+              </div>
             )}
 
             {activeTab === "pets" && (
@@ -633,31 +793,157 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
 
           {/* CAPES TAB */}
           {activeTab === "capes" && (
-            <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))" }}>
-              {CP.map((c) => {
-                const isEquipped = activeCape === c.name;
-                return (
-                  <div key={c.name} className="card ctr">
-                    <div className="pv">
-                      <div className="cape" style={{ background: c.color }} />
+            <>
+              {account?.type !== "microsoft" ? (
+                <div className="store-offline-center-wrap">
+                  <div className="store-offline-center-card">
+                    <div className="store-offline-icon-box">
+                      <svg
+                        width="36"
+                        height="36"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ color: "#9ca3af" }}
+                      >
+                        <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
                     </div>
-                    <div className="nm">{c.name}</div>
-                    <div className="ds ms">{c.desc}</div>
+
+                    <h2 className="store-offline-title">
+                      Не зарегистрирован аккаунт Microsoft
+                    </h2>
+
+                    <p className="store-offline-desc">
+                      Официальные плащи Minecraft привязаны к вашей учётной записи Microsoft.
+                      Войдите в лицензионный аккаунт, чтобы просматривать свои плащи и примерять их в 3D.
+                    </p>
+
                     <button
                       type="button"
-                      className={`b ${isEquipped ? "on" : ""}`}
-                      onClick={() => {
-                        setActiveCape(c.name);
-                        onEquipCape(c.url);
-                        showToast(`Плащ "${c.name}" надет!`);
-                      }}
+                      className="store-ms-auth-action-btn"
+                      disabled={isLoggingInMs}
+                      onClick={handleLoginMsFromCapes}
                     >
-                      {isEquipped ? "✓ Надет" : "Надеть плащ"}
+                      {isLoggingInMs ? (
+                        <>
+                          <IsometricCube size={20} variant="emerald" />
+                          <span>Ожидание авторизации...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            style={{ flexShrink: 0 }}
+                          >
+                            <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z" />
+                          </svg>
+                          <span>Войти в аккаунт Microsoft</span>
+                        </>
+                      )}
                     </button>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              ) : isLoadingCapes ? (
+                <div className="store-loading-state">
+                  <IsometricCube size={48} variant="emerald" />
+                  <div>Загрузка ваших плащей из Microsoft ({account.name})...</div>
+                </div>
+              ) : capesError ? (
+                <div className="store-error-state">
+                  <p>Не удалось получить плащи: {capesError}</p>
+                  <button
+                    type="button"
+                    className="store-retry-btn"
+                    onClick={fetchMicrosoftCapes}
+                  >
+                    Повторить попытку
+                  </button>
+                </div>
+              ) : msCapes.length === 0 ? (
+                <div className="store-offline-center-wrap">
+                  <div className="store-offline-center-card">
+                    <h2 className="store-offline-title">
+                      У вас пока нет официальных плащей
+                    </h2>
+                    <p className="store-offline-desc">
+                      На аккаунте <strong>{account.name}</strong> пока не найдены плащи Mojang.
+                      Официальные плащи выдаются за миграцию (Migrator), 15-летие Minecraft, голосование за мобов, Twitch/TikTok дропы или посещение Minecon.
+                    </p>
+                    <button
+                      type="button"
+                      className="b"
+                      onClick={fetchMicrosoftCapes}
+                      style={{ padding: "8px 24px" }}
+                    >
+                      ↻ Обновить список
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="grid"
+                  style={{ gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))" }}
+                >
+                  {msCapes.map((c) => {
+                    const isEquipped = c.state === "ACTIVE" || activeCape === c.id;
+                    const isEquipping = equippingCapeId === c.id;
+                    const details = getCapeDetails(c);
+
+                    return (
+                      <div key={c.id} className="card ctr">
+                        <div
+                          className="pv cape-3d-pv"
+                          style={{
+                            width: "100%",
+                            height: "155px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            background: "#080a10",
+                            borderRadius: "10px",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <Cape3DViewer
+                            capeUrl={c.url}
+                            width={130}
+                            height={150}
+                            interactive={true}
+                            animated={true}
+                          />
+                        </div>
+                        <div className="nm" title={details.title}>
+                          {details.title}
+                        </div>
+                        <div className="ds ms" title={details.desc}>
+                          {details.desc}
+                        </div>
+                        <button
+                          type="button"
+                          className={`b ${isEquipped ? "on" : ""}`}
+                          disabled={isEquipping || isEquipped}
+                          onClick={() => handleEquipCape(c)}
+                        >
+                          {isEquipped
+                            ? "✓ Надет"
+                            : isEquipping
+                            ? "Установка..."
+                            : "Надеть плащ"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
 
           {/* PETS TAB */}

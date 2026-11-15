@@ -154,6 +154,8 @@ export const ScreensLayer: React.FC<ScreensLayerProps> = React.memo(({
           onEquipSkin={onEquipSkin}
           onEquipCape={onEquipCape}
           currentSkinUrl={skinUrl}
+          account={account}
+          onLoginMicrosoft={onLoginMicrosoft}
         />
       )}
 

@@ -1378,6 +1378,106 @@
   gap: 6px;
 }
 
+/* Offline state centered container for Capes tab */
+.store-screen-overlay .store-offline-center-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 420px;
+  width: 100%;
+  padding: 30px 16px;
+}
+
+.store-screen-overlay .store-offline-center-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 520px;
+  width: 100%;
+  padding: 40px 32px;
+  background: #090c15;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+.store-screen-overlay .store-offline-icon-box {
+  width: 68px;
+  height: 68px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+}
+
+.store-screen-overlay .store-offline-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: #f3f4f6;
+  margin: 0 0 12px 0;
+  letter-spacing: 0.1px;
+}
+
+.store-screen-overlay .store-offline-desc {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #9ca3af;
+  margin: 0 0 26px 0;
+  max-width: 440px;
+}
+
+.store-screen-overlay .store-ms-auth-action-btn {
+  height: 44px;
+  padding: 0 26px;
+  font-size: 14px;
+  font-weight: 700;
+  background: #1d5dc7;
+  color: #ffffff;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.store-screen-overlay .store-ms-auth-action-btn:hover:not(:disabled) {
+  background: #256be4;
+  border-color: #60a5fa;
+  transform: translateY(-1px);
+}
+
+.store-screen-overlay .store-ms-auth-action-btn:active:not(:disabled) {
+  background: #1850ad;
+  transform: translateY(0);
+}
+
+.store-screen-overlay .store-ms-auth-action-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.store-screen-overlay .pv.cape-3d-pv {
+  width: 100%;
+  height: 155px;
+  background: #07090e;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.store-screen-overlay .pv.cape-3d-pv:active {
+  cursor: grabbing;
+}
+
 .store-screen-overlay .store-page-jump input {
   width: 68px;
   height: 36px;

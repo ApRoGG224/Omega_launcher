@@ -86,6 +86,11 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
   - Connected `SettingsScreen` GC presets (`G1GC`, `ZGC`, `Shenandoah`) and custom `jvmArgs` to the native game launch process.
   - `App.tsx` reads persisted launcher settings and forwards `customJvmArgs` through `ipc.launchMinecraft`.
   - Tauri Rust backend (`src-tauri/src/launch.rs`) parses, logs (`[launcher/INFO] Using custom JVM arguments: ...`), and injects custom JVM arguments directly into the spawning `std::process::Command` alongside instance RAM limits.
+- **Microsoft Official Capes & Interactive 3D Cape Viewer (`StoreScreen`, `Cape3DViewer`, `auth.rs`):**
+  - Integrated official Mojang/Microsoft capes API endpoints (`get_microsoft_capes`, `equip_microsoft_cape`, `unequip_microsoft_cape`) in Tauri backend, fetching all licensed player capes directly from `https://api.minecraftservices.com/minecraft/profile` with token auto-refresh and CORS-free data URL texture proxying.
+  - Equipping/unequipping saves in real-time to official Mojang servers (`PUT` / `DELETE /minecraft/profile/capes/active`) so capes are immediately visible in-game, on multiplayer servers, and on the launcher's home stage character.
+  - Centered offline guard card (`.store-offline-center-card`): when the user has an offline/non-Microsoft account active, the Capes tab displays a centered notice explaining that official capes require a Microsoft account, with a direct "Войти в аккаунт Microsoft" button opening Microsoft OAuth2 login/registration.
+  - Dedicated Three.js 3D Cape Component (`Cape3DViewer`): renders Minecraft capes on standard 3D BoxGeometry (`10x16x1`) with `NearestFilter` pixel-art textures, subtle ambient floating animation, depth/thickness edge lighting, and full 360-degree pointer drag inspection with double-click reset.
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 
