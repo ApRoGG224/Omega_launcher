@@ -122,6 +122,8 @@ When working on tasks for this repository, the agent MUST follow this strict seq
 
 ## Installed Skills & Engineering Tooling
 
-- `ui-ux-pro-max`, `design-system`, `ui-styling`, `design`, `brand`, `banner-design`, `slides`: Design Lab & UI/UX engineering intelligence suite.
-- `senior-frontend`: Advanced React/TypeScript frontend development patterns, accessibility standards, and bundle optimization.
-- `react-best-practices`: 57+ Vercel React and Next.js performance optimization rules (waterfall prevention, bundle size control, rendering and state performance).
+- **Mandatory Skill Review & Usage:** The agent MUST actively inspect and utilize the following specialized skills installed in `.agents/skills/` on EVERY new task, feature, or review:
+  - `ui-ux-pro-max`, `design-system`, `ui-styling`, `design`, `brand`, `banner-design`, `slides`: Design Lab & UI/UX engineering intelligence suite. Always consult when designing or refining UI layouts, colors, components, and animations.
+  - `senior-frontend`: Advanced React/TypeScript frontend development patterns, accessibility standards, and bundle optimization.
+  - `react-best-practices`: 57+ Vercel React and Next.js performance optimization rules (waterfall prevention, bundle size control, rendering and state performance).
+  - `prettier-validation`: Formatting and syntax validation for TypeScript and React code.
