@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "omega_crown",
+  "version": "1.0.0",
+  "name": "Omega Monarch Crown",
+  "description": "Built-in hidden cosmetics runtime for Omega Launcher.",
+  "authors": ["Omega Launcher Team"],
+  "contact": {
+    "homepage": "https://github.com/ApRoGG224/Omega_launcher"
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.omega.cosmetics.OmegaCrownMod::onInitializeClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.11.0",
+    "minecraft": "*"
+  }
+}

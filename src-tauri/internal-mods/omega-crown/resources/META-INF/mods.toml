@@ -1,0 +1,17 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="MIT"
+
+[[mods]]
+modId="omega_crown"
+version="1.0.0"
+displayName="Omega Monarch Crown"
+description="Built-in hidden cosmetics runtime for Omega Launcher."
+authors="Omega Launcher Team"
+
+[[dependencies.omega_crown]]
+modId="minecraft"
+mandatory=false
+versionRange="[1.16,)"
+ordering="NONE"
+side="CLIENT"

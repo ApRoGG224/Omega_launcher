@@ -93,6 +93,17 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
   - Dedicated Three.js 3D Cape Component (`Cape3DViewer`): renders Minecraft capes on standard 3D BoxGeometry (`10x16x1`) with `NearestFilter` pixel-art textures, static stable orientation without distracting motion (`animated={false}`), and depth/thickness edge lighting.
   - Automatic artwork face detection (Bedrock vs Java UV layout): Bedrock capes (like Pan Cape) place the artwork on Face 1 (`+Z`, `1..10`), whereas standard Java capes place it on Face 2 (`-Z`, `12..21`). `Cape3DViewer` analyzes pixel color diversity between both faces on an offscreen canvas to dynamically turn the decorated artwork side toward the camera (`baseY = -0.38` for Bedrock, `baseY = Math.PI - 0.38` for Java).
   - Anti-aliasing & True Colors: enabled WebGL MSAA `antialias: true` and removed CSS `image-rendering: pixelated` from the 3D canvas (preserving crisp `NearestFilter` on the texture map while smoothing polygon boundary edges), with calibrated SRGB color space lighting (`ambientLight: 0.85`, `directionalLight: 0.20`, `roughness: 1.0`) preventing washed-out desaturation into grey.
+- **Hidden In-Game Cosmetics & Monarch Crown System (`Crown3DViewer`, `cosmetics3D.ts`, `launch.rs`, `omega-crown.jar`):**
+  - **Internal Non-Deletable Runtime:** `omega-crown.jar` is stored in the launcher's private system directory (`data_dir/internal/cosmetics/omega-crown.jar`) and embedded directly into the Rust executable via `include_bytes!`. It is NEVER placed into `instances/<id>/minecraft/mods/`, making it impossible for players to accidentally delete or alter it.
+  - **Zero Presence in Instance Mod Lists:** `count_installed_mods` and `list_installed_mod_files` only scan `instances/<id>/minecraft/mods/`, ensuring the built-in launcher runtime never pollutes the user's mod count or installed mod files list.
+  - **Universal Multi-Loader & Multi-Version Injection on Launch:** Automatically adapts to any Minecraft version across Fabric, Forge, and NeoForge via JVM injection:
+    - `-javaagent:<path>=crown` (Universal JavaAgent running on the JVM before any loader initializes).
+    - `-Dfabric.addMods=<path>` (Fabric Loader native external mod loading without touching the mods directory).
+    - System classpath addition with embedded `META-INF/mods.toml` and `fabric.mod.json` allowing ModLauncher (Forge/NeoForge) and Knot (Fabric) to recognize the container.
+    - JVM system properties `-Domega.cosmetics.head=crown` and `-Domega.cosmetics.player=<username>`.
+  - **3D Voxel Crown Model (`cosmetics3D.ts`):** Authentic Minecraft 16-voxel model built from `THREE.BoxGeometry` with gold rim, 4 corner peaks, 4 tall center peaks, and 4 ruby gems with metallic sheen and zero neon.
+  - **Stage 3D Integration (`Stage3DLayer.tsx`):** Automatically attaches the 3D Crown to `viewer.playerObject.skin.head`, tracking character walking, roaming physics, jumping, head tilting, and mouse look in real time.
+  - **Store Integration (`StoreScreen.tsx` & `Crown3DViewer.tsx`):** Real-time 3D floating preview inside the "Корона Монарха" card, single-click equipping/unequipping with instant `omega:cosmetics_updated` event dispatch, and persistent storage in `localStorage` (`omega:equipped_cosmetics`).
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 

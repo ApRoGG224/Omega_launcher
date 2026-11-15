@@ -4,6 +4,7 @@ import { SkinViewer, PlayerAnimation, type PlayerObject } from "skinview3d";
 import { buildArticulatedLimbs, type ArticulatedLimbHandles } from "../../utils/articulatedPlayer";
 import { RoamingCharacterController, type WorldPlatform } from "../../utils/roamingCharacter";
 import { PRESET_SKINS } from "../../constants/skinPresets";
+import { createCrownObject, disposeThreeHierarchy } from "../../utils/cosmetics3D";
 import "../../styles/layer1-stage.css";
 
 interface Stage3DLayerProps {
@@ -548,6 +549,60 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
       }
     }
   }, [capeUrl]);
+
+  // Crown cosmetic attachment
+  useEffect(() => {
+    const updateCrown = () => {
+      const head = viewerRef.current?.playerObject?.skin?.head;
+      if (!head) return;
+
+      let isCrownEquipped = false;
+      try {
+        const raw = localStorage.getItem("omega:equipped_cosmetics");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          isCrownEquipped = parsed.head === "crown";
+        } else {
+          const activeCos = localStorage.getItem("omega:equipped_cosmetic");
+          isCrownEquipped = activeCos === "Корона Монарха" || activeCos === "crown";
+        }
+      } catch {
+        isCrownEquipped = false;
+      }
+
+      const existing = head.getObjectByName("omega_crown");
+      if (isCrownEquipped) {
+        if (!existing) {
+          const crown = createCrownObject();
+          head.add(crown);
+        }
+      } else {
+        if (existing) {
+          head.remove(existing);
+          disposeThreeHierarchy(existing);
+        }
+      }
+    };
+
+    updateCrown();
+
+    const onCosmeticsUpdated = () => {
+      updateCrown();
+    };
+
+    window.addEventListener("omega:cosmetics_updated", onCosmeticsUpdated);
+    return () => {
+      window.removeEventListener("omega:cosmetics_updated", onCosmeticsUpdated);
+      const head = viewerRef.current?.playerObject?.skin?.head;
+      if (head) {
+        const existing = head.getObjectByName("omega_crown");
+        if (existing) {
+          head.remove(existing);
+          disposeThreeHierarchy(existing);
+        }
+      }
+    };
+  }, []);
 
   return (
     <div className={`layer-stage ${!visible ? "hidden" : ""}`}>

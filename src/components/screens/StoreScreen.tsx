@@ -7,6 +7,7 @@ import {
 } from "../../services/ipc";
 import { IsometricCube } from "../icons/IsometricCube";
 import { Cape3DViewer } from "../common/Cape3DViewer";
+import { Crown3DViewer } from "../common/Crown3DViewer";
 import type { AccountData } from "../../types";
 import "../../styles/screens.css";
 
@@ -212,7 +213,9 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   const [activeSkin, setActiveSkin] = useState<string>("Dream");
   const [activeCape, setActiveCape] = useState<string>("");
   const [activePet, setActivePet] = useState<string>("Малая панда");
-  const [activeCos, setActiveCos] = useState<string>("Крылья Архангела");
+  const [activeCos, setActiveCos] = useState<string>(() => {
+    return localStorage.getItem("omega:equipped_cosmetic") || "Корона Монарха";
+  });
 
   // Microsoft capes state
   const [msCapes, setMsCapes] = useState<MicrosoftCapeItem[]>([]);
@@ -712,6 +715,9 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                 id="rm"
                 onClick={() => {
                   setActiveCos("");
+                  localStorage.removeItem("omega:equipped_cosmetic");
+                  localStorage.setItem("omega:equipped_cosmetics", JSON.stringify({ head: null }));
+                  window.dispatchEvent(new CustomEvent("omega:cosmetics_updated", { detail: { head: null, name: "" } }));
                   showToast("Аксессуары сняты");
                 }}
               >
@@ -999,8 +1005,26 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
             <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))" }}>
               {CS.filter((x) => !q || x.join(" ").toLowerCase().includes(q)).map((x) => {
                 const isEquipped = activeCos === x[0];
+                const isCrown = x[0] === "Корона Монарха";
                 return (
-                  <div key={x[0]} className="card">
+                  <div key={x[0]} className="card" style={{ display: "flex", flexDirection: "column" }}>
+                    {isCrown && (
+                      <div
+                        style={{
+                          width: "100%",
+                          height: "140px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "#080a10",
+                          borderRadius: "10px",
+                          overflow: "hidden",
+                          marginBottom: "12px",
+                        }}
+                      >
+                        <Crown3DViewer width={140} height={120} interactive={false} animated={true} />
+                      </div>
+                    )}
                     <div className="it">
                       <div className="ico">
                         <svg viewBox="0 0 24 24">
@@ -1022,8 +1046,20 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                       type="button"
                       className={`b ${isEquipped ? "on" : ""}`}
                       onClick={() => {
-                        setActiveCos(x[0]);
-                        showToast(`Аксессуар "${x[0]}" надет!`);
+                        if (isEquipped) {
+                          setActiveCos("");
+                          localStorage.removeItem("omega:equipped_cosmetic");
+                          localStorage.setItem("omega:equipped_cosmetics", JSON.stringify({ head: null }));
+                          window.dispatchEvent(new CustomEvent("omega:cosmetics_updated", { detail: { head: null, name: "" } }));
+                          showToast(`Аксессуар "${x[0]}" снят`);
+                        } else {
+                          setActiveCos(x[0]);
+                          localStorage.setItem("omega:equipped_cosmetic", x[0]);
+                          const headVal = x[0] === "Корона Монарха" ? "crown" : null;
+                          localStorage.setItem("omega:equipped_cosmetics", JSON.stringify({ head: headVal }));
+                          window.dispatchEvent(new CustomEvent("omega:cosmetics_updated", { detail: { head: headVal, name: x[0] } }));
+                          showToast(`Аксессуар "${x[0]}" надет!`);
+                        }
                       }}
                     >
                       {isEquipped ? "✓ Надет на игрока" : "Примерить аксессуар"}

@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Premain-Class: com.omega.cosmetics.OmegaAgent
+Agent-Class: com.omega.cosmetics.OmegaAgent
+Can-Redefine-Classes: true
+Can-Retransform-Classes: true
+Implementation-Title: omega-crown
+Implementation-Version: 1.0.0
+

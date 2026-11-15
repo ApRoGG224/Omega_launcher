@@ -648,6 +648,27 @@ pub async fn launch_minecraft(
     let classpath_sep = if cfg!(target_os = "windows") { ";" } else { ":" };
     let mut classpath_parts = libraries.clone();
     classpath_parts.push(client_jar.to_string_lossy().to_string());
+
+    // Injected hidden Omega Cosmetics runtime (Crown)
+    // Stored in internal launcher data directory, NEVER placed in instances/<id>/minecraft/mods/
+    let internal_cosmetics_dir = data_dir.join("internal").join("cosmetics");
+    if let Err(e) = std::fs::create_dir_all(&internal_cosmetics_dir) {
+        emit_line(&app, &format!("[launcher/WARN] Failed to create internal cosmetics dir: {e}"));
+    }
+    let crown_jar = internal_cosmetics_dir.join("omega-crown.jar");
+    const CROWN_BYTES: &[u8] = include_bytes!("../assets/omega-crown.jar");
+    if !crown_jar.exists() || crown_jar.metadata().map(|m| m.len()).unwrap_or(0) != CROWN_BYTES.len() as u64 {
+        if let Err(e) = std::fs::write(&crown_jar, CROWN_BYTES) {
+            emit_line(&app, &format!("[launcher/WARN] Failed to write internal crown jar: {e}"));
+        }
+    }
+
+    if crown_jar.exists() {
+        emit_line(&app, "[launcher/INFO] Injected internal Omega Monarch Crown runtime");
+        // Add to classpath so Knot and ModLauncher can discover manifests
+        classpath_parts.push(crown_jar.to_string_lossy().to_string());
+    }
+
     let classpath = classpath_parts.join(classpath_sep);
 
     let arg_replace = |arg: &str, config: &LaunchConfig| -> String {
@@ -685,6 +706,13 @@ pub async fn launch_minecraft(
     if crate::java::required_java_version(&vanilla_version) >= 24 {
         // LWJGL 3.4.1 still uses sun.misc.Unsafe on Java 24+.
         command.arg("--sun-misc-unsafe-memory-access=allow");
+    }
+
+    if crown_jar.exists() {
+        command.arg(format!("-javaagent:{}={}", crown_jar.to_string_lossy(), "crown"));
+        command.arg("-Domega.cosmetics.head=crown");
+        command.arg(format!("-Domega.cosmetics.player={}", &config.auth_name));
+        command.arg(format!("-Dfabric.addMods={}", crown_jar.to_string_lossy()));
     }
 
     // Custom user JVM arguments from launcher settings (e.g. -XX:+UseZGC, -XX:+UseG1GC, etc.)
