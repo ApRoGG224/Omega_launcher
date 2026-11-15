@@ -106,7 +106,9 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
   - **Store Integration & 3D Wardrobe Showcase (`StoreScreen.tsx`, `Crown3DViewer.tsx`, `Wardrobe3DViewer.tsx`):**
     - Clean, minimalist card design: displays only the animated 3D Crown preview, the title "Корона Монарха", and the equip action button (star icons, descriptions, subtitles, and rarity badges completely removed).
     - Dedicated static 3D character wardrobe stage (`Wardrobe3DViewer`) on the right side: player stands still in authentic Minecraft posture with current skin and equipped cosmetics.
-    - Dynamic camera glide & focus: smoothly lerps camera position to close-up head focus (`target: (0, 9, 0)`, `position: (0, 10, 24)`) when equipping the Crown, with manual toggle tabs for "Голова", "Во весь рост", and "Спина".
+    - Repositioned "Снять аксессуары" button to the top-left of the cosmetics catalog column, and shifted the 3D wardrobe showcase flush to the top under the header row with zero vertical offset and no intermediate tools row.
+    - Synchronized heights of the left tools bar and right wardrobe header (32px), with full-height framing (camera `Z = 70.0`, card height 420px) preventing any vertical scrolling.
+    - Dynamic camera glide & focus: smoothly lerps camera position to close-up head focus when equipping the Crown, with manual toggle tabs for "Голова", "Во весь рост", and "Спина".
     - Single-click equipping/unequipping with instant `omega:cosmetics_updated` event dispatch and persistent storage in `localStorage` (`omega:equipped_cosmetics`).
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._

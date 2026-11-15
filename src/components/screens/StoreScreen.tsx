@@ -501,6 +501,17 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     }
   };
 
+  const handleUnequipCosmetics = useCallback(() => {
+    setActiveCos("");
+    localStorage.removeItem("omega:equipped_cosmetic");
+    localStorage.setItem("omega:equipped_cosmetics", JSON.stringify({ head: null }));
+    window.dispatchEvent(
+      new CustomEvent("omega:cosmetics_updated", { detail: { head: null, name: "" } })
+    );
+    setWardrobeFocus("full");
+    showToast("Аксессуары сняты");
+  }, []);
+
   // Fetch Microsoft capes
   const fetchMicrosoftCapes = useCallback(async () => {
     if (!account || account.type !== "microsoft") {
@@ -636,9 +647,9 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
         </div>
 
         {/* Tools row */}
-        {(activeTab === "skins" || activeTab === "capes" || activeTab === "pets" || activeTab === "cos") && (
+        {(activeTab === "skins" || activeTab === "capes" || activeTab === "pets") && (
           <div className="tools" id="tools">
-            {activeTab !== "capes" && activeTab !== "cos" && (
+            {activeTab !== "capes" && (
               <div className="q">
                 <input
                   id="q"
@@ -707,24 +718,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                 }}
               >
                 Отозвать питомца
-              </button>
-            )}
-
-            {activeTab === "cos" && (
-              <button
-                type="button"
-                className="b rm"
-                id="rm"
-                onClick={() => {
-                  setActiveCos("");
-                  localStorage.removeItem("omega:equipped_cosmetic");
-                  localStorage.setItem("omega:equipped_cosmetics", JSON.stringify({ head: null }));
-                  window.dispatchEvent(new CustomEvent("omega:cosmetics_updated", { detail: { head: null, name: "" } }));
-                  setWardrobeFocus("full");
-                  showToast("Аксессуары сняты");
-                }}
-              >
-                Снять аксессуары
               </button>
             )}
           </div>
@@ -1006,8 +999,18 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
           {/* COSMETICS TAB WITH 3D WARDROBE SHOWCASE */}
           {activeTab === "cos" && (
             <div className="store-cosmetics-wardrobe-container">
-              {/* Left Column: Cosmetics Cards (Only Crown, Title & Action) */}
+              {/* Left Column: Tools & Cosmetics Cards */}
               <div className="store-cosmetics-catalog">
+                <div className="store-cosmetics-tools">
+                  <button
+                    type="button"
+                    className="store-cosmetics-unequip-btn"
+                    onClick={handleUnequipCosmetics}
+                  >
+                    Снять аксессуары
+                  </button>
+                </div>
+
                 <div className="store-cosmetics-grid">
                   {CS.filter((name) => !q || name.toLowerCase().includes(q)).map((name) => {
                     const isEquipped = activeCos === name;
@@ -1022,14 +1025,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                           className={`b ${isEquipped ? "on" : ""}`}
                           onClick={() => {
                             if (isEquipped) {
-                              setActiveCos("");
-                              localStorage.removeItem("omega:equipped_cosmetic");
-                              localStorage.setItem("omega:equipped_cosmetics", JSON.stringify({ head: null }));
-                              window.dispatchEvent(
-                                new CustomEvent("omega:cosmetics_updated", { detail: { head: null, name: "" } })
-                              );
-                              setWardrobeFocus("full");
-                              showToast(`Аксессуар "${name}" снят`);
+                              handleUnequipCosmetics();
                             } else {
                               setActiveCos(name);
                               localStorage.setItem("omega:equipped_cosmetic", name);
