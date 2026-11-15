@@ -52,7 +52,6 @@ export const translations = {
     gameFolder: "ПАПКА ИГРЫ (.MINECRAFT)",
     languageTitle: "Язык интерфейса",
 
-    // Новые строки
     anyVersion: "Любая",
     anyLoader: "Любой",
     sortDownloads: "Популярные",
@@ -62,7 +61,6 @@ export const translations = {
     sortUpdated: "Обновлённые",
     javaLabel: "JAVA (JDK)",
 
-    // Новые элементы UI
     accountsSection: "АККАУНТЫ",
     loginMicrosoftBtn: "Войти через Microsoft",
     addAccountTitle: "Добавить аккаунт",
@@ -104,7 +102,6 @@ export const translations = {
     importBtn: "Импорт",
     importBtnDesc: "Перенести сборку из Prism, CurseForge или Modrinth",
 
-    // Логи
     logWaitingBrowser: "[MS_AUTH]: Ожидание входа в браузере...",
     logSuccessLogin: "[MS_AUTH]: Успешный вход как ",
     logLoginError: "[MS_AUTH]: Ошибка входа: ",
@@ -113,7 +110,6 @@ export const translations = {
     logKillingMc: "[main/INFO]: Убиваем процесс Minecraft...",
     alertNoInstance: "Сначала выберите сборку!",
 
-    // Багфикс i18n: док, главный экран, сборки, модалки
     dockCatalog: "Каталог",
     dockPacks: "Сборки",
     dockSettings: "Настройки",
@@ -215,14 +211,12 @@ export const translations = {
     closeWindow: "Закрыть окно",
     dragMods: "Перетащите мод сюда",
 
-    // Каталог (вкладки)
     tabMods: "Моды",
     tabTextures: "Текстуры",
     tabShaders: "Шейдеры",
     tabDatapacks: "Датапаки",
     tabCatalog: "Сборки",
 
-    // Импорт
     importFromPrism: "Импорт из Prism Launcher",
     importFromCurseforge: "Импорт из CurseForge",
     importFromMrpack: "Импорт .mrpack",
@@ -230,7 +224,6 @@ export const translations = {
       "Не удалось получить путь файла. Используйте кнопку 'Выбрать файл'.",
     importFilePickFailed: "Ошибка выбора файла",
 
-    // Моды / ресурспаки / датапаки / шейдеры
     modInstallSuccessRes: "Ресурспак успешно скачан и установлен в сборку!",
     modAlreadyInstalledRes: "Ресурспак уже установлен в эту сборку",
     modInstallErrorRes: "Ошибка при установке ресурспака: ",
@@ -250,7 +243,6 @@ export const translations = {
     bestPacks: "Лучшие сборки",
     bestShaders: "Лучшие шейдеры",
 
-    // Модалки модов
     shaderModalTitle: "Куда установить шейдер?",
     irisNote: "Будет установлен Iris",
     forgeCompat: "Для совместимости с Forge",
@@ -263,7 +255,6 @@ export const translations = {
     installRespackTitle: "Установить ресурспак в сборку",
     installPackTitle: "Установить сборку",
 
-    // Тосты и логи хука useInstances
     importFinished: "Импорт завершён!",
     importFailed: "Ошибка импорта: ",
     importingArchive: "Запуск импорта из архива...",
@@ -283,7 +274,6 @@ export const translations = {
     respackInstalledDrag: "Ресурспак установлен в сборку!",
     installFailedDrag: "Ошибка установки: ",
 
-    // Настройки
     settingsExportPath: "Папка для экспорта сборок",
     settingsVersionTypes: "Отображаемые версии Minecraft",
     settingsVersionTypesDesc:
@@ -434,7 +424,6 @@ export const translations = {
     gameFolder: "GAME FOLDER (.MINECRAFT)",
     languageTitle: "Interface Language",
 
-    // New strings
     anyVersion: "Any",
     anyLoader: "Any",
     sortDownloads: "Popular",
@@ -444,7 +433,6 @@ export const translations = {
     sortUpdated: "Recently Updated",
     javaLabel: "JAVA (JDK)",
 
-    // New UI elements
     accountsSection: "ACCOUNTS",
     loginMicrosoftBtn: "Login with Microsoft",
     addAccountTitle: "Add Account",
@@ -486,7 +474,6 @@ export const translations = {
     importBtn: "Import",
     importBtnDesc: "Transfer an instance from Prism, CurseForge or Modrinth",
 
-    // Logs
     logWaitingBrowser: "[MS_AUTH]: Waiting for browser login...",
     logSuccessLogin: "[MS_AUTH]: Logged in successfully as ",
     logLoginError: "[MS_AUTH]: Login error: ",
@@ -496,7 +483,6 @@ export const translations = {
     alertNoInstance:
       "Please select or create an instance on the desktop first!",
 
-    // Bugfix i18n: dock, home, instances, modals
     dockCatalog: "Catalog",
     dockPacks: "Instances",
     dockSettings: "Settings",
@@ -596,21 +582,18 @@ export const translations = {
     closeWindow: "Close the window",
     dragMods: "Drag a mod here",
 
-    // Catalog tabs
     tabMods: "Mods",
     tabTextures: "Textures",
     tabShaders: "Shaders",
     tabDatapacks: "Datapacks",
     tabCatalog: "Modpacks",
 
-    // Import
     importFromPrism: "Import from Prism Launcher",
     importFromCurseforge: "Import from CurseForge",
     importFromMrpack: "Import .mrpack",
     importBadPath: "Could not get the file path. Use the 'Choose file' button.",
     importFilePickFailed: "File selection error",
 
-    // Mods / resource packs / datapacks / shaders
     modInstallSuccessRes:
       "Resource pack successfully downloaded and installed!",
     modAlreadyInstalledRes:
@@ -634,7 +617,6 @@ export const translations = {
     bestPacks: "Best Packs",
     bestShaders: "Best Shaders",
 
-    // Mod modals
     shaderModalTitle: "Where to install the shader?",
     irisNote: "Iris will be installed",
     forgeCompat: "For Forge compatibility",
@@ -647,7 +629,6 @@ export const translations = {
     installRespackTitle: "Install resource pack into instance",
     installPackTitle: "Install instance",
 
-    // useInstances hook toasts & logs
     importFinished: "Import finished!",
     importFailed: "Import error: ",
     importingArchive: "Starting import from archive...",
@@ -667,7 +648,6 @@ export const translations = {
     respackInstalledDrag: "Resource pack installed into the instance!",
     installFailedDrag: "Install error: ",
 
-    // Settings
     settingsExportPath: "Export folder for instances",
     settingsVersionTypes: "Displayed Minecraft versions",
     settingsVersionTypesDesc:

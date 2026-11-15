@@ -210,7 +210,6 @@ export function useVersions(): VersionsApi {
       try {
         localStorage.setItem("vf_" + String(key), checked ? "true" : "false");
       } catch {
-        // ignore quota
       }
       return next;
     });

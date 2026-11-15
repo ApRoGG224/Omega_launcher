@@ -83,10 +83,8 @@ export function useAccounts(
           merged = [...mapped, ...local.filter((localAccount) => !mapped.some((dbAccount) => sameAccount(dbAccount, localAccount)))];
         }
       } catch {
-        // DB load not available
       }
 
-      // Reconcile Microsoft accounts with true cached Microsoft authentication
       try {
         const cachedMs = await ipc.getCachedMicrosoftAccount();
         if (cachedMs && cachedMs.name) {
@@ -103,7 +101,6 @@ export function useAccounts(
           }
         }
       } catch {
-        // Ignore if IPC not available
       }
 
       if (cancelled) return;
@@ -251,7 +248,6 @@ export function useAccounts(
       try {
         await ipc.logoutMicrosoft();
       } catch {
-        // Ignore cleanup failures and still clear local selection.
       }
     }
 
@@ -259,7 +255,6 @@ export function useAccounts(
       try {
         if (omega) await omega.logout();
       } catch {
-        // Ignore cleanup failures and still clear local selection.
       }
     }
 

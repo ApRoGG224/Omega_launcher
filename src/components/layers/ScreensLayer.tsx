@@ -23,10 +23,8 @@ export type ScreenId =
 interface ScreensLayerProps {
   activeScreen: ScreenId;
   onNavigate: (screen: ScreenId) => void;
-  // Store props
   onEquipSkin: (skinUrl: string, model: "default" | "slim") => void;
   onEquipCape: (capeUrl: string | null) => void;
-  // Instances props
   instances: InstanceData[];
   selectedInstanceId: string;
   onSelectInstance: (instance: InstanceData) => void;
@@ -34,7 +32,6 @@ interface ScreensLayerProps {
   onDeleteInstance?: (id: string) => void;
   onUpdateInstance?: (instance: InstanceData) => void;
   onLaunchInstance: (instance: InstanceData) => void;
-  // Accounts props
   account: AccountData;
   accounts?: AccountData[];
   omegaAccount?: import("../../types").OmegaAccountState;
@@ -45,14 +42,10 @@ interface ScreensLayerProps {
   onDeleteAccount?: (id: string) => void;
   onLoginMicrosoft?: () => Promise<void>;
   onLoginEly?: () => Promise<void>;
-  // Console props
   logs?: import("../screens/ConsoleScreen").LogEntry[];
   onClearLogs?: () => void;
-  // Direct connect
   onDirectConnect: (serverName: string, ip: string) => void;
-  // Game running state
   isRunning: boolean;
-  // Settings props
   bgIndex: number;
   isBgAutoPlay: boolean;
   onSelectBg: (index: number) => void;
@@ -61,7 +54,6 @@ interface ScreensLayerProps {
   onToggleBgAutoPlay: () => void;
   onInstallMod: (modName: string) => void;
   onInstallModpack?: (modpack: { title: string; author?: string; desc?: string; loaders?: string[] }) => void;
-  // Appearance customization
   topBarLayout?: import("../../constants/launcherLayout").TopBarItemId[];
   onSaveTopBarLayout?: (layout: import("../../constants/launcherLayout").TopBarItemId[]) => void;
   onResetTopBarLayout?: () => void;
@@ -135,7 +127,6 @@ export const ScreensLayer: React.FC<ScreensLayerProps> = React.memo(({
   onUpdateMenusCustomization,
   onResetZoneCustomization,
 }) => {
-  // Global Escape key returns to Home (FEATURES.md Section 10)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && activeScreen !== "home") {
@@ -147,7 +138,7 @@ export const ScreensLayer: React.FC<ScreensLayerProps> = React.memo(({
   }, [activeScreen, onNavigate]);
 
   if (activeScreen === "home") {
-    return null; // Home screen shows 3D stage and launch dock directly
+    return null;
   }
 
   return (

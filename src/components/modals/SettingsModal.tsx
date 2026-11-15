@@ -31,7 +31,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       </div>
 
       <div className="modal-body">
-        {/* Section 1: Java & RAM */}
         <div className="settings-section">
           <span className="settings-section-title">Выделение памяти (RAM)</span>
           <div className="settings-ram-slider-box">
@@ -66,7 +65,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* Section 2: Java Path */}
         <div className="settings-section">
           <span className="settings-section-title">Путь к Java Runtime</span>
           <div className="settings-input-row">

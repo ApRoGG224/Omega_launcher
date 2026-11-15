@@ -89,8 +89,6 @@ async fn download_dependency_tree(
 
 type UpdateRecord = (String, Option<String>, String);
 
-/// Owns the DB lock entirely within this call so no !Send guard leaks into
-/// the async `update_all_mods` future.
 fn read_instance_for_update(db: &crate::db::Db, instance_id: &str) -> Result<(String, String, Vec<UpdateRecord>), String> {
     let conn = db.0.lock().map_err(|e| e.to_string())?;
     let (mc_version, loader): (String, String) = conn
@@ -245,7 +243,6 @@ pub async fn download_mod(
         )
         .await?;
     } else if p_type == "shader" && loader == "fabric" {
-        // Auto-install Iris for Fabric shaders (mirrors the old sidecar).
         let iris_versions = fetch_versions(&client, "iris").await.unwrap_or_default();
         let iris_valid = iris_versions
             .iter()

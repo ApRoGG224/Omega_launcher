@@ -152,7 +152,6 @@ const loadStorage = <T,>(key: string, fallback: T): T => {
 };
 
 export const App: React.FC = () => {
-  // Current active screen (Home + 8 full MVP screens from FEATURES.md)
   const [activeScreen, setActiveScreen] = useState<ScreenId>(() => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -164,10 +163,8 @@ export const App: React.FC = () => {
     return "home";
   });
 
-  // Sound state
   const [soundMuted, setSoundMuted] = useState<boolean>(false);
 
-  // Minecraft Background Atmosphere state (persisted)
   const [bgIndex, setBgIndex] = useState<number>(() => {
     try {
       const saved = localStorage.getItem("omega_launcher_bg_index");
@@ -230,18 +227,14 @@ export const App: React.FC = () => {
     });
   };
 
-  // Toast notifications disabled per user request
   const showToast = (_msg: string) => {};
 
-  // 3D Skin & Cape state
   const [activeSkinUrl, setActiveSkinUrl] = useState<string>(PRESET_SKINS.dream);
   const [skinModel, setSkinModel] = useState<"default" | "slim">("slim");
   const [activeCapeUrl, setActiveCapeUrl] = useState<string | null>(null);
 
-  // Instances state (Persisted in localStorage)
   const [instances, setInstances] = useState<InstanceData[]>(() => {
     const loaded = loadStorage<InstanceData[]>("omega_instances", DEFAULT_INSTANCES);
-    // Ensure default Rust (beta) instance is present even if user had older localStorage
     const hasRustInstance = loaded.some(
       (i) => i.id === "inst_rust_beta" || i.folderId === "folder_rust" || i.loader === "Rust"
     );
@@ -252,7 +245,6 @@ export const App: React.FC = () => {
         list = [defaultRust, ...loaded];
       }
     }
-    // Enforce that Rust instances always have version 26.3 and ensure icon is populated
     return list.map((inst) => {
       let icon = inst.icon;
       if (!icon) {
@@ -294,7 +286,6 @@ export const App: React.FC = () => {
     } catch {}
   }, [selectedInstanceId]);
 
-  // Accounts state (Persisted in localStorage)
   const [accounts, setAccounts] = useState<AccountData[]>(() =>
     loadStorage<AccountData[]>("omega_accounts", DEFAULT_ACCOUNTS)
   );
@@ -315,7 +306,6 @@ export const App: React.FC = () => {
     } catch {}
   }, [activeAccountId]);
 
-  // Live console logs from Minecraft and Tauri IPC
   const [liveLogs, setLiveLogs] = useState<LogEntry[]>([]);
 
   const pushLog = useCallback((message: string, tag: LogEntry["tag"] = "INFO") => {
@@ -327,7 +317,6 @@ export const App: React.FC = () => {
     ]);
   }, []);
 
-  // Listen to Tauri events (process stdout, stderr, auth logs)
   useEffect(() => {
     let unlistenProg: (() => void) | null = null;
     let unlistenAuth: (() => void) | null = null;
@@ -368,7 +357,6 @@ export const App: React.FC = () => {
     };
   }, [pushLog]);
 
-  // Load instances from SQLite on mount & sync mod counts
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -406,7 +394,6 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  // Sync instances to SQLite
   useEffect(() => {
     try {
       localStorage.setItem("omega_instances", JSON.stringify(instances));
@@ -425,7 +412,6 @@ export const App: React.FC = () => {
     void ipc.dbSaveInstances(dbList).catch(() => {});
   }, [instances]);
 
-  // Load accounts from SQLite & reconcile with cached Microsoft account
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -481,7 +467,6 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  // Sync accounts to SQLite
   useEffect(() => {
     void ipc.dbSaveAccounts(accounts.map((a) => ({ name: a.name, type: a.type }))).catch(() => {});
   }, [accounts]);
@@ -492,7 +477,6 @@ export const App: React.FC = () => {
   const selectedInstance =
     instances.find((i) => i.id === selectedInstanceId) || instances[0] || null;
 
-  // Omega Network Account state (linked to base account for playing with friends)
   const [omegaAccount, setOmegaAccount] = useState<OmegaAccountState>(() =>
     loadStorage("omega_network_account", { isLinked: false })
   );
@@ -505,34 +489,28 @@ export const App: React.FC = () => {
 
   const [isOmegaModalOpen, setIsOmegaModalOpen] = useState<boolean>(false);
 
-  // Game running state (Play / Stop simulation)
   const [isRunning, setIsRunning] = useState<boolean>(false);
 
-  // Top Navigation Dock Layout state (Persisted in localStorage)
   const [topBarLayout, setTopBarLayout] = useState<TopBarItemId[]>(() => {
     const loaded = loadStorage("omega_topbar_layout", DEFAULT_TOPBAR_LAYOUT);
     return sanitizeTopBarLayout(loaded);
   });
 
-  // Bottom Launch Dock Layout state (Persisted in localStorage)
   const [bottomBarLayout, setBottomBarLayout] = useState<BottomBarItemId[]>(() => {
     const loaded = loadStorage("omega_bottombar_layout", DEFAULT_BOTTOMBAR_LAYOUT);
     return sanitizeBottomBarLayout(loaded);
   });
 
-  // Bottom Launch Dock Alignment state (Persisted in localStorage)
   const [bottomBarAlignment, setBottomBarAlignment] = useState<BottomBarAlignment>(() => {
     const loaded = loadStorage<BottomBarAlignment>("omega_bottombar_alignment", DEFAULT_BOTTOMBAR_ALIGNMENT);
     return ["center", "left", "right", "space-between"].includes(loaded) ? loaded : DEFAULT_BOTTOMBAR_ALIGNMENT;
   });
 
-  // Button Shape Preset state (Persisted in localStorage)
   const [buttonShapePreset, setButtonShapePreset] = useState<ButtonShapePreset>(() => {
     const loaded = loadStorage<ButtonShapePreset>("omega_btn_shape_preset", DEFAULT_BUTTON_SHAPE_PRESET);
     return ["tactical", "cyber", "rounded", "chamfer"].includes(loaded) ? loaded : DEFAULT_BUTTON_SHAPE_PRESET;
   });
 
-  // Menus Customization State (TopBar, Background, Catalog)
   const [menusCustomization, setMenusCustomization] = useState<MenusCustomizationState>(() => {
     try {
       const saved = localStorage.getItem("omega_menus_customization_v1");
@@ -560,7 +538,6 @@ export const App: React.FC = () => {
 
   const menuCustomizationPersistTimeoutRef = useRef<number | null>(null);
 
-  // Sync root CSS custom properties for menus customization
   useEffect(() => {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
@@ -934,7 +911,6 @@ export const App: React.FC = () => {
 
   return (
     <div className={`launcher-viewport btn-shape-${buttonShapePreset}`}>
-      {/* Layer 0: Background Atmosphere (Minecraft Screenshots) */}
       <AtmosphereLayer
         visible={activeScreen === "home"}
         activeIndex={bgIndex}
@@ -943,7 +919,6 @@ export const App: React.FC = () => {
         backgroundCustomization={menusCustomization.background}
       />
 
-      {/* Layer 1: 3D Character Stage (Kept mounted to preserve WebGL context; pauses rendering when not on home) */}
       <Stage3DLayer
         visible={activeScreen === "home" && !menuCustomizerModal.isOpen && !isOmegaModalOpen}
         skinUrl={activeSkinUrl}
@@ -951,7 +926,6 @@ export const App: React.FC = () => {
         model={skinModel}
       />
 
-      {/* Layer 2: HUD & Navigation (Configurable Top Dock) */}
       <HudLayer
         visible={true}
         account={activeAccount}
@@ -985,7 +959,6 @@ export const App: React.FC = () => {
         onCreateOfflineAccount={handleCreateOfflineAccount}
       />
 
-      {/* Layer 3: Launch Dock (Configurable Bottom Bar) */}
       <DockLayer
         visible={activeScreen === "home"}
         selectedInstance={selectedInstance}
@@ -996,7 +969,6 @@ export const App: React.FC = () => {
         bottomBarAlignment={bottomBarAlignment}
       />
 
-      {/* Layer 4: Screen Overlays (Full MVP Screens from FEATURES.md) */}
       <ScreensLayer
         activeScreen={activeScreen}
         onNavigate={setActiveScreen}
@@ -1060,7 +1032,6 @@ export const App: React.FC = () => {
         onResetZoneCustomization={handleResetZoneCustomization}
       />
 
-      {/* Omega Account Login Modal */}
       <OmegaLoginModal
         isOpen={isOmegaModalOpen}
         onClose={() => setIsOmegaModalOpen(false)}
@@ -1068,7 +1039,6 @@ export const App: React.FC = () => {
         baseAccountName={activeAccount?.name ?? "Гость"}
       />
 
-      {/* Interactive Menu & Theme Customizer Modal */}
       <MenuCustomizerModal
         isOpen={menuCustomizerModal.isOpen}
         onClose={handleCloseMenuCustomizer}

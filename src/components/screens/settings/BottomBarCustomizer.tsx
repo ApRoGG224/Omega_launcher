@@ -47,7 +47,6 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
   const dockRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState<number>(1);
 
-  // Auto-fit calculation: guarantees dock is 100% visible on screen with zero horizontal scrolling
   useEffect(() => {
     const updateScale = () => {
       if (canvasRef.current && dockRef.current) {
@@ -85,7 +84,6 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
     setDraftAlignment(alignment);
   }, [alignment]);
 
-  // Global keydown listener for selected block: Delete/Backspace to delete, ArrowLeft/Right to nudge
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
@@ -276,7 +274,6 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
 
   return (
     <div className="customizer-container customizer-rounded-theme">
-      {/* Header */}
       <div>
         <h2>Настройка нижней панели (Кнопка «Играть»)</h2>
         <div className="customizer-sub">
@@ -284,7 +281,6 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
         </div>
       </div>
 
-      {/* Interactive Live Preview Box */}
       <div className="customizer-preview-box">
         <div className="customizer-preview-header">
           <div className="customizer-preview-title">
@@ -346,7 +342,6 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
                     }}
                     title={`${meta.title} (Кликните для выбора, стрелки ◀/▶ для сдвига, ПКМ для удаления)`}
                   >
-                    {/* Floating Action Controls on Hover/Selection */}
                     <div className="customizer-dock-item-controls">
                       <button
                         type="button"
@@ -387,7 +382,6 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
                       </button>
                     </div>
 
-                    {/* Block Content */}
                     <div className="customizer-dock-item-body">
                       {renderBottomBlockContent(id)}
                     </div>
@@ -427,7 +421,6 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
           </div>
         </div>
 
-        {/* Selected Block Instant Action Toolbar (automatic 1-click nudge without dragging) */}
         {selectedId && (
           <div className="customizer-active-item-bar">
             <div className="customizer-active-label">
@@ -486,7 +479,6 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
         )}
       </div>
 
-      {/* Save and Reset Action Controls: Placed BELOW the preview */}
       <div className="customizer-bottom-actions-bar">
         <div className="customizer-actions-left">
           <button
@@ -514,7 +506,6 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
           )}
         </div>
 
-        {/* Quick Presets */}
         <div className="customizer-presets-rounded">
           <button
             type="button"
@@ -539,7 +530,6 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
         </div>
       </div>
 
-      {/* Restore Deleted Elements Shelf (if any item was deleted) */}
       {deletedItems.length > 0 && (
         <div className="customizer-deleted-shelf">
           <div className="customizer-deleted-header">

@@ -38,7 +38,6 @@ export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
         className="omega-login-dialog"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <h2 style={{ fontSize: "16px", fontWeight: 900, color: "#ffffff", letterSpacing: "0.2px" }}>
@@ -56,7 +55,6 @@ export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
           </button>
         </div>
 
-        {/* Info card */}
         <div
           style={{
             padding: "10px 14px",
@@ -88,7 +86,6 @@ export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
           </div>
         )}
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <label style={{ fontSize: "12px", fontWeight: 700, color: "#94a3b8" }}>

@@ -14,16 +14,13 @@ import "../../styles/layer4-modals.css";
 interface ModalsLayerProps {
   activeModal: ActiveModal;
   onClose: () => void;
-  // Store props
   onEquipSkin: (skinUrl: string, model: "default" | "slim") => void;
   onEquipCape: (capeUrl: string) => void;
-  // Instances props
   instances: InstanceData[];
   selectedInstanceId: string;
   onSelectInstance: (instance: InstanceData) => void;
   onCreateInstance: (instance: InstanceData) => void;
   onLaunchInstance: (instance: InstanceData) => void;
-  // Accounts props
   account: AccountData;
   onSelectAccount: (acc: AccountData) => void;
 }

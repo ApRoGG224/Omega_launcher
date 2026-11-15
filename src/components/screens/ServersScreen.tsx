@@ -101,7 +101,6 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
         )
       );
     } catch {
-      // Keep existing data if offline or ping failed
     }
   }, []);
 
@@ -111,7 +110,6 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
     setIsRefreshing(false);
   }, [pingServerEntry]);
 
-  // Load from Tauri DB on mount, ping servers
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -195,7 +193,6 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
   return (
     <div className="screens-overlay-layer servers-screen-overlay">
       <div className="srv-wrap">
-        {/* Top Header: Title with count & Add button */}
         <div className="srv-top">
           <h1>СЕРВЕРЫ ({servers.length})</h1>
           <div style={{ display: "flex", gap: "8px" }}>
@@ -218,7 +215,6 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
           </div>
         </div>
 
-        {/* Add Server Form */}
         {showAddForm && (
           <form onSubmit={handleAddServer} className="srv-form">
             <input
@@ -241,7 +237,6 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
           </form>
         )}
 
-        {/* Scrollable Servers List */}
         <div className="srv-scroll-area">
           <div className="srv-list">
             {servers.length === 0 ? (

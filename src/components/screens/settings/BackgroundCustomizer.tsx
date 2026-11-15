@@ -78,7 +78,6 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
         )}
       </div>
 
-      {/* Current Active Background Hero Card (Smoothly Rounded) */}
       <div>
         <div className="set-lab">
           <span>Текущий фон:</span>
@@ -92,7 +91,6 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
             className="set-bg-preview-img"
           />
 
-          {/* Dynamic Tint Overlay on Preview Card */}
           {backgroundCustomization?.enabled && (() => {
             const t = computePanelTheme(
               backgroundCustomization.color,
@@ -143,7 +141,6 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
           </div>
         </div>
 
-        {/* Background Navigation & Controls Bar (Smoothly Rounded) */}
         <div className="set-bg-ctrl-bar">
           <button
             type="button"
@@ -189,14 +186,12 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
         </div>
       </div>
 
-      {/* Gallery of all Minecraft Backgrounds */}
       <div>
         <div className="set-lab">
           <span>Коллекция фонов Minecraft:</span>
           <small className="set-lab-hint">Кликните по карточке для выбора</small>
         </div>
 
-        {/* Category Filter Chips with Smooth Rounded Pill Shapes */}
         <div className="set-bg-filters">
           <button
             type="button"
@@ -232,7 +227,6 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
           </button>
         </div>
 
-        {/* Grid of Background Thumbnails with Smooth Rounded Shapes */}
         <div className="set-bg-grid">
           {filteredBgs.map(({ bg, originalIndex }) => {
             const isSelected = originalIndex === bgIndex;

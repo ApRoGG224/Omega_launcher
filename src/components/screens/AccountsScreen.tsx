@@ -73,7 +73,6 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       </div>
 
       <div className="screen-scroll-body" style={{ paddingBottom: "48px" }}>
-        {/* Section 1: Saved Base Accounts */}
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           <h3 style={{ fontSize: "11px", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
             Базовые игровые аккаунты Minecraft ({accounts.length})
@@ -154,7 +153,6 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
           })}
         </div>
 
-        {/* Section 2: Omega Network Account for playing with friends */}
         <div
           className="pixel-plate-dark"
           style={{
@@ -248,7 +246,6 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
           )}
         </div>
 
-        {/* Section 3: Add Account Options */}
         <div className="pixel-plate-dark" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
           <h4 style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-pure)" }}>
             Добавить новый базовый аккаунт

@@ -11,17 +11,12 @@ export function resetEmoteJoints(player: PlayerObject): void {
   }
 }
 
-/**
- * Natural, subtle Minecraft idle stance.
- * No meme dances, twerk, or chaotic emotes.
- */
 export class CleanIdleAnimation extends PlayerAnimation {
   protected animate(player: PlayerObject): void {
     const t = this.progress * 1.8;
     const skin = player.skin as any;
     if (!skin) return;
 
-    // Subtle natural breathing
     const breath = Math.sin(t) * 0.03;
     skin.leftArm.rotation.x = breath;
     skin.leftArm.rotation.z = 0.08 + breath * 0.5;

@@ -66,7 +66,6 @@ export const ConsoleScreen: React.FC<ConsoleScreenProps> = ({
       try {
         document.execCommand("copy");
       } catch {
-        // ignore
       }
       document.body.removeChild(textarea);
     };
@@ -104,7 +103,6 @@ export const ConsoleScreen: React.FC<ConsoleScreenProps> = ({
   return (
     <div className="screens-overlay-layer console-screen-overlay">
       <div className="console-wrap">
-        {/* Filter Dock Bar */}
         <div className="console-dock">
           {LOG_LEVELS.map((lvl) => {
             const count = getCount(lvl);
@@ -127,7 +125,6 @@ export const ConsoleScreen: React.FC<ConsoleScreenProps> = ({
           <div className="console-dock-count">Всего записей: {logs.length}</div>
         </div>
 
-        {/* Log Viewer Body */}
         <div className="console-log-body">
           {filteredLogs.length === 0 ? (
             <div className="console-empty">Нет записей</div>
@@ -142,7 +139,6 @@ export const ConsoleScreen: React.FC<ConsoleScreenProps> = ({
           )}
         </div>
 
-        {/* Footer Actions */}
         <div className="console-foot">
           {onClearLogs && (
             <button

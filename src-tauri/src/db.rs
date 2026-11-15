@@ -44,7 +44,6 @@ pub struct DbModRecord {
     pub filename: String,
 }
 
-/// Opens (or creates) the SQLite database inside the app data dir.
 pub fn init(app: &AppHandle) -> Result<Connection, String> {
     let data_dir = app_data_dir(app);
     let db_path = data_dir.join("omega.db");
@@ -82,7 +81,6 @@ pub fn init(app: &AppHandle) -> Result<Connection, String> {
     )
     .map_err(|e| format!("Failed to initialise database schema: {e}"))?;
 
-    // Migration: older databases lack the servers.favicon column.
     let has_favicon = {
         let mut stmt = conn
             .prepare("PRAGMA table_info(servers)")
@@ -106,8 +104,6 @@ pub fn init(app: &AppHandle) -> Result<Connection, String> {
         .map_err(|e| format!("Failed to migrate servers table: {e}"))?;
     }
 
-    // Migration: older databases lack the instances.play_time_ms /
-    // instances.last_played_at columns.
     let mut instance_cols = Vec::new();
     {
         let mut stmt = conn
@@ -292,8 +288,6 @@ pub fn db_list_installed_mods(db: State<'_, Db>, instance_id: String) -> Result<
     Ok(records)
 }
 
-/// Decodes a `data:image/...;base64,...` URL and stores it as a file under
-/// `app_data_dir/icons/`. Returns the absolute path to the saved image.
 #[tauri::command]
 pub fn db_save_icon(app: AppHandle, instance_id: String, data_url: String) -> Result<String, String> {
     let Some((_, base64_part)) = data_url.split_once(',') else {

@@ -32,7 +32,6 @@ pub struct ServerRow {
     pub favicon: Option<String>,
 }
 
-/// VarInt helpers for the Minecraft server list ping protocol.
 fn write_varint(out: &mut Vec<u8>, mut value: i32) {
     loop {
         let mut b = (value & 0x7F) as u8;
@@ -71,7 +70,6 @@ fn write_string_prefixed(out: &mut Vec<u8>, s: &str) {
     out.extend_from_slice(bytes);
 }
 
-/// Extracts plain text from a modern MC `description` (string or chat component).
 fn motd_from_chat(val: &serde_json::Value) -> String {
     match val {
         serde_json::Value::String(s) => s.clone(),
@@ -93,7 +91,6 @@ fn motd_from_chat(val: &serde_json::Value) -> String {
     }
 }
 
-/// Modern (1.7+) server list ping. Returns MOTD, players, favicon (base64) and latency.
 fn modern_ping(
     host: &str,
     port: u16,
@@ -108,7 +105,6 @@ fn modern_ping(
         .set_write_timeout(Some(timeout))
         .map_err(|e| e.to_string())?;
 
-    // Handshake: packet id 0x00, protocol 47 (1.8), host, port, next state 1 (status).
     let mut handshake = Vec::new();
     write_varint(&mut handshake, 47);
     write_string_prefixed(&mut handshake, host);
@@ -119,10 +115,8 @@ fn modern_ping(
     packet.extend_from_slice(&handshake);
     stream.write_all(&packet).map_err(|e| e.to_string())?;
 
-    // Status request: single packet with id 0x00.
     stream.write_all(&[0x01, 0x00]).map_err(|e| e.to_string())?;
 
-    // Response: packet length, packet id, then the json string.
     let _packet_len = read_varint(&mut stream)?;
     let _packet_id = read_varint(&mut stream)?;
     let json_len = read_varint(&mut stream)?;
@@ -149,7 +143,6 @@ fn modern_ping(
     Ok((motd, String::new(), players_online, players_max, favicon, latency))
 }
 
-/// Legacy (1.6-) server list ping. Fast and dependency-free.
 fn legacy_ping(host: &str, port: u16, timeout: Duration) -> Result<(String, String, i32, i32, u64), String> {
     let started = std::time::Instant::now();
     let mut stream = TcpStream::connect((host, port)).map_err(|e| format!("Cannot connect: {e}"))?;
@@ -160,7 +153,6 @@ fn legacy_ping(host: &str, port: u16, timeout: Duration) -> Result<(String, Stri
         .set_write_timeout(Some(timeout))
         .map_err(|e| e.to_string())?;
 
-    // 0xFE 0x01 0xFA 0x00 0x0B "MC|PingHost" 0x00 0x04 len host... port
     let mut payload: Vec<u8> = vec![0x01, 0xFA];
     let string = b"MC|PingHost";
     payload.push(0x00);
@@ -182,7 +174,6 @@ fn legacy_ping(host: &str, port: u16, timeout: Duration) -> Result<(String, Stri
     stream.read_to_end(&mut buf).map_err(|e| e.to_string())?;
     let latency = started.elapsed().as_millis() as u64;
 
-    // Response: 0xFF 0x00 len "§1\0motd\0players\0max"
     if buf.len() < 3 || buf[0] != 0xFF {
         return Err("Not a Minecraft server or unsupported protocol".to_string());
     }
@@ -195,7 +186,6 @@ fn legacy_ping(host: &str, port: u16, timeout: Duration) -> Result<(String, Stri
     Ok((motd, String::new(), players_online, players_max, latency))
 }
 
-/// Pings a Minecraft server and returns its status (online, MOTD, players).
 #[tauri::command]
 pub async fn ping_server(host: String, port: Option<u16>) -> Result<ServerInfo, String> {
     let port = port.unwrap_or(25565);
@@ -216,7 +206,6 @@ pub async fn ping_server(host: String, port: Option<u16>) -> Result<ServerInfo, 
                 latency,
             )),
             Err(_) => {
-                // Modern ping failed (old server or non-standard) - fall back to legacy.
                 legacy_ping(&host_for_ping, port, Duration::from_secs(3))
                     .map(|(motd, name, players_online, players_max, latency)| {
                         (motd, name, players_online, players_max, None, latency)

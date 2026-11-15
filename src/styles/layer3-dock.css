@@ -1,8 +1,3 @@
-/* Hallmark: modern-minimal / app / tactical-tech / dock */
-/* ==========================================================================
-   LAYER 3: BOTTOM LAUNCH DOCK
-   Minecraft Rust (Beta) Card Style Dock
-   ========================================================================== */
 
 :root {
   --dock-bg: #05070d;
@@ -133,7 +128,6 @@
   min-width: 0;
 }
 
-/* Floating tooltip above on hover for dock instance selector */
 .dock-tooltip {
   position: absolute;
   bottom: calc(100% + 11px);
@@ -184,7 +178,6 @@
   pointer-events: none;
 }
 
-/* 1. Main Dock Card Container */
 .dock-container.dock-card {
   display: flex;
   align-items: center;
@@ -201,7 +194,6 @@
   font-family: var(--font-primary) !important;
 }
 
-/* 2. Interactive Instance Selector */
 .dock-instance-btn {
   display: flex;
   align-items: center;
@@ -231,7 +223,6 @@
   outline-offset: 4px;
 }
 
-/* 3. Icon (64x64px, rounded 12px, #0a0c12) */
 .dock-icon {
   width: 64px;
   height: 64px;
@@ -249,7 +240,6 @@
   height: 36px;
 }
 
-/* 4. Info Section (Title & Tags) */
 .dock-info {
   flex: 1;
   min-width: 0;
@@ -321,7 +311,6 @@
   font-family: var(--font-primary) !important;
 }
 
-/* 5. Play / Stop Button */
 .dock-play {
   position: relative;
   flex: none;
@@ -370,7 +359,6 @@
   flex-shrink: 0;
 }
 
-/* Replicated Stop State from Minecraft Rust (Beta)(1).html */
 .dock-play.running {
   border-radius: 14px;
   border: 1px solid #b3423f;

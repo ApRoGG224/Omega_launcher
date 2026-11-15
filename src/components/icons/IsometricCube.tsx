@@ -31,14 +31,12 @@ export const IsometricCube: React.FC<IsometricCubeProps> = ({
         fill="none"
         className={className}
       >
-        {/* Top Face - Grass */}
         <polygon
           points="16,3 29,10 16,17 3,10"
           fill="#6eb327"
           stroke="#558f1e"
           strokeWidth="0.8"
         />
-        {/* Grass highlights on top */}
         <line
           x1="10"
           y1="6.5"
@@ -48,27 +46,23 @@ export const IsometricCube: React.FC<IsometricCubeProps> = ({
           strokeWidth="0.6"
         />
 
-        {/* Left Face - Dirt */}
         <polygon
           points="3,10 16,17 16,29 3,22"
           fill="#845e41"
           stroke="#68472f"
           strokeWidth="0.8"
         />
-        {/* Left Face - Grass Overhang */}
         <polygon
           points="3,10 16,17 16,20 13,18 10,21 7,17 3,18"
           fill="#598e21"
         />
 
-        {/* Right Face - Dirt (Shadowed) */}
         <polygon
           points="16,17 29,10 29,22 16,29"
           fill="#6a4930"
           stroke="#523620"
           strokeWidth="0.8"
         />
-        {/* Right Face - Grass Overhang */}
         <polygon
           points="16,17 29,10 29,18 25,17 22,21 19,18 16,20"
           fill="#446c17"
@@ -125,13 +119,9 @@ export const IsometricCube: React.FC<IsometricCubeProps> = ({
         className={className}
       >
         <polygon points="16,3 29,10 16,17 3,10" fill="#dc4a3b" stroke="#b03123" strokeWidth="0.8" />
-        {/* Left red face */}
         <polygon points="3,10 16,17 16,29 3,22" fill="#c33729" stroke="#962216" strokeWidth="0.8" />
-        {/* Left white stripe */}
         <polygon points="3,14 16,21 16,25 3,18" fill="#eae4db" />
-        {/* Right red face */}
         <polygon points="16,17 29,10 29,22 16,29" fill="#9f251a" stroke="#79180e" strokeWidth="0.8" />
-        {/* Right white stripe */}
         <polygon points="16,21 29,14 29,18 16,25" fill="#cfc7bd" />
       </svg>
     );
@@ -163,19 +153,16 @@ export const IsometricCube: React.FC<IsometricCubeProps> = ({
         fill="none"
         className={className}
       >
-        {/* Top Face - Warm Rust/Copper Metal */}
         <polygon points="16,3 29,10 16,17 3,10" fill="#df6436" stroke="#b34a21" strokeWidth="0.8" />
         <polygon points="16,6 24,10 16,14 8,10" fill="#ee794d" />
         <circle cx="16" cy="10" r="1.8" fill="#ffedd5" />
         <circle cx="16" cy="10" r="0.8" fill="#9a3412" />
 
-        {/* Left Face - Industrial Oxidized Rust */}
         <polygon points="3,10 16,17 16,29 3,22" fill="#c24f24" stroke="#8c3311" strokeWidth="0.8" />
         <circle cx="8" cy="17" r="1" fill="#7c2d12" />
         <circle cx="12" cy="23" r="1" fill="#ea580c" />
         <line x1="6" y1="13" x2="14" y2="25" stroke="rgba(255,255,255,0.18)" strokeWidth="0.6" />
 
-        {/* Right Face - Dark Shaded Industrial Metal */}
         <polygon points="16,17 29,10 29,22 16,29" fill="#933614" stroke="#682108" strokeWidth="0.8" />
         <circle cx="24" cy="17" r="1" fill="#581a04" />
         <circle cx="20" cy="23" r="1" fill="#c2410c" />
@@ -218,7 +205,6 @@ export const IsometricCube: React.FC<IsometricCubeProps> = ({
     );
   }
 
-  // Futuristic Crystal Cubes (violet default fallback)
   return (
     <svg
       width={size}

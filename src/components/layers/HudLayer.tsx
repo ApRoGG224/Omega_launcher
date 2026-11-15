@@ -91,7 +91,6 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
   const [offlineError, setOfflineError] = useState<string | null>(null);
   const dropdownRefTop = useRef<HTMLDivElement | null>(null);
 
-  // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -110,19 +109,15 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
     };
   }, [isDropdownOpen]);
 
-  // Check if player has a valid active base account
   const hasBaseAccount = !!account && (account.type === "microsoft" || account.type === "offline");
 
-  // Account switcher popover content with full-width action buttons
   const renderAccountDropdown = () => (
     <div className="hud-profile-dropdown panel align-left" onClick={(e) => e.stopPropagation()}>
-      {/* Title Header with Counter */}
       <div className="hud-acc-dropdown-header">
         <span className="title">МОИ АККАУНТЫ</span>
         <span className="hud-acc-count-badge">{accounts.length}</span>
       </div>
 
-      {/* Accounts List */}
       <div className="hud-acc-list">
         {accounts.map((acc) => {
           const isSelected = acc.id === account?.id;
@@ -179,7 +174,6 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
 
       <div className="hud-acc-divider" />
 
-      {/* Action Buttons: Microsoft & Offline */}
       <div className="hud-acc-actions">
         <button
           type="button"
@@ -450,7 +444,6 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
                   <div className={`hud-shortcut-badge ${inst.icon || "diamond_sword"}`}>
                     <InstanceAvatarIcon icon={inst.icon} size={22} />
                   </div>
-                  {/* Floating tooltip underneath on hover */}
                   <div className="hud-shortcut-tooltip">{inst.name}</div>
                 </button>
               );
@@ -497,9 +490,6 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
 
   return (
     <div className={`layer-hud ${!visible ? "hidden" : ""}`}>
-      {/* ====================================================================
-          2.1 ROTATED TOP DOCK (Configurable order based on topBarLayout)
-          ==================================================================== */}
       <header className="hud-topbar">
         <nav
           className={`hud-top-dock ${topBarCustomization?.enabled ? "custom-theme-active" : ""}`}
@@ -538,9 +528,6 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
         </nav>
       </header>
 
-      {/* ====================================================================
-          2.2 LEFT FLANK: Project GitHub Link (No button background)
-          ==================================================================== */}
       {activeScreen === "home" && (
         <aside className="hud-flank-left">
           <a
@@ -557,15 +544,9 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
         </aside>
       )}
 
-      {/* ====================================================================
-          2.3 RIGHT FLANK: Quick Controls (Sound, Particles)
-          (Side friends card removed as requested!)
-          ==================================================================== */}
       {activeScreen === "home" && (
         <aside className="hud-flank-right">
-          {/* Quick Utility Control Buttons */}
           <div className="hud-side-controls">
-            {/* Sound Toggle */}
             <button
               type="button"
               className={`hud-flank-btn ${soundMuted ? "muted" : ""}`}

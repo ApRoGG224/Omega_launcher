@@ -32,10 +32,6 @@ interface MenuCustomizerModalProps {
   onResetZone?: (zone: CustomizerZoneId) => void;
 }
 
-/**
- * Directly writes CSS custom properties to document root.
- * Bypasses virtual DOM diffing for 60/120/144fps GPU-accelerated live preview.
- */
 function applyZoneCssVariables(zone: CustomizerZoneId, config: ZoneCustomizationConfig) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
@@ -85,12 +81,11 @@ function getHarmonyOffsets(numDots: number, harmonyType: string): number[] {
   if (numDots === 1) return [];
   if (numDots === 2) {
     if (harmonyType === "singleAnalogous") return [50];
-    return [180]; // complementary
+    return [180];
   }
-  // 3 dots
   if (harmonyType === "triadic") return [120, 240];
   if (harmonyType === "splitComplementary") return [150, 210];
-  return [50, 310]; // analogous (±50°)
+  return [50, 310];
 }
 
 const MAX_RADIUS = 38;
@@ -109,10 +104,8 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
   });
   const [palettePageIndex, setPalettePageIndex] = useState<number>(0);
 
-  // Active configuration for current zone
   const currentConfig = state[activeZone] || DEFAULT_MENUS_CUSTOMIZATION[activeZone];
 
-  // Local state for React UI elements
   const [numDots, setNumDots] = useState<number>(currentConfig.numDots ?? 3);
   const [harmonyType, setHarmonyType] = useState<
     "analogous" | "triadic" | "splitComplementary" | "complementary" | "singleAnalogous"
@@ -137,7 +130,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     return currentConfig.color || sampleZenColor(baseAngle, distance, MAX_RADIUS, currentConfig.mode);
   });
 
-  // Direct DOM Refs for 0-latency, 0-React-render drag operations
   const cardRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const dot0Ref = useRef<HTMLDivElement>(null);
@@ -160,28 +152,23 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
   const knobTicksSvgRef = useRef<SVGSVGElement>(null);
   const knobValLabelRef = useRef<HTMLDivElement>(null);
 
-  // Cached layout rects
   const canvasRectRef = useRef<DOMRect | null>(null);
   const sliderRectRef = useRef<DOMRect | null>(null);
   const knobRectRef = useRef<DOMRect | null>(null);
 
-  // Drag coordinates & refs
   const canvasPointerCoordsRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const activeDragDotRef = useRef<number>(0);
   const sliderPointerXRef = useRef<number>(0);
   const knobPointerCoordsRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // Running values during active drag (so onPointerUp can commit cleanly)
   const dragBaseAngleRef = useRef<number>(baseAngle);
   const dragDistanceRef = useRef<number>(distance);
   const dragColorRef = useRef<string>(localColor);
   const dragIntensityRef = useRef<number>(localIntensity);
   const dragPatternIntensityRef = useRef<number>(localPatternIntensity);
 
-  // requestAnimationFrame handle
   const rafIdRef = useRef<number | null>(null);
 
-  // References to latest state
   const latestStateRef = useRef<MenusCustomizationState>(state);
   const latestConfigRef = useRef<ZoneCustomizationConfig>(currentConfig);
   const activeZoneRef = useRef<CustomizerZoneId>(activeZone);
@@ -205,7 +192,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     }
   }, [initialZone, isOpen]);
 
-  // Synchronize local state when switching zone or reopening
   useEffect(() => {
     const cfg = state[activeZone] || DEFAULT_MENUS_CUSTOMIZATION[activeZone];
     latestConfigRef.current = cfg;
@@ -246,7 +232,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     }
   }, [activeZone, isOpen]);
 
-  // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
@@ -257,7 +242,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Geometry calculations for ball orbits
   const offsets = useMemo(() => {
     return getHarmonyOffsets(numDots, harmonyType);
   }, [numDots, harmonyType]);
@@ -287,7 +271,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     return computePanelTheme(color0, localIntensity, localPatternIntensity, localMode);
   }, [color0, localIntensity, localPatternIntensity, localMode]);
 
-  // Helper to commit changes to parent and save
   const commitConfigChange = useCallback((updates: Partial<ZoneCustomizationConfig>) => {
     const updated: ZoneCustomizationConfig = {
       ...latestConfigRef.current,
@@ -300,10 +283,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
       [activeZoneRef.current]: updated,
     });
   }, []);
-
-  // =========================================================================
-  // Zero-React-Render Direct DOM Tick for Orbital Balls
-  // =========================================================================
 
   const processCanvasDragTick = useCallback(() => {
     rafIdRef.current = null;
@@ -344,7 +323,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     dragDistanceRef.current = newDist;
     dragColorRef.current = newPrimaryColor;
 
-    // DIRECT DOM MUTATIONS (0ms Virtual DOM overhead)
     const curRad0 = (newBaseAngle * Math.PI) / 180;
     const curDot0_x = CANVAS_CENTER.x + newDist * Math.cos(curRad0);
     const curDot0_y = CANVAS_CENTER.y + newDist * Math.sin(curRad0);
@@ -385,7 +363,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
       dot2Ref.current.style.backgroundColor = curColor2;
     }
 
-    // Live panel surface preview direct DOM update
     const curTheme = computePanelTheme(
       newPrimaryColor,
       latestConfigRef.current.intensity,
@@ -416,11 +393,9 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     };
     latestConfigRef.current = updated;
 
-    // Instant CSS update on documentElement (0ms latency, direct GPU composition)
     applyZoneCssVariables(activeZoneRef.current, updated);
   }, []);
 
-  // Pointer Down for Zen Balls
   const handleStartDragBall = useCallback((dotIndex: number, e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -457,7 +432,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
       cardRef.current?.classList.remove("is-dragging");
       canvasRectRef.current = null;
 
-      // Sync React state once on release
       setBaseAngle(dragBaseAngleRef.current);
       setDistance(dragDistanceRef.current);
       setLocalColor(dragColorRef.current);
@@ -473,13 +447,8 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     window.addEventListener("pointerup", onWindowUp);
     window.addEventListener("pointercancel", onWindowUp);
 
-    // Initial tick
     processCanvasDragTick();
   }, [processCanvasDragTick, commitConfigChange]);
-
-  // =========================================================================
-  // Zero-React-Render Direct DOM Tick for Wavy Slider
-  // =========================================================================
 
   const processSliderDragTick = useCallback(() => {
     rafIdRef.current = null;
@@ -577,10 +546,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     processSliderDragTick();
   }, [processSliderDragTick, commitConfigChange]);
 
-  // =========================================================================
-  // Zero-React-Render Direct DOM Tick for Rotary Knob
-  // =========================================================================
-
   const processKnobDragTick = useCallback(() => {
     rafIdRef.current = null;
     const rect = knobRectRef.current;
@@ -608,7 +573,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
       previewTextureRef.current.textContent = `Текстура: ${pct}%`;
     }
 
-    // Direct update of tick marks around rotary dial
     if (knobTicksSvgRef.current) {
       const circles = knobTicksSvgRef.current.querySelectorAll("circle");
       circles.forEach((c, i) => {
@@ -618,7 +582,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
       });
     }
 
-    // Live update of panel preview texture pattern in real time
     const curTheme = computePanelTheme(
       dragColorRef.current,
       dragIntensityRef.current,
@@ -694,7 +657,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     processKnobDragTick();
   }, [processKnobDragTick, commitConfigChange]);
 
-  // Action: Add ball (+)
   const handleAddDot = useCallback(() => {
     if (numDots >= 3) return;
     const next = (numDots + 1) as 1 | 2 | 3;
@@ -704,7 +666,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     commitConfigChange({ numDots: next, harmonyType: newHarmony });
   }, [numDots, commitConfigChange]);
 
-  // Action: Remove ball (—)
   const handleRemoveDot = useCallback(() => {
     if (numDots <= 1) return;
     const next = (numDots - 1) as 1 | 2 | 3;
@@ -714,7 +675,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     commitConfigChange({ numDots: next, harmonyType: newHarmony });
   }, [numDots, commitConfigChange]);
 
-  // Action: Toggle harmony algorithm (∴)
   const handleToggleAlgo = useCallback(() => {
     if (numDots === 3) {
       const harmonies: Array<"analogous" | "triadic" | "splitComplementary"> = [
@@ -733,7 +693,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     }
   }, [numDots, harmonyType, commitConfigChange]);
 
-  // Mode button toggle (dynamic / light / dark)
   const handleSetMode = useCallback((newMode: "dynamic" | "light" | "dark") => {
     setLocalMode(newMode);
     const newColor = sampleZenColor(baseAngle, distance, MAX_RADIUS, newMode);
@@ -746,7 +705,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
   const currentPalettes = COLOR_PALETTE_PAGES[palettePageIndex] || COLOR_PALETTE_PAGES[0];
   const knobAngle = (localPatternIntensity / 100) * 360;
 
-  // 16 Tick marks around rotary knob
   const tickCount = 16;
   const tickRadius = 24;
   const tickCenter = 29;
@@ -785,7 +743,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
       aria-modal="true"
     >
       <div ref={cardRef} className="menu-customizer-card">
-        {/* Header: Zone Selector & Master On/Off Toggle */}
         <div className="customizer-header">
           <div className="customizer-title-group">
             <div className="customizer-title">
@@ -817,7 +774,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
           </div>
         </div>
 
-        {/* Zone Switcher Tabs (Верхняя панель / Задний фон) */}
         <div className="customizer-zone-pills">
           <button
             type="button"
@@ -837,7 +793,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
           </button>
         </div>
 
-        {/* 3 Mode Icons (✦ Sparkles, ☼ Sun, ☾ Moon) */}
         <div className="customizer-modes-bar">
           <button
             type="button"
@@ -865,7 +820,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
           </button>
         </div>
 
-        {/* Interactive Zen Browser Canvas Area with Orbital Color Balls */}
         <div
           ref={canvasRef}
           className="customizer-canvas zen-canvas"
@@ -877,11 +831,9 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
           }}
           onPointerDown={(e) => handleStartDragBall(0, e)}
         >
-          {/* Circular Orbit Boundary Guide matching Zen Browser */}
           <div className="zen-canvas-orbit-guide" />
           <div className="zen-canvas-center-dot" />
 
-          {/* Primary Ball (Dot 0 - Large) */}
           <div
             ref={dot0Ref}
             className="zen-ball primary"
@@ -894,7 +846,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
             title="Основной цвет темы (перетаскивайте по кругу)"
           />
 
-          {/* Ball 1 (Secondary) */}
           {numDots >= 2 && (
             <div
               ref={dot1Ref}
@@ -909,7 +860,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
             />
           )}
 
-          {/* Ball 2 (Tertiary) */}
           {numDots >= 3 && (
             <div
               ref={dot2Ref}
@@ -924,7 +874,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
             />
           )}
 
-          {/* Canvas Tools underneath: + (add), — (remove), ∴ (toggle algo) */}
           <div className="canvas-tools-bar">
             <button
               type="button"
@@ -975,7 +924,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
           </div>
         </div>
 
-        {/* Live Panel Surface Preview (Demonstrating the actual panel background color & texture) */}
         <div
           ref={previewBgRef}
           className="customizer-panel-live-preview"
@@ -1015,7 +963,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
           </div>
         </div>
 
-        {/* Swatches Palette Row with Pagination */}
         <div className="customizer-swatches-row">
           <button
             type="button"
@@ -1074,9 +1021,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
           </button>
         </div>
 
-        {/* Bottom Controls: Wavy Slider + Rotary Dial */}
         <div className="customizer-controls-row">
-          {/* Wavy Slider for Intensity (0% - 100%) */}
           <div className="wavy-slider-container">
             <div className="wavy-slider-label-row">
               <span>Интенсивность цвета</span>
@@ -1093,7 +1038,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
                 viewBox="0 0 200 24"
                 preserveAspectRatio="none"
               >
-                {/* Background dark wavy track */}
                 <path
                   d="M 6 12 Q 18 2, 30 12 T 54 12 T 78 12 T 102 12 T 126 12 T 150 12 T 174 12 T 194 12"
                   fill="none"
@@ -1101,7 +1045,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
                   strokeWidth="5"
                   strokeLinecap="round"
                 />
-                {/* Active colored wavy track overlay */}
                 <path
                   ref={sliderActivePathRef}
                   d="M 6 12 Q 18 2, 30 12 T 54 12 T 78 12 T 102 12 T 126 12 T 150 12 T 174 12 T 194 12"
@@ -1115,7 +1058,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
                 />
               </svg>
 
-              {/* Draggable vertical white pill thumb */}
               <div
                 ref={sliderThumbRef}
                 className="wavy-slider-thumb"
@@ -1126,7 +1068,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
             </div>
           </div>
 
-          {/* Rotary Dial Knob for Texture / Pattern Grain (0% - 100%) */}
           <div className="rotary-knob-container">
             <div
               ref={knobRef}
@@ -1134,7 +1075,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
               onPointerDown={handleStartKnob}
               title="Поверните для настройки зернистости / микро-текстуры"
             >
-              {/* Radial tick marks */}
               <svg ref={knobTicksSvgRef} className="rotary-ticks-svg" viewBox="0 0 58 58">
                 {ticks.map((t) => (
                   <circle
@@ -1147,7 +1087,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
                 ))}
               </svg>
 
-              {/* Inner metallic rotating dial */}
               <div
                 ref={knobDialRef}
                 className="rotary-inner-dial"
@@ -1165,7 +1104,6 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
           </div>
         </div>
 
-        {/* Footer Actions */}
         <div className="customizer-footer">
           <button
             type="button"

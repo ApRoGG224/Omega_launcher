@@ -30,7 +30,6 @@ fn read_zip_entry(zip_path: &Path, wanted: &str) -> Option<String> {
     None
 }
 
-/// Extracts a single entry (by exact or suffix path match) from a zip archive.
 fn extract_zip_entry(zip_path: &Path, wanted: &str, dest: &Path) -> Result<bool, String> {
     let file = std::fs::File::open(zip_path).map_err(|e| e.to_string())?;
     let mut archive = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
@@ -50,8 +49,6 @@ fn extract_zip_entry(zip_path: &Path, wanted: &str, dest: &Path) -> Result<bool,
     Ok(false)
 }
 
-/// Extracts all entries whose path contains a root folder (e.g. `.minecraft`,
-/// `overrides`, or a custom override folder) and returns the file count.
 fn extract_roots(zip_path: &Path, dest: &Path, roots: &[&str]) -> Result<usize, String> {
     let file = std::fs::File::open(zip_path).map_err(|e| e.to_string())?;
     let mut archive = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
@@ -104,8 +101,6 @@ fn loader_from_parts(parts: &[Value]) -> String {
     "Vanilla".to_string()
 }
 
-/// Picks the vanilla version id from `.minecraft/versions/<id>/<id>.json` entries.
-/// Used as a last-resort fallback when `instance.cfg` and `mmc-pack.json` are missing.
 fn version_from_versions_folder(zip_path: &Path) -> Option<String> {
     let file = std::fs::File::open(zip_path).ok()?;
     let mut archive = zip::ZipArchive::new(file).ok()?;
@@ -184,9 +179,6 @@ pub async fn import_prism(
         }
     }
 
-    // Prefer mmc-pack.json: it describes the actual component selected for the
-    // instance. Some Prism exports keep a stale MinecraftVer in instance.cfg.
-    // Use instance.cfg as a fallback for older/incomplete exports.
     let mut cfg_found = false;
     if let Some(text) = read_zip_entry(&zip_path, "instance.cfg") {
         cfg_found = true;
@@ -221,7 +213,6 @@ pub async fn import_prism(
     }
 
     if !cfg_found && mc_version == "1.20.1" {
-        // Not a Prism export: maybe a raw .minecraft folder dump.
         if let Some(v) = version_from_versions_folder(&zip_path) {
             emit_line(&app, &format!("[IMPORT] mmc-pack.json и instance.cfg не найдены, версия взята из папки versions: {v}"));
             mc_version = v;
@@ -369,7 +360,6 @@ pub async fn import_mrpack(
                 }
             }
             Err(e) => {
-                // Offline fallback: pull the file straight out of the archive if present.
                 match extract_zip_entry(&zip_path, path, &dest) {
                     Ok(true) => downloaded += 1,
                     Ok(false) => emit_line(&app, &format!("[IMPORT] Файл не найден ни в сети, ни в архиве: {path}")),
@@ -388,7 +378,6 @@ pub async fn import_mrpack(
     Ok(serde_json::to_string(&summary).map_err(|e| e.to_string())?)
 }
 
-/// Zips a folder tree into an archive. Used by export_modpack.
 fn add_folder_to_zip<T: std::io::Write + std::io::Seek>(
     zip: &mut zip::ZipWriter<T>,
     dir: &Path,
@@ -468,8 +457,6 @@ emit_line(
     Ok(mrpack_path.to_string_lossy().to_string())
 }
 
-/// Exports a full instance snapshot into a single `.omega` archive containing
-/// the mrpack index, `omega.metadata.json` and the `overrides/` folders.
 #[tauri::command]
 pub async fn export_omega(
     app: AppHandle,

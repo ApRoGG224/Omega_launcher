@@ -156,7 +156,6 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
     }
   };
 
-  // Check if title and tags are consecutive
   const items = bottomBarLayout || DEFAULT_BOTTOMBAR_LAYOUT;
   const titleIdx = items.indexOf("instance_title");
   const tagsIdx = items.indexOf("instance_tags");
@@ -166,7 +165,6 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
     <footer className={`layer-dock ${!visible ? "hidden" : ""} dock-align-${bottomBarAlignment}`}>
       <div className={`dock-container dock-card dock-layout-mode-${areTitleAndTagsAdjacent ? "grouped" : "split"}`}>
         {items.map((id, index) => {
-          // If title and tags are adjacent, group them into a single column dock-info
           if (areTitleAndTagsAdjacent) {
             if (id === "instance_title" && titleIdx < tagsIdx) {
               return (
@@ -210,7 +208,7 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
               );
             }
             if (id === "instance_tags" && titleIdx < tagsIdx) {
-              return null; // Already rendered in group
+              return null;
             }
             if (id === "instance_tags" && tagsIdx < titleIdx) {
               return (
@@ -254,7 +252,7 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
               );
             }
             if (id === "instance_title" && tagsIdx < titleIdx) {
-              return null; // Already rendered in group
+              return null;
             }
           }
 

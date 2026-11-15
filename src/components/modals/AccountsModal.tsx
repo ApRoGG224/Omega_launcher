@@ -65,7 +65,6 @@ export const AccountsModal: React.FC<AccountsModalProps> = ({
       </div>
 
       <div className="modal-body">
-        {/* Active Accounts List */}
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {accounts.map((acc) => {
             const isActive = acc.id === activeAccount.id;
@@ -143,7 +142,6 @@ export const AccountsModal: React.FC<AccountsModalProps> = ({
           })}
         </div>
 
-        {/* Add Account Options */}
         <div className="settings-section">
           <span className="settings-section-title">Добавить аккаунт</span>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>

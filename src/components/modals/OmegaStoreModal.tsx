@@ -54,7 +54,6 @@ export const OmegaStoreModal: React.FC<OmegaStoreModalProps> = ({
       </div>
 
       <div className="modal-body">
-        {/* Navigation Tabs */}
         <div className="store-tabs">
           <button
             type="button"
@@ -72,7 +71,6 @@ export const OmegaStoreModal: React.FC<OmegaStoreModalProps> = ({
           </button>
         </div>
 
-        {/* Tab 1: Skins */}
         {activeTab === "skins" && (
           <>
             <div className="store-search-bar">
@@ -118,7 +116,6 @@ export const OmegaStoreModal: React.FC<OmegaStoreModalProps> = ({
           </>
         )}
 
-        {/* Tab 2: Capes */}
         {activeTab === "capes" && (
           <div className="store-grid">
             {capesCatalog.map((cape) => (

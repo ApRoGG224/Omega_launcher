@@ -101,7 +101,6 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
   const [addedUsers, setAddedUsers] = useState<Record<string, boolean>>({});
   const [joiningFriend, setJoiningFriend] = useState<string | null>(null);
 
-  // Canvas spoiler particle code state
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const codeBtnRef = useRef<HTMLButtonElement | null>(null);
   const [isCodeOpen, setIsCodeOpen] = useState(false);
@@ -317,7 +316,6 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
   return (
     <div className="screens-overlay-layer friends-screen-overlay">
       <main className="app">
-        {/* Top Header */}
         <div className="top">
           <button
             type="button"
@@ -377,7 +375,6 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
           </div>
         </div>
 
-        {/* Friend Code Card (Matches HTML 1:1) */}
         <div className="card code">
           <div className="t">
             <small>Твой код друга</small>
@@ -405,9 +402,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
           </div>
         </div>
 
-        {/* View / Content List */}
         <div className="list" id="view">
-          {/* TAB 1: FRIENDS */}
           {tab === "friends" && (
             friends.length === 0 ? (
               <div className="card empty">
@@ -458,10 +453,8 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
             )
           )}
 
-          {/* TAB 2: CHATS */}
           {tab === "chats" && (
             activeChatFriend ? (
-              /* Active Conversation View */
               <div className="chat-convo-wrap">
                 <div className="chat-header-bar">
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -536,7 +529,6 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                 </div>
               </div>
             ) : (
-              /* Dialogs list from mockup */
               chats.map((c) => {
                 const friend = friends.find((x) => x.n === c.n);
                 const s = friend ? friend.s : "off";
@@ -572,7 +564,6 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
             )
           )}
 
-          {/* TAB 3: REQUESTS (Заявки) */}
           {tab === "reqs" && (
             reqs.length === 0 ? (
               <div className="card empty">Новых заявок нет.</div>
@@ -605,7 +596,6 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
             )
           )}
 
-          {/* TAB 4: SEARCH (Поиск) */}
           {tab === "search" && (
             <>
               <input

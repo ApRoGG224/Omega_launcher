@@ -71,7 +71,6 @@ export function getInitialWindowPosition(key: string, fallback: Point): Point {
         return parsed as Point;
       }
     } catch {
-      // Ignore malformed state and fall back to centered positioning.
     }
   }
   return fallback;
@@ -87,7 +86,6 @@ export function getInitialWindowSize(key: string, fallback?: WindowSize): Window
         return parsed as WindowSize;
       }
     } catch {
-      // Ignore malformed state and use the panel's default size.
     }
   }
   return fallback;

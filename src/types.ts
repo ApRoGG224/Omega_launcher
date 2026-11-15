@@ -25,7 +25,7 @@ export interface SkinPreset {
 export interface InstanceFolder {
   id: string;
   name: string;
-  icon: string; // Emoji, texture variant, or image URL
+  icon: string;
   iconType?: "emoji" | "cube" | "image";
   cubeVariant?: "grass" | "stone" | "obsidian" | "tnt" | "diamond" | "rust";
   isSystem?: boolean;

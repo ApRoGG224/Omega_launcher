@@ -122,7 +122,6 @@ export async function omegaGetProfile(): Promise<OmegaProfile | null> {
     .eq("id", uid)
     .maybeSingle();
   if (!row) {
-    // Fallback for projects where the avatar_url migration is not applied yet.
     const { data: rowFallback } = await sb
       .from("profiles")
       .select("id, username, friend_code")

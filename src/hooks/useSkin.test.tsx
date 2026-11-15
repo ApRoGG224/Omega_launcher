@@ -81,7 +81,6 @@ describe("useSkin", () => {
 
   it("resolves custom cape for ely source when capeEnabled is true", async () => {
     vi.useFakeTimers();
-    // mock global fetch
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue({
       ok: true,
       json: async () => ({

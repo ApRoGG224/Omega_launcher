@@ -1,8 +1,3 @@
-/* Hallmark: modern-minimal / app / tactical-tech / modals */
-/* ==========================================================================
-   LAYER 4: MODALS & OVERLAYS
-   Tactical Dialogs, Omega Network Auth, Modals Backdrop
-   ========================================================================== */
 .modal-backdrop,
 .layer-modals-backdrop,
 .layer-modals {
@@ -72,9 +67,6 @@
   }
 }
 
-/* ==========================================================================
-   OMEGA NETWORK AUTHENTICATION DIALOG (TACTICAL TECH)
-   ========================================================================== */
 .omega-login-dialog {
   position: relative;
   width: 440px;
@@ -166,7 +158,6 @@
   font-family: var(--font-primary) !important;
 }
 
-/* Modal Header */
 .modal-header {
   display: flex;
   align-items: center;
@@ -228,7 +219,6 @@
   color: var(--text-pure);
 }
 
-/* Modal Body */
 .modal-body {
   padding: 24px;
   overflow-y: auto;
@@ -238,7 +228,6 @@
   gap: 20px;
 }
 
-/* Store Tabs inside Modal */
 .store-tabs {
   display: flex;
   gap: 8px;
@@ -363,7 +352,6 @@
   filter: brightness(1.14);
 }
 
-/* Settings Sections */
 .settings-section {
   display: flex;
   flex-direction: column;

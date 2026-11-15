@@ -110,8 +110,6 @@ fn app_exit(app: AppHandle) {
     app.exit(0);
 }
 
-/// Returns the first non-loopback IPv4 address of this machine, used for
-/// friend "join my world" invites (LAN play).
 #[tauri::command]
 fn get_local_ip() -> Option<String> {
     let socket = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
@@ -242,7 +240,6 @@ fn open_folder(app: tauri::AppHandle, instance_id: String) {
     path.push("instances");
     path.push(&instance_id);
 
-    // Create the 'minecraft' subfolder so it exists when the user opens the folder
     let mut mc_path = path.clone();
     mc_path.push("minecraft");
     let _ = std::fs::create_dir_all(&mc_path);
@@ -356,7 +353,6 @@ fn list_worlds(app: tauri::AppHandle, instance_id: String) -> Result<Vec<String>
 fn open_path(app: tauri::AppHandle, path: String) {
     let mut expanded_path = path.clone();
 
-    // expand tilde
     if path.starts_with("~/") || path == "~" {
         if let Some(home) = dirs::home_dir() {
             if path == "~" {
@@ -408,13 +404,11 @@ async fn translate_text(text: String, target_lang: String) -> Result<String, Str
         }
     }
 
-    Ok(text) // return original text if translation failed
+    Ok(text)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Keep the WebKitGTK crash workaround for NVIDIA, but allow hardware
-    // compositing on Intel/AMD so scrolling can follow the display refresh rate.
     #[cfg(target_os = "linux")]
     if std::path::Path::new("/proc/driver/nvidia/version").exists() {
         std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
@@ -510,15 +504,15 @@ mod tests {
     #[test]
     fn parses_level_name_from_level_dat() {
         let mut nbt = Vec::new();
-        nbt.push(10); // root compound
+        nbt.push(10);
         nbt.extend_from_slice(&nbt_string(""));
-        nbt.push(10); // nested "Data" compound
+        nbt.push(10);
         nbt.extend_from_slice(&nbt_string("Data"));
-        nbt.push(8); // "LevelName" string
+        nbt.push(8);
         nbt.extend_from_slice(&nbt_string("LevelName"));
         nbt.extend_from_slice(&nbt_string("My World"));
-        nbt.push(0); // end of Data
-        nbt.push(0); // end of root
+        nbt.push(0);
+        nbt.push(0);
         let path = write_temp("level", &gz(&nbt));
 
         assert_eq!(find_level_name(&path).as_deref(), Some("My World"));

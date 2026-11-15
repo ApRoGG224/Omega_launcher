@@ -108,9 +108,6 @@ async fn exchange_code(code: &str) -> Result<(String, String, String), String> {
     Ok((access_token, refresh_token, expires_in.to_string()))
 }
 
-/// Reads the cached Microsoft auth file, refreshing the access token via the
-/// saved refresh token when it has expired. Returns `true` when a refresh was
-/// performed, `false` when nothing needed refreshing.
 pub async fn try_refresh_cached_token(app: &AppHandle) -> Result<bool, String> {
     try_refresh_cached_token_internal(app, false).await
 }
@@ -176,8 +173,6 @@ async fn try_refresh_cached_token_internal(app: &AppHandle, force: bool) -> Resu
         .unwrap_or_else(|| refresh_token.to_string());
     let expires_in = data.get("expires_in").and_then(|v| v.as_u64()).unwrap_or(3600);
 
-    // The refresh endpoint returns a Microsoft token, while Minecraft profile
-    // and launch APIs require a fresh Minecraft token obtained through Xbox.
     let (xsts_token, uhs) = xbox_authenticate(&microsoft_access_token).await?;
     let (minecraft_access_token, name, uuid) = minecraft_login(app, &xsts_token, &uhs).await?;
 
@@ -198,19 +193,14 @@ fn now_unix() -> u64 {
         .unwrap_or(0)
 }
 
-/// Reads the cached Microsoft auth object, if any.
 pub fn read_cached_auth(app: &AppHandle) -> Option<Value> {
     let path = app_data_dir(app).join("ms_auth.json");
     let text = std::fs::read_to_string(path).ok()?;
     serde_json::from_str(&text).ok()
 }
 
-/// Returns the official skin texture URL for the cached Microsoft account.
-/// The access token stays in Rust and is never exposed to the frontend.
 #[tauri::command]
 pub async fn get_microsoft_skin(app: AppHandle, username: String) -> Result<Option<String>, String> {
-    // The cached Minecraft token is short-lived. Refresh it before querying
-    // the profile so the preview also works after a long launcher restart.
     try_refresh_cached_token(&app).await?;
     let auth = read_cached_auth(&app).ok_or("Microsoft account is not cached")?;
     let cached_name = auth.get("name").and_then(|value| value.as_str()).unwrap_or("");
@@ -259,7 +249,6 @@ pub struct MicrosoftCapeItem {
     pub alias: String,
 }
 
-/// Retrieves all official Minecraft capes owned by the logged-in Microsoft account.
 #[tauri::command]
 pub async fn get_microsoft_capes(app: AppHandle) -> Result<Vec<MicrosoftCapeItem>, String> {
     try_refresh_cached_token(&app).await?;
@@ -332,7 +321,6 @@ pub async fn get_microsoft_capes(app: AppHandle) -> Result<Vec<MicrosoftCapeItem
     Ok(capes)
 }
 
-/// Equips the specified official cape on the player's Microsoft Minecraft profile.
 #[tauri::command]
 pub async fn equip_microsoft_cape(app: AppHandle, cape_id: String) -> Result<String, String> {
     try_refresh_cached_token(&app).await?;
@@ -395,7 +383,6 @@ pub async fn equip_microsoft_cape(app: AppHandle, cape_id: String) -> Result<Str
     }
 }
 
-/// Unequips the currently active cape from the player's Microsoft Minecraft profile.
 #[tauri::command]
 pub async fn unequip_microsoft_cape(app: AppHandle) -> Result<String, String> {
     try_refresh_cached_token(&app).await?;
@@ -464,7 +451,6 @@ pub fn logout_microsoft(app: AppHandle) -> Result<(), String> {
     }
 }
 
-/// Returns the cached Microsoft account details (username and uuid) if logged in.
 #[tauri::command]
 pub fn get_cached_microsoft_account(app: AppHandle) -> Result<Option<Value>, String> {
     if let Some(json) = read_cached_auth(&app) {
@@ -541,9 +527,6 @@ fn build_skin_upload_request(
         .multipart(form))
 }
 
-/// Uploads and applies the skin to the player's Microsoft account via the official Mojang API.
-/// This updates the skin on official Mojang servers, making it visible across all launchers
-/// and multiplayer servers.
 #[tauri::command]
 pub async fn upload_microsoft_skin(
     app: AppHandle,
@@ -608,7 +591,6 @@ fn write_auth_file(app: &AppHandle, auth_json: &Value) -> Result<(), String> {
     let path = data_dir.join("ms_auth.json");
     std::fs::write(&path, serde_json::to_string(auth_json).map_err(|e| e.to_string())?)
         .map_err(|e| e.to_string())?;
-    // Restrict permissions on Unix so other users cannot read tokens.
     #[cfg(not(target_os = "windows"))]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -619,11 +601,9 @@ fn write_auth_file(app: &AppHandle, auth_json: &Value) -> Result<(), String> {
 
 async fn xbox_authenticate(ms_access_token: &str) -> Result<(String, String), String> {
     let client = auth_client()?;
-    // 1. XBL token
     let xbl = xbox_user_authenticate(&client, &format!("d={ms_access_token}")).await?;
     let xbl_token = xbl.get("Token").and_then(|v| v.as_str()).ok_or("No XBL token")?.to_string();
 
-    // 2. XSTS token
     let res = client
         .post("https://xsts.auth.xboxlive.com/xsts/authorize")
         .header(ACCEPT, "application/json")
@@ -698,7 +678,6 @@ async fn minecraft_login(app: &AppHandle, xsts_token: &str, uhs: &str) -> Result
     let access_token = json.get("access_token").and_then(|v| v.as_str()).ok_or("No Minecraft access token")?.to_string();
     emit_auth_log(app, "[MS_AUTH]: Requesting Minecraft profile...");
 
-    // 4. Profile
     let res = send_with_retry(
         || {
             client

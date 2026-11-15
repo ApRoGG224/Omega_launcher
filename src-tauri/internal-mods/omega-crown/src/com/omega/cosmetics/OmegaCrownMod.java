@@ -1,8 +1,5 @@
 package com.omega.cosmetics;
 
-/**
- * Universal Mod Container for Fabric, Forge, and NeoForge.
- */
 public class OmegaCrownMod {
     public static final String MOD_ID = "omega_crown";
     public static final String MOD_NAME = "Omega Monarch Crown";

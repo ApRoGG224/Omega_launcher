@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-/// Guards against path traversal: instance ids must be a short safe token.
+// Prevent directory traversal attacks by constraining instance identifiers to safe characters.
 pub fn validate_instance_id(id: &str) -> Result<&str, String> {
     if id.is_empty() {
         return Err("Instance id must not be empty".to_string());
@@ -20,7 +20,6 @@ pub fn validate_instance_id(id: &str) -> Result<&str, String> {
     Ok(id)
 }
 
-/// Builds the per-instance `minecraft` folder path, rejecting traversal.
 pub fn instance_minecraft_dir(data_dir: &Path, id: &str) -> Result<PathBuf, String> {
     let id = validate_instance_id(id)?;
     let root = data_dir.join("instances");
@@ -31,8 +30,6 @@ pub fn instance_minecraft_dir(data_dir: &Path, id: &str) -> Result<PathBuf, Stri
     Ok(instance.join("minecraft"))
 }
 
-/// Resolves a user-supplied path, expanding `~`. Rejects paths that escape
-/// nothing (there is no fixed sandbox) but normalizes them.
 pub fn expand_user_path(path: &str) -> PathBuf {
     let mut expanded = path.to_string();
     if path.starts_with("~/") || path == "~" {
@@ -47,7 +44,6 @@ pub fn expand_user_path(path: &str) -> PathBuf {
     PathBuf::from(expanded)
 }
 
-/// Sanitizes an arbitrary id into a safe filesystem token (for icon files).
 pub fn sanitize_id(id: &str) -> String {
     let cleaned: String = id
         .chars()
@@ -66,7 +62,6 @@ pub fn sanitize_id(id: &str) -> String {
     }
 }
 
-/// Rejects world names that could escape the saves directory (path traversal).
 pub fn validate_world_name(world: &str) -> Result<&str, String> {
     if world.is_empty() {
         return Err("World name must not be empty".to_string());

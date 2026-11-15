@@ -3,9 +3,6 @@ use std::path::Path;
 use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
-/// Caches a remote icon (Modrinth CDN) into `app_cache_dir/icons/` keyed by
-/// its URL hash. Returns the local file path so the frontend can render it via
-/// `convertFileSrc` instead of hitting the network on every search.
 #[tauri::command]
 pub async fn cache_mod_icon(app: AppHandle, url: String) -> Result<String, String> {
     if url.is_empty() || !url.starts_with("http") {
@@ -51,8 +48,6 @@ fn cache_is_fresh(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-/// Returns the vanilla version manifest, fetching it at most once per 24 hours
-/// and persisting it in `app_cache_dir/versions.json`.
 #[tauri::command]
 pub async fn get_cached_version_manifest(app: AppHandle) -> Result<Value, String> {
     let cache_dir = app

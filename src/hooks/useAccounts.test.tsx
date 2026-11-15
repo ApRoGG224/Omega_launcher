@@ -189,7 +189,6 @@ describe("useAccounts", () => {
       result.current.setAccountNickname("Notch");
     });
 
-    // Nickname MUST remain ApRoGG!
     expect(result.current.account.name).toBe("ApRoGG");
   });
 

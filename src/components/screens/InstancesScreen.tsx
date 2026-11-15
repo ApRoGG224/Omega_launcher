@@ -57,7 +57,6 @@ const AVAILABLE_LOADERS: Array<{ id: InstanceData["loader"]; label: string; isRu
   { id: "Quilt", label: "Quilt" },
 ];
 
-
 const getFolderColor = (folder: InstanceFolder) => {
   if (folder.id === "all") return "#a3a3a3";
   if (folder.id === "folder_rust" || folder.name.toLowerCase().includes("rust")) return "#f97316";
@@ -114,13 +113,11 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
   onUpdateInstance,
   onLaunchInstance,
 }) => {
-  // Folder state with localStorage persistence
   const [folders, setFolders] = useState<InstanceFolder[]>(() => {
     try {
       const saved = localStorage.getItem("omega_instance_folders");
       if (saved) {
         const parsed: InstanceFolder[] = JSON.parse(saved);
-        // Ensure folder_rust is present even if user already visited launcher earlier
         if (!parsed.some((f) => f.id === "folder_rust")) {
           const allIdx = parsed.findIndex((f) => f.id === "all");
           const rustFolder: InstanceFolder = {
@@ -152,7 +149,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
     } catch {}
   }, [folders]);
 
-  // Modal states for folder creation & folder edit
   const [editingFolder, setEditingFolder] = useState<InstanceFolder | null>(null);
   const [isCreatingFolder, setIsCreatingFolder] = useState<boolean>(false);
   const [folderNameInput, setFolderNameInput] = useState<string>("");
@@ -161,7 +157,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
   const [folderEmojiIcon, setFolderEmojiIcon] = useState<string>("grass");
   const [folderCustomImageUrl, setFolderCustomImageUrl] = useState<string>("");
 
-  // Instance creation & import states
   const [isCreating, setIsCreating] = useState(() => {
     try {
       return new URLSearchParams(window.location.search).get("modal") === "create";
@@ -208,7 +203,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
     e.target.value = "";
   };
 
-  // Hide persistent HUD topbar and Inspector while any modal is active, ensuring pure fullscreen backdrop blur
   useEffect(() => {
     const isAnyModalOpen = isCreating || isImporting || isCreatingFolder || !!editingFolder;
     if (isAnyModalOpen) {
@@ -246,7 +240,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
   const currentInstance =
     instances.find((i) => i.id === selectedInstanceId) || instances[0];
 
-  // Open folder edit dialog
   const handleOpenFolderEdit = (folder: InstanceFolder, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setEditingFolder(folder);
@@ -257,7 +250,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
     setFolderCustomImageUrl(folder.iconType === "image" ? folder.icon : "");
   };
 
-  // Save folder edit (change name, change picture/icon)
   const handleSaveFolderEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingFolder || !folderNameInput.trim()) return;
@@ -283,10 +275,8 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
     setEditingFolder(null);
   };
 
-  // Delete folder
   const handleDeleteFolder = (folderId: string) => {
     setFolders((prev) => prev.filter((f) => f.id !== folderId));
-    // Move instances in this folder back to "all" (unassigned)
     instances.forEach((inst) => {
       if (inst.folderId === folderId && onUpdateInstance) {
         onUpdateInstance({ ...inst, folderId: undefined });
@@ -298,7 +288,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
     setEditingFolder(null);
   };
 
-  // Create new folder
   const handleCreateFolderSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!folderNameInput.trim()) return;
@@ -372,18 +361,15 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
     }
   };
 
-  // Filter instances by current selected folder
   const filteredInstances = instances.filter((inst) => {
     if (selectedFolderId === "all") return true;
     return inst.folderId === selectedFolderId;
   });
 
-  // Filtered versions for new instance modal
   const filteredVersions = useMemo(() => {
     const list = allVersions.length > 0 ? allVersions : FALLBACK_UI_VERSIONS;
     const query = versionSearchQuery.trim().toLowerCase();
 
-    // If searching, search across all versions regardless of tab
     if (query) {
       return list.filter(
         (v) =>
@@ -392,7 +378,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
       );
     }
 
-    // Tab-based filtering
     if (versionCategory === "popular") {
       return popularVersions.length > 0 ? popularVersions : list.slice(0, 15);
     }
@@ -402,7 +387,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
     if (versionCategory === "legacy") {
       return list.filter((v) => v.type === "old_beta" || v.type === "old_alpha");
     }
-    // "releases"
     return list.filter((v) => !v.isSnapshot && v.type === "release");
   }, [allVersions, popularVersions, versionCategory, versionSearchQuery]);
 
@@ -427,7 +411,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
   return (
     <div className="screens-overlay-layer instances-screen-overlay">
       <div className="instances-screen-wrap">
-        {/* Top actions bar: Import & + Create */}
         <div className="instances-top-bar">
           <button
             type="button"
@@ -512,7 +495,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
           </div>
         </div>
 
-        {/* Selected Instance Hero Section */}
         {currentInstance ? (
           <div className="sb-hero">
             <div className="sb-ico">
@@ -634,7 +616,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
           </div>
         )}
 
-        {/* Folders Dock Section */}
         <div>
           <div className="sb-section-head">
             Папки версий ({folders.length})
@@ -676,7 +657,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
           </div>
         </div>
 
-        {/* Available Builds Section */}
         <div>
           <div className="sb-section-head">
             Доступные версии ({filteredInstances.length})
@@ -775,9 +755,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
         </div>
       </div>
 
-      {/* ====================================================================
-          MODAL: CREATE INSTANCE (Компактная модалка по макету Новая сборка.html)
-          ==================================================================== */}
       {isCreating &&
         createPortal(
           <div
@@ -789,7 +766,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
               onClick={(e) => e.stopPropagation()}
               onSubmit={handleCreateSubmit}
             >
-              {/* Header */}
               <div className="nc-head">
                 <div className="nc-ico">
                   {newIcon === "custom" && customAvatarUrl ? (
@@ -809,7 +785,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 </button>
               </div>
 
-              {/* Body */}
               <div className="nc-body">
                 <div className="nc-lab">
                   <span>Название</span>
@@ -1030,7 +1005,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 </div>
               </div>
 
-              {/* Footer */}
               <div className="nc-foot">
                 <button
                   type="button"
@@ -1051,9 +1025,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
           document.body
         )}
 
-      {/* ====================================================================
-          MODAL: IMPORT INSTANCE (Посередине экрана)
-          ==================================================================== */}
       {isImporting &&
         createPortal(
           <div
@@ -1118,9 +1089,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
           document.body
         )}
 
-      {/* ====================================================================
-          MODAL: EDIT FOLDER (Менять имя, картинку, удалять)
-          ==================================================================== */}
       {editingFolder &&
         createPortal(
           <div
@@ -1149,7 +1117,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <Settings2 size={20} color="var(--accent-bright)" />
@@ -1175,7 +1142,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
             </div>
 
             <form onSubmit={handleSaveFolderEdit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {/* 1. Folder Name Input (Менять имя) */}
               <div>
                 <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
                   Имя папки
@@ -1231,13 +1197,11 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 </div>
               </div>
 
-              {/* 2. Folder Picture / Icon Selection (Менять картинку) */}
               <div>
                 <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
                   Картинка / Иконка папки
                 </label>
 
-                {/* Preset Icons Grid */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px", marginBottom: "10px" }}>
                   {PRESET_FOLDER_ICONS.map((preset) => {
                     const isSelected =
@@ -1270,7 +1234,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                   })}
                 </div>
 
-                {/* Custom Image URL Option */}
                 <div>
                   <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>
                     Или ссылка на собственную картинку (URL):
@@ -1298,9 +1261,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 </div>
               </div>
 
-              {/* Action Buttons: Save & Delete Folder */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px", gap: "10px" }}>
-                {/* Delete button (Удалять) */}
                 <button
                   type="button"
                   className="btn-delete"
@@ -1340,9 +1301,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
           document.body
         )}
 
-      {/* ====================================================================
-          MODAL: CREATE NEW FOLDER
-          ==================================================================== */}
       {isCreatingFolder &&
         createPortal(
           <div

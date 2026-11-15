@@ -104,7 +104,6 @@ export function useInstances(
           }
         }
       } catch {
-        // Tauri backend unavailable (browser dev) - localStorage cache is used.
       }
     })();
     return () => {
@@ -255,7 +254,6 @@ export function useInstances(
           .dbSaveIcon(selectedInstanceId, dataUrl)
           .then((path) => updateInstance(selectedInstanceId, { icon: path }))
           .catch(() => {
-            // Fallback: keep the icon inline when the backend is unavailable.
             updateInstance(selectedInstanceId, { icon: dataUrl });
           });
       };

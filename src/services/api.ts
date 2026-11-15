@@ -4,7 +4,7 @@ const MODRINTH_API = "https://api.modrinth.com/v2";
 const VERSION_MANIFEST_URL =
   "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 const MANIFEST_CACHE_KEY = "omega:version_manifest_v2";
-const MANIFEST_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const MANIFEST_TTL_MS = 24 * 60 * 60 * 1000;
 
 export interface ModrinthSearchParams {
   query: string;
@@ -104,7 +104,6 @@ function cacheManifest(data: MojangVersionManifestData) {
     };
     localStorage.setItem(MANIFEST_CACHE_KEY, JSON.stringify(payload));
   } catch {
-    // Cache is best-effort; ignore quota issues.
   }
 }
 
@@ -112,7 +111,6 @@ export async function fetchFullVersionManifest(retries = 2): Promise<MojangVersi
   const cached = readCachedManifest();
   if (cached) return cached;
 
-  // Prefer the native 24h file cache inside app_cache_dir.
   try {
     const { ipc } = await import("./ipc");
     const data = (await ipc.getCachedVersionManifest()) as {
@@ -128,7 +126,6 @@ export async function fetchFullVersionManifest(retries = 2): Promise<MojangVersi
       return result;
     }
   } catch {
-    // Native cache unavailable (browser dev) - fall through to network fetch.
   }
 
   let lastError: unknown;

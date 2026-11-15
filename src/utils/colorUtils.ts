@@ -1,6 +1,3 @@
-/**
- * Color manipulation utilities for Menu Customization
- */
 
 export interface RgbColor {
   r: number;
@@ -14,9 +11,6 @@ export interface HslColor {
   l: number;
 }
 
-/**
- * Converts a 3 or 6 digit hex string to RGB object
- */
 export function hexToRgb(hex: string): RgbColor {
   let cleanHex = hex.replace("#", "").trim();
   if (cleanHex.length === 3) {
@@ -27,7 +21,7 @@ export function hexToRgb(hex: string): RgbColor {
   }
   const num = parseInt(cleanHex, 16);
   if (isNaN(num)) {
-    return { r: 89, g: 212, b: 164 }; // fallback mint
+    return { r: 89, g: 212, b: 164 };
   }
   return {
     r: (num >> 16) & 255,
@@ -36,27 +30,18 @@ export function hexToRgb(hex: string): RgbColor {
   };
 }
 
-/**
- * Formats hex and alpha to rgba(...) CSS string
- */
 export function rgbaString(hex: string, alpha: number): string {
   const { r, g, b } = hexToRgb(hex);
   const clampedAlpha = Math.max(0, Math.min(1, alpha));
   return `rgba(${r}, ${g}, ${b}, ${clampedAlpha.toFixed(3)})`;
 }
 
-/**
- * Converts RGB to hex string
- */
 export function rgbToHex(r: number, g: number, b: number): string {
   const clamp = (val: number) => Math.max(0, Math.min(255, Math.round(val)));
   const toHex = (val: number) => clamp(val).toString(16).padStart(2, "0");
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-/**
- * Converts Hex to HSL
- */
 export function hexToHsl(hex: string): HslColor {
   const { r, g, b } = hexToRgb(hex);
   const rNorm = r / 255;
@@ -93,9 +78,6 @@ export function hexToHsl(hex: string): HslColor {
   };
 }
 
-/**
- * Converts HSL to Hex
- */
 export function hslToHex(h: number, s: number, l: number): string {
   const sNorm = s / 100;
   const lNorm = l / 100;
@@ -135,9 +117,6 @@ export function hslToHex(h: number, s: number, l: number): string {
   return rgbToHex((r + m) * 255, (g + m) * 255, (b + m) * 255);
 }
 
-/**
- * Modifies lightness/brightness of a hex color
- */
 export function adjustLightness(hex: string, deltaPercent: number): string {
   const { h, s, l } = hexToHsl(hex);
   const newL = Math.max(5, Math.min(95, l + deltaPercent));
@@ -145,27 +124,23 @@ export function adjustLightness(hex: string, deltaPercent: number): string {
 }
 
 export interface PanelThemeStyles {
-  panelBg: string;              // Rich solid matte background color (e.g. #35381f for olive, matches Image 5)
-  panelPattern: string;         // Multi-layer dynamic texture CSS background-image
-  panelPatternSize: string;     // Multi-layer dynamic background-size
-  panelPatternPosition: string; // Multi-layer dynamic background-position
-  panelPatternOpacity: string;  // Dynamic hardware-accelerated grain opacity (0.0 to 1.0)
-  panelBorder: string;          // Soft subtle border
-  itemBg: string;               // Inner buttons default bg (solid, non-transparent, tinted to theme)
-  itemBorder: string;           // Inner buttons border
-  itemHover: string;            // Inner buttons hover (solid, non-transparent, tinted to theme)
-  itemActive: string;           // Inner buttons active (solid, non-transparent, tinted to theme)
-  itemActiveBorder: string;     // Active button border highlight
-  itemPlay: string;             // Play button bg (solid, non-transparent, tinted to theme)
-  cardBg: string;               // Card background for catalog
-  cardBorder: string;           // Card border
-  accentColor: string;          // Clean accent color
+  panelBg: string;
+  panelPattern: string;
+  panelPatternSize: string;
+  panelPatternPosition: string;
+  panelPatternOpacity: string;
+  panelBorder: string;
+  itemBg: string;
+  itemBorder: string;
+  itemHover: string;
+  itemActive: string;
+  itemActiveBorder: string;
+  itemPlay: string;
+  cardBg: string;
+  cardBorder: string;
+  accentColor: string;
 }
 
-/**
- * Computes the rich matte panel background matching user examples (Image 5 / Image 2 / Image 0)
- * The panel background ITSELF receives this color, NOT just a stroke/border!
- */
 export function computePanelTheme(
   hex: string,
   intensity: number,
@@ -175,11 +150,9 @@ export function computePanelTheme(
   const { r, g, b } = hexToRgb(hex);
   const factor = Math.max(0.1, Math.min(1, intensity / 100));
 
-  // Multiplier for brightness based on mode
   const mult = mode === "light" ? 0.88 : mode === "dark" ? 0.68 : 0.78;
   const baseR = 14, baseG = 17, baseB = 22;
 
-  // Saturated matte fill: for olive (#6F7326) at 50% intensity, produces rgb(53, 56, 32) (exact Image 5)
   const targetR = Math.round(r * mult + 6);
   const targetG = Math.round(g * mult + 6);
   const targetB = Math.round(b * mult + 6);
@@ -190,13 +163,11 @@ export function computePanelTheme(
 
   const panelBg = `rgb(${finalR}, ${finalG}, ${finalB})`;
 
-  // Subtle border: 20-30% lighter, non-neon, matte
   const borderR = Math.min(255, Math.round(finalR * 1.35 + 24));
   const borderG = Math.min(255, Math.round(finalG * 1.35 + 24));
   const borderB = Math.min(255, Math.round(finalB * 1.35 + 24));
   const panelBorder = `rgba(${borderR}, ${borderG}, ${borderB}, 0.35)`;
 
-  // Inner buttons: 100% SOLID, non-transparent, tinted to match the chosen style & color
   const btnR = Math.min(255, Math.max(16, Math.round(finalR * 1.1 + 8)));
   const btnG = Math.min(255, Math.max(16, Math.round(finalG * 1.1 + 8)));
   const btnB = Math.min(255, Math.max(16, Math.round(finalB * 1.1 + 8)));
@@ -220,15 +191,12 @@ export function computePanelTheme(
   const playB = Math.min(255, Math.max(20, Math.round(finalB * 1.15 + 12)));
   const itemPlay = `rgb(${playR}, ${playG}, ${playB})`;
 
-  // Cards in catalog: slightly deeper than panel wrap
   const cardR = Math.round(finalR * 0.88);
   const cardG = Math.round(finalG * 0.88);
   const cardB = Math.round(finalB * 0.88);
   const cardBg = `rgb(${cardR}, ${cardG}, ${cardB})`;
   const cardBorder = `rgba(${borderR}, ${borderG}, ${borderB}, 0.28)`;
 
-  // Dynamic proportional texture intensity & density:
-  // Every single percent point (1% - 100%) dynamically scales both grain contrast and particle visibility!
   const patternPct = Math.max(0, Math.min(100, Math.round(patternIntensity)));
   let panelPattern = "none";
   let panelPatternSize = "180px 180px";
@@ -236,14 +204,10 @@ export function computePanelTheme(
   let panelPatternOpacity = "0";
 
   if (patternPct > 0) {
-    const norm = patternPct / 100; // 0.01 to 1.0
+    const norm = patternPct / 100;
 
-    // Direct proportional opacity for every single percent (from 0.008 to 0.75)
-    // Small percentages (1-10%) are very faint micro-textures, scaling smoothly up to 100%
     panelPatternOpacity = (norm * 0.75).toFixed(3);
 
-    // Fine, microscopic grain tile:
-    // Kept at high resolution (180px-220px) so each noise speck remains a tiny 1-pixel micro-particle
     if (norm > 0.4) {
       panelPattern = "url('/textures/menu_pattern.png'), url('/textures/menu_pattern.png')";
       panelPatternSize = "180px 180px, 220px 220px";
@@ -274,12 +238,6 @@ export function computePanelTheme(
   };
 }
 
-/**
- * Samples a color in Zen Browser's polar wheel system:
- * - Angle represents Hue (0° to 360°)
- * - Distance from center represents Saturation (low at center, high at rim)
- * - Lightness is governed by mode
- */
 export function sampleZenColor(
   hue: number,
   dist: number,
@@ -296,16 +254,12 @@ export function sampleZenColor(
   } else if (mode === "light") {
     light = Math.round(24 + normDist * 12);
   } else {
-    // dynamic
     light = Math.round(18 + normDist * 12);
   }
 
   return hslToHex(h, sat, light);
 }
 
-/**
- * Finds polar angle and distance in Zen Browser's system for a given hex color
- */
 export function findZenCoordsForColor(
   hex: string,
   maxRadius: number = 38
@@ -316,9 +270,6 @@ export function findZenCoordsForColor(
   return { baseAngle, distance };
 }
 
-/**
- * Samples color on the 2D canvas based on (nx, ny) in % (0 - 100)
- */
 export function sampleCanvasColor(
   nx: number,
   ny: number,
@@ -327,10 +278,6 @@ export function sampleCanvasColor(
   const clampedX = Math.max(0, Math.min(100, nx)) / 100;
   const clampedY = Math.max(0, Math.min(100, ny)) / 100;
 
-  // Spectrum mapping:
-  // Center (0.59) gives olive green (hue ~ 63)
-  // Right gives warmer tones (terracotta/orange/pink)
-  // Left gives cooler tones (forest green/mint/blue/lavender)
   let hue = Math.round((210 - clampedX * 250 + 360) % 360);
 
   let sat = 50;
@@ -350,9 +297,6 @@ export function sampleCanvasColor(
   return hslToHex(hue, sat, light);
 }
 
-/**
- * Finds canvas coordinates (x, y in %) corresponding to a given hex color
- */
 export function findCanvasCoordsForColor(hex: string): { x: number; y: number } {
   const { h, l } = hexToHsl(hex);
   let diff = (210 - h + 360) % 360;

@@ -38,7 +38,6 @@ export const FriendsModal: React.FC<FriendsModalProps> = ({ onClose }) => {
       </div>
 
       <div className="modal-body">
-        {/* Friend Code Box */}
         <div className="instance-hero-box" style={{ padding: "14px 18px" }}>
           <div>
             <span style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase" }}>
@@ -58,7 +57,6 @@ export const FriendsModal: React.FC<FriendsModalProps> = ({ onClose }) => {
           </button>
         </div>
 
-        {/* Friends List */}
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           <h3 style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
             Список контактов (2 в сети)

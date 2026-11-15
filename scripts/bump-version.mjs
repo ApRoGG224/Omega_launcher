@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-// Бамп patch-версии во всех файлах проекта (package.json, package-lock.json, tauri.conf.json).
-//   node scripts/bump-version.mjs [major|minor|patch]
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";

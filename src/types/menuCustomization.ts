@@ -4,15 +4,15 @@ export type CustomizerMode = "dynamic" | "light" | "dark";
 
 export interface ZoneCustomizationConfig {
   enabled: boolean;
-  color: string;           // Hex color code, e.g. '#59D4A4'
-  intensity: number;       // 0 to 100 (percentage)
-  patternIntensity: number;// 0 to 100 (percentage for rotary dial / texture)
-  mode: CustomizerMode;    // 'dynamic' (✦), 'light' (☼), 'dark' (☾)
+  color: string;
+  intensity: number;
+  patternIntensity: number;
+  mode: CustomizerMode;
   activeSwatchIndex?: number;
-  numDots?: number;        // 1, 2, or 3 balls (Zen Browser style)
+  numDots?: number;
   harmonyType?: "analogous" | "triadic" | "splitComplementary" | "complementary" | "singleAnalogous";
-  baseAngle?: number;      // 0 to 360 degrees
-  distance?: number;       // distance from center (radial saturation)
+  baseAngle?: number;
+  distance?: number;
 }
 
 export interface MenusCustomizationState {
@@ -24,7 +24,7 @@ export interface MenusCustomizationState {
 export const DEFAULT_MENUS_CUSTOMIZATION: MenusCustomizationState = {
   topbar: {
     enabled: true,
-    color: "#2f3822", // Dark tactical olive
+    color: "#2f3822",
     intensity: 45,
     patternIntensity: 25,
     mode: "dynamic",
@@ -36,7 +36,7 @@ export const DEFAULT_MENUS_CUSTOMIZATION: MenusCustomizationState = {
   },
   background: {
     enabled: true,
-    color: "#1c2838", // Deep slate / dark navy blue
+    color: "#1c2838",
     intensity: 30,
     patternIntensity: 20,
     mode: "dark",
@@ -48,7 +48,7 @@ export const DEFAULT_MENUS_CUSTOMIZATION: MenusCustomizationState = {
   },
   catalog: {
     enabled: true,
-    color: "#442219", // Dark terracotta / rust
+    color: "#442219",
     intensity: 35,
     patternIntensity: 25,
     mode: "dynamic",
@@ -64,40 +64,40 @@ export const COLOR_PALETTE_PAGES: Array<{ name: string; colors: string[] }> = [
   {
     name: "Затемнённая классика",
     colors: [
-      "#383428", // 1. Dark Sand / Deep Cream
-      "#3d242c", // 2. Dark Muted Dusty Rose
-      "#31233e", // 3. Deep Plum / Dark Lavender
-      "#421b22", // 4. Deep Wine / Dark Crimson
-      "#442219", // 5. Dark Terracotta / Rust
-      "#3e3016", // 6. Deep Dark Ochre / Warm Umber
-      "#1b3629", // 7. Deep Pine / Dark Jade
-      "#1c2838", // 8. Deep Slate / Dark Navy Blue
+      "#383428",
+      "#3d242c",
+      "#31233e",
+      "#421b22",
+      "#442219",
+      "#3e3016",
+      "#1b3629",
+      "#1c2838",
     ],
   },
   {
     name: "Тактические милитари & Стелс",
     colors: [
-      "#2f3822", // Tactical Olive
-      "#202a38", // Deep Gunmetal Steel
-      "#3d2114", // Dark Burnt Umber
-      "#133324", // Deep Cold Emerald
-      "#3a2e15", // Dark Bronze Gold
-      "#20223d", // Deep Night Indigo
-      "#222833", // Deep Obsidian Charcoal
-      "#3d161d", // Dark Cherry Maroon
+      "#2f3822",
+      "#202a38",
+      "#3d2114",
+      "#133324",
+      "#3a2e15",
+      "#20223d",
+      "#222833",
+      "#3d161d",
     ],
   },
   {
     name: "Глубокие стелс-тона",
     colors: [
-      "#123829", // Deep Stealth Jade
-      "#102f38", // Deep Abyssal Cyan
-      "#2d1840", // Deep Shadow Violet
-      "#162744", // Deep Midnight Cobalt
-      "#3d2b0e", // Dark Molten Honey
-      "#3d1217", // Deep Blood Crimson
-      "#2b3616", // Dark Tactical Moss
-      "#3b142d", // Deep Velvet Plum
+      "#123829",
+      "#102f38",
+      "#2d1840",
+      "#162744",
+      "#3d2b0e",
+      "#3d1217",
+      "#2b3616",
+      "#3b142d",
     ],
   },
 ];

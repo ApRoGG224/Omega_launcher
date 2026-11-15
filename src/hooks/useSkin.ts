@@ -161,7 +161,6 @@ export function useSkin(accountName?: string): SkinApi {
             return;
           }
         } catch {
-          // fallback to minotar
         }
 
         if (!cancelled) {
@@ -208,7 +207,6 @@ export function useSkin(accountName?: string): SkinApi {
             }
           }
         } catch {
-          // fallback to minotar
         }
 
         if (!cancelled) {

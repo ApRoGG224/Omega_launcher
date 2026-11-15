@@ -1,12 +1,3 @@
-/* ==========================================================================
-   MENU CUSTOMIZER WIDGET & MODAL
-   Pixel-faithful implementation of screenshot UI:
-   - Modes (✦, ☼, ☾)
-   - Textured micro-dot canvas with interactive rings
-   - Swatches palette with pagination
-   - Wavy intensity slider + Rotary pattern knob
-   - Zone-specific toggles: TopBar, Background, Catalog
-   ========================================================================== */
 
 .menu-customizer-modal-backdrop {
   position: fixed;
@@ -49,7 +40,6 @@
   box-sizing: border-box;
 }
 
-/* Zone Switcher Header Bar */
 .customizer-header {
   display: flex;
   align-items: center;
@@ -81,7 +71,6 @@
   color: #94a3b8;
 }
 
-/* Master Toggle Switch (Вкл / Выкл) */
 .customizer-toggle-group {
   display: flex;
   align-items: center;
@@ -142,7 +131,6 @@
   color: #ffffff;
 }
 
-/* Zone Tabs Bar (Верхняя панель | Задний фон | Каталог) */
 .customizer-zone-pills {
   display: flex;
   gap: 6px;
@@ -183,7 +171,6 @@
   font-weight: 700;
 }
 
-/* 3 Mode Icons (✦ Sparkles, ☼ Sun, ☾ Moon) */
 .customizer-modes-bar {
   display: flex;
   align-items: center;
@@ -218,7 +205,6 @@
   border-color: rgba(255, 255, 255, 0.26);
 }
 
-/* Interactive Canvas Area (Zen Browser Color Pad System) */
 .customizer-canvas {
   position: relative;
   width: 100%;
@@ -254,7 +240,6 @@
   cursor: grabbing;
 }
 
-/* Zen Browser Orbital Guides */
 .zen-canvas-orbit-guide {
   position: absolute;
   top: 50%;
@@ -280,7 +265,6 @@
   pointer-events: none;
 }
 
-/* Zen Browser Colored Balls (Dots) with spring physics */
 .zen-ball {
   position: absolute;
   border-radius: 50%;
@@ -331,7 +315,6 @@
   z-index: 4;
 }
 
-/* Canvas Tools: + , - , ∴ (matching Zen Browser action bar) */
 .canvas-tools-bar {
   position: absolute;
   bottom: 12px;
@@ -374,7 +357,6 @@
   cursor: not-allowed;
 }
 
-/* Legacy fallback classes */
 .canvas-circle-large {
   position: absolute;
   width: 44px;
@@ -399,7 +381,6 @@
   z-index: 2;
 }
 
-/* Swatches Palette Row */
 .customizer-swatches-row {
   display: flex;
   align-items: center;
@@ -458,7 +439,6 @@
   box-shadow: 0 0 0 2px #14171d, 0 0 0 4.5px #ffffff;
 }
 
-/* Bottom Controls: Wavy Slider + Rotary Knob */
 .customizer-controls-row {
   display: flex;
   align-items: center;
@@ -468,7 +448,6 @@
   box-sizing: border-box;
 }
 
-/* Wavy Slider Container */
 .wavy-slider-container {
   flex: 1 1 auto;
   min-width: 0;
@@ -535,7 +514,6 @@
   transform: translate(-50%, -50%) scale(1.08);
 }
 
-/* Rotary Dial Knob */
 .rotary-knob-container {
   display: flex;
   flex-direction: column;
@@ -558,7 +536,6 @@
   cursor: pointer;
 }
 
-/* Outer tick dots circle */
 .rotary-ticks-svg {
   position: absolute;
   inset: 0;
@@ -609,7 +586,6 @@
   display: block;
 }
 
-/* Footer Actions */
 .customizer-footer {
   display: flex;
   align-items: center;
@@ -659,7 +635,6 @@
   background: #22c55e;
 }
 
-/* Live panel surface preview inside customizer modal */
 .customizer-panel-live-preview {
   position: relative;
   width: 100%;
@@ -706,13 +681,7 @@
   color: #f1f5f9;
 }
 
-/* ==========================================================================
-   DYNAMIC STYLING HOOKS FOR LAUNCHER SECTIONS
-   Applied when customization is enabled:
-   The PANEL BACKGROUND ITSELF is customized, not just a border!
-   ========================================================================== */
 
-/* TopBar Dock Customization */
 .hud-top-dock.custom-theme-active {
   position: relative;
   overflow: visible !important;
@@ -721,7 +690,6 @@
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
 }
 
-/* Allow account dropdown menu to inherit settings style */
 .hud-top-dock.custom-theme-active .hud-profile-dropdown {
   background-color: var(--custom-topbar-bg, #0e1118) !important;
   border-color: var(--custom-topbar-border, rgba(255, 255, 255, 0.14)) !important;
@@ -792,10 +760,6 @@
   z-index: 2;
 }
 
-/* 
- * Keep buttons solid and tactile (never transparent) inside custom dock,
- * dynamically adapting their color to match the selected customization theme!
- */
 .hud-top-dock.custom-theme-active .hud-dock-btn,
 .hud-top-dock.custom-theme-active .hud-dock-profile-btn,
 .hud-top-dock.custom-theme-active .dock-chip,
@@ -836,7 +800,6 @@
   background-color: var(--custom-topbar-btn-border, rgba(255, 255, 255, 0.15)) !important;
 }
 
-/* Background Atmosphere Tint Customization */
 .atmosphere-custom-tint-layer {
   position: absolute;
   inset: 0;
@@ -845,9 +808,6 @@
   transition: opacity 0.3s ease;
 }
 
-/* 
- * Zone Customizer Trigger Button in Settings
- */
 .catalog-customizer-btn {
   display: inline-flex;
   align-items: center;

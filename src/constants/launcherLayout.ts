@@ -187,7 +187,6 @@ export const sanitizeTopBarLayout = (input: unknown): TopBarItemId[] => {
       result.push(item as TopBarItemId);
     }
   }
-  // Append any missing items from default
   for (const item of DEFAULT_TOPBAR_LAYOUT) {
     if (!result.includes(item)) {
       result.push(item);

@@ -25,7 +25,6 @@ export const AtmosphereLayer: React.FC<AtmosphereLayerProps> = React.memo(({
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
   const lastActiveIndex = useRef<number>(activeIndex);
 
-  // Trigger crossfade transition when activeIndex changes
   useEffect(() => {
     if (activeIndex !== lastActiveIndex.current) {
       setPrevIndex(lastActiveIndex.current);
@@ -41,7 +40,6 @@ export const AtmosphereLayer: React.FC<AtmosphereLayerProps> = React.memo(({
     }
   }, [activeIndex]);
 
-  // Preload adjacent images for smooth switching
   useEffect(() => {
     const nextIdx = (activeIndex + 1) % MINECRAFT_BACKGROUNDS.length;
     const prevIdx = (activeIndex - 1 + MINECRAFT_BACKGROUNDS.length) % MINECRAFT_BACKGROUNDS.length;
@@ -53,7 +51,6 @@ export const AtmosphereLayer: React.FC<AtmosphereLayerProps> = React.memo(({
     });
   }, [activeIndex]);
 
-  // Autoplay timer
   useEffect(() => {
     if (!isAutoPlay || !onNextBg) return;
 
@@ -71,9 +68,7 @@ export const AtmosphereLayer: React.FC<AtmosphereLayerProps> = React.memo(({
       className={`layer-atmosphere ${!visible ? "hidden" : ""}`}
       aria-hidden="true"
     >
-      {/* Background Screenshots Canvas */}
       <div className="atmosphere-canvas">
-        {/* Previous background fading out */}
         {prevIndex !== null && MINECRAFT_BACKGROUNDS[prevIndex] && (
           <img
             src={MINECRAFT_BACKGROUNDS[prevIndex].url}
@@ -83,7 +78,6 @@ export const AtmosphereLayer: React.FC<AtmosphereLayerProps> = React.memo(({
           />
         )}
 
-        {/* Current active background */}
         <img
           key={activeBg.url}
           src={activeBg.url}
@@ -93,7 +87,6 @@ export const AtmosphereLayer: React.FC<AtmosphereLayerProps> = React.memo(({
         />
       </div>
 
-      {/* Dynamic Custom Atmosphere Tint Overlay */}
       {backgroundCustomization?.enabled && (() => {
         const t = computePanelTheme(
           backgroundCustomization.color,
@@ -121,7 +114,6 @@ export const AtmosphereLayer: React.FC<AtmosphereLayerProps> = React.memo(({
         );
       })()}
 
-      {/* Tactical matte scrim: multi-zone contrast for HUD, 3D character, and Dock */}
       <div className="atmosphere-matte-scrim" />
     </div>
   );

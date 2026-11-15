@@ -1,10 +1,4 @@
-/* Hallmark: modern-minimal / app / tactical-tech / fonts */
-/* ==========================================================================
-   OMEGA LAUNCHER TYPOGRAPHY & FONT CONFIGURATION
-   Exo 2 (General UI) + Unbounded (Brand / Badges)
-   ========================================================================== */
 
-/* 1. General Interface Font: Exo 2 */
 @font-face {
   font-family: 'Exo 2';
   src: url('/fonts/Exo2-Variable.ttf') format('truetype');
@@ -13,7 +7,6 @@
   font-display: swap;
 }
 
-/* 2. Brand & Logo Fonts */
 @font-face {
   font-family: 'Unbounded';
   src: url('/fonts/Unbounded-Variable.ttf') format('truetype');

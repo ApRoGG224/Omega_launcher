@@ -35,8 +35,6 @@ fn rules_match(rules: Option<&Value>) -> bool {
     let mut allowed = false;
     for rule in arr {
         let action = rule.get("action").and_then(|a| a.as_str()).unwrap_or("allow");
-        // Launcher features (demo mode, custom resolution, quick play) are
-        // never enabled by Omega Launcher, so feature-gated rules never match.
         if let Some(features) = rule.get("features").and_then(|f| f.as_object()) {
             if features.values().any(|v| v.as_bool() == Some(true)) {
                 continue;
@@ -69,7 +67,6 @@ fn expand_library_path(name: &str) -> String {
     path
 }
 
-/// Collects libraries from the version json chain by following `inheritsFrom`.
 async fn collect_libraries(
     app: &AppHandle,
     client: &reqwest::Client,
@@ -164,7 +161,6 @@ async fn collect_libraries(
                     libraries.push(file.to_string_lossy().to_string());
                 }
 
-                // Natives: extract the classifiers jar matching this OS.
                 let native_os = if cfg!(target_os = "windows") {
                     "windows"
                 } else if cfg!(target_os = "macos") {
@@ -245,9 +241,6 @@ fn expand_library_path_native(name: &str, classifier: &str) -> String {
     )
 }
 
-/// Collects JVM and game arguments from the complete version profile chain.
-/// Loader profiles usually inherit the vanilla profile's resource arguments
-/// (`--assets`, `--assetIndex`, `--gameDir`, etc.) instead of copying them.
 fn collect_profile_arguments(
     root: &Path,
     version_name: &str,
@@ -279,7 +272,6 @@ fn collect_profile_arguments(
         }
     }
 
-    // Parent arguments must be present before loader-specific arguments.
     profiles.reverse();
     let mut jvm_args = Vec::new();
     let mut game_args = Vec::new();
@@ -298,7 +290,6 @@ fn collect_profile_arguments(
                         continue;
                     }
                     if value == "-cp" || value == "-classpath" {
-                        // The launcher supplies its own complete classpath below.
                         skip_classpath_value = true;
                         continue;
                     }
@@ -401,7 +392,6 @@ async fn ensure_assets(
     Ok(())
 }
 
-/// Injects the Forge/NeoForge JVM arguments from modern profiles (see old launcher.ts fix).
 fn inject_custom_jvm_args(app: &AppHandle, json: &Value, config: &mut LaunchConfig, libraries_dir: &Path) {
     if let Some(args) = json.get("arguments").and_then(|a| a.get("jvm")).and_then(|j| j.as_array()) {
         let mut extra: Vec<String> = Vec::new();
@@ -451,7 +441,6 @@ pub async fn launch_minecraft(
 
     emit_line(&app, &format!("[launcher/INFO] Launching Minecraft {} for user {}...", vanilla_version, username));
 
-    // Resolve auth: cached Microsoft token matching the username, else offline.
     let auth_name = username.clone();
     let mut auth_uuid = String::new();
     let mut auth_access_token = String::new();
@@ -459,7 +448,6 @@ pub async fn launch_minecraft(
     if let Some(json) = crate::auth::read_cached_auth(&app) {
         let cached_name = json.get("name").and_then(|v| v.as_str()).unwrap_or("");
         if cached_name == username {
-            // Auto-refresh the token when it expired (Этап 4.2).
             match crate::auth::try_refresh_cached_token(&app).await {
                 Ok(true) => emit_line(&app, "[launcher/INFO] Microsoft token refreshed automatically"),
                 Ok(false) => {}
@@ -483,10 +471,8 @@ pub async fn launch_minecraft(
         emit_line(&app, &format!("[launcher/INFO] Using cached Microsoft Auth for {username}"));
     }
 
-    // Java runtime.
     let java_path = crate::java::ensure_java(&app, &vanilla_version, &data_dir)?;
 
-    // Loader install for versions like "1.21.1-fabric".
     let mut final_version = vanilla_version.clone();
     let client = reqwest::Client::new();
     if version.contains('-') {
@@ -496,7 +482,6 @@ pub async fn launch_minecraft(
         crate::installer::prepare_vanilla_root(&app, &vanilla_version, &data_dir).await?;
     }
 
-    // Working directory: the instance's isolated .minecraft.
     let game_dir = data_dir.join("instances").join(&instance_id).join("minecraft");
     let libraries_dir = data_dir.join("libraries");
     let natives_dir = data_dir
@@ -506,7 +491,6 @@ pub async fn launch_minecraft(
     let assets_root = data_dir.join("assets");
     let client_jar = data_dir.join("versions").join(&final_version).join(format!("{final_version}.jar"));
 
-    // Load profile chain.
     let profile_path = data_dir.join("versions").join(&final_version).join(format!("{final_version}.json"));
     let profile_text = std::fs::read_to_string(&profile_path).map_err(|e| format!("Version {final_version} is not installed: {e}"))?;
     let profile: Value = serde_json::from_str(&profile_text).map_err(|e| e.to_string())?;
@@ -539,9 +523,6 @@ pub async fn launch_minecraft(
         .unwrap_or("")
         .to_string();
 
-    // Loader profiles often inherit the asset index from the vanilla profile.
-    // Never fall back to "legacy": that endpoint does not exist for modern
-    // Minecraft versions.
     if asset_index_id.is_empty() {
         if let Some(parent) = profile.get("inheritsFrom").and_then(|i| i.as_str()) {
             let parent_path = data_dir
@@ -585,7 +566,6 @@ pub async fn launch_minecraft(
         .unwrap_or("net.minecraft.client.main.Main")
         .to_string();
 
-    // Client jar from the base (vanilla) profile.
     if !client_jar.exists() {
         let base_profile = profile.clone();
         let base = if profile.get("downloads").is_none() {
@@ -626,7 +606,6 @@ pub async fn launch_minecraft(
 
     let (jvm_args, game_args) = collect_profile_arguments(&data_dir, &final_version)?;
 
-    // Collect arguments from vanilla first, then apply loader-specific values.
     let mut config = LaunchConfig {
         version_name: final_version.clone(),
         game_dir: game_dir.clone(),
@@ -649,8 +628,7 @@ pub async fn launch_minecraft(
     let mut classpath_parts = libraries.clone();
     classpath_parts.push(client_jar.to_string_lossy().to_string());
 
-    // Injected hidden Omega Cosmetics runtime (Crown)
-    // Stored in internal launcher data directory, NEVER placed in instances/<id>/minecraft/mods/
+    // Embed and unpack internal cosmetics runtime outside user mod directories.
     let internal_cosmetics_dir = data_dir.join("internal").join("cosmetics");
     if let Err(e) = std::fs::create_dir_all(&internal_cosmetics_dir) {
         emit_line(&app, &format!("[launcher/WARN] Failed to create internal cosmetics dir: {e}"));
@@ -665,7 +643,6 @@ pub async fn launch_minecraft(
 
     if crown_jar.exists() {
         emit_line(&app, "[launcher/INFO] Injected internal Omega Monarch Crown runtime");
-        // Add to classpath so Knot and ModLauncher can discover manifests
         classpath_parts.push(crown_jar.to_string_lossy().to_string());
     }
 
@@ -700,11 +677,8 @@ pub async fn launch_minecraft(
         .arg("-Dminecraft.launcher.brand=Omega Launcher")
         .arg("-Dminecraft.launcher.version=1.0.0");
 
-    // LWJGL uses native libraries. Java 25 warns about this unless native
-    // access is explicitly granted to classpath code.
     command.arg("--enable-native-access=ALL-UNNAMED");
     if crate::java::required_java_version(&vanilla_version) >= 24 {
-        // LWJGL 3.4.1 still uses sun.misc.Unsafe on Java 24+.
         command.arg("--sun-misc-unsafe-memory-access=allow");
     }
 
@@ -715,7 +689,6 @@ pub async fn launch_minecraft(
         command.arg(format!("-Dfabric.addMods={}", crown_jar.to_string_lossy()));
     }
 
-    // Custom user JVM arguments from launcher settings (e.g. -XX:+UseZGC, -XX:+UseG1GC, etc.)
     if let Some(user_args) = &custom_jvm_args {
         let trimmed_user = user_args.trim();
         if !trimmed_user.is_empty() {
@@ -771,8 +744,6 @@ pub async fn launch_minecraft(
                 let _ = app1.emit("download-progress", line);
             }
         }
-        // stdout EOF means the game process exited: tell the frontend so the
-        // Play button resets, and clean up the stale pid file.
         let _ = app1.emit("download-progress", "[launcher/INFO] Minecraft process exited");
         let _ = std::fs::remove_file(&pid_file_exit);
     });
@@ -810,7 +781,6 @@ pub fn kill_minecraft(app: AppHandle, instance_id: String) -> Result<String, Str
         }
     }
 
-    // Fallback: kill any remaining Java processes started by this launcher (matching the java runtime dir).
     if !killed {
         #[cfg(not(target_os = "windows"))]
         {
@@ -854,7 +824,6 @@ mod tests {
             { "action": "allow" },
             { "action": "disallow", "os": { "name": "windows" } },
         ]);
-        // A rule that does not match its OS does not participate.
         assert!(!rules_match(Some(&json!([{ "action": "disallow", "os": { "name": "windows" } }]))), "single unmatched disallow allows nothing");
         if cfg!(target_os = "windows") {
             assert!(!rules_match(Some(&rules)));

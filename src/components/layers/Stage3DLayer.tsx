@@ -18,9 +18,6 @@ const tempTL = new THREE.Vector3();
 const tempBR = new THREE.Vector3();
 const tempNDC = new THREE.Vector2();
 
-/**
- * Converts screen pixel coordinates (clientX, clientY) to 3D world coordinates on plane Z = 0.
- */
 function screenPointToWorld(
   clientX: number,
   clientY: number,
@@ -37,10 +34,6 @@ function screenPointToWorld(
   return hit !== null;
 }
 
-/**
- * Scans active UI elements (Dock and Top Bar panels) to create solid 3D walking platforms.
- * Calculates lower floor level below all buttons.
- */
 function scanLauncherPlatforms(
   camera: THREE.PerspectiveCamera,
   raycaster: THREE.Raycaster,
@@ -49,19 +42,16 @@ function scanLauncherPlatforms(
   const w = window.innerWidth || 1280;
   const h = window.innerHeight || 720;
 
-  // Screen wall boundaries (framed so character body remains 100% visible on screen)
   screenPointToWorld(0, h * 0.5, camera, raycaster, plane, tempTL);
   const minX = tempTL.x + 22.0;
   screenPointToWorld(w, h * 0.5, camera, raycaster, plane, tempTL);
   const maxX = tempTL.x - 22.0;
 
-  // Lower floor level (below all buttons near bottom edge of screen)
   screenPointToWorld(w * 0.5, h - 6, camera, raycaster, plane, tempTL);
   const floorLevel = tempTL.y + 24.0;
 
   const platforms: WorldPlatform[] = [];
 
-  // Only the bottom dock buttons are solid platforms
   const selectors = [
     ".dock-container",
   ];
@@ -81,7 +71,6 @@ function scanLauncherPlatforms(
         const topWorldY = Math.max(tempTL.y, tempBR.y);
         const bottomWorldY = Math.min(tempTL.y, tempBR.y);
 
-        // Soles of shoes rest firmly on the top surface of the button plate
         const topY = topWorldY + 23.2;
         const bottomY = bottomWorldY - 8.8;
 
@@ -104,10 +93,6 @@ function scanLauncherPlatforms(
   return { platforms, floorLevel, minX, maxX };
 }
 
-/**
- * Fast check if the pointer coordinates intersect or are within the grab radius of the 3D character.
- * Uses bounding-box early exit to avoid expensive recursive Three.js raycasting when cursor is not near character.
- */
 function isPointerOverCharacter(
   clientX: number,
   clientY: number,
@@ -121,20 +106,16 @@ function isPointerOverCharacter(
     return false;
   }
 
-  // 1. Instant bounding box rejection:
-  // Character center is at (currentX, currentY + 14), width ~8, height ~32.
   const dx = Math.abs(outWorldPos.x - controller.currentX);
   const dy = Math.abs(outWorldPos.y - (controller.currentY + 14.0));
   if (dx > 8.5 || dy > 18.0) {
     return false;
   }
 
-  // 2. Proximity check around character grab cylinder
   if (dx <= 6.5 && dy <= 16.5) {
     return true;
   }
 
-  // 3. Precise raycast direct intersection with character meshes only if near the outer edge
   const intersects = raycaster.intersectObject(viewer.playerObject, true);
   return intersects.length > 0;
 }
@@ -151,18 +132,15 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
   const controllerRef = useRef<RoamingCharacterController | null>(null);
   const visibleRef = useRef<boolean>(visible);
 
-  // Interaction tracking state
   const isPointerDownOnChar = useRef<boolean>(false);
   const pointerDownPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const pointerDownTime = useRef<number>(0);
   const grabOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const lastMouseWorld = useRef<THREE.Vector3>(new THREE.Vector3());
 
-  // Three.js reusable math objects
   const raycasterRef = useRef<THREE.Raycaster>(new THREE.Raycaster());
   const planeRef = useRef<THREE.Plane>(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0));
 
-  // Sync visibility and pause WebGL rendering when hidden
   useEffect(() => {
     visibleRef.current = visible;
     if (viewerRef.current) {
@@ -184,7 +162,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
     }
   }, [visible]);
 
-  // Initialize Fullscreen 3D Stage with Articulated Limbs & Physical Platforming
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -203,7 +180,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         enableControls: false,
       });
 
-      // Camera positioned with wide cinematic angle over launcher floor
       viewer.camera.position.set(0, 14, 95);
       viewer.camera.lookAt(0, -2, 0);
       viewer.controls.target.set(0, -2, 0);
@@ -212,20 +188,16 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
       viewer.controls.enablePan = false;
       viewer.controls.update();
 
-      // Build articulated limbs with functional elbow & knee joints
       const isSlim = viewer.playerObject.skin.modelType === "slim" || model === "slim";
       const limbs = buildArticulatedLimbs(viewer.playerObject, isSlim);
       limbsRef.current = limbs;
 
-      // Roaming character controller with physical platforming, dragging & wall collisions
       const controller = new RoamingCharacterController(viewer.playerObject, limbs, viewer.scene);
       controllerRef.current = controller;
 
-      // Initial platform scan
       const initialData = scanLauncherPlatforms(viewer.camera, raycasterRef.current, planeRef.current);
       controller.setPlatforms(initialData.platforms, initialData.floorLevel, initialData.minX, initialData.maxX);
 
-      // Animation loop: drives character physics, platform collisions & animations
       class PhysicalRoamingAnimation extends PlayerAnimation {
         animate(_player: PlayerObject, delta: number): void {
           if (controllerRef.current) {
@@ -234,14 +206,10 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         }
       }
 
-      // Bypass heavy multi-pass EffectComposer / FXAAShader to render directly to canvas for maximum FPS
       (viewer as any).render = function () {
         this.renderer.render(this.scene, this.camera);
       };
 
-      // Adaptive FPS frame limiter:
-      // Limits rendering to ~36 FPS during idle/walk (or ~50 FPS during active mouse dragging).
-      // Eliminates GPU/CPU overload on 144Hz+ monitors while maintaining completely fluid Minecraft motion.
       let lastRenderTime = performance.now();
       const TARGET_FPS_IDLE = 36;
       const TARGET_FPS_DRAG = 50;
@@ -277,7 +245,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
       (window as any).__skinViewer = viewer;
       (window as any).__controller = controller;
 
-      // Update platforms cleanly without polling layout thrashing
       const refreshPlatforms = () => {
         if (!viewerRef.current || !controllerRef.current) return;
         const res = scanLauncherPlatforms(
@@ -288,7 +255,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         controllerRef.current.setPlatforms(res.platforms, res.floorLevel, res.minX, res.maxX);
       };
 
-      // Observe dock container resizing/layout changes without polling
       let resizeObserver: ResizeObserver | null = null;
       if (typeof ResizeObserver !== "undefined") {
         resizeObserver = new ResizeObserver(() => {
@@ -300,7 +266,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         }
       }
 
-      // Handle window resize dynamically with frame debouncing
       let resizeRaf: number | null = null;
       const onResize = () => {
         if (viewerRef.current && controllerRef.current) {
@@ -319,11 +284,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
       };
       window.addEventListener("resize", onResize);
 
-      // =========================================================================
-      // MOUSE DRAG & PUNCH INTERACTION (Capture phase)
-      // If clicking character: drag or punch him!
-      // If clicking outside: let events pass through cleanly to launcher buttons!
-      // =========================================================================
       const tempCurWorld = new THREE.Vector3();
       const tempHitPos = new THREE.Vector3();
       let lastHoverCheckTime = 0;
@@ -331,13 +291,11 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
       const onWindowPointerDown = (e: PointerEvent) => {
         if (!visibleRef.current) return;
 
-        // Skip raycast if clicking over modals, customizer backdrop, or HUD
         const target = e.target as HTMLElement | null;
         if (target && target.closest(".menu-customizer-modal-backdrop, .modal, [role='dialog'], .hud-container")) {
           return;
         }
 
-        // Fast 2D boundary check: character only roams in the lower half of the screen
         const screenH = window.innerHeight || 720;
         if (e.clientY < screenH * 0.45) {
           return;
@@ -347,7 +305,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         const vwr = viewerRef.current;
         if (!ctrl || !vwr) return;
 
-        // Disallow grabbing while unconscious
         if (ctrl.state === "unconscious" || ctrl.state === "waking_up") return;
 
         if (
@@ -361,7 +318,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
             tempHitPos
           )
         ) {
-          // Interacting with character: capture event so buttons underneath don't fire
           e.stopPropagation();
           e.preventDefault();
 
@@ -403,8 +359,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
           return;
         }
 
-        // Fast 2D boundary check: character is bounded to the lower screen dock area.
-        // If cursor is in the upper area (top bar, upper cards, settings, etc.), skip all raycasts & math!
         const screenH = window.innerHeight || 720;
         if (e.clientY < screenH * 0.45) {
           if (document.body.style.cursor === "grab") {
@@ -413,12 +367,10 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
           return;
         }
 
-        // Throttle hover checks to ~40fps to avoid main thread jank from high-frequency gaming mice
         const now = performance.now();
         if (now - lastHoverCheckTime < 24) return;
         lastHoverCheckTime = now;
 
-        // Skip raycast work if pointer is over any modal or HUD bar
         const target = e.target as HTMLElement | null;
         if (target && target.closest(".menu-customizer-modal-backdrop, .modal, [role='dialog'], .hud-container")) {
           if (document.body.style.cursor === "grab") {
@@ -436,7 +388,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
           tempCurWorld
         );
 
-        // Hover cursor feedback
         if (ctrl.state !== "unconscious" && ctrl.state !== "waking_up") {
           const isOver = isPointerOverCharacter(
             e.clientX,
@@ -479,10 +430,8 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         );
 
         if (dist < 8.0 && elapsed < 350) {
-          // CLICK / TAP: PUNCH THE CHARACTER!
           ctrl.punch(tempCurWorld.x, tempCurWorld.y);
         } else {
-          // RELEASE FROM DRAG WITH MOMENTUM
           ctrl.endDrag();
         }
 
@@ -512,7 +461,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
     }
   }, []);
 
-  // Update skin texture and model (with cancellation token against race conditions)
   useEffect(() => {
     let canceled = false;
     if (viewerRef.current) {
@@ -537,7 +485,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
     };
   }, [skinUrl, model]);
 
-  // Update cape
   useEffect(() => {
     if (viewerRef.current) {
       if (capeUrl) {
@@ -550,7 +497,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
     }
   }, [capeUrl]);
 
-  // Crown cosmetic attachment
   useEffect(() => {
     const updateCrown = () => {
       const head = viewerRef.current?.playerObject?.skin?.head;

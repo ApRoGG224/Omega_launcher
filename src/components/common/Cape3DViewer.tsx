@@ -26,7 +26,6 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Rotation and dragging state refs
   const baseYRef = useRef<number>(Math.PI - 0.38);
   const rotYRef = useRef<number>(0);
   const rotXRef = useRef<number>(0);
@@ -42,12 +41,10 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
     let animId: number | null = null;
     let textureToDispose: THREE.Texture | null = null;
 
-    // Sizing
     const currentW = width;
     const currentH = height;
     const aspect = currentW / currentH;
 
-    // Three.js Scene, Camera, and Renderer
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(30, aspect, 0.1, 100);
     camera.position.set(0, -8, 33);
@@ -64,7 +61,6 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0x000000, 0);
 
-    // Balanced Minecraft lighting to preserve true texture colors without washing them out
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(ambientLight);
 
@@ -76,14 +72,12 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
     fillLight.position.set(-15, -12, -15);
     scene.add(fillLight);
 
-    // Cape Object from skinview3d
     const cape = new CapeObject();
     const baseX = 0.12;
     cape.rotation.x = baseX;
     cape.rotation.y = baseYRef.current;
     scene.add(cape);
 
-    // Direct render call
     const renderScene = () => {
       if (disposed) return;
       cape.rotation.y = baseYRef.current + rotYRef.current;
@@ -92,10 +86,8 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
     };
     renderSceneRef.current = renderScene;
 
-    // Initial placeholder render
     renderScene();
 
-    // Fetch and load cape texture as data URL to bypass any CORS restrictions
     const loadTexture = async () => {
       try {
         setLoading(true);
@@ -111,7 +103,6 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
 
         if (disposed) return;
 
-        // Load into HTML Image to analyze pixel colors and normalize UV dimensions
         const img = new Image();
         img.crossOrigin = "anonymous";
         await new Promise<void>((resolve, reject) => {
@@ -122,7 +113,6 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
 
         if (disposed) return;
 
-        // Normalize cape image into 64x32 Minecraft cape UV coordinate space
         const offCanvas = document.createElement("canvas");
         offCanvas.width = 64;
         offCanvas.height = 32;
@@ -133,10 +123,6 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
         ctx.clearRect(0, 0, 64, 32);
         ctx.drawImage(img, 0, 0, 64, 32);
 
-        // Detect whether the main decorated artwork is located on Face 1 (x: 1..10, y: 1..16)
-        // or Face 2 (x: 12..21, y: 1..16).
-        // For Bedrock/Pan Capes, the design is in Face 1.
-        // For standard Java Capes, the design is in Face 2.
         const f1Data = ctx.getImageData(1, 1, 10, 16).data;
         const f2Data = ctx.getImageData(12, 1, 10, 16).data;
 
@@ -153,8 +139,8 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
           }
         }
 
-        // If Face 1 has more distinct colors than Face 2, Face 1 contains the artwork (+Z face).
-        // Otherwise Face 2 contains the artwork (-Z face).
+        // Bedrock capes place artwork on Face 1 (+Z), while Java capes use Face 2 (-Z).
+        // Rotate towards the face with higher color diversity to display the decorated side.
         const showF1 = f1Colors.size > f2Colors.size;
         baseYRef.current = showF1 ? -0.38 : Math.PI - 0.38;
 
@@ -186,7 +172,6 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
 
     void loadTexture();
 
-    // Optional animation loop only if explicitly requested
     if (animated) {
       let startTime = performance.now();
       const renderFrame = (now: number) => {
@@ -229,7 +214,6 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
     };
   }, [capeUrl, width, height, animated]);
 
-  // Optional manual pointer interactions if interactive is true
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!interactive) return;
     isDraggingRef.current = true;
@@ -258,7 +242,6 @@ export const Cape3DViewer: React.FC<Cape3DViewerProps> = ({
     try {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     } catch {
-      // ignore
     }
   };
 

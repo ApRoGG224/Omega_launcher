@@ -22,7 +22,6 @@ interface SettingsScreenProps {
   onNextBg: () => void;
   onPrevBg: () => void;
   onToggleBgAutoPlay: () => void;
-  // Appearance customization
   topBarLayout?: TopBarItemId[];
   onSaveTopBarLayout?: (layout: TopBarItemId[]) => void;
   onResetTopBarLayout?: () => void;
@@ -113,7 +112,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [appearanceSubTab, setAppearanceSubTab] = useState<"topbar" | "bottombar" | "background">("topbar");
   const [bgFilter, setBgFilter] = useState<"all" | "shader" | "official" | "user">("all");
 
-  // Load persisted settings
   const [initialSettings] = useState<StoredSettings>(() => {
     try {
       const saved = localStorage.getItem("omega_launcher_settings");
@@ -123,7 +121,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     }
   });
 
-  // State
   const [ram, setRam] = useState<number>(initialSettings.ram);
   const [mcVersion] = useState<string>("1.21.4");
   const [closeOnLaunch, setCloseOnLaunch] = useState<boolean>(initialSettings.closeOnLaunch);
@@ -138,7 +135,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [showStatusFriends, setShowStatusFriends] = useState<boolean>(initialSettings.showStatusFriends);
   const [proxyType, setProxyType] = useState<string>(initialSettings.proxyType);
 
-  // Version filters
   const [showReleases, setShowReleases] = useState<boolean>(initialSettings.showReleases);
   const [showSnapshots, setShowSnapshots] = useState<boolean>(initialSettings.showSnapshots);
   const [showBetas, setShowBetas] = useState<boolean>(initialSettings.showBetas);
@@ -185,7 +181,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     showAlphas,
   ]);
 
-  // Toast notifications disabled per user request
   const showFeedback = (_msg: string) => {};
 
   const handleRamChange = (v: number) => {
@@ -233,7 +228,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   return (
     <div className="screens-overlay-layer settings-screen-overlay">
       <div className="set-wrap">
-        {/* Left Side: Navigation & Profile card */}
         <aside className="set-side">
           <div className="set-card set-nav">
             <div className="set-cap">Конфигурация</div>
@@ -308,9 +302,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </div>
         </aside>
 
-        {/* Right Main Content Card */}
         <main className="set-card set-main">
-          {/* Panel 0: Paths */}
           <div className={`set-pn ${activeTab === "paths" ? "on" : ""}`}>
             <div>
               <h1>Пути к файлам и каталогам игры</h1>
@@ -384,7 +376,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </div>
           </div>
 
-          {/* Panel 1: Memory & Java */}
           <div className={`set-pn ${activeTab === "memory" ? "on" : ""}`}>
             <div>
               <h1>Выделение памяти (RAM) и параметры JVM</h1>
@@ -479,7 +470,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </div>
           </div>
 
-          {/* Panel 2: Network */}
           <div className={`set-pn ${activeTab === "network" ? "on" : ""}`}>
             <div>
               <h1>Сетевые настройки и авторизация</h1>
@@ -560,7 +550,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </div>
           </div>
 
-          {/* Panel 3: Versions & Language */}
           <div className={`set-pn ${activeTab === "versions" ? "on" : ""}`}>
             <div>
               <h1>Фильтрация версий Minecraft и локализация</h1>
@@ -653,7 +642,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </div>
           </div>
 
-          {/* Panel 4: Launch */}
           <div className={`set-pn ${activeTab === "launch" ? "on" : ""}`}>
             <div>
               <h1>Поведение при запуске Minecraft</h1>
@@ -722,9 +710,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </div>
           </div>
 
-          {/* Panel 5: Appearance Sub-menus (Top Bar / Bottom Bar / Background) */}
           <div className={`set-pn ${activeTab === "appearance" ? "on" : ""}`}>
-            {/* Sub-navigation tabs for Appearance */}
             <div className="set-appearance-nav">
               <button
                 type="button"
@@ -749,7 +735,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               </button>
             </div>
 
-            {/* Active Appearance Sub-menu Content */}
             {appearanceSubTab === "topbar" && (
               <TopBarCustomizer
                 layout={topBarLayout}

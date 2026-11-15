@@ -158,9 +158,6 @@ function formatRelativeTime(timestamp: number): string {
   return `${days} дн. назад`;
 }
 
-/**
- * High-performance memoized skin card to prevent re-rendering when new pages are appended
- */
 const InsideSkinCard = React.memo<{
   skin: MinecraftInsideSkinItem;
   isEquipped: boolean;
@@ -218,19 +215,16 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   });
   const [wardrobeFocus, setWardrobeFocus] = useState<WardrobeFocusZone>("full");
 
-  // Microsoft capes state
   const [msCapes, setMsCapes] = useState<MicrosoftCapeItem[]>([]);
   const [isLoadingCapes, setIsLoadingCapes] = useState<boolean>(false);
   const [capesError, setCapesError] = useState<string | null>(null);
   const [equippingCapeId, setEquippingCapeId] = useState<string | null>(null);
   const [isLoggingInMs, setIsLoggingInMs] = useState<boolean>(false);
 
-  // Search state
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [nick, setNick] = useState("");
 
-  // Live Minecraft Inside infinite scroll state
   const [insideSkins, setInsideSkins] = useState<MinecraftInsideSkinItem[]>([]);
   const [isLoadingInside, setIsLoadingInside] = useState<boolean>(false);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
@@ -238,7 +232,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   const [insideError, setInsideError] = useState<string | null>(null);
   const [isApplying, setIsApplying] = useState<string | null>(null);
 
-  // Synchronous pagination locks (matching ModrinthScreen pattern)
   const currentPageRef = useRef<number>(1);
   const totalPagesRef = useRef<number>(1);
   const isLoadingRef = useRef<boolean>(false);
@@ -248,7 +241,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
-  // Recent skins state with persistent localStorage
   const [recentList, setRecentList] = useState<RecentSkinItem[]>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_RECENT_SKINS_KEY);
@@ -257,7 +249,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch {
-      // ignore
     }
     return [
       { name: "Dream", url: PRESET_SKINS.dream, timestamp: Date.now() - 60000, model: "slim" },
@@ -273,7 +264,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     setTimeout(() => setToast(null), 2500);
   };
 
-  // Debounce search input (350ms)
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setDebouncedSearch(search.trim());
@@ -281,7 +271,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     return () => window.clearTimeout(timer);
   }, [search]);
 
-  // Initial load of Page 1 when tab or debounced search changes
   const fetchInitialSkins = useCallback(async () => {
     if (activeTab !== "skins") return;
 
@@ -318,7 +307,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     fetchInitialSkins();
   }, [fetchInitialSkins]);
 
-  // Infinite scroll: fetch next page when user reaches bottom
   const loadMore = useCallback(async () => {
     if (
       isLoadingRef.current ||
@@ -365,12 +353,10 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     }
   }, [activeTab, debouncedSearch]);
 
-  // Dual-trigger infinite scroll (IntersectionObserver + Scroll Listener for 100% reliability)
   useEffect(() => {
     const wrap = wrapRef.current;
     if (!wrap || activeTab !== "skins") return;
 
-    // 1. Passive scroll listener
     const handleScroll = () => {
       if (
         !isLoadingRef.current &&
@@ -386,7 +372,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
 
     wrap.addEventListener("scroll", handleScroll, { passive: true });
 
-    // 2. IntersectionObserver on sentinel
     let observer: IntersectionObserver | null = null;
     const sentinel = sentinelRef.current;
     if (sentinel && typeof IntersectionObserver !== "undefined") {
@@ -433,7 +418,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
       try {
         localStorage.setItem(STORAGE_RECENT_SKINS_KEY, JSON.stringify(updated));
       } catch {
-        // ignore
       }
       return updated;
     });
@@ -444,12 +428,10 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     try {
       localStorage.removeItem(STORAGE_RECENT_SKINS_KEY);
     } catch {
-      // ignore
     }
     showToast("История очищена");
   };
 
-  // Equip skin from Minecraft Inside live catalog
   const handleEquipInsideSkin = useCallback(async (skin: MinecraftInsideSkinItem) => {
     setIsApplying(skin.nickname);
     try {
@@ -470,7 +452,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     }
   }, [onEquipSkin]);
 
-  // Direct nickname equip
   const handleNickEquip = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = nick.trim();
@@ -509,7 +490,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     showToast("Аксессуары сняты");
   }, []);
 
-  // Fetch Microsoft capes
   const fetchMicrosoftCapes = useCallback(async () => {
     if (!account || account.type !== "microsoft") {
       setMsCapes([]);
@@ -620,7 +600,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
       )}
 
       <div className="wrap" ref={wrapRef}>
-        {/* Head */}
         <div className="head">
           <div>
             <h1>Магазин Omega</h1>
@@ -643,7 +622,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
           </div>
         </div>
 
-        {/* Tools row */}
         {(activeTab === "skins" || activeTab === "capes" || activeTab === "pets") && (
           <div className="tools" id="tools">
             {activeTab !== "capes" && (
@@ -720,9 +698,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
           </div>
         )}
 
-        {/* Content output */}
         <div id="out">
-          {/* SKINS TAB (Infinite Scroll direct live catalog) */}
           {activeTab === "skins" && (
             <>
               {isLoadingInside ? (
@@ -778,7 +754,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                     })}
                   </div>
 
-                  {/* Sentinel element to trigger automatic infinite scroll */}
                   <div
                     ref={sentinelRef}
                     style={{ height: "4px", width: "100%", pointerEvents: "none" }}
@@ -798,7 +773,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
             </>
           )}
 
-          {/* CAPES TAB */}
           {activeTab === "capes" && (
             <>
               {account?.type !== "microsoft" ? (
@@ -953,7 +927,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
             </>
           )}
 
-          {/* PETS TAB */}
           {activeTab === "pets" && (
             <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))" }}>
               {PT.filter((x) => !q || x.join(" ").toLowerCase().includes(q)).map((x) => {
@@ -993,10 +966,8 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
             </div>
           )}
 
-          {/* COSMETICS TAB WITH 3D WARDROBE SHOWCASE */}
           {activeTab === "cos" && (
             <div className="store-cosmetics-wardrobe-container">
-              {/* Left Column: Tools & Cosmetics Cards */}
               <div className="store-cosmetics-catalog">
                 <div className="store-cosmetics-tools">
                   <button
@@ -1044,7 +1015,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                 </div>
               </div>
 
-              {/* Right Column: 3D Wardrobe Stage */}
               <div className="store-wardrobe-showcase">
                 <div className="store-wardrobe-header">
                   <div className="store-wardrobe-title">Примерочная 3D</div>
@@ -1086,7 +1056,6 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
             </div>
           )}
 
-          {/* RECENT TAB */}
           {activeTab === "recent" && (
             <div>
               <div

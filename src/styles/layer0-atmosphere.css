@@ -1,9 +1,3 @@
-/* Hallmark: modern-minimal / app / tactical-tech / atmosphere */
-/* ==========================================================================
-   LAYER 0: ATMOSPHERE & MINECRAFT SCREENSHOT BACKGROUND
-   Scenic in-game screenshots with smooth crossfade & tactical matte overlays
-   Strict adherence to AGENTS.md: zero neon, pure 'Exo 2', matte finish
-   ========================================================================== */
 
 .layer-atmosphere {
   position: absolute;
@@ -19,7 +13,6 @@
   opacity: 0;
 }
 
-/* Container for background images */
 .atmosphere-canvas {
   position: absolute;
   inset: 0;
@@ -28,7 +21,6 @@
   overflow: hidden;
 }
 
-/* Crossfading image layers */
 .atmosphere-bg-img {
   position: absolute;
   inset: -12px;
@@ -48,17 +40,13 @@
   transform: scale(1.03);
 }
 
-/* Multi-zone tactical matte scrim: keeps HUD, Dock, and 3D Character ultra-legible */
 .atmosphere-matte-scrim {
   position: absolute;
   inset: 0;
   z-index: 2;
   pointer-events: none;
   background:
-    /* Top HUD readability gradient */
     linear-gradient(180deg, rgba(6, 9, 15, 0.85) 0%, rgba(6, 9, 15, 0.55) 75px, rgba(6, 9, 15, 0.15) 150px, transparent 230px),
-    /* Bottom Dock readability gradient */
     linear-gradient(0deg, rgba(4, 6, 11, 0.94) 0%, rgba(4, 6, 11, 0.65) 100px, rgba(4, 6, 11, 0.2) 180px, transparent 260px),
-    /* Center contrast & perimeter vignette */
     radial-gradient(ellipse at 50% 50%, rgba(6, 9, 15, 0.2) 0%, rgba(4, 6, 10, 0.5) 65%, rgba(2, 3, 6, 0.88) 100%);
 }

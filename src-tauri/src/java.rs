@@ -6,7 +6,6 @@ use crate::util::{emit_line, extract_zip};
 
 pub fn required_java_version(mc_version: &str) -> u32 {
     let clean = mc_version.trim();
-    // Handle weekly snapshots like 25w06a, 24w45a, 20w14a
     if let Some(pos) = clean.find('w') {
         if let Ok(year) = clean[..pos].parse::<u32>() {
             if year >= 26 {
@@ -27,7 +26,6 @@ pub fn required_java_version(mc_version: &str) -> u32 {
     let minor: u32 = parts.get(1).and_then(|p| p.parse().ok()).unwrap_or(0);
     let patch: u32 = parts.get(2).and_then(|p| p.parse().ok()).unwrap_or(0);
     if major > 1 {
-        // Year-based versions like 26.x require Java 25+.
         25
     } else if minor > 20 || (minor == 20 && patch >= 5) {
         21
@@ -61,8 +59,6 @@ fn java_executable(jre_dir: &Path) -> PathBuf {
     jre_dir.join("bin").join(exe)
 }
 
-/// Looks for a suitable Java runtime already installed on the system
-/// (JAVA_HOME, common JVM dirs, PATH) and returns the path when found.
 pub fn find_system_java(required_major: u32) -> Option<String> {
     let mut candidates: Vec<std::path::PathBuf> = Vec::new();
 
@@ -93,13 +89,11 @@ pub fn find_system_java(required_major: u32) -> Option<String> {
         }
     }
 
-    // PATH fallback: plain `java`.
     if std::env::var_os("PATH").is_some() {
         candidates.push(std::path::PathBuf::from("java"));
     }
 
     for candidate in candidates {
-        // A bare "java" relies on PATH resolution; anything else must exist.
         if candidate.components().count() > 1 && !candidate.exists() {
             continue;
         }
@@ -122,7 +116,6 @@ fn major_version_of(java: &std::path::Path) -> Result<u32, String> {
     for line in text.lines() {
         if let Some(version) = line.split("java.version =").nth(1) {
             let v = version.trim();
-            // "1.8.0_402" -> 8, "21.0.3" -> 21
             if let Some(rest) = v.strip_prefix("1.") {
                 return rest
                     .split('.')
@@ -152,9 +145,6 @@ fn java_bin() -> &'static str {
     "java"
 }
 
-/// Ensures a Java runtime for the given Minecraft version is cached inside
-/// `root/runtime`. Picks 25 / 21 / 17 / 8 and prefers a
-/// compatible system JDK before downloading the Adoptium JRE.
 pub fn ensure_java(app: &AppHandle, mc_version: &str, root: &Path) -> Result<String, String> {
     let java_version = required_java_version(mc_version);
     if let Some(system_java) = find_system_java(java_version) {
@@ -183,7 +173,6 @@ pub fn ensure_java(app: &AppHandle, mc_version: &str, root: &Path) -> Result<Str
 
     let client = reqwest::blocking::Client::new();
 
-    // Adoptium redirects to the actual archive; follow it and check the final extension.
     let response = client
         .get(&api_url)
         .send()
@@ -203,7 +192,6 @@ pub fn ensure_java(app: &AppHandle, mc_version: &str, root: &Path) -> Result<Str
     }
     std::fs::create_dir_all(&temp_dir).map_err(|e| e.to_string())?;
 
-    // Try tar.gz (linux/mac) first, fall back to zip (windows).
     let mut extracted = false;
     if cfg!(not(target_os = "windows")) {
         let file = std::fs::File::open(&archive_path).map_err(|e| e.to_string())?;
@@ -226,7 +214,6 @@ pub fn ensure_java(app: &AppHandle, mc_version: &str, root: &Path) -> Result<Str
             .map_err(|e| format!("Failed to extract Java archive: {e}"))?;
     }
 
-    // Adoptium archives unpack into a single folder like "jdk-21.0.3+9-jre".
     let inner = std::fs::read_dir(&temp_dir)
         .map_err(|e| e.to_string())?
         .filter_map(|entry| entry.ok())
@@ -237,7 +224,6 @@ pub fn ensure_java(app: &AppHandle, mc_version: &str, root: &Path) -> Result<Str
     let _ = std::fs::remove_dir_all(&temp_dir);
     let _ = std::fs::remove_file(&archive_path);
 
-    // Make executable on Linux/macOS.
     #[cfg(not(target_os = "windows"))]
     {
         use std::os::unix::fs::PermissionsExt;

@@ -9,7 +9,6 @@ export interface IconProps {
   style?: React.CSSProperties;
 }
 
-// 100% Authentic Minecraft 16x16 Pixel Art PNG Textures
 export const MC_TEXTURE_DIAMOND_SWORD =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAJFBMVEUAAAAOPzYIJSAz68uk/fArx6weincVY1VoTh5JNhUoHguJZycazUdMAAAAAXRSTlMAQObYZgAAAExJREFUGNN1jsENwDAMAgGndpLuv29/jZFa/+4QwkA/ks5jyPky8cHxwyQAxslZNAaYiux9Zlb4A0XjNcVu1r0hvYacGwB0Rq0OSC4ehwkBE0lygnsAAAAASUVORK5CYII=";
 
@@ -45,9 +44,6 @@ const basePixelStyle: React.CSSProperties = {
   pointerEvents: "none",
 };
 
-/**
- * Authentic Minecraft Diamond Sword (16x16 pixel art)
- */
 export const IconDiamondSword: React.FC<IconProps> = ({ size = 24, className, style }) => (
   <img
     src={MC_TEXTURE_DIAMOND_SWORD}
@@ -60,9 +56,6 @@ export const IconDiamondSword: React.FC<IconProps> = ({ size = 24, className, st
   />
 );
 
-/**
- * Authentic Minecraft Diamond Pickaxe (16x16 pixel art)
- */
 export const IconDiamondPickaxe: React.FC<IconProps> = ({ size = 24, className, style }) => (
   <img
     src={MC_TEXTURE_DIAMOND_PICKAXE}
@@ -75,9 +68,6 @@ export const IconDiamondPickaxe: React.FC<IconProps> = ({ size = 24, className, 
   />
 );
 
-/**
- * Authentic Minecraft Obsidian Block (16x16 pixel art)
- */
 export const IconObsidian: React.FC<IconProps> = ({ size = 24, className, style }) => (
   <img
     src={MC_TEXTURE_OBSIDIAN}
@@ -90,9 +80,6 @@ export const IconObsidian: React.FC<IconProps> = ({ size = 24, className, style 
   />
 );
 
-/**
- * Authentic Minecraft End Crystal Item (16x16 pixel art)
- */
 export const IconEndCrystal: React.FC<IconProps> = ({ size = 24, className, style }) => (
   <img
     src={MC_TEXTURE_END_CRYSTAL}
@@ -105,9 +92,6 @@ export const IconEndCrystal: React.FC<IconProps> = ({ size = 24, className, styl
   />
 );
 
-/**
- * Authentic Minecraft Totem of Undying (16x16 pixel art)
- */
 export const IconTotemOfUndying: React.FC<IconProps> = ({ size = 24, className, style }) => (
   <img
     src={MC_TEXTURE_TOTEM_OF_UNDYING}
@@ -120,9 +104,6 @@ export const IconTotemOfUndying: React.FC<IconProps> = ({ size = 24, className, 
   />
 );
 
-/**
- * Authentic Minecraft Golden Apple (16x16 pixel art)
- */
 export const IconGoldenApple: React.FC<IconProps> = ({ size = 24, className, style }) => (
   <img
     src={MC_TEXTURE_GOLDEN_APPLE}
@@ -135,9 +116,6 @@ export const IconGoldenApple: React.FC<IconProps> = ({ size = 24, className, sty
   />
 );
 
-/**
- * Authentic Minecraft Ender Pearl (16x16 pixel art)
- */
 export const IconEnderPearl: React.FC<IconProps> = ({ size = 24, className, style }) => (
   <img
     src={MC_TEXTURE_ENDER_PEARL}
@@ -150,9 +128,6 @@ export const IconEnderPearl: React.FC<IconProps> = ({ size = 24, className, styl
   />
 );
 
-/**
- * Authentic Minecraft TNT Block (16x16 pixel art)
- */
 export const IconTNT: React.FC<IconProps> = ({ size = 24, className, style }) => (
   <img
     src={MC_TEXTURE_TNT}
@@ -165,9 +140,6 @@ export const IconTNT: React.FC<IconProps> = ({ size = 24, className, style }) =>
   />
 );
 
-/**
- * Authentic Minecraft Netherite Sword (16x16 pixel art)
- */
 export const IconNetheriteSword: React.FC<IconProps> = ({ size = 24, className, style }) => (
   <img
     src={MC_TEXTURE_NETHERITE_SWORD}
@@ -197,9 +169,6 @@ export const INSTANCE_AVATAR_OPTIONS: Array<{
   { id: "netherite_sword", label: "Незерит", fullName: "Незеритовый меч", component: IconNetheriteSword },
 ];
 
-/**
- * Universal Avatar Icon Resolver for Instances
- */
 export const InstanceAvatarIcon: React.FC<{
   icon?: string;
   size?: number;
@@ -262,6 +231,5 @@ export const InstanceAvatarIcon: React.FC<{
     return <IconDiamondSword size={size} className={className} style={style} />;
   }
 
-  // Fallback to Diamond Sword
   return <IconDiamondSword size={size} className={className} style={style} />;
 };

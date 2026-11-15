@@ -65,7 +65,6 @@ export const InstancesModal: React.FC<InstancesModalProps> = ({
       </div>
 
       <div className="modal-body">
-        {/* Top Hero Card for Current Instance */}
         {currentInstance && (
           <div className="instance-hero-box">
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
@@ -129,7 +128,6 @@ export const InstancesModal: React.FC<InstancesModalProps> = ({
           </div>
         )}
 
-        {/* Carousel of Instances */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <h3 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)" }}>
             Все версии ({instances.length})
@@ -174,7 +172,6 @@ export const InstancesModal: React.FC<InstancesModalProps> = ({
           ))}
         </div>
 
-        {/* Create Instance Dialog (Посередине экрана) */}
         {isCreating &&
           createPortal(
             <div

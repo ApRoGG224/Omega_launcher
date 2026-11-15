@@ -306,7 +306,6 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
         });
       }
     } catch {
-      // Ignore network errors on pagination
     } finally {
       if (currentReqId === reqIdRef.current) {
         isLoadingMoreRef.current = false;

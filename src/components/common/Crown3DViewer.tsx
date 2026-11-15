@@ -35,10 +35,8 @@ export const Crown3DViewer: React.FC<Crown3DViewerProps> = ({
     const currentH = height;
     const aspect = currentW / currentH;
 
-    // Three.js Scene, Camera, and Renderer
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(32, aspect, 0.1, 100);
-    // Camera positioned to frame the crown centered around origin
     camera.position.set(0, 5, 25);
     camera.lookAt(0, 0, 0);
 
@@ -53,7 +51,6 @@ export const Crown3DViewer: React.FC<Crown3DViewerProps> = ({
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0x000000, 0);
 
-    // Subtle, authentic Minecraft directional & ambient lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(ambientLight);
 
@@ -65,15 +62,11 @@ export const Crown3DViewer: React.FC<Crown3DViewerProps> = ({
     fillLight.position.set(-10, -5, -10);
     scene.add(fillLight);
 
-    // Create Crown object and offset its center so it rotates around (0,0,0)
     const crown = createCrownObject();
-    // In createCrownObject, base Y is ~7.6, center is around Y = 8.4
-    // Offset crown container so its center of mass sits at local (0, 0, 0)
     crown.position.set(0, -8.4, 0);
 
     const crownRoot = new THREE.Group();
     crownRoot.add(crown);
-    // Gentle default isometric tilt
     const baseTiltX = 0.38;
     crownRoot.rotation.x = baseTiltX;
     scene.add(crownRoot);
@@ -85,7 +78,6 @@ export const Crown3DViewer: React.FC<Crown3DViewerProps> = ({
     };
     renderSceneRef.current = renderScene;
 
-    // Animation loop (slow gentle spin and float)
     let animId: number | null = null;
     let baseAngle = 0;
     const clock = new THREE.Clock();
@@ -152,7 +144,6 @@ export const Crown3DViewer: React.FC<Crown3DViewerProps> = ({
     try {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     } catch {
-      // ignore
     }
   };
 

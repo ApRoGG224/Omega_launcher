@@ -5,8 +5,6 @@ use tauri::AppHandle;
 
 use crate::util::{download_file, emit_line, get_json};
 
-/// Downloads the vanilla version JSON + client jar for `mc_version` into
-/// `root/versions`, unless already present (like the old @xmcl installVersion).
 pub async fn ensure_vanilla(app: &AppHandle, client: &reqwest::Client, mc_version: &str, root: &Path) -> Result<(), String> {
     let version_dir = root.join("versions").join(mc_version);
     let json_path = version_dir.join(format!("{mc_version}.json"));
@@ -46,7 +44,6 @@ pub async fn ensure_vanilla(app: &AppHandle, client: &reqwest::Client, mc_versio
         {
             if let Ok(actual) = sha1_of(&jar_path) {
                 if actual != expected_sha1 {
-                    // Re-download once with a fresh attempt; keep going on mismatch.
                     emit_line(app, "[installer/INFO] SHA1 mismatch on client jar, retrying...");
                     let _ = std::fs::remove_file(&jar_path);
                     download_file(app, client, &client_jar, &jar_path).await?;
@@ -108,7 +105,6 @@ async fn install_quilt(app: &AppHandle, client: &reqwest::Client, mc_version: &s
         .to_string();
 
     let version_name = format!("quilt-loader-{latest}-{mc_version}");
-    // Quilt publishes the same profile-json layout as Fabric.
     let profile_url = format!("https://meta.quiltmc.org/v3/versions/loader/{mc_version}/{latest}/profile/json");
     match get_json::<Value>(client, &profile_url).await {
         Ok(profile) => {
@@ -116,7 +112,6 @@ async fn install_quilt(app: &AppHandle, client: &reqwest::Client, mc_version: &s
             Ok(version_name)
         }
         Err(_) => {
-            // Fallback for older Quilt versions: fabric-style profile from the loader list.
             let profile_url = format!("https://meta.quiltmc.org/v3/versions/loader/{mc_version}/{latest}/profile/fabric");
             let profile: Value = get_json(client, &profile_url).await?;
             write_profile(app, root, &version_name, profile)?;
@@ -166,7 +161,6 @@ async fn install_forge(app: &AppHandle, client: &reqwest::Client, mc_version: &s
     }
 
     emit_line(app, &format!("[installer/INFO] Installing Forge {forge_version}..."));
-    // Newer Forge ships a universal installer jar for all loader types.
     let installer_url = format!("https://maven.minecraftforge.net/net/minecraftforge/forge/{forge_version}/forge-{forge_version}-installer.jar");
     let installer_path = root.join(format!("forge-{forge_version}-installer.jar"));
     if !installer_path.exists() {
@@ -188,7 +182,6 @@ async fn install_neoforge(app: &AppHandle, client: &reqwest::Client, mc_version:
         .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
         .unwrap_or_default();
 
-    // NeoForge dropped the '1.' prefix: 1.21.1 -> 21.1
     let neo_prefix: String = mc_version
         .split('.')
         .skip(1)
@@ -238,7 +231,6 @@ pub async fn install_loader(
     }
 }
 
-/// Downloads the version json (and jar) so a loader profile can inherit from it.
 pub async fn prepare_vanilla_root(app: &AppHandle, mc_version: &str, root: &Path) -> Result<(), String> {
     let client = reqwest::Client::new();
     ensure_vanilla(app, &client, mc_version, root).await

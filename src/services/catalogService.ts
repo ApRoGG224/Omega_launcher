@@ -61,16 +61,12 @@ function getIconFallback(tab: CatalogTab): CatalogItem["iconFallback"] {
   }
 }
 
-/**
- * Searches Modrinth API for modpacks, mods, shaders, and resource packs.
- */
 async function searchModrinth(
   params: CatalogSearchParams,
   signal?: AbortSignal
 ): Promise<CatalogItem[]> {
   const { tab, query, loader, sort, limit = 15, offset = 0 } = params;
 
-  // Modrinth project type mapping
   const projectTypeMap: Record<CatalogTab, string> = {
     modpacks: "modpack",
     mods: "mod",
@@ -84,7 +80,6 @@ async function searchModrinth(
     facets.push([`categories:${loader.toLowerCase()}`]);
   }
 
-  // Modrinth index sorts: 'relevance', 'downloads', 'follows', 'newest', 'updated'
   let index = "downloads";
   if (sort === "n") {
     index = query ? "relevance" : "downloads";
@@ -106,7 +101,6 @@ async function searchModrinth(
   const hits: any[] = data.hits || [];
 
   return hits.map((hit) => {
-    // Collect loaders from categories
     const categories: string[] = hit.categories || [];
     const loaders = categories
       .filter((c) => ["fabric", "forge", "neoforge", "quilt"].includes(c.toLowerCase()))
@@ -136,16 +130,12 @@ async function searchModrinth(
   });
 }
 
-/**
- * Searches CurseForge Core API for modpacks, mods, shaders, and resource packs.
- */
 async function searchCurseForge(
   params: CatalogSearchParams,
   signal?: AbortSignal
 ): Promise<CatalogItem[]> {
   const { tab, query, loader, sort, limit = 15, offset = 0 } = params;
 
-  // CurseForge classId for Minecraft (gameId = 432)
   const classIdMap: Record<CatalogTab, number> = {
     modpacks: 4471,
     mods: 6,
@@ -163,7 +153,6 @@ async function searchCurseForge(
     url.searchParams.set("searchFilter", query.trim());
   }
 
-  // Loader filter
   if (loader && (tab === "modpacks" || tab === "mods")) {
     const loaderTypeMap: Record<string, number> = {
       Forge: 1,
@@ -176,7 +165,6 @@ async function searchCurseForge(
     }
   }
 
-  // CurseForge sortField: 1=Featured, 2=Popularity/Downloads, 3=Updated, 4=Name
   if (sort === "p") {
     url.searchParams.set("sortField", "2");
     url.searchParams.set("sortOrder", "desc");
@@ -211,7 +199,6 @@ async function searchCurseForge(
   };
 
   return data.map((mod) => {
-    // Extract loaders from latestFilesIndexes
     const loaderSet = new Set<string>();
     if (Array.isArray(mod.latestFilesIndexes)) {
       for (const item of mod.latestFilesIndexes) {
@@ -253,9 +240,6 @@ async function searchCurseForge(
   });
 }
 
-/**
- * Unified entry point to search across Modrinth or CurseForge.
- */
 export async function searchCatalog(
   params: CatalogSearchParams,
   signal?: AbortSignal

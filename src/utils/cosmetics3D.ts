@@ -1,28 +1,21 @@
 import * as THREE from "three";
 
-/**
- * Creates an authentic Minecraft voxel 3D Crown group (16 cubes).
- * Perfectly sized to fit around a Minecraft player head (8x8x8 + 0.5 outer layer).
- */
 export function createCrownObject(): THREE.Group {
   const group = new THREE.Group();
   group.name = "omega_crown";
 
-  // Authentic Minecraft Gold Material (subtle metallic sheen, zero neon)
   const goldMat = new THREE.MeshStandardMaterial({
     color: 0xf5b81b,
     roughness: 0.35,
     metalness: 0.65,
   });
 
-  // Authentic Minecraft Ruby Gem Material
   const rubyMat = new THREE.MeshStandardMaterial({
     color: 0xdf1638,
     roughness: 0.2,
     metalness: 0.4,
   });
 
-  // Base rim walls (thickness 0.4, height 1.3, centered around Y = 7.6)
   const rimFront = new THREE.Mesh(new THREE.BoxGeometry(9.4, 1.3, 0.4), goldMat);
   rimFront.position.set(0, 7.6, 4.5);
   group.add(rimFront);
@@ -39,7 +32,6 @@ export function createCrownObject(): THREE.Group {
   rimRight.position.set(4.5, 7.6, 0);
   group.add(rimRight);
 
-  // 4 Corner peaks
   const corners: [number, number, number][] = [
     [-4.5, 8.6, -4.5],
     [4.5, 8.6, -4.5],
@@ -52,7 +44,6 @@ export function createCrownObject(): THREE.Group {
     group.add(p);
   });
 
-  // 4 Center tall peaks (Front, Back, Left, Right)
   const frontPeak = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.9, 0.5), goldMat);
   frontPeak.position.set(0, 8.9, 4.5);
   group.add(frontPeak);
@@ -69,7 +60,6 @@ export function createCrownObject(): THREE.Group {
   rightPeak.position.set(4.5, 8.8, 0);
   group.add(rightPeak);
 
-  // 4 Ruby insets on center peaks
   const frontRuby = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.65, 0.65), rubyMat);
   frontRuby.position.set(0, 8.65, 4.6);
   group.add(frontRuby);
@@ -89,9 +79,6 @@ export function createCrownObject(): THREE.Group {
   return group;
 }
 
-/**
- * Cleanly disposes all geometries and materials of a Three.js object hierarchy.
- */
 export function disposeThreeHierarchy(obj: THREE.Object3D): void {
   obj.traverse((child) => {
     if (child instanceof THREE.Mesh) {

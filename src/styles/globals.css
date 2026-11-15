@@ -1,4 +1,3 @@
-/* Hallmark: modern-minimal / app / tactical-tech / globals */
 @import "./fonts.css";
 @import "./tokens.css";
 
@@ -82,13 +81,11 @@ select option {
   color: #e6e8ec;
 }
 
-/* Instant High-Contrast Focus Visible */
 :focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
-/* Custom Tactical Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -107,7 +104,6 @@ select option {
   background: var(--border-bright);
 }
 
-/* Base Master Canvas */
 .launcher-viewport {
   position: relative;
   width: 100%;
@@ -120,7 +116,6 @@ select option {
   background: #06090f;
 }
 
-/* Strictly Centered Toast Notification (Tactical Matte Slate) */
 @keyframes toast-drop-in {
   0% {
     opacity: 0;
@@ -151,7 +146,6 @@ select option {
   white-space: nowrap;
 }
 
-/* Modal Open: Hide persistent HUD topbar and flanks to prevent clipping */
 body.modal-open-hide-hud .hud-topbar,
 body.modal-open-hide-hud .hud-flank-left,
 body.modal-open-hide-hud .hud-flank-right {
@@ -160,7 +154,6 @@ body.modal-open-hide-hud .hud-flank-right {
   transition: opacity 0.15s ease;
 }
 
-/* Accessibility: Prefers Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

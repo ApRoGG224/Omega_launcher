@@ -1,4 +1,3 @@
-// Fast local skin and cape textures with instant 0ms load
 export const PRESET_SKINS = {
   dream: "/skins/dream.png",
   steve: "/skins/steve.png",

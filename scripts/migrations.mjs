@@ -1,15 +1,4 @@
 #!/usr/bin/env node
-// Omega Launcher — раннер миграций для Supabase.
-//
-//   node scripts/migrations.mjs            — применить неприменённые миграции
-//   node scripts/migrations.mjs new <name> — создать новый файл миграции
-//   node scripts/migrations.mjs status     — показать статус миграций
-//   node scripts/migrations.mjs import     — пометить все текущие файлы как применённые
-//                                           (для БД, где схема уже внесена вручную)
-//
-// Требует в .env:
-//   VITE_SUPABASE_URL        (https://<project-ref>.supabase.co)
-//   SUPABASE_ACCESS_TOKEN    (личный токен: https://supabase.com/dashboard/account/tokens)
 
 import { readFileSync, readdirSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";

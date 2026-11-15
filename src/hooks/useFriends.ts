@@ -45,7 +45,6 @@ export function useFriends(omega: OmegaAuthApi): FriendsApi {
       setFriends(data.friends);
       setRequests(data.requests);
     } catch {
-      // supabase unavailable (no .env / offline) - keep last state
     } finally {
       setLoading(false);
     }

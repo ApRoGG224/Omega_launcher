@@ -61,7 +61,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
   const dockRef = useRef<HTMLElement>(null);
   const [scale, setScale] = useState<number>(1);
 
-  // Auto-fit calculation: guarantees dock is 100% visible on screen with zero horizontal scrolling
   useEffect(() => {
     const updateScale = () => {
       if (canvasRef.current && dockRef.current) {
@@ -95,7 +94,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
     setDraftLayout([...layout]);
   }, [layout]);
 
-  // Global keydown listener for selected item: Delete/Backspace to delete, ArrowLeft/Right to nudge
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
@@ -123,10 +121,8 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
 
   const hasUnsavedChanges = JSON.stringify(draftLayout) !== JSON.stringify(layout);
 
-  // Deleted / hidden items that can be restored
   const deletedItems = DEFAULT_TOPBAR_LAYOUT.filter((id) => !draftLayout.includes(id));
 
-  // Move item from one position to another
   const moveItem = (fromIdx: number, toIdx: number) => {
     if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || fromIdx >= draftLayout.length || toIdx >= draftLayout.length) {
       return;
@@ -139,14 +135,12 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
     });
   };
 
-  // Nudge item by direction (-1: left, 1: right)
   const nudgeItem = (index: number, direction: -1 | 1) => {
     const target = index + direction;
     if (target < 0 || target >= draftLayout.length) return;
     moveItem(index, target);
   };
 
-  // Delete an item from the top bar
   const deleteItem = (idToDelete: TopBarItemId) => {
     setDraftLayout((prev) => prev.filter((id) => id !== idToDelete));
     if (selectedId === idToDelete) {
@@ -154,27 +148,22 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
     }
   };
 
-  // Restore a deleted item
   const restoreItem = (idToRestore: TopBarItemId) => {
     setDraftLayout((prev) => [...prev, idToRestore]);
   };
 
-  // Save changes
   const handleSave = () => {
     onSave?.(draftLayout);
   };
 
-  // Reset to default
   const handleReset = () => {
     setDraftLayout([...DEFAULT_TOPBAR_LAYOUT]);
     setSelectedId(null);
     onReset?.();
   };
 
-  // Click on item in preview
   const handleItemClick = (id: TopBarItemId, index: number) => {
     if (selectedId && selectedId !== id) {
-      // Automatic swap: clicking an element when another is selected automatically places it there!
       const fromIdx = draftLayout.indexOf(selectedId);
       if (fromIdx !== -1) {
         moveItem(fromIdx, index);
@@ -185,7 +174,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
     setSelectedId((prev) => (prev === id ? null : id));
   };
 
-  // Drag and drop with live auto-shift
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggingIdx(index);
     e.dataTransfer.setData("text/plain", index.toString());
@@ -193,7 +181,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
   };
 
   const handleDragEnter = (targetIndex: number) => {
-    // Automatic live repositioning as mouse hovers over elements
     if (draggingIdx !== null && draggingIdx !== targetIndex) {
       moveItem(draggingIdx, targetIndex);
       setDraggingIdx(targetIndex);
@@ -204,7 +191,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
     setDraggingIdx(null);
   };
 
-  // Render individual preview item
   const renderDockItemContent = (id: TopBarItemId) => {
     switch (id) {
       case "profile":
@@ -317,7 +303,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
 
   return (
     <div className="customizer-container customizer-rounded-theme">
-      {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
         <div>
           <h2>Настройка верхней панели навигации</h2>
@@ -342,7 +327,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
         )}
       </div>
 
-      {/* Interactive Live Drag-and-Drop Preview Showcase */}
       <div className="customizer-preview-box">
         <div className="customizer-preview-header">
           <div className="customizer-preview-title">
@@ -424,7 +408,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
                   }}
                   title={`${meta.title} (Кликните для выбора, стрелки ◀/▶ для сдвига, ПКМ для удаления)`}
                 >
-                  {/* Floating Action Controls on Hover/Selection */}
                   <div className="customizer-dock-item-controls">
                     <button
                       type="button"
@@ -465,7 +448,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
                     </button>
                   </div>
 
-                  {/* Actual Button Visual */}
                   <div className="customizer-dock-item-body">
                     {renderDockItemContent(id)}
                   </div>
@@ -475,7 +457,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
           </nav>
         </div>
 
-        {/* Selected Item Instant Action Toolbar (automatic 1-click nudge without dragging) */}
         {selectedId && (
           <div className="customizer-active-item-bar">
             <div className="customizer-active-label">
@@ -534,7 +515,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
         )}
       </div>
 
-      {/* Save and Reset Action Controls: Placed BELOW the preview */}
       <div className="customizer-bottom-actions-bar">
         <div className="customizer-actions-left">
           <button
@@ -562,7 +542,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
           )}
         </div>
 
-        {/* Quick Presets */}
         <div className="customizer-presets-rounded">
           <button
             type="button"
@@ -595,7 +574,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
         </div>
       </div>
 
-      {/* Restore Deleted Elements Shelf (if any item was deleted) */}
       {deletedItems.length > 0 && (
         <div className="customizer-deleted-shelf">
           <div className="customizer-deleted-header">

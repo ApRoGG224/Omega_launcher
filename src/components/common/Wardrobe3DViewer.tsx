@@ -30,13 +30,11 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
   const focusZoneRef = useRef<WardrobeFocusZone>(focusZone);
   focusZoneRef.current = focusZone;
 
-  // Camera targets for smooth cinematic lerp transitions
   const curPosRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.2, 48.0));
   const curLookRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.0, 0));
   const targetPosRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.2, 48.0));
   const targetLookRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.0, 0));
 
-  // Initialize static 3D SkinViewer
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -58,27 +56,22 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
     });
     viewerRef.current = viewer;
 
-    // Fixed clean pose: player stands completely still in authentic Minecraft stance
-    viewer.playerObject.rotation.y = 0.22; // subtle isometric 3D angle
+    viewer.playerObject.rotation.y = 0.22;
     viewer.playerObject.skin.rightArm.rotation.x = 0.04;
     viewer.playerObject.skin.leftArm.rotation.x = -0.04;
 
-    // Disabled controls to ensure player stands completely still
     viewer.controls.enableRotate = false;
     viewer.controls.enableZoom = false;
     viewer.controls.enablePan = false;
 
-    // Direct WebGL render bypass for maximum performance
     (viewer as any).render = function () {
       this.renderer.render(this.scene, this.camera);
     };
 
-    // Smooth camera transition animation loop
     let animId: number | null = null;
     const renderLoop = () => {
       if (disposed) return;
 
-      // Update camera targets based on current focusZone
       switch (focusZoneRef.current) {
         case "head":
           targetPosRef.current.set(0, 18.2, 30.0);
@@ -99,7 +92,6 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
           break;
       }
 
-      // Exponential smoothing (lerp) for smooth cinematic glide
       curPosRef.current.lerp(targetPosRef.current, 0.08);
       curLookRef.current.lerp(targetLookRef.current, 0.08);
 
@@ -111,7 +103,6 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
     };
     animId = requestAnimationFrame(renderLoop);
 
-    // Responsive resize handler
     const handleResize = () => {
       if (container && viewer && !disposed) {
         const w = container.clientWidth || 320;
@@ -132,7 +123,6 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
     };
   }, []);
 
-  // Update skin & model
   useEffect(() => {
     if (viewerRef.current && skinUrl) {
       viewerRef.current.loadSkin(skinUrl, { model: model })?.catch?.((err) => {
@@ -141,7 +131,6 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
     }
   }, [skinUrl, model]);
 
-  // Update cape
   useEffect(() => {
     if (viewerRef.current) {
       if (capeUrl) {
@@ -154,7 +143,6 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
     }
   }, [capeUrl]);
 
-  // Attach / Detach 3D Crown on character head
   useEffect(() => {
     const head = viewerRef.current?.playerObject?.skin?.head;
     if (!head) return;
@@ -187,7 +175,7 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
         justifyContent: "center",
         overflow: "hidden",
         userSelect: "none",
-        pointerEvents: "none", // Stays in place, completely unmovable per user requirement
+        pointerEvents: "none",
       }}
     >
       <canvas

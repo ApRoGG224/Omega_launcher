@@ -87,7 +87,6 @@ pub async fn fetch_minecraft_inside_skins(
         });
     }
 
-    // Parse pagination
     let mut total_pages = p;
 
     if let Some(last_str) = extract_between(&html, "<li class=\"last\">", "</li>") {
@@ -98,11 +97,9 @@ pub async fn fetch_minecraft_inside_skins(
         }
     }
 
-    // Also scan all data-page occurrences to find maximum page
     for chunk in html.split("data-page=\"").skip(1) {
         if let Some(end) = chunk.find('\"') {
             if let Ok(num) = chunk[..end].parse::<u32>() {
-                // data-page is 0-indexed (e.g. data-page="0" for page 1)
                 total_pages = total_pages.max(num + 1);
             }
         }

@@ -79,7 +79,6 @@ async function fetchProfiles(ids: string[]) {
   if (!first.error && first.data) {
     profiles = first.data;
   } else {
-    // Fallback for projects where the avatar_url migration is not applied yet.
     const fallback = await sb
       .from("profiles")
       .select("id, username, friend_code")

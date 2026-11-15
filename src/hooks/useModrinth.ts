@@ -42,7 +42,6 @@ async function translateDescriptions(
           translatedById.set(hit.project_id, translated);
         }
       } catch {
-        // Keep the original description when translation is unavailable.
       }
     }
   };
@@ -86,7 +85,6 @@ export function useModrinthSearch(
   );
   const [sortBy, setSortBy] = useState("downloads");
 
-  // Guards against out-of-order responses when the language, filters, or query change quickly.
   const requestSeqRef = useRef(0);
   const cancelTranslationsRef = useRef<(() => void) | null>(null);
 
@@ -118,7 +116,6 @@ export function useModrinthSearch(
         setOffset(0);
       }
 
-      // Translate descriptions in the background if language is 'ru'.
       if (hits.length > 0 && language === "ru") {
         let cancelled = false;
         const cancelTranslations = () => {
@@ -159,7 +156,6 @@ export function useModrinthSearch(
 
   useEffect(() => {
     searchMods(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mcVersion, modLoader, sortBy, language, projectType]);
 
   return {

@@ -1,12 +1,3 @@
-/* Hallmark: modern-minimal / app / tactical-tech / pixelPlates */
-/* ==========================================================================
-   OMEGA TACTICAL TECH BUTTON & CONTROL SYSTEM (ZERO NEON)
-   Standard: launcher_buttons_tektur_font specification.
-   - Buttons & Cards: Diagonal 0 8px 0 8px radius with tactical corner brackets.
-   - ZERO NEON: Absolutely no colored glow, halo, or neon box-shadows. Clean matte finish.
-   - Specific rounded elements: Dock menu (14px), chips (6px), delete buttons (6px).
-   - Font: Strictly var(--font-primary) ('Exo 2') preserved throughout without exception.
-   ========================================================================== */
 
 button:focus-visible,
 [role="button"]:focus-visible,
@@ -23,9 +14,6 @@ input:focus-visible {
   }
 }
 
-/* --------------------------------------------------------------------------
-   1. CORE TACTICAL TECH BUTTONS & PLATES
-   -------------------------------------------------------------------------- */
 .btn-tech,
 .btn-primary,
 .btn-secondary,
@@ -72,10 +60,9 @@ input:focus-visible {
   font-family: var(--font-primary) !important;
   transition: filter var(--speed-fast) ease, transform 0.06s ease, background-color var(--speed-fast) ease, border-color var(--speed-fast) ease, color var(--speed-fast) ease;
   user-select: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 2px 6px rgba(0, 0, 0, 0.35) !important; /* STRICTLY NO NEON GLOW */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 2px 6px rgba(0, 0, 0, 0.35) !important;
 }
 
-/* Masked border with 14px corner cutouts avoiding bracket collision */
 .btn-tech::before,
 .btn-primary::before,
 .btn-secondary::before,
@@ -127,7 +114,6 @@ input:focus-visible {
   z-index: 1;
 }
 
-/* 15px L-shaped corner brackets (top-left & bottom-right) */
 .btn-tech::after,
 .btn-primary::after,
 .btn-secondary::after,
@@ -176,7 +162,6 @@ input:focus-visible {
   z-index: 2;
 }
 
-/* Interactive Feedback (Smooth luminescence, crisp press) */
 .btn-tech:hover,
 .btn-primary:hover,
 .btn-secondary:hover,
@@ -244,7 +229,6 @@ input:focus-visible {
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* Disabled State */
 .btn-tech:disabled,
 .btn-tech.disabled,
 .pixel-plate-dark:disabled,
@@ -259,11 +243,7 @@ input:focus-visible {
   transform: none !important;
 }
 
-/* --------------------------------------------------------------------------
-   2. BUTTON SIZE & VARIANT PRESETS (.i, .m, .p)
-   -------------------------------------------------------------------------- */
 
-/* 2.1 Square Icon Buttons (42x42px standard) */
 .btn-icon,
 .hud-square-btn {
   width: 42px;
@@ -298,7 +278,6 @@ input:focus-visible {
   color: var(--text-pure);
 }
 
-/* 2.2 Medium Action Cards (230x56px standard) */
 .btn-card,
 .pixel-plate-card-store,
 .pixel-plate-card-friends,
@@ -333,7 +312,6 @@ input:focus-visible {
   flex-shrink: 0;
 }
 
-/* 2.3 Signature Play / Action Button (Tactical Green Field) */
 .btn-play,
 .pixel-plate-play,
 .dock-play-btn:not(.running) {
@@ -345,7 +323,6 @@ input:focus-visible {
   letter-spacing: 0.8px;
 }
 
-/* 2.4 Signature Stop / Cancel Button (Tactical Crimson) */
 .btn-stop,
 .pixel-plate-stop,
 .dock-play-btn.running {
@@ -357,7 +334,6 @@ input:focus-visible {
   letter-spacing: 0.8px;
 }
 
-/* 2.5 Dock Instance Card & Active Selection (Tactical Royal Blue) */
 .pixel-plate-instance {
   background-color: var(--btn-bg-instance);
   --bc: var(--btn-bc-instance);
@@ -370,7 +346,6 @@ input:focus-visible {
   --kc: #76aef0;
 }
 
-/* 2.6 Amber / Rust Beta Variant */
 .btn-amber {
   background-color: var(--btn-bg-amber);
   --bc: var(--btn-bc-amber);
@@ -378,11 +353,7 @@ input:focus-visible {
   color: var(--btn-text-amber);
 }
 
-/* --------------------------------------------------------------------------
-   3. SPECIFIC ROUNDED ELEMENTS REQUESTED BY USER & STANDARDS
-   -------------------------------------------------------------------------- */
 
-/* 3.1 Dock Menu Container: Smoothly rounded on ALL sides */
 .pixel-plate-dock-container {
   background-color: #080c14;
   border-radius: 14px !important;
@@ -398,7 +369,6 @@ input:focus-visible {
   display: none !important;
 }
 
-/* 3.2 Badges & Chips: Smoothly rounded */
 .dock-chip {
   padding: 2px 8px;
   font-size: 11px;
@@ -411,7 +381,6 @@ input:focus-visible {
   border-radius: 6px !important;
 }
 
-/* 3.3 Dedicated Delete Button: Smoothly rounded with matte red styling */
 .btn-delete,
 .screen-delete-btn {
   padding: 5px 12px !important;
@@ -447,7 +416,6 @@ input:focus-visible {
   color: var(--btn-text-delete-hover) !important;
 }
 
-/* Notification Badge */
 .pixel-badge-red {
   position: absolute;
   top: -6px;

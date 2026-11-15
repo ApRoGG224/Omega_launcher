@@ -1,9 +1,3 @@
-/* Hallmark: modern-minimal / app / tactical-tech / screens */
-/* ==========================================================================
-   SCREENS & OVERLAYS STYLES
-   Positioned cleanly under the persistent Top Bar (top: 68px)
-   Strictly centered layout (max-width: 1140px; margin: 0 auto; width: 100%)
-   ========================================================================== */
 
 .screens-overlay-layer {
   position: absolute;
@@ -32,7 +26,6 @@
   }
 }
 
-/* Screen Top Header Bar */
 .screen-header-bar {
   display: flex;
   align-items: center;
@@ -94,7 +87,6 @@
   gap: 12px;
 }
 
-/* Screen Content Area */
 .screen-scroll-body {
   flex: 1;
   overflow-y: auto;
@@ -127,9 +119,6 @@
   background: var(--border-bright);
 }
 
-/* ==========================================================================
-   MODRINTH CONTENT CATALOG
-   ========================================================================== */
 .catalog-filter-bar {
   display: flex;
   align-items: center;
@@ -315,9 +304,6 @@
   font-family: var(--font-primary) !important;
 }
 
-/* ==========================================================================
-   CATALOG REDESIGN (Exact 1:1 match to Каталог — редизайн.html)
-   ========================================================================== */
 .catalog-screen-overlay {
   position: absolute !important;
   top: 0 !important;
@@ -555,7 +541,6 @@
   transform: translateY(-1px);
 }
 
-/* Ambient blurred backdrop directly matching user's reference example */
 .catalog-screen-overlay .card-ambient-backdrop {
   position: absolute;
   top: 0;
@@ -905,9 +890,6 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* ==========================================================================
-   STORE SCREEN REDESIGN (Exact 1:1 match to store.html)
-   ========================================================================== */
 .store-screen-overlay {
   position: absolute !important;
   top: 0 !important;
@@ -1378,7 +1360,6 @@
   gap: 6px;
 }
 
-/* Offline state centered container for Capes tab */
 .store-screen-overlay .store-offline-center-wrap {
   display: flex;
   align-items: center;
@@ -1544,9 +1525,6 @@
   100% { transform: rotate(360deg); }
 }
 
-/* ==========================================================================
-   SERVERS MONITOR (Exact 1:1 match to Серверы.html)
-   ========================================================================== */
 .servers-screen-overlay {
   position: absolute !important;
   top: 0 !important;
@@ -1827,9 +1805,6 @@
   font-size: 13px !important;
 }
 
-/* ==========================================================================
-   CONSOLE & LOGS (Exact 1:1 match to Логи.html, Full-width & Top bar integration)
-   ========================================================================== */
 .console-screen-overlay {
   position: absolute !important;
   top: 0 !important;
@@ -2100,9 +2075,6 @@
   }
 }
 
-/* ==========================================================================
-   FRIENDS & CO-OP SCREEN (Exact 1:1 match to Друзья и совместная игра.html)
-   ========================================================================== */
 
 .friends-screen-overlay {
   position: absolute !important;
@@ -2524,7 +2496,6 @@
   border-color: var(--line2);
 }
 
-/* Chat Conversation View inside Friends */
 .friends-screen-overlay .chat-convo-wrap {
   display: flex;
   flex-direction: column;
@@ -2606,9 +2577,6 @@
   height: 38px;
 }
 
-/* ==========================================================================
-   INSTANCES MANAGER: 5-COLUMN GRID & FOLDER SYSTEM
-   ========================================================================== */
 .instances-grid-5 {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -2738,9 +2706,6 @@
   color: var(--text-accent);
 }
 
-/* ==========================================================================
-   INSTANCES SCREEN (Exact 1:1 match to Сборки.html, Full-width & Top bar integration)
-   ========================================================================== */
 .instances-screen-overlay {
   position: absolute !important;
   top: 0 !important;
@@ -2831,7 +2796,6 @@
   color: #f87171 !important;
 }
 
-/* Hero Section */
 .sb-hero {
   display: flex !important;
   align-items: center !important;
@@ -3341,9 +3305,6 @@
   color: #fff !important;
 }
 
-/* ==========================================================================
-   NEW INSTANCE MODAL (Exact 1:1 match to Новая сборка.html)
-   ========================================================================== */
 .nc-backdrop {
   position: fixed !important;
   inset: 0 !important;
@@ -3853,9 +3814,6 @@
   color: #0d1117 !important;
 }
 
-/* ==========================================================================
-   SETTINGS SCREEN (Exact 1:1 match to Настройки — редизайн.html)
-   ========================================================================== */
 .settings-screen-overlay {
   position: absolute !important;
   top: 0 !important;
@@ -4299,12 +4257,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ==========================================================================
-   SETTINGS: APPEARANCE & BACKGROUND CONTROLS
-   Strict tactical tech style (Exo 2 font, 0 8px 0 8px radius, clean matte finish)
-   ========================================================================== */
 
-/* Active Background Preview Card */
 .set-bg-preview-card {
   position: relative !important;
   width: 100% !important;
@@ -4390,7 +4343,6 @@
   font-family: var(--font-primary), 'Exo 2', sans-serif !important;
 }
 
-/* Background Control Bar */
 .set-bg-ctrl-bar {
   display: flex !important;
   align-items: center !important;
@@ -4448,7 +4400,6 @@
   color: #a8cf88 !important;
 }
 
-/* Category Filter Chips */
 .set-bg-filters {
   display: flex !important;
   gap: 8px !important;
@@ -4480,7 +4431,6 @@
   color: #ffffff !important;
 }
 
-/* Gallery Grid & Cards */
 .set-bg-grid {
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)) !important;
@@ -4598,12 +4548,7 @@
   font-family: var(--font-primary), 'Exo 2', sans-serif !important;
 }
 
-/* ==========================================================================
-   APPEARANCE SETTINGS: TOP & BOTTOM BAR CUSTOMIZATION + REDESIGNED BUTTON FORMS
-   Strict tactical tech style (Exo 2 font, 0 8px 0 8px radius, clean matte finish)
-   ========================================================================== */
 
-/* Sub-navigation tabs for Appearance (Верхняя панель / Нижняя панель / Задний фон) */
 .set-appearance-nav {
   display: flex !important;
   gap: 8px !important;
@@ -4658,7 +4603,6 @@
   color: #ffffff !important;
 }
 
-/* Customizer General Container */
 .customizer-container {
   display: flex !important;
   flex-direction: column !important;
@@ -4682,7 +4626,6 @@
   margin-top: 2px !important;
 }
 
-/* Interactive Preview Box */
 .customizer-preview-box {
   display: flex !important;
   flex-direction: column !important;
@@ -4749,7 +4692,6 @@
   display: none !important;
 }
 
-/* Customizer Dock Items & Auto-Placing Wrappers */
 .customizer-dock-preview {
   position: relative !important;
   margin: 0 auto !important;
@@ -4820,7 +4762,6 @@
   outline-width: 2px !important;
 }
 
-/* Disable inner child button hover borders to prevent white flash */
 .customizer-dock-preview .hud-dock-btn:hover,
 .customizer-dock-preview .hud-dock-profile-btn:hover,
 .customizer-dock-preview .hud-dock-shortcut-btn:hover,
@@ -4844,7 +4785,6 @@
   transform: scale(0.95) !important;
 }
 
-/* Floating Action Controls on Hover / Selection */
 .customizer-dock-item-controls {
   position: absolute !important;
   top: -34px !important;
@@ -4932,9 +4872,6 @@
   pointer-events: none !important;
 }
 
-/* ==========================================================================
-   ACTIVE ITEM BAR (INSIDE PREVIEW BOX)
-   ========================================================================== */
 .customizer-active-item-bar {
   display: flex !important;
   align-items: center !important;
@@ -5028,9 +4965,6 @@
   color: #f1f5f9 !important;
 }
 
-/* ==========================================================================
-   ACTIONS BAR BELOW PREVIEW (SAVE, RESET, PRESETS)
-   ========================================================================== */
 .customizer-bottom-actions-bar {
   display: flex !important;
   align-items: center !important;
@@ -5131,9 +5065,6 @@
   color: #ffffff !important;
 }
 
-/* ==========================================================================
-   DELETED ELEMENTS SHELF (RESTORE WITH 1 CLICK)
-   ========================================================================== */
 .customizer-deleted-shelf {
   display: flex !important;
   flex-direction: column !important;
@@ -5182,10 +5113,6 @@
   color: #ffffff !important;
 }
 
-/* ==========================================================================
-   BOTTOM BAR CUSTOMIZER SPECIFICS (SMOOTHLY ROUNDED)
-   ========================================================================== */
-/* Bottom Preview Alignment */
 .bottom-dock-canvas.align-center {
   justify-content: center !important;
 }
@@ -5241,7 +5168,6 @@
   align-items: flex-start !important;
 }
 
-/* Individual customizable block wrappers */
 .customizer-bottom-block-wrapper {
   position: relative !important;
   display: inline-flex !important;
@@ -5315,7 +5241,6 @@
   transform: scale(0.96) !important;
 }
 
-/* EXACT PLAY BUTTON STYLES MATCHING IMAGE 1 */
 .customizer-dock-bottom-preview .dock-play {
   position: relative !important;
   flex: none !important;
@@ -5353,7 +5278,6 @@
   font-weight: 800 !important;
 }
 
-/* Icon inside preview */
 .customizer-dock-bottom-preview .dock-icon {
   width: 44px !important;
   height: 44px !important;
@@ -5366,7 +5290,6 @@
   justify-content: center !important;
 }
 
-/* Title inside preview */
 .customizer-dock-bottom-preview .dock-title {
   margin: 0 !important;
   font-size: 16px !important;
@@ -5378,7 +5301,6 @@
   white-space: nowrap !important;
 }
 
-/* Tags inside preview */
 .customizer-dock-bottom-preview .dock-tags {
   display: flex !important;
   align-items: center !important;
@@ -5412,9 +5334,6 @@
   font-family: var(--font-primary), 'Exo 2', sans-serif !important;
 }
 
-/* ==========================================================================
-   BACKGROUND MENU CONTROLS & GALLERY (SMOOTHLY ROUNDED)
-   ========================================================================== */
 .set-bg-rounded-btn {
   border-radius: 12px !important;
   background: #111a28 !important;
@@ -5437,7 +5356,6 @@
   box-shadow: inset 0 0 0 1px #86a06f !important;
 }
 
-/* Rounded Pill Filter Chips */
 .set-bg-filters .set-bg-filter-chip {
   display: inline-flex !important;
   align-items: center !important;
@@ -5475,7 +5393,6 @@
   color: inherit !important;
 }
 
-/* Smoothly Rounded Background Gallery Cards */
 .set-bg-rounded-card {
   border-radius: 14px !important;
   background: #090d14 !important;
@@ -5507,9 +5424,6 @@
   .set-main { padding: 18px !important; }
 }
 
-/* =========================================================================
-   COSMETICS WARDROBE SHOWCASE (Catalog on Left, 3D Character on Right)
-   ========================================================================= */
 .store-cosmetics-wardrobe-container {
   display: flex;
   justify-content: space-between;

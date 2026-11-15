@@ -35,10 +35,8 @@ pub async fn get_json<T: DeserializeOwned>(
     res.json().await.map_err(|e| format!("Bad JSON from {url}: {e}"))
 }
 
-/// Hard cap for downloads (5 GiB) to protect against runaway transfers.
 pub const MAX_DOWNLOAD_BYTES: u64 = 5 * 1024 * 1024 * 1024;
 
-/// Streams a download into `dest` (creating parent dirs), emitting progress.
 pub async fn download_file(
     app: &AppHandle,
     client: &reqwest::Client,
@@ -48,8 +46,6 @@ pub async fn download_file(
     download_file_max(app, client, url, dest, MAX_DOWNLOAD_BYTES).await
 }
 
-/// Like `download_file` but aborts when the declared or received size exceeds
-/// `max_bytes`.
 pub async fn download_file_max(
     app: &AppHandle,
     client: &reqwest::Client,
@@ -106,8 +102,6 @@ pub async fn download_file_max(
     Ok(())
 }
 
-/// Extracts a local zip archive to `dest_dir`. Mirrors adm-zip behaviour used
-/// by the old sidecars: keeps the relative structure, skips directories.
 pub fn extract_zip(zip_path: &Path, dest_dir: &Path) -> Result<usize, String> {
     let file = std::fs::File::open(zip_path).map_err(|e| e.to_string())?;
     let mut zip = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
@@ -122,7 +116,6 @@ pub fn extract_zip(zip_path: &Path, dest_dir: &Path) -> Result<usize, String> {
         if entry.is_dir() || name.is_empty() || name.ends_with('/') {
             continue;
         }
-        // Guard against zip-slip
         let rel = std::path::Path::new(&name);
         let out_path = dest_dir.join(rel);
         if !out_path.starts_with(dest_dir) {
@@ -138,8 +131,6 @@ pub fn extract_zip(zip_path: &Path, dest_dir: &Path) -> Result<usize, String> {
     Ok(count)
 }
 
-/// Wraps relative segments below a folder prefix found inside a zip path,
-/// e.g. `MyMod/.minecraft/mods/x.jar` with wanted root `.minecraft` -> `mods/x.jar`.
 pub fn relative_after(parts: &[&str], needle: &str) -> Option<String> {
     let idx = parts.iter().position(|p| *p == needle)?;
     let sliced = &parts[idx + 1..];

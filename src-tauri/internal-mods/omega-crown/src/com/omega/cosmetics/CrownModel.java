@@ -1,9 +1,5 @@
 package com.omega.cosmetics;
 
-/**
- * Minecraft Voxel Crown Geometric Specification.
- * Golden rim with 4 corner peaks, 4 tall center peaks, and 4 ruby gems.
- */
 public class CrownModel {
     public static final float RIM_WIDTH = 9.4f;
     public static final float RIM_HEIGHT = 1.2f;

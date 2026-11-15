@@ -4,11 +4,6 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 
-/**
- * Omega Cosmetics Core JavaAgent.
- * Injected at JVM startup by Omega Launcher without ever placing any file
- * in the user's Minecraft mods folder.
- */
 public class OmegaAgent {
     private static volatile boolean active = true;
     private static String equippedHead = "crown";

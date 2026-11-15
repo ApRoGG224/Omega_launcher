@@ -23,7 +23,6 @@ class MemoryStorage implements Storage {
   }
 }
 
-// jsdom 29 + vitest 4 passes a broken --localstorage-file flag; use a memory storage instead.
 if (typeof (globalThis as any).localStorage?.clear !== "function") {
   Object.defineProperty(globalThis, "localStorage", { value: new MemoryStorage(), configurable: true });
 }
