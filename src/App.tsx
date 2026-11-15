@@ -28,6 +28,8 @@ import {
 } from "./constants/launcherLayout";
 import { ipc, type DbInstance } from "./services/ipc";
 import { listen } from "@tauri-apps/api/event";
+import { useLanguage } from "./context/LanguageContext";
+import type { Language } from "./i18n";
 import type { LogEntry } from "./components/screens/ConsoleScreen";
 import type {
   ActiveModal,
@@ -152,6 +154,7 @@ const loadStorage = <T,>(key: string, fallback: T): T => {
 };
 
 export const App: React.FC = () => {
+  const { t, lang } = useLanguage();
   const [activeScreen, setActiveScreen] = useState<ScreenId>(() => {
     try {
       const urlParams = new URLSearchParams(window.location.search);

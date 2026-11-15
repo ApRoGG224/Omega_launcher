@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ipc } from "../../services/ipc";
+import { useLanguage } from "../../context/LanguageContext";
 import "../../styles/screens.css";
 
 interface ServersScreenProps {
@@ -58,6 +59,7 @@ const DEFAULT_SERVERS: ServerEntry[] = [
 export const ServersScreen: React.FC<ServersScreenProps> = ({
   onDirectConnect,
 }) => {
+  const { t, lang } = useLanguage();
   const [servers, setServers] = useState<ServerEntry[]>(() => {
     try {
       const saved = localStorage.getItem("omega_servers");
@@ -194,23 +196,27 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
     <div className="screens-overlay-layer servers-screen-overlay">
       <div className="srv-wrap">
         <div className="srv-top">
-          <h1>СЕРВЕРЫ ({servers.length})</h1>
+          <h1>{lang === "uk" ? "СЕРВЕРИ" : lang === "ru" ? "СЕРВЕРЫ" : "SERVERS"} ({servers.length})</h1>
           <div style={{ display: "flex", gap: "8px" }}>
             <button
               type="button"
               className="srv-b"
               onClick={() => refreshAllServers(servers)}
               disabled={isRefreshing}
-              title="Обновить пинг и статус серверов"
+              title={lang === "uk" ? "Оновити пінг та статус серверів" : lang === "ru" ? "Обновить пинг и статус серверов" : "Refresh ping & server status"}
             >
-              {isRefreshing ? "Опрос…" : "⟳ Обновить"}
+              {isRefreshing
+                ? (lang === "uk" ? "Опитування…" : lang === "ru" ? "Опрос…" : "Querying…")
+                : (lang === "uk" ? "⟳ Оновити" : lang === "ru" ? "⟳ Обновить" : "⟳ Refresh")}
             </button>
             <button
               type="button"
               className="srv-b"
               onClick={() => setShowAddForm((prev) => !prev)}
             >
-              {showAddForm ? "✕ Отмена" : "+ Добавить сервер"}
+              {showAddForm
+                ? (lang === "uk" ? "✕ Скасувати" : lang === "ru" ? "✕ Отмена" : "✕ Cancel")
+                : (lang === "uk" ? "+ Додати сервер" : lang === "ru" ? "+ Добавить сервер" : "+ Add Server")}
             </button>
           </div>
         </div>
@@ -220,19 +226,19 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
             <input
               type="text"
               required
-              placeholder="Название"
+              placeholder={lang === "uk" ? "Назва" : lang === "ru" ? "Название" : "Name"}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
             />
             <input
               type="text"
               required
-              placeholder="Адрес, например mc.example.net"
+              placeholder={lang === "uk" ? "Адреса, наприклад mc.example.net" : lang === "ru" ? "Адрес, например mc.example.net" : "Address, e.g. mc.example.net"}
               value={newIp}
               onChange={(e) => setNewIp(e.target.value)}
             />
             <button type="submit" className="srv-b srv-b-go">
-              Сохранить
+              {lang === "uk" ? "Зберегти" : lang === "ru" ? "Сохранить" : "Save"}
             </button>
           </form>
         )}

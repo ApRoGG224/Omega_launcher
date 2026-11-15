@@ -1,4 +1,4 @@
-export type Language = "ru" | "en";
+export type Language = "uk" | "ru" | "en";
 
 export type AccountType = "microsoft" | "offline" | "omega";
 

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import type { AccountData, OmegaAccountState } from "../../types";
 import { User, Globe } from "lucide-react";
+import { useLanguage } from "../../context/LanguageContext";
 import "../../styles/screens.css";
 import "../../design-system/pixelPlates.css";
 
@@ -33,6 +34,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   onLoginMicrosoft,
   onLoginEly,
 }) => {
+  const { t, lang } = useLanguage();
   const [offlineInput, setOfflineInput] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isLoggingInMs, setIsLoggingInMs] = useState(false);
@@ -41,7 +43,13 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
     e.preventDefault();
     const cleanNick = offlineInput.trim();
     if (!MINECRAFT_NICK_REGEX.test(cleanNick)) {
-      setValidationError("Никнейм должен содержать от 3 до 16 латинских символов, цифр или _");
+      setValidationError(
+        lang === "uk"
+          ? "Нікнейм має містити від 3 до 16 латинських символів, цифр або _"
+          : lang === "ru"
+          ? "Никнейм должен содержать от 3 до 16 латинских символов, цифр или _"
+          : "Nickname must be 3-16 characters (letters, numbers, _)"
+      );
       return;
     }
     setValidationError(null);
@@ -59,14 +67,20 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
             type="button"
             className="screen-back-btn pixel-plate-dark"
             onClick={onBack}
-            title="Вернуться назад (Esc)"
+            title={lang === "uk" ? "Повернутися назад (Esc)" : lang === "ru" ? "Вернуться назад (Esc)" : "Go back (Esc)"}
           >
-            ← Назад
+            ← {lang === "uk" ? "Назад" : lang === "ru" ? "Назад" : "Back"}
           </button>
           <div className="screen-title-wrap">
-            <h1 className="screen-title">Управление аккаунтами</h1>
+            <h1 className="screen-title">
+              {lang === "uk" ? "Керування акаунтами" : lang === "ru" ? "Управление аккаунтами" : "Account Management"}
+            </h1>
             <span className="screen-subtitle">
-              Двухуровневая система: базовый аккаунт Minecraft (Microsoft / Офлайн) + сетевой аккаунт Omega для игры с друзьями
+              {lang === "uk"
+                ? "Дворівнева система: базовий акаунт Minecraft (Microsoft / Офлайн) + мережевий акаунт Omega для гри з друзями"
+                : lang === "ru"
+                ? "Двухуровневая система: базовый аккаунт Minecraft (Microsoft / Офлайн) + сетевой аккаунт Omega для игры с друзьями"
+                : "Dual-tier system: basic Minecraft account (Microsoft / Offline) + Omega account for playing with friends"}
             </span>
           </div>
         </div>
@@ -75,7 +89,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       <div className="screen-scroll-body" style={{ paddingBottom: "48px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           <h3 style={{ fontSize: "11px", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-            Базовые игровые аккаунты Minecraft ({accounts.length})
+            {lang === "uk" ? "Базові ігрові акаунти Minecraft" : lang === "ru" ? "Базовые игровые аккаунты Minecraft" : "Minecraft Game Accounts"} ({accounts.length})
           </h3>
 
           {accounts.map((acc) => {
@@ -116,8 +130,8 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                     </span>
                     <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                       {acc.type === "microsoft"
-                        ? "Официальная лицензия Microsoft (Mojang OAuth2)"
-                        : "Локальный оффлайн профиль"}
+                        ? (lang === "uk" ? "Офіційна ліцензія Microsoft (Mojang OAuth2)" : lang === "ru" ? "Официальная лицензия Microsoft (Mojang OAuth2)" : "Official Microsoft License (Mojang OAuth2)")
+                        : (lang === "uk" ? "Локальний офлайн профіль" : lang === "ru" ? "Локальный оффлайн профиль" : "Local offline profile")}
                     </span>
                   </div>
                 </div>
@@ -125,7 +139,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                   {isActive ? (
                     <span style={{ color: "var(--text-accent)", fontWeight: 800, fontSize: "13px" }}>
-                      ● Активен
+                      ● {lang === "uk" ? "Активний" : lang === "ru" ? "Активен" : "Active"}
                     </span>
                   ) : (
                     <button
@@ -134,7 +148,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                       style={{ padding: "6px 16px", minHeight: "32px", fontSize: "12px" }}
                       onClick={() => onSelectAccount(acc)}
                     >
-                      Выбрать
+                      {lang === "uk" ? "Обрати" : lang === "ru" ? "Выбрать" : "Select"}
                     </button>
                   )}
                   {accounts.length > 1 && onDeleteAccount && (
@@ -142,9 +156,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                       type="button"
                       className="btn-delete"
                       onClick={() => onDeleteAccount(acc.id)}
-                      title="Удалить профиль"
+                      title={lang === "uk" ? "Видалити профіль" : lang === "ru" ? "Удалить профиль" : "Delete profile"}
                     >
-                      Удалить
+                      {lang === "uk" ? "Видалити" : lang === "ru" ? "Удалить" : "Delete"}
                     </button>
                   )}
                 </div>
@@ -267,7 +281,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 }
               }}
             >
-              {isLoggingInMs ? "Авторизация Microsoft..." : "Войти через Microsoft OAuth2"}
+              {isLoggingInMs
+                ? (lang === "uk" ? "Авторизація Microsoft..." : lang === "ru" ? "Авторизация Microsoft..." : "Microsoft Authorization...")
+                : (lang === "uk" ? "Увійти через Microsoft OAuth2" : lang === "ru" ? "Войти через Microsoft OAuth2" : "Login with Microsoft OAuth2")}
             </button>
 
             {onLoginEly && (
@@ -277,7 +293,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 style={{ padding: "10px 18px", color: "#38bdf8", minHeight: "40px" }}
                 onClick={() => onLoginEly()}
               >
-                Войти в Ely.by
+                {lang === "uk" ? "Увійти в Ely.by" : lang === "ru" ? "Войти в Ely.by" : "Login with Ely.by"}
               </button>
             )}
           </div>
@@ -289,7 +305,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 required
                 minLength={3}
                 maxLength={16}
-                placeholder="Создать оффлайн никнейм (3-16 символов)..."
+                placeholder={lang === "uk" ? "Створити офлайн нікнейм (3-16 символів)..." : lang === "ru" ? "Создать оффлайн никнейм (3-16 символов)..." : "Create offline nickname (3-16 chars)..."}
                 value={offlineInput}
                 onChange={(e) => {
                   setOfflineInput(e.target.value);
@@ -303,7 +319,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 className="server-connect-btn pixel-plate-play"
                 style={{ padding: "10px 20px", minHeight: "42px" }}
               >
-                + Добавить профиль
+                {lang === "uk" ? "+ Додати профіль" : lang === "ru" ? "+ Добавить профиль" : "+ Add Profile"}
               </button>
             </div>
             {validationError && (

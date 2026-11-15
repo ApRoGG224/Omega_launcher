@@ -91,7 +91,7 @@ export function getInitialWindowSize(key: string, fallback?: WindowSize): Window
   return fallback;
 }
 
-export const getStoredLanguage = () => (localStorage.getItem(LANGUAGE_KEY) as "ru" | "en") || "ru";
+export const getStoredLanguage = () => (localStorage.getItem(LANGUAGE_KEY) as "uk" | "ru" | "en") || "uk";
 export const setStoredLanguage = (lang: string) => localStorage.setItem(LANGUAGE_KEY, lang);
 
 export const getStoredTheme = () => localStorage.getItem(THEME_KEY) || "#663af3";

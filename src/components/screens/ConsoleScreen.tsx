@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Copy, Download } from "lucide-react";
+import { useLanguage } from "../../context/LanguageContext";
 import "../../styles/screens.css";
 
 export interface ConsoleScreenProps {
@@ -34,6 +35,7 @@ export const ConsoleScreen: React.FC<ConsoleScreenProps> = ({
   logs: propLogs,
   onClearLogs,
 }) => {
+  const { t, lang } = useLanguage();
   const [filter, setFilter] = useState<LogLevel>("ALL");
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
@@ -122,12 +124,16 @@ export const ConsoleScreen: React.FC<ConsoleScreenProps> = ({
           })}
 
           <div className="console-dock-spacer" />
-          <div className="console-dock-count">Всего записей: {logs.length}</div>
+          <div className="console-dock-count">
+            {lang === "uk" ? "Усього записів:" : lang === "ru" ? "Всего записей:" : "Total entries:"} {logs.length}
+          </div>
         </div>
 
         <div className="console-log-body">
           {filteredLogs.length === 0 ? (
-            <div className="console-empty">Нет записей</div>
+            <div className="console-empty">
+              {lang === "uk" ? "Немає записів" : lang === "ru" ? "Нет записей" : "No entries"}
+            </div>
           ) : (
             filteredLogs.map((log) => (
               <div key={log.id} className={`console-row ${log.tag}`}>
@@ -145,9 +151,9 @@ export const ConsoleScreen: React.FC<ConsoleScreenProps> = ({
               type="button"
               className="console-act-btn"
               onClick={onClearLogs}
-              title="Очистить консоль"
+              title={lang === "uk" ? "Очистити консоль" : lang === "ru" ? "Очистить консоль" : "Clear console"}
             >
-              <span>Очистить</span>
+              <span>{lang === "uk" ? "Очистити" : lang === "ru" ? "Очистить" : "Clear"}</span>
             </button>
           )}
 
@@ -155,20 +161,20 @@ export const ConsoleScreen: React.FC<ConsoleScreenProps> = ({
             type="button"
             className="console-act-btn"
             onClick={handleCopy}
-            title="Скопировать текущие логи"
+            title={lang === "uk" ? "Скопіювати поточні логи" : lang === "ru" ? "Скопировать текущие логи" : "Copy current logs"}
           >
             <Copy size={16} />
-            <span>{copyFeedback || "Скопировать"}</span>
+            <span>{copyFeedback || (lang === "uk" ? "Скопіювати" : lang === "ru" ? "Скопировать" : "Copy")}</span>
           </button>
 
           <button
             type="button"
             className="console-act-btn"
             onClick={handleExport}
-            title="Экспортировать latest.log"
+            title={lang === "uk" ? "Експортувати latest.log" : lang === "ru" ? "Экспортировать latest.log" : "Export latest.log"}
           >
             <Download size={16} />
-            <span>{exportFeedback || "Экспорт"}</span>
+            <span>{exportFeedback || (lang === "uk" ? "Експорт" : lang === "ru" ? "Экспорт" : "Export")}</span>
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import React from "react";
 import { IsometricCube } from "../icons/IsometricCube";
 import { InstanceAvatarIcon } from "../icons/MinecraftIcons";
+import { useLanguage } from "../../context/LanguageContext";
 import type { InstanceData } from "../../types";
 import {
   type BottomBarItemId,
@@ -29,10 +30,15 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
   bottomBarLayout = DEFAULT_BOTTOMBAR_LAYOUT,
   bottomBarAlignment = DEFAULT_BOTTOMBAR_ALIGNMENT,
 }) => {
+  const { t, lang } = useLanguage();
   const isRust =
     selectedInstance?.loader === "Rust" ||
     selectedInstance?.folderId === "folder_rust" ||
     selectedInstance?.name?.toLowerCase().includes("rust");
+
+  const changeVersionText = t("changeVersionTooltip", lang === "uk" ? "Змінити версію" : lang === "ru" ? "Сменить версию" : "Change Version");
+  const minText = t("min", lang === "uk" ? "хв" : lang === "ru" ? "мин" : "min");
+  const playBtnText = isRunning ? t("stop", "СТОП") : t("play", "ГРАТИ");
 
   const renderIcon = () => {
     if (isRust) {
@@ -64,12 +70,12 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
             type="button"
             className="dock-item-btn dock-icon-btn"
             onClick={onOpenInstancesModal}
-            aria-label="Иконка версии"
+            aria-label={changeVersionText}
           >
             <div className="dock-icon" aria-hidden="true">
               {renderIcon()}
             </div>
-            <div className="dock-tooltip">Сменить версию</div>
+            <div className="dock-tooltip">{changeVersionText}</div>
           </button>
         );
 
@@ -80,12 +86,12 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
             type="button"
             className="dock-item-btn dock-title-btn"
             onClick={onOpenInstancesModal}
-            aria-label="Сменить версию"
+            aria-label={changeVersionText}
           >
             <h1 className="dock-title">
               {selectedInstance ? selectedInstance.name : "Minecraft Rust (Beta)"}
             </h1>
-            <div className="dock-tooltip">Сменить версию</div>
+            <div className="dock-tooltip">{changeVersionText}</div>
           </button>
         );
 
@@ -96,7 +102,7 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
             type="button"
             className="dock-item-btn dock-tags-btn"
             onClick={onOpenInstancesModal}
-            aria-label="Информация о версии"
+            aria-label={changeVersionText}
           >
             <div className="dock-tags">
               {selectedInstance ? (
@@ -110,18 +116,18 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
                   </span>
                   <span className="dock-chip">{selectedInstance.mcVersion}</span>
                   <span className="dock-playtime">
-                    {selectedInstance.playTimeMinutes} мин
+                    {selectedInstance.playTimeMinutes} {minText}
                   </span>
                 </>
               ) : (
                 <>
                   <span className="dock-chip rust">RUST</span>
                   <span className="dock-chip">26.3</span>
-                  <span className="dock-playtime">0 мин</span>
+                  <span className="dock-playtime">0 {minText}</span>
                 </>
               )}
             </div>
-            <div className="dock-tooltip">Сменить версию</div>
+            <div className="dock-tooltip">{changeVersionText}</div>
           </button>
         );
 
@@ -134,10 +140,22 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
             onClick={selectedInstance ? onTogglePlay : onOpenInstancesModal}
             title={
               !selectedInstance
-                ? "Создайте версию перед запуском"
+                ? lang === "uk"
+                  ? "Створіть версію перед запуском"
+                  : lang === "ru"
+                  ? "Создайте версию перед запуском"
+                  : "Create version before launching"
                 : isRunning
-                ? "Принудительно закрыть Minecraft"
-                : "Запустить версию Minecraft"
+                ? lang === "uk"
+                  ? "Примусово закрити Minecraft"
+                  : lang === "ru"
+                  ? "Принудительно закрыть Minecraft"
+                  : "Force quit Minecraft"
+                : lang === "uk"
+                ? "Запустити версію Minecraft"
+                : lang === "ru"
+                ? "Запустить версию Minecraft"
+                : "Launch Minecraft version"
             }
           >
             <svg viewBox="0 0 24 24" className="dock-play-svg" aria-hidden="true">
@@ -147,7 +165,7 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
                 <path d="M6 4l14 8-14 8z" />
               )}
             </svg>
-            <span>{isRunning ? "СТОП" : "ИГРАТЬ"}</span>
+            <span>{playBtnText}</span>
           </button>
         );
 
@@ -173,7 +191,7 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
                   type="button"
                   className="dock-instance-btn dock-info-group"
                   onClick={onOpenInstancesModal}
-                  aria-label="Сменить версию Minecraft"
+                  aria-label={changeVersionText}
                 >
                   <div className="dock-info">
                     <h1 className="dock-title">
@@ -191,19 +209,19 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
                           </span>
                           <span className="dock-chip">{selectedInstance.mcVersion}</span>
                           <span className="dock-playtime">
-                            {selectedInstance.playTimeMinutes} мин
+                            {selectedInstance.playTimeMinutes} {minText}
                           </span>
                         </>
                       ) : (
                         <>
                           <span className="dock-chip rust">RUST</span>
                           <span className="dock-chip">26.3</span>
-                          <span className="dock-playtime">0 мин</span>
+                          <span className="dock-playtime">0 {minText}</span>
                         </>
                       )}
                     </div>
                   </div>
-                  <div className="dock-tooltip">Сменить версию</div>
+                  <div className="dock-tooltip">{changeVersionText}</div>
                 </button>
               );
             }
@@ -217,7 +235,7 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
                   type="button"
                   className="dock-instance-btn dock-info-group"
                   onClick={onOpenInstancesModal}
-                  aria-label="Сменить версию Minecraft"
+                  aria-label={changeVersionText}
                 >
                   <div className="dock-info">
                     <div className="dock-tags" style={{ marginBottom: 6 }}>
@@ -232,14 +250,14 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
                           </span>
                           <span className="dock-chip">{selectedInstance.mcVersion}</span>
                           <span className="dock-playtime">
-                            {selectedInstance.playTimeMinutes} мин
+                            {selectedInstance.playTimeMinutes} {minText}
                           </span>
                         </>
                       ) : (
                         <>
                           <span className="dock-chip rust">RUST</span>
                           <span className="dock-chip">26.3</span>
-                          <span className="dock-playtime">0 мин</span>
+                          <span className="dock-playtime">0 {minText}</span>
                         </>
                       )}
                     </div>
@@ -247,7 +265,7 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
                       {selectedInstance ? selectedInstance.name : "Minecraft Rust (Beta)"}
                     </h1>
                   </div>
-                  <div className="dock-tooltip">Сменить версию</div>
+                  <div className="dock-tooltip">{changeVersionText}</div>
                 </button>
               );
             }

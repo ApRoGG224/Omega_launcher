@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { MINECRAFT_BACKGROUNDS } from "../../constants/backgrounds";
 import { ipc } from "../../services/ipc";
 import { setStoredCloseOnLaunch } from "../../services/storage";
+import { useLanguage } from "../../context/LanguageContext";
 import type {
   TopBarItemId,
   BottomBarItemId,
@@ -53,7 +54,7 @@ interface StoredSettings {
   resolution: string;
   gcType: string;
   jvmArgs: string;
-  lang: "RU" | "EN";
+  lang: "UK" | "RU" | "EN";
   accountGateway: "offline" | "ely" | "microsoft";
   showStatusFriends: boolean;
   proxyType: string;
@@ -72,7 +73,7 @@ const DEFAULT_SETTINGS: StoredSettings = {
   resolution: "1280x720",
   gcType: "G1GC",
   jvmArgs: "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions",
-  lang: "RU",
+  lang: "UK",
   accountGateway: "offline",
   showStatusFriends: true,
   proxyType: "direct",
@@ -126,14 +127,26 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [closeOnLaunch, setCloseOnLaunch] = useState<boolean>(initialSettings.closeOnLaunch);
   const [gameDir, setGameDir] = useState<string>(initialSettings.gameDir);
   const [javaPath, setJavaPath] = useState<string>(initialSettings.javaPath);
+  const { t, lang: globalLang, setLang: setGlobalLang } = useLanguage();
   const [fullscreen, setFullscreen] = useState<boolean>(initialSettings.fullscreen);
   const [resolution, setResolution] = useState<string>(initialSettings.resolution);
   const [gcType, setGcType] = useState<string>(initialSettings.gcType);
   const [jvmArgs, setJvmArgs] = useState<string>(initialSettings.jvmArgs);
-  const [lang, setLang] = useState<"RU" | "EN">(initialSettings.lang);
+  const [lang, setLang] = useState<"UK" | "RU" | "EN">(
+    (globalLang?.toUpperCase() as "UK" | "RU" | "EN") || initialSettings.lang || "UK"
+  );
   const [accountGateway, setAccountGateway] = useState<"offline" | "ely" | "microsoft">(initialSettings.accountGateway);
   const [showStatusFriends, setShowStatusFriends] = useState<boolean>(initialSettings.showStatusFriends);
   const [proxyType, setProxyType] = useState<string>(initialSettings.proxyType);
+
+  useEffect(() => {
+    if (globalLang) {
+      const upper = globalLang.toUpperCase() as "UK" | "RU" | "EN";
+      if (upper !== lang) {
+        setLang(upper);
+      }
+    }
+  }, [globalLang]);
 
   const [showReleases, setShowReleases] = useState<boolean>(initialSettings.showReleases);
   const [showSnapshots, setShowSnapshots] = useState<boolean>(initialSettings.showSnapshots);
@@ -230,54 +243,56 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       <div className="set-wrap">
         <aside className="set-side">
           <div className="set-card set-nav">
-            <div className="set-cap">Конфигурация</div>
+            <div className="set-cap">
+              {globalLang === "uk" ? "Конфігурація" : globalLang === "ru" ? "Конфигурация" : "Configuration"}
+            </div>
             <button
               type="button"
               className={activeTab === "paths" ? "on" : ""}
               onClick={() => setActiveTab("paths")}
             >
-              Пути игры
+              {globalLang === "uk" ? "Шляхи гри" : globalLang === "ru" ? "Пути игры" : "Game Paths"}
             </button>
             <button
               type="button"
               className={activeTab === "memory" ? "on" : ""}
               onClick={() => setActiveTab("memory")}
             >
-              Память и Java
+              {globalLang === "uk" ? "Пам'ять та Java" : globalLang === "ru" ? "Память и Java" : "Memory & Java"}
             </button>
             <button
               type="button"
               className={activeTab === "network" ? "on" : ""}
               onClick={() => setActiveTab("network")}
             >
-              Сеть
+              {globalLang === "uk" ? "Мережа" : globalLang === "ru" ? "Сеть" : "Network"}
             </button>
             <button
               type="button"
               className={activeTab === "versions" ? "on" : ""}
               onClick={() => setActiveTab("versions")}
             >
-              Версии и язык
+              {globalLang === "uk" ? "Версії та мова" : globalLang === "ru" ? "Версии и язык" : "Versions & Language"}
             </button>
             <button
               type="button"
               className={activeTab === "launch" ? "on" : ""}
               onClick={() => setActiveTab("launch")}
             >
-              Запуск
+              {globalLang === "uk" ? "Запуск" : globalLang === "ru" ? "Запуск" : "Launch"}
             </button>
             <button
               type="button"
               className={activeTab === "appearance" ? "on" : ""}
               onClick={() => setActiveTab("appearance")}
             >
-              Оформление
+              {globalLang === "uk" ? "Оформлення" : globalLang === "ru" ? "Оформление" : "Appearance"}
             </button>
           </div>
 
           <div className="set-card set-prof">
             <div className="set-cap" style={{ paddingLeft: 0 }}>
-              Текущий профиль
+              {globalLang === "uk" ? "Поточний профіль" : globalLang === "ru" ? "Текущий профиль" : "Current Profile"}
             </div>
             <div className="set-pr">
               <b>{ram} GB</b>
@@ -285,19 +300,35 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </div>
             <div className="set-pr">
               <b>{mcVersion}</b>
-              <span>ВЕРСИЯ</span>
+              <span>{globalLang === "uk" ? "ВЕРСІЯ" : globalLang === "ru" ? "ВЕРСИЯ" : "VERSION"}</span>
             </div>
             <div className="set-pr">
               <b style={{ color: closeOnLaunch ? "#5fc9a0" : "#8b919c" }}>
-                {closeOnLaunch ? "Вкл." : "Выкл."}
+                {closeOnLaunch
+                  ? globalLang === "uk"
+                    ? "Увімк."
+                    : globalLang === "ru"
+                    ? "Вкл."
+                    : "On"
+                  : globalLang === "uk"
+                  ? "Вимк."
+                  : globalLang === "ru"
+                  ? "Выкл."
+                  : "Off"}
               </b>
-              <span>ЗАКРЫВАТЬ ЛАУНЧЕР</span>
+              <span>
+                {globalLang === "uk"
+                  ? "ЗАКРИВАТИ ЛАУНЧЕР"
+                  : globalLang === "ru"
+                  ? "ЗАКРЫВАТЬ ЛАУНЧЕР"
+                  : "CLOSE ON LAUNCH"}
+              </span>
             </div>
             <div className="set-pr">
               <b style={{ maxWidth: 120, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }} title={activeBg.title}>
                 {activeBg.title}
               </b>
-              <span>ФОН</span>
+              <span>{globalLang === "uk" ? "ФОН" : globalLang === "ru" ? "ФОН" : "BACKGROUND"}</span>
             </div>
           </div>
         </aside>
@@ -552,30 +583,46 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
           <div className={`set-pn ${activeTab === "versions" ? "on" : ""}`}>
             <div>
-              <h1>Фильтрация версий Minecraft и локализация</h1>
+              <h1>
+                {globalLang === "uk"
+                  ? "Фільтрація версій Minecraft та локалізація"
+                  : globalLang === "ru"
+                  ? "Фильтрация версий Minecraft и локализация"
+                  : "Minecraft Version Filtering & Localization"}
+              </h1>
               <div className="set-sub">
-                Настройка отображения снапшотов, бета-версий и языка интерфейса
+                {globalLang === "uk"
+                  ? "Налаштування відображення снапшотів, бета-версій та мови інтерфейсу"
+                  : globalLang === "ru"
+                  ? "Настройка отображения снапшотов, бета-версий и языка интерфейса"
+                  : "Configure snapshots, betas, and interface language"}
               </div>
             </div>
 
             <div>
-              <div className="set-lab">Язык интерфейса лаунчера:</div>
+              <div className="set-lab">{t("languageTitle", "Мова інтерфейсу лаунчера:")}</div>
               <div className="set-seg c2">
                 <button
                   type="button"
-                  className={lang === "RU" ? "on" : ""}
-                  onClick={() => setLang("RU")}
+                  className={globalLang === "uk" ? "on" : ""}
+                  onClick={() => {
+                    setGlobalLang("uk");
+                    setLang("UK");
+                  }}
                 >
-                  Русский
-                  <small>Полная локализация</small>
+                  Українська
+                  <small>{t("langUkrainianSub", "Повна локалізація")}</small>
                 </button>
                 <button
                   type="button"
-                  className={lang === "EN" ? "on" : ""}
-                  onClick={() => setLang("EN")}
+                  className={globalLang === "en" ? "on" : ""}
+                  onClick={() => {
+                    setGlobalLang("en");
+                    setLang("EN");
+                  }}
                 >
                   English
-                  <small>Default language</small>
+                  <small>{t("langEnglishSub", "Default language")}</small>
                 </button>
               </div>
             </div>

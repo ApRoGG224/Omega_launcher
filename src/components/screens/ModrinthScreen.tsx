@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   searchCatalog,
   CatalogItem,
@@ -8,6 +8,7 @@ import {
   CatalogSort,
 } from "../../services/catalogService";
 import { IsometricCube } from "../icons/IsometricCube";
+import { useLanguage } from "../../context/LanguageContext";
 import "../../styles/screens.css";
 
 interface ModrinthScreenProps {
@@ -85,6 +86,7 @@ interface CatalogCardProps {
 
 const CatalogCard = React.memo<CatalogCardProps>(
   ({ item, isDone, failedImage, onImageError, onInstall, activeTab }) => {
+    const { t, lang } = useLanguage();
     const itemKey = `${item.source}-${item.id}`;
     const showImg = !!item.iconUrl && !failedImage;
 
@@ -95,6 +97,11 @@ const CatalogCard = React.memo<CatalogCardProps>(
     const handleImgError = useCallback(() => {
       onImageError(item.id);
     }, [item.id, onImageError]);
+
+    const noDescText = lang === "uk" ? "Немає опису" : lang === "ru" ? "Нет описания" : "No description";
+    const installedPackText = lang === "uk" ? "Збірку встановлено" : lang === "ru" ? "Сборка установлена" : "Modpack installed";
+    const downloadPackText = lang === "uk" ? "+ Завантажити збірку" : lang === "ru" ? "+ Скачать сборку" : "+ Download modpack";
+    const installModText = lang === "uk" ? "+ Встановити" : lang === "ru" ? "+ Установить" : "+ Install";
 
     return (
       <div className="card">
@@ -149,10 +156,12 @@ const CatalogCard = React.memo<CatalogCardProps>(
         <div className="bd">
           <div className="t">
             <b title={item.title}>{item.title}</b>
-            <span title={`от ${item.author}`}>от {item.author}</span>
+            <span title={`${t("byAuthor", "від")} ${item.author}`}>
+              {t("byAuthor", "від")} {item.author}
+            </span>
           </div>
           <div className="ds" title={item.desc}>
-            {item.desc || "Нет описания"}
+            {item.desc || noDescText}
           </div>
           <div className="ft">
             <div className="dl">{item.downloadsFormatted}</div>
@@ -163,11 +172,11 @@ const CatalogCard = React.memo<CatalogCardProps>(
             >
               {isDone
                 ? activeTab === "modpacks"
-                  ? "Сборка установлена"
-                  : "Установлено"
+                  ? installedPackText
+                  : t("installed", "Встановлено")
                 : activeTab === "modpacks"
-                ? "+ Скачать сборку"
-                : "+ Установить"}
+                ? downloadPackText
+                : installModText}
             </button>
           </div>
         </div>
@@ -182,6 +191,7 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
   onInstallMod,
   onInstallModpack,
 }) => {
+  const { t, lang, setLang } = useLanguage();
   const [activeSource, setActiveSource] = useState<CatalogSource>("Modrinth");
   const [activeTab, setActiveTab] = useState<CatalogTab>("modpacks");
   const [search, setSearch] = useState("");
@@ -195,6 +205,42 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+
+  const categories = useMemo(
+    () => [
+      { id: "modpacks" as CatalogTab, label: t("catModpacks", "Збірки") },
+      { id: "mods" as CatalogTab, label: t("catMods", "Моди") },
+      { id: "shaders" as CatalogTab, label: t("catShaders", "Шейдери") },
+      { id: "tex" as CatalogTab, label: t("catTextures", "Текстури") },
+    ],
+    [t]
+  );
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    const trimmed = val.trim().toLowerCase();
+
+    // Secret hidden trigger: typing /ru switches launcher translation to Russian
+    if (trimmed === "/ru") {
+      setLang("ru");
+      setSearch("");
+      return;
+    }
+    // Secret trigger to switch back to Ukrainian
+    if (trimmed === "/uk" || trimmed === "/ua") {
+      setLang("uk");
+      setSearch("");
+      return;
+    }
+    // Secret trigger for English
+    if (trimmed === "/en") {
+      setLang("en");
+      setSearch("");
+      return;
+    }
+
+    setSearch(val);
+  }, [setLang]);
 
   const isLoadingRef = useRef(false);
   const isLoadingMoreRef = useRef(false);
@@ -378,7 +424,7 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
       <div className="wrap" ref={wrapRef}>
         <div className="head">
           <div className="dock" id="tabs">
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <button
                 key={cat.id}
                 type="button"
@@ -416,9 +462,9 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
             </svg>
             <input
               id="q"
-              placeholder={`Поиск в ${activeSource} (название или описание)...`}
+              placeholder={`${t("searchIn", "Пошук у")} ${activeSource} (${lang === "uk" ? "назва або опис" : lang === "ru" ? "название или описание" : "name or description"})...`}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
             />
           </div>
 
@@ -428,7 +474,7 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
               value={selectedLoader}
               onChange={(e) => setSelectedLoader(e.target.value as CatalogLoader)}
             >
-              <option value="">Загрузчик: Любой</option>
+              <option value="">{t("loaderAny", "Завантажувач: Будь-який")}</option>
               <option value="Fabric">Fabric</option>
               <option value="Forge">Forge</option>
               <option value="NeoForge">NeoForge</option>
@@ -441,9 +487,9 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
             value={sortMode}
             onChange={(e) => setSortMode(e.target.value as CatalogSort)}
           >
-            <option value="p">По популярности</option>
-            <option value="n">По релевантности</option>
-            <option value="new">Недавно обновлённые</option>
+            <option value="p">{t("sortPopularity", "За популярністю")}</option>
+            <option value="n">{t("sortRelevance", "За релевантністю")}</option>
+            <option value="new">{t("sortRecentlyUpdated", "Нещодавно оновлені")}</option>
           </select>
         </div>
 
@@ -456,7 +502,7 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
                   variant={activeSource === "Modrinth" ? "emerald" : "rust"}
                 />
               </div>
-              <div>Поиск в {activeSource}...</div>
+              <div>{t("searchIn", "Пошук у")} {activeSource}...</div>
             </div>
           ) : error ? (
             <div className="catalog-error">

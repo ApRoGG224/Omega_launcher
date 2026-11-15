@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { SkinHeadAvatar } from "../common/SkinHeadAvatar";
 import { InstanceAvatarIcon } from "../icons/MinecraftIcons";
+import { useLanguage } from "../../context/LanguageContext";
 import type { AccountData, ActiveModal, OmegaAccountState, InstanceData } from "../../types";
 import {
   type TopBarItemId,
@@ -84,6 +85,7 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
   topBarLayout = DEFAULT_TOPBAR_LAYOUT,
   topBarCustomization,
 }) => {
+  const { t, lang } = useLanguage();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoggingInMs, setIsLoggingInMs] = useState(false);
   const [isAddingOffline, setIsAddingOffline] = useState(false);
@@ -114,7 +116,7 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
   const renderAccountDropdown = () => (
     <div className="hud-profile-dropdown panel align-left" onClick={(e) => e.stopPropagation()}>
       <div className="hud-acc-dropdown-header">
-        <span className="title">МОИ АККАУНТЫ</span>
+        <span className="title">{t("myAccounts", "МОЇ АКАУНТИ")}</span>
         <span className="hud-acc-count-badge">{accounts.length}</span>
       </div>
 
@@ -153,12 +155,12 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
                       <svg className="ms" viewBox="0 0 12 12" aria-hidden="true" width={11} height={11}>
                         <rect x="0" y="0" width="5.5" height="5.5" rx="1.2" fill="#f25022" />
                         <rect x="6.5" y="0" width="5.5" height="5.5" rx="1.2" fill="#7fba00" />
-                        <rect x="0" y="6.5" width="5.5" height="5.5" rx="1.2" fill="#00a4ef" />
+                        <rect x="0" y="0" width="5.5" height="5.5" rx="1.2" fill="#00a4ef" />
                         <rect x="6.5" y="6.5" width="5.5" height="5.5" rx="1.2" fill="#ffb900" />
                       </svg>
                     </>
                   ) : (
-                    "Оффлайн профиль"
+                    t("offlineAccount", "Офлайн профіль")
                   )}
                 </span>
               </span>
@@ -194,7 +196,7 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
           {isLoggingInMs ? (
             <>
               <Loader2 size={14} className="hud-acc-spin" />
-              <span>Авторизация...</span>
+              <span>{lang === "uk" ? "Авторизація..." : lang === "ru" ? "Авторизация..." : "Authorizing..."}</span>
             </>
           ) : (
             <>
@@ -204,7 +206,7 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
                 <rect x="0" y="6.5" width="5.5" height="5.5" rx="1.2" fill="#00a4ef" />
                 <rect x="6.5" y="6.5" width="5.5" height="5.5" rx="1.2" fill="#ffb900" />
               </svg>
-              <span>Войти через Microsoft</span>
+              <span>{t("loginMicrosoftBtn", "Увійти через Microsoft")}</span>
             </>
           )}
         </button>
@@ -217,7 +219,7 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
               const cleanNick = offlineInput.trim();
               if (!cleanNick) return;
               if (!/^[a-zA-Z0-9_]{3,16}$/.test(cleanNick)) {
-                setOfflineError("От 3 до 16 символов");
+                setOfflineError(lang === "uk" ? "Від 3 до 16 символів" : lang === "ru" ? "От 3 до 16 символов" : "3-16 characters");
                 return;
               }
               onCreateOfflineAccount?.(cleanNick);
@@ -232,7 +234,7 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
               <input
                 type="text"
                 autoFocus
-                placeholder="Никнейм игрока..."
+                placeholder={t("enterNickname", "Введіть нікнейм...")}
                 value={offlineInput}
                 onChange={(e) => {
                   setOfflineInput(e.target.value);
@@ -244,7 +246,7 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
               <button
                 type="submit"
                 className="hud-acc-offline-btn-submit"
-                title="Добавить профиль"
+                title={lang === "uk" ? "Додати профіль" : lang === "ru" ? "Добавить профиль" : "Add profile"}
               >
                 <Plus size={14} />
               </button>
@@ -255,7 +257,7 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
                   setIsAddingOffline(false);
                   setOfflineError(null);
                 }}
-                title="Отмена"
+                title={t("cancel", "Скасувати")}
               >
                 ✕
               </button>
@@ -272,7 +274,7 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
             }}
           >
             <User size={14} />
-            <span>Оффлайн вход</span>
+            <span>{t("addOfflineAccount", "Офлайн вхід")}</span>
           </button>
         )}
       </div>
@@ -288,17 +290,17 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
               type="button"
               className={`hud-dock-profile-btn ${isDropdownOpen ? "open" : ""}`}
               onClick={() => setIsDropdownOpen((prev) => !prev)}
-              aria-label="Мои аккаунты"
+              aria-label={t("myAccounts", "МОЇ АКАУНТИ")}
             >
               <ChevronDown
                 size={13}
                 className={`hud-dock-profile-chevron ${isDropdownOpen ? "open" : ""}`}
               />
-              <span className="hud-dock-profile-name">{account?.name ?? "Гость"}</span>
+              <span className="hud-dock-profile-name">{account?.name ?? (lang === "uk" ? "Гість" : lang === "ru" ? "Гость" : "Guest")}</span>
               <div className="hud-dock-profile-avatar">
                 <SkinHeadAvatar skinUrl={skinUrl} size={26} />
               </div>
-              {!isDropdownOpen && <div className="hud-dock-tooltip">Аккаунты</div>}
+              {!isDropdownOpen && <div className="hud-dock-tooltip">{t("sidebarAccounts", "Акаунти")}</div>}
             </button>
             {isDropdownOpen && renderAccountDropdown()}
           </div>
@@ -320,7 +322,7 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
                 onTogglePlay?.();
               }
             }}
-            aria-label={isRunning ? "Остановить" : "Играть"}
+            aria-label={isRunning ? t("stopBtn", "Зупинити") : t("playBtn", "Грати")}
           >
             {isRunning ? (
               <Square size={16} fill="currentColor" />
@@ -328,7 +330,11 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
               <Play size={16} fill="currentColor" />
             )}
             <div className="hud-dock-tooltip">
-              {isRunning ? "Остановить" : activeScreen === "home" ? "Играть" : "Главная"}
+              {isRunning
+                ? t("stopBtn", "Зупинити")
+                : activeScreen === "home"
+                ? t("playBtn", "Грати")
+                : t("sidebarHome", "Головна")}
             </div>
           </button>
         );
@@ -340,10 +346,10 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
             type="button"
             className={`hud-dock-btn ${activeScreen === "settings" ? "active" : ""}`}
             onClick={() => onNavigate(activeScreen === "settings" ? "home" : "settings")}
-            aria-label="Настройки"
+            aria-label={t("dockSettings", "Налаштування")}
           >
             <Settings size={18} />
-            <div className="hud-dock-tooltip">Настройки</div>
+            <div className="hud-dock-tooltip">{t("dockSettings", "Налаштування")}</div>
           </button>
         );
 
@@ -354,10 +360,10 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
             type="button"
             className={`hud-dock-btn ${activeScreen === "modrinth" ? "active" : ""}`}
             onClick={() => onNavigate(activeScreen === "modrinth" ? "home" : "modrinth")}
-            aria-label="Каталог"
+            aria-label={t("dockCatalog", "Каталог")}
           >
             <Puzzle size={18} />
-            <div className="hud-dock-tooltip">Каталог</div>
+            <div className="hud-dock-tooltip">{t("dockCatalog", "Каталог")}</div>
           </button>
         );
 
@@ -368,10 +374,10 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
             type="button"
             className={`hud-dock-btn ${activeScreen === "instances" ? "active" : ""}`}
             onClick={() => onNavigate(activeScreen === "instances" ? "home" : "instances")}
-            aria-label="Версии"
+            aria-label={t("dockPacks", "Версії")}
           >
             <Package size={18} />
-            <div className="hud-dock-tooltip">Версии</div>
+            <div className="hud-dock-tooltip">{t("dockPacks", "Версії")}</div>
           </button>
         );
 
@@ -382,10 +388,10 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
             type="button"
             className={`hud-dock-btn ${activeScreen === "servers" ? "active" : ""}`}
             onClick={() => onNavigate(activeScreen === "servers" ? "home" : "servers")}
-            aria-label="Серверы"
+            aria-label={t("serversTitle", "Сервери")}
           >
             <Server size={18} />
-            <div className="hud-dock-tooltip">Серверы</div>
+            <div className="hud-dock-tooltip">{t("serversTitle", "Сервери")}</div>
           </button>
         );
 
@@ -396,10 +402,10 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
             type="button"
             className={`hud-dock-btn ${activeScreen === "store" ? "active" : ""}`}
             onClick={() => onNavigate(activeScreen === "store" ? "home" : "store")}
-            aria-label="Магазин"
+            aria-label={t("launcherStoreTitle", "Магазин")}
           >
             <ShoppingBag size={18} />
-            <div className="hud-dock-tooltip">Магазин</div>
+            <div className="hud-dock-tooltip">{t("launcherStoreTitle", "Магазин")}</div>
           </button>
         );
 
@@ -410,10 +416,10 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
             type="button"
             className={`hud-dock-btn ${activeScreen === "console" ? "active" : ""}`}
             onClick={() => onNavigate(activeScreen === "console" ? "home" : "console")}
-            aria-label="Консоль"
+            aria-label={t("consoleTitle", "Консоль")}
           >
             <Terminal size={18} />
-            <div className="hud-dock-tooltip">Консоль</div>
+            <div className="hud-dock-tooltip">{t("consoleTitle", "Консоль")}</div>
           </button>
         );
 
@@ -461,11 +467,11 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
             type="button"
             className={`hud-dock-btn ${activeScreen === "friends" ? "active" : ""}`}
             onClick={() => onNavigate(activeScreen === "friends" ? "home" : "friends")}
-            aria-label="Друзья"
+            aria-label={t("friendsTitle", "Друзі")}
           >
             <Users size={18} />
             <span className="hud-dock-badge">2</span>
-            <div className="hud-dock-tooltip">Друзья</div>
+            <div className="hud-dock-tooltip">{t("friendsTitle", "Друзі")}</div>
           </button>
         );
 
@@ -476,10 +482,10 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
             type="button"
             className="hud-dock-btn hud-dock-chevron"
             onClick={() => onNavigate(activeScreen === "settings" ? "home" : "settings")}
-            aria-label="Параметры"
+            aria-label={t("dockSettings", "Налаштування")}
           >
             <ChevronRight size={16} />
-            <div className="hud-dock-tooltip">Параметры</div>
+            <div className="hud-dock-tooltip">{t("dockSettings", "Налаштування")}</div>
           </button>
         );
 

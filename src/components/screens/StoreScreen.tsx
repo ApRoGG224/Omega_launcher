@@ -9,6 +9,7 @@ import { IsometricCube } from "../icons/IsometricCube";
 import { Cape3DViewer } from "../common/Cape3DViewer";
 import { Crown3DViewer } from "../common/Crown3DViewer";
 import { Wardrobe3DViewer, type WardrobeFocusZone } from "../common/Wardrobe3DViewer";
+import { useLanguage } from "../../context/LanguageContext";
 import type { AccountData } from "../../types";
 import "../../styles/screens.css";
 
@@ -216,6 +217,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   const [wardrobeFocus, setWardrobeFocus] = useState<WardrobeFocusZone>("full");
 
   const [msCapes, setMsCapes] = useState<MicrosoftCapeItem[]>([]);
+  const { t, lang } = useLanguage();
   const [isLoadingCapes, setIsLoadingCapes] = useState<boolean>(false);
   const [capesError, setCapesError] = useState<string | null>(null);
   const [equippingCapeId, setEquippingCapeId] = useState<string | null>(null);
@@ -602,11 +604,23 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
       <div className="wrap" ref={wrapRef}>
         <div className="head">
           <div>
-            <h1>Магазин Omega</h1>
-            <div className="sub">Скины по никам (54 000+), плащи, питомцы и кастомизация</div>
+            <h1>{lang === "uk" ? "Магазин Omega" : lang === "ru" ? "Магазин Omega" : "Omega Store"}</h1>
+            <div className="sub">
+              {lang === "uk"
+                ? "Скіни за ніками (54 000+), плащі, вихованці та кастомізація"
+                : lang === "ru"
+                ? "Скины по никам (54 000+), плащи, питомцы и кастомизация"
+                : "Skins by nickname (54,000+), capes, pets, and customization"}
+            </div>
           </div>
           <div className="dock" id="tabs">
-            {TB.map((tab) => (
+            {[
+              { id: "skins" as const, label: lang === "uk" ? "Скіни" : lang === "ru" ? "Скины" : "Skins" },
+              { id: "capes" as const, label: lang === "uk" ? "Плащі" : lang === "ru" ? "Плащи" : "Capes" },
+              { id: "pets" as const, label: lang === "uk" ? "Вихованці" : lang === "ru" ? "Питомцы" : "Pets" },
+              { id: "cos" as const, label: lang === "uk" ? "Аксесуари" : lang === "ru" ? "Косметика" : "Cosmetics" },
+              { id: "recent" as const, label: lang === "uk" ? "Нещодавні" : lang === "ru" ? "Недавние" : "Recent" },
+            ].map((tab) => (
               <button
                 key={tab.id}
                 type="button"
@@ -630,8 +644,16 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                   id="q"
                   placeholder={
                     activeTab === "skins"
-                      ? "Какой скин ты ищешь? (например: zefaa, Dream, Steve, anime...)"
-                      : "Поиск питомца по имени или типу…"
+                      ? (lang === "uk"
+                          ? "Який скін ти шукаєш? (наприклад: zefaa, Dream, Steve, anime...)"
+                          : lang === "ru"
+                          ? "Какой скин ты ищешь? (например: zefaa, Dream, Steve, anime...)"
+                          : "What skin are you looking for? (e.g. zefaa, Dream, Steve...)")
+                      : (lang === "uk"
+                          ? "Пошук вихованця за ім'ям або типом…"
+                          : lang === "ru"
+                          ? "Поиск питомца по имени или типу…"
+                          : "Search pet by name or type…")
                   }
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}

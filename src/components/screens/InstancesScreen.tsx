@@ -10,6 +10,7 @@ import { Download, FolderPlus, Settings2, Trash2, Check, Folder, Edit3, ChevronD
 import type { InstanceData, InstanceFolder } from "../../types";
 import { ipc } from "../../services/ipc";
 import { useVersions, FALLBACK_UI_VERSIONS } from "../../hooks/useVersions";
+import { useLanguage } from "../../context/LanguageContext";
 import "../../styles/screens.css";
 import "../../design-system/pixelPlates.css";
 
@@ -113,6 +114,16 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
   onUpdateInstance,
   onLaunchInstance,
 }) => {
+  const { t, lang } = useLanguage();
+
+  const getDisplayFolderName = (folder: InstanceFolder) => {
+    if (folder.id === "all") return t("foldersAll", "Всі версії");
+    if (folder.id === "folder_modpacks") return t("foldersModpacks", "Збірки");
+    if (folder.id === "folder_survival") return t("foldersSurvival", "Виживання");
+    if (folder.id === "folder_pvp") return t("foldersPvP", "PvP");
+    if (folder.id === "folder_vanilla") return t("foldersVanilla", "Ваніла");
+    return folder.name;
+  };
   const [folders, setFolders] = useState<InstanceFolder[]>(() => {
     try {
       const saved = localStorage.getItem("omega_instance_folders");
@@ -416,9 +427,9 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
             type="button"
             className="sb-btn"
             onClick={() => setIsImporting(true)}
-            title="Импортировать версию из архива (.zip, .mrpack)"
+            title={lang === "uk" ? "Імпортувати версію з архіву (.zip, .mrpack)" : lang === "ru" ? "Импортировать версию из архива (.zip, .mrpack)" : "Import version from archive (.zip, .mrpack)"}
           >
-            Импорт
+            {lang === "uk" ? "Імпорт" : lang === "ru" ? "Импорт" : "Import"}
           </button>
 
           <div style={{ position: "relative" }}>
@@ -426,9 +437,9 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
               type="button"
               className="sb-btn sb-btn-go"
               onClick={() => setIsCreateMenuOpen((prev) => !prev)}
-              title="Создать версию или папку"
+              title={lang === "uk" ? "Створити версію або папку" : lang === "ru" ? "Создать версию или папку" : "Create version or folder"}
             >
-              + Создать
+              {lang === "uk" ? "+ Створити" : lang === "ru" ? "+ Создать" : "+ Create"}
               <ChevronDown
                 size={14}
                 style={{
@@ -452,7 +463,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                       const isRust = selectedFolderId === "folder_rust";
                       setNewLoader(isRust ? "Rust" : "Fabric");
                       setNewVersion(isRust ? "26.3" : "1.21.4");
-                      setNewName(isRust ? "Minecraft Rust" : "Моя версия 1.21");
+                      setNewName(isRust ? "Minecraft Rust" : (lang === "uk" ? "Моя версія 1.21" : lang === "ru" ? "Моя версия 1.21" : "My Version 1.21"));
                       setNewInstanceFolder(selectedFolderId === "all" ? "folder_survival" : selectedFolderId);
                       setNewRamGb(4);
                       setVersionSearchQuery("");
@@ -463,9 +474,11 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                   >
                     <IsometricCube size={18} variant="grass" />
                     <div>
-                      <div style={{ color: "#fff", fontSize: "12.5px" }}>Создать версию</div>
+                      <div style={{ color: "#fff", fontSize: "12.5px" }}>
+                        {lang === "uk" ? "Створити версію" : lang === "ru" ? "Создать версию" : "Create Version"}
+                      </div>
                       <div style={{ color: "#8b919c", fontSize: "11px", fontWeight: 500 }}>
-                        Новая версия Minecraft
+                        {lang === "uk" ? "Нова версія Minecraft" : lang === "ru" ? "Новая версия Minecraft" : "New Minecraft version"}
                       </div>
                     </div>
                   </button>
@@ -483,9 +496,11 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                   >
                     <FolderPlus size={18} color="#60a5fa" />
                     <div>
-                      <div style={{ color: "#fff", fontSize: "12.5px" }}>Создать папку</div>
+                      <div style={{ color: "#fff", fontSize: "12.5px" }}>
+                        {lang === "uk" ? "Створити папку" : lang === "ru" ? "Создать папку" : "Create Folder"}
+                      </div>
                       <div style={{ color: "#8b919c", fontSize: "11px", fontWeight: 500 }}>
-                        Новая категория для версий
+                        {lang === "uk" ? "Нова категорія для версій" : lang === "ru" ? "Новая категория для версий" : "New category for versions"}
                       </div>
                     </div>
                   </button>
@@ -602,7 +617,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                   onBack();
                 }}
               >
-                Играть сейчас
+                {lang === "uk" ? "Грати зараз" : lang === "ru" ? "Играть сейчас" : "Play now"}
               </button>
             </div>
           </div>
@@ -610,7 +625,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
           <div className="sb-hero">
             <div className="sb-hero-info">
               <h1 style={{ margin: 0, fontSize: "20px", color: "#8b919c" }}>
-                Версия не выбрана
+                {lang === "uk" ? "Версію не обрано" : lang === "ru" ? "Версия не выбрана" : "No version selected"}
               </h1>
             </div>
           </div>
@@ -618,7 +633,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
 
         <div>
           <div className="sb-section-head">
-            Папки версий ({folders.length})
+            {lang === "uk" ? "Папки версій" : lang === "ru" ? "Папки версий" : "Version Folders"} ({folders.length})
           </div>
 
           <div className="sb-dock">
@@ -629,6 +644,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                   ? instances.length
                   : instances.filter((i) => i.folderId === folder.id).length;
               const dotColor = getFolderColor(folder);
+              const displayName = getDisplayFolderName(folder);
 
               return (
                 <button
@@ -644,12 +660,12 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                   }}
                   title={
                     folder.isSystem
-                      ? "Показать все версии"
-                      : `Папка: ${folder.name} (ПКМ для настроек папки)`
+                      ? (lang === "uk" ? "Показати всі версії" : lang === "ru" ? "Показать все версии" : "Show all versions")
+                      : `${lang === "uk" ? "Папка" : lang === "ru" ? "Папка" : "Folder"}: ${displayName}`
                   }
                 >
                   <i style={{ background: dotColor }} />
-                  <span>{folder.name}</span>
+                  <span>{displayName}</span>
                   <em>({count})</em>
                 </button>
               );
@@ -659,12 +675,12 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
 
         <div>
           <div className="sb-section-head">
-            Доступные версии ({filteredInstances.length})
+            {lang === "uk" ? "Доступні версії" : lang === "ru" ? "Доступные версии" : "Available Versions"} ({filteredInstances.length})
           </div>
 
           {filteredInstances.length === 0 ? (
             <div className="sb-empty">
-              В этой папке пока нет версий
+              {lang === "uk" ? "У цій папці поки немає версій" : lang === "ru" ? "В этой папке пока нет версий" : "No versions in this folder yet"}
             </div>
           ) : (
             <div className="sb-grid">
@@ -685,7 +701,9 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                         <div className="sb-cn" title={inst.name}>
                           {inst.name}
                         </div>
-                        <div className="sb-cm">{inst.modCount} модов</div>
+                        <div className="sb-cm">
+                          {inst.modCount} {lang === "uk" ? "модів" : lang === "ru" ? "модов" : "mods"}
+                        </div>
                       </div>
                     </div>
 
@@ -712,25 +730,27 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                           }
                         }}
                       >
-                        {isActive ? "Играть" : "Выбрать"}
+                        {isActive
+                          ? (lang === "uk" ? "Грати" : lang === "ru" ? "Играть" : "Play")
+                          : (lang === "uk" ? "Обрати" : lang === "ru" ? "Выбрать" : "Select")}
                       </button>
 
                       <button
                         type="button"
                         className="sb-btn"
-                        title="Открыть директорию версии в файловом менеджере"
+                        title={lang === "uk" ? "Відкрити директорію версії у файловому менеджері" : lang === "ru" ? "Открыть директорию версии в файловом менеджере" : "Open version directory"}
                         onClick={() => void ipc.openFolder(inst.id)}
                       >
-                        Папка
+                        {lang === "uk" ? "Тека" : lang === "ru" ? "Папка" : "Folder"}
                       </button>
 
                       <button
                         type="button"
                         className="sb-btn"
-                        title="Создать ярлык версии на рабочем столе"
+                        title={lang === "uk" ? "Створити ярлик версії на робочому столі" : lang === "ru" ? "Создать ярлык версии на рабочем столе" : "Create shortcut on desktop"}
                         onClick={() => void ipc.createShortcut(inst.id)}
                       >
-                        Ярлык
+                        {lang === "uk" ? "Ярлик" : lang === "ru" ? "Ярлык" : "Shortcut"}
                       </button>
 
                       {instances.length > 1 && onDeleteInstance && (
@@ -738,12 +758,12 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                           type="button"
                           className="sb-btn sb-btn-del"
                           onClick={() => {
-                            if (confirm(`Удалить версию "${inst.name}"?`)) {
+                            if (confirm(`${lang === "uk" ? "Видалити версію" : lang === "ru" ? "Удалить версию" : "Delete version"} "${inst.name}"?`)) {
                               onDeleteInstance(inst.id);
                             }
                           }}
                         >
-                          Удалить
+                          {lang === "uk" ? "Видалити" : lang === "ru" ? "Удалить" : "Delete"}
                         </button>
                       )}
                     </div>

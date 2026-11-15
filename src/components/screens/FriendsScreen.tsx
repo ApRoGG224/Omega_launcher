@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 import "../../styles/screens.css";
 
 interface FriendsScreenProps {
@@ -89,6 +90,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
   onBack,
   onJoinFriend,
 }) => {
+  const { t, lang } = useLanguage();
   const [tab, setTab] = useState<"friends" | "chats" | "reqs" | "search">("friends");
   const [friends, setFriends] = useState<FriendItem[]>(INITIAL_FRIENDS);
   const [reqs, setReqs] = useState<RequestItem[]>(INITIAL_REQS);
@@ -337,7 +339,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                 setActiveChatFriend(null);
               }}
             >
-              Друзья<i>{friends.length}</i>
+              {lang === "uk" ? "Друзі" : lang === "ru" ? "Друзья" : "Friends"}<i>{friends.length}</i>
             </button>
             <button
               type="button"
@@ -346,7 +348,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
               aria-selected={tab === "chats"}
               onClick={() => setTab("chats")}
             >
-              Чаты
+              {lang === "uk" ? "Чати" : lang === "ru" ? "Чаты" : "Chats"}
             </button>
             <button
               type="button"
@@ -358,7 +360,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                 setActiveChatFriend(null);
               }}
             >
-              Заявки{reqs.length > 0 && <i>{reqs.length}</i>}
+              {lang === "uk" ? "Запити" : lang === "ru" ? "Заявки" : "Requests"}{reqs.length > 0 && <i>{reqs.length}</i>}
             </button>
             <button
               type="button"
@@ -370,20 +372,20 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                 setActiveChatFriend(null);
               }}
             >
-              Поиск
+              {lang === "uk" ? "Пошук" : lang === "ru" ? "Поиск" : "Search"}
             </button>
           </div>
         </div>
 
         <div className="card code">
           <div className="t">
-            <small>Твой код друга</small>
+            <small>{lang === "uk" ? "Твій код друга" : lang === "ru" ? "Твой код друга" : "Your Friend Code"}</small>
             <button
               ref={codeBtnRef}
               type="button"
               className={`sp ${isCodeOpen ? "open" : ""}`}
               id="code"
-              aria-label={isCodeOpen ? undefined : "Показать код друга"}
+              aria-label={isCodeOpen ? undefined : (lang === "uk" ? "Показати код друга" : lang === "ru" ? "Показать код друга" : "Show friend code")}
               onClick={handleOpenCode}
             >
               <span>OMG-774921</span>
@@ -397,7 +399,9 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
               id="copy"
               onClick={handleCopyCode}
             >
-              {copied ? "Скопировано" : "Скопировать"}
+              {copied
+                ? (lang === "uk" ? "Скопійовано" : lang === "ru" ? "Скопировано" : "Copied")
+                : (lang === "uk" ? "Скопіювати" : lang === "ru" ? "Скопировать" : "Copy")}
             </button>
           </div>
         </div>
@@ -444,7 +448,9 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                           onJoinFriend(f.n, f.h!);
                         }}
                       >
-                        {joiningFriend === f.n ? "Подключаемся…" : "Присоединиться"}
+                        {joiningFriend === f.n
+                          ? (lang === "uk" ? "Підключаємося…" : lang === "ru" ? "Подключаемся…" : "Connecting…")
+                          : (lang === "uk" ? "Приєднатися" : lang === "ru" ? "Присоединиться" : "Join")}
                       </button>
                     </div>
                   )}
