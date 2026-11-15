@@ -654,7 +654,10 @@ export class RoamingCharacterController {
       this.shadowMesh.position.set(this.currentX, groundY + 0.08, this.currentZ);
       const scale = Math.max(0.35, 1.0 - heightAboveGround * 0.02);
       this.shadowMesh.scale.set(scale, 1, scale);
-      this.shadowMat.opacity = Math.max(0, 0.55 - heightAboveGround * 0.018);
+      const targetOpacity = Math.max(0, 0.55 - heightAboveGround * 0.018);
+      if (Math.abs(this.shadowMat.opacity - targetOpacity) > 0.02) {
+        this.shadowMat.opacity = targetOpacity;
+      }
     }
   }
 

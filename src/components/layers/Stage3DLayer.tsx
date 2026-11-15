@@ -169,13 +169,16 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
       if (viewerRef.current.animation) {
         viewerRef.current.animation.paused = !visible;
       }
-      if (visible && controllerRef.current) {
-        const res = scanLauncherPlatforms(
-          viewerRef.current.camera,
-          raycasterRef.current,
-          planeRef.current
-        );
-        controllerRef.current.setPlatforms(res.platforms, res.floorLevel, res.minX, res.maxX);
+      if (visible) {
+        (viewerRef.current as any).clock?.getDelta();
+        if (controllerRef.current) {
+          const res = scanLauncherPlatforms(
+            viewerRef.current.camera,
+            raycasterRef.current,
+            planeRef.current
+          );
+          controllerRef.current.setPlatforms(res.platforms, res.floorLevel, res.minX, res.maxX);
+        }
       }
     }
   }, [visible]);
@@ -195,7 +198,8 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         skin: skinUrl,
         model: model,
         cape: capeUrl || undefined,
-        pixelRatio: Math.min(window.devicePixelRatio || 1, 1.25),
+        pixelRatio: Math.min(window.devicePixelRatio || 1, 1.0),
+        enableControls: false,
       });
 
       // Camera positioned with wide cinematic angle over launcher floor
@@ -232,6 +236,39 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
       // Bypass heavy multi-pass EffectComposer / FXAAShader to render directly to canvas for maximum FPS
       (viewer as any).render = function () {
         this.renderer.render(this.scene, this.camera);
+      };
+
+      // Adaptive FPS frame limiter:
+      // Limits rendering to ~36 FPS during idle/walk (or ~50 FPS during active mouse dragging).
+      // Eliminates GPU/CPU overload on 144Hz+ monitors while maintaining completely fluid Minecraft motion.
+      let lastRenderTime = performance.now();
+      const TARGET_FPS_IDLE = 36;
+      const TARGET_FPS_DRAG = 50;
+      const FRAME_INTERVAL_IDLE = 1000 / TARGET_FPS_IDLE;
+      const FRAME_INTERVAL_DRAG = 1000 / TARGET_FPS_DRAG;
+
+      (viewer as any).draw = function () {
+        if (this._disposed) return;
+        if (this._renderPaused) {
+          this.animationID = null;
+          return;
+        }
+
+        const now = performance.now();
+        const targetInterval = isPointerDownOnChar.current ? FRAME_INTERVAL_DRAG : FRAME_INTERVAL_IDLE;
+        const elapsed = now - lastRenderTime;
+
+        if (elapsed >= targetInterval) {
+          lastRenderTime = now - (elapsed % targetInterval);
+          const dt = this.clock.getDelta();
+
+          if (this._animation !== null) {
+            this._animation.update(this.playerObject, dt);
+          }
+          this.render();
+        }
+
+        this.animationID = window.requestAnimationFrame(() => this.draw());
       };
 
       viewer.animation = new PhysicalRoamingAnimation();
@@ -299,6 +336,12 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
           return;
         }
 
+        // Fast 2D boundary check: character only roams in the lower half of the screen
+        const screenH = window.innerHeight || 720;
+        if (e.clientY < screenH * 0.45) {
+          return;
+        }
+
         const ctrl = controllerRef.current;
         const vwr = viewerRef.current;
         if (!ctrl || !vwr) return;
@@ -356,6 +399,16 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
           );
           lastMouseWorld.current.copy(tempCurWorld);
           document.body.style.cursor = "grabbing";
+          return;
+        }
+
+        // Fast 2D boundary check: character is bounded to the lower screen dock area.
+        // If cursor is in the upper area (top bar, upper cards, settings, etc.), skip all raycasts & math!
+        const screenH = window.innerHeight || 720;
+        if (e.clientY < screenH * 0.45) {
+          if (document.body.style.cursor === "grab") {
+            document.body.style.cursor = "";
+          }
           return;
         }
 
