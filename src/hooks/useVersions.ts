@@ -19,17 +19,39 @@ export function getVersionTag(
 ): string {
   if (latestRelease && id === latestRelease) return "ПОСЛЕДНИЙ РЕЛИЗ";
   if (latestSnapshot && id === latestSnapshot) return "НОВЫЙ СНАПШОТ";
+  if (id === "1.21.4") return "СВЕЖИЙ РЕЛИЗ";
   if (id === "1.20.1") return "СТАБИЛЬНАЯ";
-  if (id === "1.21.4") return "РЕЛИЗ";
-  if (id === "1.16.5") return "КЛАССИКА";
+  if (id === "1.19.4") return "РЕЛИЗ";
+  if (id === "1.18.2") return "CAVES & CLIFFS";
+  if (id === "1.16.5") return "NETHER КЛАССИКА";
   if (id === "1.12.2") return "FORGE LEGACY";
-  if (id === "1.7.10") return "LEGACY";
+  if (id === "1.8.9") return "PVP КЛАССИКА";
+  if (id === "1.8") return "PVP РЕЛИЗ";
+  if (id === "1.7.10") return "КЛАССИКА МОДОВ";
+  if (id === "1.5.2") return "GOLDEN AGE";
+  if (id === "1.2.5") return "РЕТРО 1.2";
+  if (id === "1.0") return "RELEASE 1.0";
   if (type === "release") return "РЕЛИЗ";
   if (type === "snapshot") return "СНАПШОТ";
   if (type === "old_beta") return "BETA";
   if (type === "old_alpha") return "ALPHA";
   return "ВЕРСИЯ";
 }
+
+export const POPULAR_VERSION_IDS = [
+  "26.3",
+  "1.21.4",
+  "1.20.1",
+  "1.19.4",
+  "1.18.2",
+  "1.16.5",
+  "1.12.2",
+  "1.8.9",
+  "1.8",
+  "1.7.10",
+  "1.5.2",
+  "26.4-snapshot-8",
+];
 
 export const FALLBACK_RELEASES = [
   "26.3", "26.2", "26.1.2", "26.1.1", "26.1",
@@ -81,6 +103,7 @@ export const FALLBACK_UI_VERSIONS: UiVersionItem[] = [
 
 export interface VersionsApi {
   allVersions: UiVersionItem[];
+  popularVersions: UiVersionItem[];
   latestRelease: string;
   latestSnapshot: string;
   isLoading: boolean;
@@ -88,6 +111,7 @@ export interface VersionsApi {
   totalCount: number;
   releasesCount: number;
   snapshotsCount: number;
+  betaAlphaCount: number;
   reload: () => Promise<void>;
   currentVersionsList: string[];
   versionFilters: VersionFilterState;
@@ -147,6 +171,32 @@ export function useVersions(): VersionsApi {
     return allVersions.filter((v) => v.isSnapshot || v.type === "snapshot").length;
   }, [allVersions]);
 
+  const betaAlphaCount = useMemo(() => {
+    return allVersions.filter((v) => v.type === "old_beta" || v.type === "old_alpha").length;
+  }, [allVersions]);
+
+  const popularVersions = useMemo(() => {
+    const map = new Map<string, UiVersionItem>();
+    for (const v of allVersions) {
+      map.set(v.version, v);
+    }
+    const result: UiVersionItem[] = [];
+    for (const id of POPULAR_VERSION_IDS) {
+      const found = map.get(id);
+      if (found) {
+        result.push(found);
+      } else {
+        result.push({
+          version: id,
+          tag: getVersionTag(id, id.includes("snapshot") ? "snapshot" : "release", latestRelease, latestSnapshot),
+          type: id.includes("snapshot") ? "snapshot" : "release",
+          isSnapshot: id.includes("snapshot"),
+        });
+      }
+    }
+    return result;
+  }, [allVersions, latestRelease, latestSnapshot]);
+
   const currentVersionsList = useMemo(() => {
     if (allVersionsRaw.length === 0) return FALLBACK_RELEASES;
     return allVersionsRaw
@@ -168,6 +218,7 @@ export function useVersions(): VersionsApi {
 
   return {
     allVersions,
+    popularVersions,
     latestRelease,
     latestSnapshot,
     isLoading,
@@ -175,6 +226,7 @@ export function useVersions(): VersionsApi {
     totalCount: allVersions.length,
     releasesCount,
     snapshotsCount,
+    betaAlphaCount,
     reload: loadManifest,
     currentVersionsList,
     versionFilters,

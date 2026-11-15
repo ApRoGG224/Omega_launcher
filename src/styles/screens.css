@@ -3529,8 +3529,14 @@
 }
 
 .nc-av img {
-  width: 22px !important;
-  height: 22px !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 0 !important;
+  object-fit: contain !important;
+  image-rendering: pixelated !important;
+}
+
+.nc-av.nc-up img {
   border-radius: 5px !important;
   object-fit: cover !important;
 }
@@ -3650,6 +3656,69 @@
   color: #f97316 !important;
   background: rgba(249, 115, 22, 0.14) !important;
   border: 1px solid rgba(249, 115, 22, 0.35) !important;
+}
+
+.nc-tag-badge.tag-pvp {
+  color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.14) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+}
+
+.nc-tag-badge.tag-mods {
+  color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.14) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+.nc-tag-badge.tag-classic {
+  color: #c084fc !important;
+  background: rgba(192, 132, 252, 0.14) !important;
+  border: 1px solid rgba(192, 132, 252, 0.35) !important;
+}
+
+.nc-tag-badge.tag-old_beta,
+.nc-tag-badge.tag-old_alpha {
+  color: #9ca3af !important;
+  background: rgba(156, 163, 175, 0.12) !important;
+  border: 1px solid rgba(156, 163, 175, 0.25) !important;
+}
+
+.nc-vtabs {
+  display: flex !important;
+  gap: 6px !important;
+  margin-top: 6px !important;
+  margin-bottom: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.nc-vtab {
+  padding: 5px 10px !important;
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #9ca3af !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  transition: all 0.15s ease !important;
+}
+
+.nc-vtab:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #e5e7eb !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+.nc-vtab.active {
+  background: #18202d !important;
+  color: #38bdf8 !important;
+  border-color: rgba(56, 189, 248, 0.45) !important;
+  font-weight: 700 !important;
+}
+
+.sb-ico img {
+  image-rendering: pixelated !important;
 }
 
 .nc-versions-count {

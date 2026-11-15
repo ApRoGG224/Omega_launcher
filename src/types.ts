@@ -35,7 +35,12 @@ export type InstanceAvatarVariant =
   | "diamond_sword"
   | "diamond_pickaxe"
   | "end_crystal"
-  | "obsidian";
+  | "obsidian"
+  | "totem_of_undying"
+  | "golden_apple"
+  | "ender_pearl"
+  | "tnt"
+  | "netherite_sword";
 
 export interface InstanceData {
   id: string;

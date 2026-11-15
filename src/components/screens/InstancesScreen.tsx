@@ -86,8 +86,13 @@ const getLoaderTagClass = (loader?: string) => {
 const AVATAR_PRESETS: Array<{ id: InstanceAvatarVariant; label: string; fullName: string }> = [
   { id: "diamond_sword", label: "Меч", fullName: "Алмазный меч" },
   { id: "diamond_pickaxe", label: "Кирка", fullName: "Алмазная кирка" },
-  { id: "end_crystal", label: "Кристалл", fullName: "Кристалл" },
   { id: "obsidian", label: "Обсидиан", fullName: "Обсидиан" },
+  { id: "end_crystal", label: "Кристалл", fullName: "Кристалл Энда" },
+  { id: "totem_of_undying", label: "Тотем", fullName: "Тотем бессмертия" },
+  { id: "golden_apple", label: "Яблоко", fullName: "Золотое яблоко" },
+  { id: "ender_pearl", label: "Жемчуг", fullName: "Жемчуг Энда" },
+  { id: "tnt", label: "ТНТ", fullName: "Динамит (TNT)" },
+  { id: "netherite_sword", label: "Незерит", fullName: "Незеритовый меч" },
 ];
 
 const LOADER_OPTIONS: Array<{ id: InstanceData["loader"]; label: string; colorClass: string }> = [
@@ -178,9 +183,16 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
   const [customAvatarUrl, setCustomAvatarUrl] = useState<string>("");
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [versionSearchQuery, setVersionSearchQuery] = useState<string>("");
-  const [showSnapshots, setShowSnapshots] = useState<boolean>(false);
+  const [versionCategory, setVersionCategory] = useState<"popular" | "releases" | "snapshots" | "legacy">("popular");
   const [versionDisplayLimit, setVersionDisplayLimit] = useState<number>(60);
-  const { allVersions, latestRelease } = useVersions();
+  const {
+    allVersions,
+    popularVersions,
+    releasesCount,
+    snapshotsCount,
+    betaAlphaCount,
+    latestRelease,
+  } = useVersions();
 
   const handleCustomAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -370,12 +382,29 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
   const filteredVersions = useMemo(() => {
     const list = allVersions.length > 0 ? allVersions : FALLBACK_UI_VERSIONS;
     const query = versionSearchQuery.trim().toLowerCase();
-    return list.filter((v) => {
-      if (v.isSnapshot && !showSnapshots) return false;
-      if (query && !v.version.toLowerCase().includes(query)) return false;
-      return true;
-    });
-  }, [allVersions, showSnapshots, versionSearchQuery]);
+
+    // If searching, search across all versions regardless of tab
+    if (query) {
+      return list.filter(
+        (v) =>
+          v.version.toLowerCase().includes(query) ||
+          v.tag.toLowerCase().includes(query)
+      );
+    }
+
+    // Tab-based filtering
+    if (versionCategory === "popular") {
+      return popularVersions.length > 0 ? popularVersions : list.slice(0, 15);
+    }
+    if (versionCategory === "snapshots") {
+      return list.filter((v) => v.isSnapshot || v.type === "snapshot");
+    }
+    if (versionCategory === "legacy") {
+      return list.filter((v) => v.type === "old_beta" || v.type === "old_alpha");
+    }
+    // "releases"
+    return list.filter((v) => !v.isSnapshot && v.type === "release");
+  }, [allVersions, popularVersions, versionCategory, versionSearchQuery]);
 
   const visibleVersions = useMemo(() => {
     return filteredVersions.slice(0, versionDisplayLimit);
@@ -383,7 +412,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
 
   useEffect(() => {
     setVersionDisplayLimit(60);
-  }, [versionSearchQuery, showSnapshots]);
+  }, [versionSearchQuery, versionCategory]);
 
   const activeFolder = folders.find((f) => f.id === selectedFolderId);
 
@@ -444,7 +473,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                       setNewInstanceFolder(selectedFolderId === "all" ? "folder_survival" : selectedFolderId);
                       setNewRamGb(4);
                       setVersionSearchQuery("");
-                      setShowSnapshots(false);
+                      setVersionCategory("popular");
                       setIsCreating(true);
                       setIsCreateMenuOpen(false);
                     }}
@@ -861,13 +890,54 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                   <span>Версия игры</span>
                   <b>{newLoader === "Rust" ? "26.3" : newVersion}</b>
                   <span className="nc-versions-count">
-                    {filteredVersions.length} {showSnapshots ? "версий и снапшотов" : "релизов"}
+                    {filteredVersions.length}{" "}
+                    {versionCategory === "snapshots"
+                      ? "снапшотов"
+                      : versionCategory === "popular"
+                      ? "популярных"
+                      : versionCategory === "legacy"
+                      ? "старых версий"
+                      : "релизов"}
                   </span>
                 </div>
+
+                {newLoader !== "Rust" && (
+                  <div className="nc-vtabs">
+                    <button
+                      type="button"
+                      className={`nc-vtab ${versionCategory === "popular" ? "active" : ""}`}
+                      onClick={() => setVersionCategory("popular")}
+                    >
+                      ⭐ Популярные (1.8, 1.7.10...)
+                    </button>
+                    <button
+                      type="button"
+                      className={`nc-vtab ${versionCategory === "releases" ? "active" : ""}`}
+                      onClick={() => setVersionCategory("releases")}
+                    >
+                      Все релизы ({releasesCount})
+                    </button>
+                    <button
+                      type="button"
+                      className={`nc-vtab ${versionCategory === "snapshots" ? "active" : ""}`}
+                      onClick={() => setVersionCategory("snapshots")}
+                    >
+                      Снапшоты ({snapshotsCount})
+                    </button>
+                    <button
+                      type="button"
+                      className={`nc-vtab ${versionCategory === "legacy" ? "active" : ""}`}
+                      onClick={() => setVersionCategory("legacy")}
+                    >
+                      Beta / Alpha ({betaAlphaCount})
+                    </button>
+                  </div>
+                )}
+
                 <input
                   type="text"
                   className="nc-input"
-                  placeholder="Поиск версии (например: 26.3, 1.20, snapshot, 25w...)"
+                  placeholder="Поиск версии (например: 1.8, 1.7.10, 1.20, snapshot, 25w...)"
                   value={versionSearchQuery}
                   onChange={(e) => setVersionSearchQuery(e.target.value)}
                 />
@@ -888,6 +958,9 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                       {visibleVersions.map((v) => {
                         const isLatest = v.tag.includes("ПОСЛЕДНИЙ");
                         const isNewSnap = v.tag.includes("НОВЫЙ");
+                        const isPvp = v.tag.includes("PVP");
+                        const isMods = v.tag.includes("МОДОВ");
+                        const isClassic = v.tag.includes("КЛАССИКА") || v.tag.includes("LEGACY");
                         return (
                           <button
                             key={v.version}
@@ -899,7 +972,11 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                             <small
                               className={`nc-tag-badge tag-${v.type} ${
                                 isLatest ? "tag-latest" : ""
-                              } ${isNewSnap ? "tag-new-snap" : ""}`}
+                              } ${isNewSnap ? "tag-new-snap" : ""} ${
+                                isPvp ? "tag-pvp" : ""
+                              } ${isMods ? "tag-mods" : ""} ${
+                                isClassic ? "tag-classic" : ""
+                              }`}
                             >
                               {v.tag}
                             </small>
@@ -918,18 +995,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                     </>
                   )}
                 </div>
-
-                {newLoader !== "Rust" && (
-                  <div
-                    className={`nc-sw ${showSnapshots ? "on" : ""}`}
-                    onClick={() => setShowSnapshots(!showSnapshots)}
-                  >
-                    <i />
-                    <span>
-                      Показать снапшоты ({allVersions.filter((v) => v.isSnapshot).length || 759})
-                    </span>
-                  </div>
-                )}
 
                 <div className="nc-lab">
                   <span>Папка</span>

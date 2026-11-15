@@ -118,6 +118,11 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
   - Snapshot toggle filter with live count badge (`Показать снапшоты (759)`), allowing seamless switching between stable releases and experimental snapshots.
   - Multi-tier 24h caching in `app_cache_dir/versions.json` and `localStorage` for instantaneous offline/startup loads.
   - Enhanced Java detection in `src-tauri/src/java.rs` parsing weekly snapshots (e.g. `25w06a`, `24w45a`) and accurately provisioning Java 21 / 25 runtimes.
+- **Authentic Minecraft 16x16 Pixel-Art Instance Avatars & Popular Legacy Versions Tabs (`MinecraftIcons.tsx`, `useVersions.ts`, `InstancesScreen.tsx`):**
+  - Completely replaced synthetic hand-drawn SVGs with authentic official 16x16 Minecraft pixel-art textures embedded as Base64 data URLs: Diamond Sword (`diamond_sword`), Diamond Pickaxe (`diamond_pickaxe`), Obsidian (`obsidian`), End Crystal (`end_crystal`), Totem of Undying (`totem_of_undying`), Golden Apple (`golden_apple`), Ender Pearl (`ender_pearl`), TNT (`tnt`), and Netherite Sword (`netherite_sword`).
+  - Strict pixelated rendering via `image-rendering: pixelated; object-fit: contain;`, displaying razor-sharp authentic Minecraft in-game items across instance list cards, hero banners, top navigation bar, launch dock, and new instance modals.
+  - Dedicated version category filter tabs in `InstancesScreen`: `⭐ Популярные (1.8, 1.7.10...)`, `Все релизы (103)`, `Снапшоты (759)`, and `Beta & Alpha (61)`.
+  - Prominent tags for legacy/classic releases: `1.8.9` (`PVP КЛАССИКА`), `1.8` (`PVP РЕЛИЗ`), `1.7.10` (`КЛАССИКА МОДОВ`), `1.12.2` (`FORGE LEGACY`), `1.16.5` (`NETHER КЛАССИКА`), `1.20.1` (`СТАБИЛЬНАЯ`), `1.21.4` (`СВЕЖИЙ РЕЛИЗ`), `26.3` (`ПОСЛЕДНИЙ РЕЛИЗ`).
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 
