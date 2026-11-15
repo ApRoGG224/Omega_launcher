@@ -31,9 +31,9 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
   focusZoneRef.current = focusZone;
 
   // Camera targets for smooth cinematic lerp transitions
-  const curPosRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.5, 75.0));
+  const curPosRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.2, 68.0));
   const curLookRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.0, 0));
-  const targetPosRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.5, 75.0));
+  const targetPosRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.2, 68.0));
   const targetLookRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.0, 0));
 
   // Initialize static 3D SkinViewer
@@ -43,8 +43,8 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
     if (!canvas || !container) return;
 
     let disposed = false;
-    const initialW = container.clientWidth || 280;
-    const initialH = container.clientHeight || 294;
+    const initialW = container.clientWidth || 400;
+    const initialH = container.clientHeight || 440;
 
     const viewer = new SkinViewer({
       canvas,
@@ -81,20 +81,20 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
       // Update camera targets based on current focusZone
       switch (focusZoneRef.current) {
         case "head":
-          targetPosRef.current.set(0, 18.5, 34.0);
+          targetPosRef.current.set(0, 18.2, 30.0);
           targetLookRef.current.set(0, 18.0, 0);
           break;
         case "back":
-          targetPosRef.current.set(0, 8.0, -55.0);
+          targetPosRef.current.set(0, 7.0, -48.0);
           targetLookRef.current.set(0, 5.0, 0);
           break;
         case "body":
-          targetPosRef.current.set(0, 5.0, 48.0);
+          targetPosRef.current.set(0, 5.0, 44.0);
           targetLookRef.current.set(0, 4.0, 0);
           break;
         case "full":
         default:
-          targetPosRef.current.set(0, 3.5, 75.0);
+          targetPosRef.current.set(0, 3.2, 68.0);
           targetLookRef.current.set(0, 3.0, 0);
           break;
       }
@@ -181,7 +181,7 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
         position: "relative",
         width: "100%",
         height: "100%",
-        minHeight: "280px",
+        minHeight: "380px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

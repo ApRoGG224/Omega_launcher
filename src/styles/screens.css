@@ -5385,19 +5385,19 @@
 }
 
 /* =========================================================================
-   COSMETICS WARDROBE SHOWCASE (Compact two-column layout with zero scrolling)
+   COSMETICS WARDROBE SHOWCASE (Catalog on Left, 3D Character on Right)
    ========================================================================= */
 .store-cosmetics-wardrobe-container {
   display: flex;
-  gap: 18px;
+  justify-content: space-between;
+  gap: 32px;
   width: 100%;
-  max-width: 530px;
   align-items: flex-start;
 }
 
 .store-cosmetics-catalog {
-  flex: 0 0 220px;
-  width: 220px;
+  flex: 0 0 250px;
+  width: 250px;
 }
 
 .store-cosmetics-grid {
@@ -5410,17 +5410,17 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 12px;
+  padding: 16px;
   background: var(--panel, #0e121d);
   border: 1px solid var(--line, rgba(255, 255, 255, 0.08));
   border-radius: 16px;
   box-sizing: border-box;
-  height: 330px;
+  height: 350px;
 }
 
 .store-cosmetic-pv-box {
   width: 100%;
-  height: 180px;
+  height: 190px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5431,32 +5431,34 @@
 }
 
 .store-cosmetic-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--tx, #fff);
   text-align: center;
-  margin: 6px 0;
+  margin: 10px 0;
   letter-spacing: -0.01em;
 }
 
 .store-wardrobe-showcase {
-  flex: 0 0 270px;
-  width: 270px;
+  margin-left: auto;
+  flex: 0 0 420px;
+  width: 420px;
+  max-width: 52%;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .store-wardrobe-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2px;
-  height: 28px;
+  padding: 0 4px;
+  height: 30px;
 }
 
 .store-wardrobe-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--mut, #8b92a5);
   text-transform: uppercase;
@@ -5465,9 +5467,9 @@
 
 .store-wardrobe-angle-tabs {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   background: rgba(0, 0, 0, 0.4);
-  padding: 2px;
+  padding: 3px;
   border-radius: 8px;
   border: 1px solid var(--line, rgba(255, 255, 255, 0.08));
 }
@@ -5476,9 +5478,9 @@
   background: transparent;
   border: none;
   color: var(--mut, #8b92a5);
-  padding: 3px 8px;
-  border-radius: 5px;
-  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -5497,16 +5499,16 @@
 .store-wardrobe-stage-card {
   position: relative;
   width: 100%;
-  height: 294px;
-  min-height: 294px;
+  height: 440px;
+  min-height: 420px;
   background: radial-gradient(circle at 50% 45%, #111524 0%, #070911 100%);
   border: 1px solid var(--line, rgba(255, 255, 255, 0.08));
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
   box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 860px) {
   .store-cosmetics-wardrobe-container {
     flex-direction: column;
   }
@@ -5515,5 +5517,6 @@
     flex: none;
     width: 100%;
     max-width: 100%;
+    margin-left: 0;
   }
 }
