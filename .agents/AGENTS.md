@@ -123,6 +123,9 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
   - Strict pixelated rendering via `image-rendering: pixelated; object-fit: contain;`, displaying razor-sharp authentic Minecraft in-game items across instance list cards, hero banners, top navigation bar, launch dock, and new instance modals.
   - Dedicated version category filter tabs in `InstancesScreen`: `⭐ Популярные (1.8, 1.7.10...)`, `Все релизы (103)`, `Снапшоты (759)`, and `Beta & Alpha (61)`.
   - Prominent tags for legacy/classic releases: `1.8.9` (`PVP КЛАССИКА`), `1.8` (`PVP РЕЛИЗ`), `1.7.10` (`КЛАССИКА МОДОВ`), `1.12.2` (`FORGE LEGACY`), `1.16.5` (`NETHER КЛАССИКА`), `1.20.1` (`СТАБИЛЬНАЯ`), `1.21.4` (`СВЕЖИЙ РЕЛИЗ`), `26.3` (`ПОСЛЕДНИЙ РЕЛИЗ`).
+- **Dock Instance Selector Hover Box & Custom Tooltip (`DockLayer.tsx`, `layer3-dock.css`):**
+  - Replaced native delayed OS tooltip with interactive gray hover highlight box (`background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15)`) around the active instance in the bottom launch dock, giving immediate visual click feedback.
+  - Added custom floating obsidian tooltip (`.dock-tooltip`) with triangular pointer arrow saying "Сменить версию", appearing smoothly with zero delay on hover and active scale press feedback.
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 

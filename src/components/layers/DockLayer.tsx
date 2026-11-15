@@ -64,12 +64,12 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
             type="button"
             className="dock-item-btn dock-icon-btn"
             onClick={onOpenInstancesModal}
-            title="Сменить версию Minecraft"
             aria-label="Иконка версии"
           >
             <div className="dock-icon" aria-hidden="true">
               {renderIcon()}
             </div>
+            <div className="dock-tooltip">Сменить версию</div>
           </button>
         );
 
@@ -80,11 +80,12 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
             type="button"
             className="dock-item-btn dock-title-btn"
             onClick={onOpenInstancesModal}
-            title="Сменить версию"
+            aria-label="Сменить версию"
           >
             <h1 className="dock-title">
               {selectedInstance ? selectedInstance.name : "Minecraft Rust (Beta)"}
             </h1>
+            <div className="dock-tooltip">Сменить версию</div>
           </button>
         );
 
@@ -95,7 +96,7 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
             type="button"
             className="dock-item-btn dock-tags-btn"
             onClick={onOpenInstancesModal}
-            title="Информация о версии"
+            aria-label="Информация о версии"
           >
             <div className="dock-tags">
               {selectedInstance ? (
@@ -120,6 +121,7 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
                 </>
               )}
             </div>
+            <div className="dock-tooltip">Сменить версию</div>
           </button>
         );
 
@@ -173,7 +175,7 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
                   type="button"
                   className="dock-instance-btn dock-info-group"
                   onClick={onOpenInstancesModal}
-                  title="Сменить версию Minecraft"
+                  aria-label="Сменить версию Minecraft"
                 >
                   <div className="dock-info">
                     <h1 className="dock-title">
@@ -203,6 +205,7 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
                       )}
                     </div>
                   </div>
+                  <div className="dock-tooltip">Сменить версию</div>
                 </button>
               );
             }
@@ -216,7 +219,7 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
                   type="button"
                   className="dock-instance-btn dock-info-group"
                   onClick={onOpenInstancesModal}
-                  title="Сменить версию Minecraft"
+                  aria-label="Сменить версию Minecraft"
                 >
                   <div className="dock-info">
                     <div className="dock-tags" style={{ marginBottom: 6 }}>
@@ -246,6 +249,7 @@ export const DockLayer: React.FC<DockLayerProps> = React.memo(({
                       {selectedInstance ? selectedInstance.name : "Minecraft Rust (Beta)"}
                     </h1>
                   </div>
+                  <div className="dock-tooltip">Сменить версию</div>
                 </button>
               );
             }
