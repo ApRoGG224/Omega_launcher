@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import React, { useEffect, useRef } from "react";
-import { SkinViewer, WaveAnimation } from "skinview3d";
-import { CleanIdleAnimation } from "../../utils/skinAnimations";
+import { SkinViewer } from "skinview3d";
 import { PRESET_SKINS } from "../../constants/skinPresets";
 import { createCrownObject, disposeThreeHierarchy } from "../../utils/cosmetics3D";
 import "../../styles/layer1-stage.css";
@@ -11,6 +10,27 @@ interface Stage3DLayerProps {
   skinUrl?: string;
   capeUrl?: string | null;
   model?: "default" | "slim";
+}
+
+const tempVec = new THREE.Vector3();
+const tempTL = new THREE.Vector3();
+const tempBR = new THREE.Vector3();
+const tempNDC = new THREE.Vector2();
+
+function screenPointToWorld(
+  clientX: number,
+  clientY: number,
+  camera: THREE.PerspectiveCamera,
+  raycaster: THREE.Raycaster,
+  plane: THREE.Plane,
+  outVec: THREE.Vector3
+): boolean {
+  const w = window.innerWidth || 1280;
+  const h = window.innerHeight || 720;
+  tempNDC.set((clientX / w) * 2 - 1, -(clientY / h) * 2 + 1);
+  raycaster.setFromCamera(tempNDC, camera);
+  const hit = raycaster.ray.intersectPlane(plane, outVec);
+  return hit !== null;
 }
 
 function createContactShadow(): THREE.Mesh {
@@ -41,7 +61,6 @@ function createContactShadow(): THREE.Mesh {
 
   const mesh = new THREE.Mesh(geo, mat);
   mesh.name = "contact_shadow";
-  mesh.position.set(0, -16.05, 0);
   return mesh;
 }
 
@@ -51,36 +70,23 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
   capeUrl,
   model = "default",
 }) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewerRef = useRef<SkinViewer | null>(null);
   const visibleRef = useRef<boolean>(visible);
   visibleRef.current = visible;
 
-  const isDragging = useRef<boolean>(false);
-  const dragStartX = useRef<number>(0);
-  const dragStartTime = useRef<number>(0);
-  const lastX = useRef<number>(0);
-  const lastTime = useRef<number>(0);
-  const angularVelocity = useRef<number>(0);
-
-  const targetHeadYaw = useRef<number>(0);
-  const targetHeadPitch = useRef<number>(0);
-  const curHeadYaw = useRef<number>(0);
-  const curHeadPitch = useRef<number>(0);
-
-  const animTimeoutRef = useRef<number | null>(null);
+  const raycasterRef = useRef<THREE.Raycaster>(new THREE.Raycaster());
+  const planeRef = useRef<THREE.Plane>(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0));
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
+    if (!canvas) return;
 
     let disposed = false;
     let animId: number | null = null;
 
-    const initialW = container.clientWidth || 460;
-    const initialH = container.clientHeight || 560;
+    const initialW = Math.max(1, window.innerWidth || 1280);
+    const initialH = Math.max(1, window.innerHeight || 720);
 
     const viewer = new SkinViewer({
       canvas,
@@ -89,26 +95,122 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
       skin: skinUrl,
       model: model || "default",
       cape: capeUrl || undefined,
-      pixelRatio: Math.min(window.devicePixelRatio || 1, 1.25),
+      pixelRatio: Math.min(window.devicePixelRatio || 1, 1.0),
       enableControls: false,
     });
     viewerRef.current = viewer;
 
-    viewer.camera.position.set(0, 1.5, 46);
-    viewer.camera.lookAt(0, 0, 0);
-
-    viewer.playerObject.position.set(0, 0, 0);
-    viewer.playerObject.rotation.y = 0.28;
+    viewer.camera.position.set(0, 14, 95);
+    viewer.camera.lookAt(0, -2, 0);
+    viewer.controls.enableRotate = false;
+    viewer.controls.enableZoom = false;
+    viewer.controls.enablePan = false;
 
     const shadow = createContactShadow();
     viewer.scene.add(shadow);
 
-    const clock = new THREE.Clock();
-    const idleAnimation = new CleanIdleAnimation();
-    viewer.animation = idleAnimation;
-
     (viewer as any).render = function () {
       this.renderer.render(this.scene, this.camera);
+    };
+
+    let floorY = -54;
+    let dockTopY = -34.6;
+    let dockMinX = -50;
+    let dockMaxX = 50;
+    let screenMinX = -85;
+    let screenMaxX = 85;
+
+    const updateMetrics = () => {
+      const w = Math.max(1, window.innerWidth || 1280);
+      const h = Math.max(1, window.innerHeight || 720);
+
+      viewer.setSize(w, h);
+      viewer.camera.aspect = w / h;
+      viewer.camera.updateProjectionMatrix();
+
+      screenPointToWorld(w * 0.5, h - 8, viewer.camera, raycasterRef.current, planeRef.current, tempVec);
+      floorY = tempVec.y + 16.0;
+
+      const dockEl = document.querySelector(".dock-container") || document.querySelector(".layer-dock");
+      if (dockEl) {
+        const rect = dockEl.getBoundingClientRect();
+        screenPointToWorld(rect.left, rect.top, viewer.camera, raycasterRef.current, planeRef.current, tempTL);
+        screenPointToWorld(rect.right, rect.bottom, viewer.camera, raycasterRef.current, planeRef.current, tempBR);
+        dockMinX = Math.min(tempTL.x, tempBR.x) + 2.0;
+        dockMaxX = Math.max(tempTL.x, tempBR.x) - 2.0;
+        dockTopY = Math.max(tempTL.y, tempBR.y) + 16.0;
+      } else {
+        dockMinX = -45;
+        dockMaxX = 45;
+        dockTopY = floorY + 20;
+      }
+
+      screenPointToWorld(24, h * 0.5, viewer.camera, raycasterRef.current, planeRef.current, tempTL);
+      screenPointToWorld(w - 24, h * 0.5, viewer.camera, raycasterRef.current, planeRef.current, tempBR);
+      screenMinX = Math.min(tempTL.x, tempBR.x);
+      screenMaxX = Math.max(tempTL.x, tempBR.x);
+    };
+
+    updateMetrics();
+
+    let charX = 0;
+    let charY = dockTopY;
+    let vx = 0;
+    let vy = 0;
+    let state: "idle" | "walking" | "falling" | "dragged" = "idle";
+    let curRotationY = 0.28;
+    let targetRotationY = 0.28;
+    let curRotationZ = 0;
+    let walkTargetX = 0;
+    let walkTime = 0;
+    let idleTimer = 2.5;
+    let totalTime = 0;
+    let flashTimer = 0;
+
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartTime = 0;
+    let grabOffsetX = 0;
+    let grabOffsetY = 0;
+    let lastDragWorldX = 0;
+    let lastDragWorldY = 0;
+    let lastDragTime = 0;
+    let dragVelocityX = 0;
+    let dragVelocityY = 0;
+
+    let targetHeadYaw = 0;
+    let targetHeadPitch = 0;
+    let curHeadYaw = 0;
+    let curHeadPitch = 0;
+
+    const clock = new THREE.Clock();
+
+    const getGroundY = (x: number, y: number): number => {
+      if (x >= dockMinX && x <= dockMaxX && y >= dockTopY - 4) {
+        return dockTopY;
+      }
+      return floorY;
+    };
+
+    const triggerDamageFlash = () => {
+      flashTimer = 0.22;
+      const skin = viewer.playerObject.skin as any;
+      if (skin) {
+        if (skin.layer1Material) skin.layer1Material.color.setRGB(1.0, 0.35, 0.35);
+        if (skin.layer1MaterialBiased) skin.layer1MaterialBiased.color.setRGB(1.0, 0.35, 0.35);
+        if (skin.layer2Material) skin.layer2Material.color.setRGB(1.0, 0.35, 0.35);
+        if (skin.layer2MaterialBiased) skin.layer2MaterialBiased.color.setRGB(1.0, 0.35, 0.35);
+      }
+    };
+
+    const resetSkinColor = () => {
+      const skin = viewer.playerObject.skin as any;
+      if (skin) {
+        if (skin.layer1Material) skin.layer1Material.color.setRGB(1.0, 1.0, 1.0);
+        if (skin.layer1MaterialBiased) skin.layer1MaterialBiased.color.setRGB(1.0, 1.0, 1.0);
+        if (skin.layer2Material) skin.layer2Material.color.setRGB(1.0, 1.0, 1.0);
+        if (skin.layer2MaterialBiased) skin.layer2MaterialBiased.color.setRGB(1.0, 1.0, 1.0);
+      }
     };
 
     const renderLoop = () => {
@@ -119,28 +221,135 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         return;
       }
 
-      const player = viewer.playerObject;
+      const dt = Math.min(clock.getDelta(), 0.05);
+      totalTime += dt;
 
-      if (!isDragging.current) {
-        if (Math.abs(angularVelocity.current) > 0.0002) {
-          player.rotation.y += angularVelocity.current;
-          angularVelocity.current *= 0.92;
+      if (state === "falling") {
+        vy -= 95 * dt;
+        charX += vx * dt;
+        charY += vy * dt;
+        vx *= Math.pow(0.92, dt * 60);
+        curRotationZ *= Math.pow(0.90, dt * 60);
+
+        if (charX < screenMinX) {
+          charX = screenMinX;
+          vx = Math.abs(vx) * 0.6;
+        } else if (charX > screenMaxX) {
+          charX = screenMaxX;
+          vx = -Math.abs(vx) * 0.6;
+        }
+
+        const groundY = getGroundY(charX, charY);
+        if (charY <= groundY) {
+          charY = groundY;
+          vy = 0;
+          vx = 0;
+          curRotationZ = 0;
+          state = "idle";
+          idleTimer = 2.5 + Math.random() * 3.0;
+        }
+      } else if (state === "walking") {
+        const dist = walkTargetX - charX;
+        if (Math.abs(dist) < 0.8) {
+          charX = walkTargetX;
+          state = "idle";
+          idleTimer = 3.0 + Math.random() * 4.0;
         } else {
-          angularVelocity.current = 0;
+          const dir = Math.sign(dist);
+          charX += dir * 16 * dt;
+          targetRotationY = dir > 0 ? 1.4 : -1.4;
+
+          const groundY = getGroundY(charX, charY);
+          if (charY > groundY + 1.0) {
+            state = "falling";
+            vy = 0;
+          }
+        }
+      } else if (state === "idle") {
+        idleTimer -= dt;
+        if (idleTimer <= 0) {
+          const isDock = charY >= dockTopY - 2;
+          const minP = isDock ? dockMinX + 5 : screenMinX + 10;
+          const maxP = isDock ? dockMaxX - 5 : screenMaxX - 10;
+          walkTargetX = minP + Math.random() * (maxP - minP);
+          state = "walking";
+          walkTime = 0;
         }
       }
 
-      curHeadYaw.current += (targetHeadYaw.current - curHeadYaw.current) * 0.08;
-      curHeadPitch.current += (targetHeadPitch.current - curHeadPitch.current) * 0.08;
+      const player = viewer.playerObject;
+      const skin = player.skin as any;
+      const cape = player.cape;
 
-      if (player.skin?.head) {
-        player.skin.head.rotation.y = curHeadYaw.current;
-        player.skin.head.rotation.x = curHeadPitch.current;
+      if (skin) {
+        if (state === "idle") {
+          const t = totalTime * 2.2;
+          const breath = Math.sin(t) * 0.03;
+          skin.leftArm.rotation.x = breath;
+          skin.leftArm.rotation.z = 0.06 + breath * 0.5;
+          skin.rightArm.rotation.x = -breath;
+          skin.rightArm.rotation.z = -0.06 - breath * 0.5;
+          skin.leftLeg.rotation.set(0, 0, 0);
+          skin.rightLeg.rotation.set(0, 0, 0);
+          if (cape) cape.rotation.x = 0.16 + Math.sin(t) * 0.03;
+        } else if (state === "walking") {
+          walkTime += dt;
+          const t = walkTime * 8.0;
+          skin.leftLeg.rotation.x = Math.sin(t) * 0.65;
+          skin.rightLeg.rotation.x = -Math.sin(t) * 0.65;
+          skin.leftArm.rotation.x = -Math.sin(t) * 0.65;
+          skin.leftArm.rotation.z = 0.08;
+          skin.rightArm.rotation.x = Math.sin(t) * 0.65;
+          skin.rightArm.rotation.z = -0.08;
+          if (cape) cape.rotation.x = 0.38 + Math.abs(Math.sin(t)) * 0.15;
+        } else if (state === "dragged") {
+          skin.leftArm.rotation.z = 2.2 + Math.sin(totalTime * 6) * 0.1;
+          skin.rightArm.rotation.z = -2.2 - Math.sin(totalTime * 6) * 0.1;
+          skin.leftArm.rotation.x = 0.2;
+          skin.rightArm.rotation.x = 0.2;
+          skin.leftLeg.rotation.x = Math.sin(totalTime * 5) * 0.3;
+          skin.rightLeg.rotation.x = -Math.sin(totalTime * 5) * 0.3;
+          if (cape) cape.rotation.x = 0.6;
+        } else if (state === "falling") {
+          skin.leftArm.rotation.x = 2.0 + Math.sin(totalTime * 10) * 0.3;
+          skin.rightArm.rotation.x = 2.0 - Math.sin(totalTime * 10) * 0.3;
+          skin.leftArm.rotation.z = 0.8;
+          skin.rightArm.rotation.z = -0.8;
+          skin.leftLeg.rotation.x = -0.4 + Math.sin(totalTime * 8) * 0.3;
+          skin.rightLeg.rotation.x = 0.4 - Math.sin(totalTime * 8) * 0.3;
+          if (cape) cape.rotation.x = 0.7 + Math.sin(totalTime * 10) * 0.2;
+        }
+
+        if (state === "idle" || state === "walking") {
+          curHeadYaw += (targetHeadYaw - curHeadYaw) * 0.08;
+          curHeadPitch += (targetHeadPitch - curHeadPitch) * 0.08;
+          if (skin.head) {
+            skin.head.rotation.y = curHeadYaw;
+            skin.head.rotation.x = curHeadPitch;
+          }
+        } else if (skin.head) {
+          skin.head.rotation.set(0, 0, 0);
+        }
       }
 
-      const dt = clock.getDelta();
-      if (viewer.animation && !viewer.animation.paused) {
-        viewer.animation.update(player, dt);
+      curRotationY += (targetRotationY - curRotationY) * 0.1;
+      player.rotation.y = curRotationY;
+      player.rotation.z = curRotationZ;
+
+      player.position.set(charX, charY, 0);
+
+      const groundY = getGroundY(charX, charY);
+      shadow.position.set(charX, groundY - 15.9, 0);
+      const heightAboveGround = Math.max(0, charY - groundY);
+      const shadowScale = Math.max(0.5, 1.0 - heightAboveGround * 0.025);
+      shadow.scale.set(shadowScale, shadowScale, 1.0);
+      (shadow.material as THREE.MeshBasicMaterial).opacity = Math.max(0.12, 0.85 - heightAboveGround * 0.035);
+
+      if (flashTimer > 0) {
+        flashTimer -= dt;
+        if (flashTimer <= 0) {
+          resetSkinColor();
+        }
       }
 
       (viewer as any).render();
@@ -152,91 +361,107 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
 
     const onPointerDown = (e: PointerEvent) => {
       if (!visibleRef.current) return;
-      isDragging.current = true;
-      dragStartX.current = e.clientX;
-      dragStartTime.current = performance.now();
-      lastX.current = e.clientX;
-      lastTime.current = performance.now();
-      angularVelocity.current = 0;
-      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    };
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest("button, a, input, select, .hud-container, .dock-container, .modal, [role='dialog']")) {
+        return;
+      }
 
-    const onPointerMove = (e: PointerEvent) => {
-      if (!isDragging.current) return;
-      const deltaX = e.clientX - lastX.current;
-      const now = performance.now();
-      const dt = Math.max(1, now - lastTime.current);
+      screenPointToWorld(e.clientX, e.clientY, viewer.camera, raycasterRef.current, planeRef.current, tempVec);
 
-      viewer.playerObject.rotation.y += deltaX * 0.012;
-      angularVelocity.current = (deltaX / dt) * 0.16;
+      const dx = Math.abs(tempVec.x - charX);
+      const dy = Math.abs(tempVec.y - (charY + 1.0));
 
-      lastX.current = e.clientX;
-      lastTime.current = now;
-    };
+      if (dx <= 7.0 && dy <= 16.5) {
+        e.preventDefault();
+        e.stopPropagation();
 
-    const onPointerUp = (e: PointerEvent) => {
-      if (!isDragging.current) return;
-      isDragging.current = false;
-      try {
-        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-      } catch {}
+        isDragging = true;
+        dragStartX = tempVec.x;
+        dragStartTime = performance.now();
+        grabOffsetX = charX - tempVec.x;
+        grabOffsetY = charY - tempVec.y;
+        lastDragWorldX = tempVec.x;
+        lastDragWorldY = tempVec.y;
+        lastDragTime = performance.now();
+        dragVelocityX = 0;
+        dragVelocityY = 0;
 
-      const elapsed = performance.now() - dragStartTime.current;
-      const dist = Math.abs(e.clientX - dragStartX.current);
-
-      if (dist < 6 && elapsed < 280) {
-        if (animTimeoutRef.current) {
-          window.clearTimeout(animTimeoutRef.current);
-        }
-        viewer.animation = new WaveAnimation();
-        animTimeoutRef.current = window.setTimeout(() => {
-          if (!disposed && viewerRef.current) {
-            viewerRef.current.animation = new CleanIdleAnimation();
-          }
-        }, 1300);
+        state = "dragged";
+        document.body.style.cursor = "grabbing";
       }
     };
 
-    const onDoubleClick = () => {
-      angularVelocity.current = 0;
-      viewer.playerObject.rotation.y = 0.28;
+    const onPointerMove = (e: PointerEvent) => {
+      if (!visibleRef.current) return;
+
+      screenPointToWorld(e.clientX, e.clientY, viewer.camera, raycasterRef.current, planeRef.current, tempVec);
+
+      if (isDragging) {
+        const now = performance.now();
+        const dt = Math.max(1, now - lastDragTime);
+
+        dragVelocityX = ((tempVec.x - lastDragWorldX) / dt) * 1000;
+        dragVelocityY = ((tempVec.y - lastDragWorldY) / dt) * 1000;
+
+        lastDragWorldX = tempVec.x;
+        lastDragWorldY = tempVec.y;
+        lastDragTime = now;
+
+        charX = tempVec.x + grabOffsetX;
+        charY = tempVec.y + grabOffsetY;
+        document.body.style.cursor = "grabbing";
+        return;
+      }
+
+      const dx = Math.abs(tempVec.x - charX);
+      const dy = Math.abs(tempVec.y - (charY + 1.0));
+
+      if (dx <= 7.0 && dy <= 16.5) {
+        document.body.style.cursor = "grab";
+      } else if (document.body.style.cursor === "grab") {
+        document.body.style.cursor = "";
+      }
+
+      const lookDx = (tempVec.x - charX) / 40;
+      const lookDy = (tempVec.y - (charY + 14)) / 30;
+      targetHeadYaw = Math.max(-0.45, Math.min(0.45, lookDx));
+      targetHeadPitch = Math.max(-0.35, Math.min(0.35, -lookDy));
     };
 
-    const viewportEl = container;
-    viewportEl.addEventListener("pointerdown", onPointerDown);
-    viewportEl.addEventListener("pointermove", onPointerMove);
-    viewportEl.addEventListener("pointerup", onPointerUp);
-    viewportEl.addEventListener("pointercancel", onPointerUp);
-    viewportEl.addEventListener("dblclick", onDoubleClick);
+    const onPointerUp = (e: PointerEvent) => {
+      if (!isDragging) return;
+      isDragging = false;
+      document.body.style.cursor = "";
 
-    const onWindowPointerMove = (e: PointerEvent) => {
-      if (!visibleRef.current || isDragging.current) return;
-      const rect = container.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height * 0.35;
+      screenPointToWorld(e.clientX, e.clientY, viewer.camera, raycasterRef.current, planeRef.current, tempVec);
 
-      const dx = (e.clientX - centerX) / (window.innerWidth * 0.45);
-      const dy = (e.clientY - centerY) / (window.innerHeight * 0.45);
+      const elapsed = performance.now() - dragStartTime;
+      const dist = Math.abs(tempVec.x - dragStartX);
 
-      targetHeadYaw.current = Math.max(-0.45, Math.min(0.45, dx));
-      targetHeadPitch.current = Math.max(-0.35, Math.min(0.35, -dy));
+      if (dist < 4.0 && elapsed < 280) {
+        triggerDamageFlash();
+        const dir = tempVec.x < charX ? 1 : -1;
+        vx = dir * (34 + Math.random() * 10);
+        vy = 26 + Math.random() * 8;
+        curRotationZ = -dir * 0.35;
+        state = "falling";
+      } else {
+        vx = Math.max(-60, Math.min(60, dragVelocityX * 0.75));
+        vy = Math.max(-30, Math.min(60, dragVelocityY * 0.75));
+        state = "falling";
+      }
     };
 
-    const onMouseLeave = () => {
-      targetHeadYaw.current = 0;
-      targetHeadPitch.current = 0;
-    };
+    window.addEventListener("pointerdown", onPointerDown, { capture: true });
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("pointerup", onPointerUp);
 
-    window.addEventListener("pointermove", onWindowPointerMove, { passive: true });
-    document.addEventListener("mouseleave", onMouseLeave);
-
+    let resizeTimer: number | null = null;
     const onResize = () => {
-      if (!container || !viewerRef.current) return;
-      const w = container.clientWidth || 460;
-      const h = container.clientHeight || 560;
-      viewerRef.current.setSize(w, h);
-      viewerRef.current.camera.aspect = w / h;
-      viewerRef.current.camera.updateProjectionMatrix();
+      if (resizeTimer !== null) window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        updateMetrics();
+      }, 100);
     };
 
     window.addEventListener("resize", onResize);
@@ -244,17 +469,14 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
     return () => {
       disposed = true;
       if (animId !== null) cancelAnimationFrame(animId);
-      if (animTimeoutRef.current) window.clearTimeout(animTimeoutRef.current);
+      if (resizeTimer !== null) window.clearTimeout(resizeTimer);
 
-      viewportEl.removeEventListener("pointerdown", onPointerDown);
-      viewportEl.removeEventListener("pointermove", onPointerMove);
-      viewportEl.removeEventListener("pointerup", onPointerUp);
-      viewportEl.removeEventListener("pointercancel", onPointerUp);
-      viewportEl.removeEventListener("dblclick", onDoubleClick);
-
-      window.removeEventListener("pointermove", onWindowPointerMove);
-      document.removeEventListener("mouseleave", onMouseLeave);
+      window.removeEventListener("pointerdown", onPointerDown, { capture: true });
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("resize", onResize);
+
+      document.body.style.cursor = "";
 
       const existingShadow = viewer.scene.getObjectByName("contact_shadow");
       if (existingShadow) {
@@ -348,7 +570,7 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
 
   return (
     <div className={`layer-stage ${!visible ? "hidden" : ""}`}>
-      <div className="stage-character-viewport" ref={containerRef}>
+      <div className="stage-viewport-container">
         <canvas ref={canvasRef} style={{ outline: "none" }} />
       </div>
     </div>
