@@ -96,7 +96,25 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
   const [isAddingOffline, setIsAddingOffline] = useState(false);
   const [offlineInput, setOfflineInput] = useState("");
   const [offlineError, setOfflineError] = useState<string | null>(null);
+  const [characterBoostInfo, setCharacterBoostInfo] = useState<{ isBoosted: boolean; remaining: number }>({
+    isBoosted: false,
+    remaining: 0,
+  });
   const dropdownRefTop = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onBoostState = (e: any) => {
+      const detail = e.detail;
+      if (detail) {
+        setCharacterBoostInfo({
+          isBoosted: !!detail.isBoosted,
+          remaining: Math.ceil(detail.remaining || 0),
+        });
+      }
+    };
+    window.addEventListener("omega:character_boost_state", onBoostState);
+    return () => window.removeEventListener("omega:character_boost_state", onBoostState);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -629,6 +647,29 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
                       : "Disable character")}
               </div>
             </button>
+            {!disable3DCharacter && (
+              <button
+                type="button"
+                className={`hud-flank-btn hud-character-boost-btn ${characterBoostInfo.isBoosted ? "boosted" : ""}`}
+                onClick={() => window.dispatchEvent(new CustomEvent("omega:trigger_character_boost"))}
+                title={
+                  characterBoostInfo.isBoosted
+                    ? (lang === "uk" ? `System Boost активний (${characterBoostInfo.remaining}с)` : lang === "ru" ? `System Boost активен (${characterBoostInfo.remaining}с)` : `System Boost active (${characterBoostInfo.remaining}s)`)
+                    : (lang === "uk" ? "System Boost персонажа (очищення ОЗУ та спринт)" : lang === "ru" ? "System Boost персонажа (очистка ОЗУ и спринт)" : "Character System Boost (RAM cleanup & sprint)")
+                }
+                aria-label="System Boost"
+              >
+                <Zap size={16} />
+                <div
+                  className="hud-dock-tooltip"
+                  style={{ right: 0, left: "auto", transform: "none", top: "calc(100% + 9px)" }}
+                >
+                  {characterBoostInfo.isBoosted
+                    ? (lang === "uk" ? `Буст: ${characterBoostInfo.remaining}с` : lang === "ru" ? `Буст: ${characterBoostInfo.remaining}с` : `Boost: ${characterBoostInfo.remaining}s`)
+                    : "System Boost"}
+                </div>
+              </button>
+            )}
             <button
               type="button"
               className={`hud-flank-btn ${soundMuted ? "muted" : ""}`}

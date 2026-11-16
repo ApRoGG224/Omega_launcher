@@ -1088,6 +1088,7 @@ export const App: React.FC = () => {
           skinUrl={activeSkinUrl}
           capeUrl={activeCapeUrl}
           model={skinModel}
+          soundMuted={soundMuted}
         />
       )}
 
