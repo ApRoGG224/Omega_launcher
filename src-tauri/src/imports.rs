@@ -22,17 +22,7 @@ pub struct ImportSummary {
 fn read_zip_entry(zip_path: &Path, wanted: &str) -> Option<String> {
     let file = std::fs::File::open(zip_path).ok()?;
     let mut archive = zip::ZipArchive::new(file).ok()?;
-    for i in 0..archive.len() {
-        let mut entry = archive.by_index(i).ok()?;
-        let name = entry.name().to_string();
-        if name == wanted || name.ends_with(&format!("/{wanted}")) {
-            let mut buf = String::new();
-            use std::io::Read;
-            entry.read_to_string(&mut buf).ok()?;
-            return Some(buf);
-        }
-    }
-    None
+    read_zip_text(&mut archive, wanted)
 }
 
 fn read_zip_text<R: std::io::Read + std::io::Seek>(
@@ -47,12 +37,11 @@ fn read_zip_text<R: std::io::Read + std::io::Seek>(
             return Some(buf);
         }
     }
-    // 2. Scan if nested inside folder e.g. "my_pack/mmc-pack.json"
+    // 2. Scan if nested inside folder e.g. "my_pack/mmc-pack.json" without per-entry string allocation
     let suffix = format!("/{wanted}");
     for i in 0..archive.len() {
         if let Ok(mut entry) = archive.by_index(i) {
-            let name = entry.name().to_string();
-            if name == wanted || name.ends_with(&suffix) {
+            if entry.name().ends_with(&suffix) {
                 let mut buf = String::new();
                 if entry.read_to_string(&mut buf).is_ok() {
                     return Some(buf);

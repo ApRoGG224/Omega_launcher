@@ -1,4 +1,4 @@
-use std::collections::{HashSet, VecDeque};
+use std::collections::HashSet;
 use std::path::Path;
 
 use tauri::AppHandle;
@@ -49,40 +49,85 @@ async fn download_dependency_tree(
     loader: &str,
     mods_dir: &Path,
 ) -> Result<(), String> {
+    use futures_util::future::join_all;
+    use futures_util::stream::{self, StreamExt, TryStreamExt};
+
     let mut downloaded: HashSet<String> = std::iter::once(root_project.to_string()).collect();
-    let mut queue: VecDeque<ModrinthDependency> = root_deps.to_vec().into();
-    while let Some(dep) = queue.pop_front() {
-        let Some(project_id) = dep.project_id.clone() else { continue };
-        if dep.dependency_type.as_deref() != Some("required") || downloaded.contains(&project_id) {
-            continue;
+    let mut current_wave: Vec<ModrinthDependency> = root_deps.to_vec();
+
+    while !current_wave.is_empty() {
+        // 1. Filter out dependencies that are not required or already handled
+        let mut wave_projects: Vec<String> = Vec::new();
+        for dep in current_wave.drain(..) {
+            let Some(project_id) = dep.project_id else { continue };
+            if dep.dependency_type.as_deref() != Some("required") || downloaded.contains(&project_id) {
+                continue;
+            }
+            downloaded.insert(project_id.clone());
+            wave_projects.push(project_id);
         }
-        downloaded.insert(project_id.clone());
-        let versions = match fetch_versions(client, &project_id).await {
-            Ok(v) => v,
-            Err(_) => continue,
-        };
-        let Some(valid) = versions
-            .iter()
-            .find(|v| v.game_versions.contains(&mc_version.into()) && v.loaders.contains(&loader.into()))
-        else {
-            emit_line(
-                app,
-                &format!("[DOWNLOADER] Skipping dependency {project_id}: no compatible version found"),
-            );
-            continue;
-        };
-        let Some(file) = pick_file(valid) else { continue };
-        let dest = mods_dir.join(&file.filename);
-        if !dest.exists() {
-            emit_line(
-                app,
-                &format!("[DOWNLOADER] Downloading required dependency {project_id} -> {}", file.filename),
-            );
-            download_file(app, client, &file.url, &dest).await?;
+
+        if wave_projects.is_empty() {
+            break;
         }
-        for nested in &valid.dependencies {
-            queue.push_back(nested.clone());
+
+        // 2. Fetch version manifests in parallel
+        let fetch_futures = wave_projects.iter().map(|pid| {
+            let pid = pid.clone();
+            async move {
+                let res = fetch_versions(client, &pid).await;
+                (pid, res)
+            }
+        });
+        let fetched = join_all(fetch_futures).await;
+
+        let mut to_download: Vec<(String, String, std::path::PathBuf)> = Vec::new();
+        let mut next_wave: Vec<ModrinthDependency> = Vec::new();
+
+        for (pid, versions_res) in fetched {
+            let versions = match versions_res {
+                Ok(v) => v,
+                Err(_) => continue,
+            };
+            let Some(valid) = versions
+                .iter()
+                .find(|v| v.game_versions.contains(&mc_version.into()) && v.loaders.contains(&loader.into()))
+            else {
+                emit_line(
+                    app,
+                    &format!("[DOWNLOADER] Skipping dependency {pid}: no compatible version found"),
+                );
+                continue;
+            };
+            let Some(file) = pick_file(valid) else { continue };
+            let dest = mods_dir.join(&file.filename);
+            if !dest.exists() {
+                to_download.push((pid, file.url.clone(), dest));
+            }
+            for nested in &valid.dependencies {
+                next_wave.push(nested.clone());
+            }
         }
+
+        // 3. Download all files in this wave concurrently (up to 8 in parallel)
+        if !to_download.is_empty() {
+            let download_stream = stream::iter(to_download.into_iter().map(|(pid, url, dest)| {
+                let app = app.clone();
+                let client = client.clone();
+                async move {
+                    let filename = dest.file_name().and_then(|n| n.to_str()).unwrap_or("file");
+                    emit_line(
+                        &app,
+                        &format!("[DOWNLOADER] Downloading required dependency {pid} -> {filename}"),
+                    );
+                    download_file(&app, &client, &url, &dest).await
+                }
+            })).buffer_unordered(8);
+
+            download_stream.try_collect::<Vec<()>>().await?;
+        }
+
+        current_wave = next_wave;
     }
     Ok(())
 }

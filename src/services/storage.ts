@@ -1,13 +1,18 @@
 import type { Account, ModpackInstance, Point, WindowSize, VersionFilterState } from "../types";
 
-const INSTANCES_KEY = "desktopInstances";
-const ACCOUNTS_KEY = "savedNicknames";
+const INSTANCES_KEY = "omega_instances";
+const ACCOUNTS_KEY = "omega_accounts";
+const LEGACY_INSTANCES_KEY = "desktopInstances";
+const LEGACY_ACCOUNTS_KEY = "savedNicknames";
 const LANGUAGE_KEY = "launcherLang";
 export const EXPORT_PATH_KEY = "exportPath";
 const THEME_KEY = "omegaTheme";
 
 export function loadInstances(): ModpackInstance[] {
-  const saved = localStorage.getItem(INSTANCES_KEY);
+  let saved = localStorage.getItem(INSTANCES_KEY);
+  if (!saved) {
+    saved = localStorage.getItem(LEGACY_INSTANCES_KEY);
+  }
   if (!saved) return [];
   try {
     const parsed = JSON.parse(saved);
@@ -19,14 +24,19 @@ export function loadInstances(): ModpackInstance[] {
 
 export function persistInstances(instances: ModpackInstance[]) {
   try {
-    localStorage.setItem(INSTANCES_KEY, JSON.stringify(instances));
+    const serialized = JSON.stringify(instances);
+    localStorage.setItem(INSTANCES_KEY, serialized);
+    localStorage.setItem(LEGACY_INSTANCES_KEY, serialized);
   } catch (e) {
-    console.error("Failed to persist desktopInstances", e);
+    console.error("Failed to persist omega_instances", e);
   }
 }
 
 export function loadAccounts(): Account[] {
-  const saved = localStorage.getItem(ACCOUNTS_KEY);
+  let saved = localStorage.getItem(ACCOUNTS_KEY);
+  if (!saved) {
+    saved = localStorage.getItem(LEGACY_ACCOUNTS_KEY);
+  }
   if (!saved) return [];
   try {
     const parsed = JSON.parse(saved);
@@ -40,16 +50,18 @@ export function loadAccounts(): Account[] {
       .filter((a): a is Account => a !== null);
     return accounts;
   } catch (e) {
-    console.error("Failed to parse savedNicknames, data might be corrupted", e);
+    console.error("Failed to parse omega_accounts, data might be corrupted", e);
     return [];
   }
 }
 
 export function persistAccounts(accounts: Account[]) {
   try {
-    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+    const serialized = JSON.stringify(accounts);
+    localStorage.setItem(ACCOUNTS_KEY, serialized);
+    localStorage.setItem(LEGACY_ACCOUNTS_KEY, serialized);
   } catch (e) {
-    console.error("Failed to persist savedNicknames", e);
+    console.error("Failed to persist omega_accounts", e);
   }
 }
 

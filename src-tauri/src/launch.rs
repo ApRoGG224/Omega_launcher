@@ -373,22 +373,55 @@ async fn ensure_assets(
     if total == 0 {
         return Ok(());
     }
-    let mut done = 0usize;
+
+    // 1. Filter out assets that are already cached on disk
+    let mut to_download: Vec<(String, PathBuf)> = Vec::new();
+    let mut already_cached = 0usize;
+
     for (_, obj) in objects {
         let Some(hash) = obj.get("hash").and_then(|h| h.as_str()) else { continue };
         let rel_path = format!("objects/{}/{hash}", &hash[..2]);
         let dest = root.join("assets").join(&rel_path);
         if dest.exists() {
-            done += 1;
-            continue;
-        }
-        let url = format!("https://resources.download.minecraft.net/{}/{hash}", &hash[..2]);
-        download_file(app, client, &url, &dest).await?;
-        done += 1;
-        if done % 200 == 0 {
-            emit_line(app, &format!("[launcher/INFO] Assets downloaded: {done}/{total}"));
+            already_cached += 1;
+        } else {
+            let url = format!("https://resources.download.minecraft.net/{}/{hash}", &hash[..2]);
+            to_download.push((url, dest));
         }
     }
+
+    if to_download.is_empty() {
+        emit_line(app, &format!("[launcher/INFO] All {total} assets verified on disk"));
+        return Ok(());
+    }
+
+    let need_count = to_download.len();
+    emit_line(app, &format!("[launcher/INFO] Downloading {need_count} missing assets in parallel (pool size: 24, cached: {already_cached}/{total})..."));
+
+    // 2. High-throughput concurrent downloads using Tokio stream buffer_unordered
+    use futures_util::stream::{self, StreamExt, TryStreamExt};
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
+
+    const ASSET_CONCURRENCY: usize = 24;
+    let completed = Arc::new(AtomicUsize::new(0));
+
+    let stream = stream::iter(to_download.into_iter().map(|(url, dest)| {
+        let app = app.clone();
+        let client = client.clone();
+        let completed = completed.clone();
+        async move {
+            download_file(&app, &client, &url, &dest).await?;
+            let done = completed.fetch_add(1, Ordering::Relaxed) + 1;
+            if done % 200 == 0 || done == need_count {
+                emit_line(&app, &format!("[launcher/INFO] Assets downloaded: {done}/{need_count}"));
+            }
+            Ok::<(), String>(())
+        }
+    })).buffer_unordered(ASSET_CONCURRENCY);
+
+    stream.try_collect::<Vec<()>>().await?;
+    emit_line(app, &format!("[launcher/INFO] Completed downloading {need_count} assets"));
     Ok(())
 }
 

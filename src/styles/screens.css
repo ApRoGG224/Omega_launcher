@@ -698,7 +698,8 @@
   flex-shrink: 0;
 }
 
-.catalog-screen-overlay .ds {
+.catalog-screen-overlay .ds,
+.catalog-screen-overlay .catalog-card-desc {
   color: #b4b9c2;
   font-size: 12px;
   line-height: 1.45;
@@ -777,7 +778,8 @@
   background: #d8a47f;
 }
 
-.catalog-screen-overlay .b {
+.catalog-screen-overlay .b,
+.catalog-screen-overlay .catalog-action-btn {
   height: 32px;
   padding: 0 13px;
   border-radius: 9px;
@@ -1053,7 +1055,8 @@
   width: 220px;
 }
 
-.store-screen-overlay .b {
+.store-screen-overlay .b,
+.store-screen-overlay .store-action-btn {
   height: 34px;
   padding: 0 14px;
   border-radius: 10px;
@@ -1132,7 +1135,8 @@
   text-align: center;
 }
 
-.store-screen-overlay .pv {
+.store-screen-overlay .pv,
+.store-screen-overlay .store-preview-box {
   display: grid;
   place-items: center;
   width: 84px;
@@ -1142,7 +1146,8 @@
   border: 1px solid var(--line);
 }
 
-.store-screen-overlay .pv svg {
+.store-screen-overlay .pv svg,
+.store-screen-overlay .store-preview-box svg {
   height: 96px;
   width: 48px;
 }
@@ -1154,7 +1159,8 @@
   border: 1px solid var(--line2);
 }
 
-.store-screen-overlay .nm {
+.store-screen-overlay .nm,
+.store-screen-overlay .store-item-name {
   font-weight: 700;
   font-size: 14.5px;
   color: var(--tx);
@@ -1165,7 +1171,8 @@
   font-size: 12px;
 }
 
-.store-screen-overlay .ds {
+.store-screen-overlay .ds,
+.store-screen-overlay .store-item-desc {
   color: #b4b9c2;
   font-size: 12.5px;
   line-height: 1.45;
@@ -2135,7 +2142,8 @@
   letter-spacing: -0.01em;
 }
 
-.friends-screen-overlay .b {
+.friends-screen-overlay .b,
+.friends-screen-overlay .friends-action-btn {
   height: 38px;
   padding: 0 16px;
   border-radius: 11px;
@@ -2282,7 +2290,8 @@
   border-radius: 14px;
 }
 
-.friends-screen-overlay .code .b {
+.friends-screen-overlay .code .b,
+.friends-screen-overlay .code .friends-action-btn {
   height: 32px;
   padding: 0 13px;
   font-size: 12px;
