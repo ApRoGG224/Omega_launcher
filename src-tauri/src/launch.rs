@@ -473,11 +473,55 @@ pub async fn launch_minecraft(
 
     let java_path = crate::java::ensure_java(&app, &vanilla_version, &data_dir)?;
 
+    let mut loader_type = if version.contains('-') {
+        version.split('-').nth(1).unwrap_or("").to_lowercase()
+    } else {
+        String::new()
+    };
+
+    if loader_type.is_empty() {
+        // 1. Query omega.db for instance loader
+        let conn_res = rusqlite::Connection::open(data_dir.join("omega.db"));
+        if let Ok(conn) = conn_res {
+            let row: Result<String, _> = conn.query_row(
+                "SELECT loader FROM instances WHERE id = ?1",
+                [&instance_id],
+                |r| r.get(0),
+            );
+            if let Ok(l) = row {
+                let l_lower = l.to_lowercase();
+                if l_lower != "vanilla" && !l_lower.is_empty() {
+                    loader_type = l_lower;
+                }
+            }
+        }
+    }
+
+    if loader_type.is_empty() {
+        // 2. Check if instance mods folder contains fabric / forge / neoforge mods
+        let mods_dir = data_dir.join("instances").join(&instance_id).join("minecraft").join("mods");
+        if let Ok(entries) = std::fs::read_dir(&mods_dir) {
+            for entry in entries.flatten() {
+                let name = entry.file_name().to_string_lossy().to_lowercase();
+                if name.contains("fabric") {
+                    loader_type = "fabric".to_string();
+                    break;
+                } else if name.contains("neoforge") {
+                    loader_type = "neoforge".to_string();
+                    break;
+                } else if name.contains("forge") {
+                    loader_type = "forge".to_string();
+                    break;
+                }
+            }
+        }
+    }
+
     let mut final_version = vanilla_version.clone();
     let client = reqwest::Client::new();
-    if version.contains('-') {
-        let loader = version.split('-').nth(1).unwrap_or("").to_string();
-        final_version = crate::installer::install_loader(&app, &vanilla_version, &loader, &data_dir, &java_path).await?;
+    if !loader_type.is_empty() && loader_type != "vanilla" {
+        emit_line(&app, &format!("[launcher/INFO] Installing/verifying modloader '{loader_type}' for Minecraft {vanilla_version}..."));
+        final_version = crate::installer::install_loader(&app, &vanilla_version, &loader_type, &data_dir, &java_path).await?;
     } else {
         crate::installer::prepare_vanilla_root(&app, &vanilla_version, &data_dir).await?;
     }
@@ -489,11 +533,21 @@ pub async fn launch_minecraft(
         .join(&final_version)
         .join(format!("{final_version}-natives-{}", if cfg!(target_os = "windows") { "windows" } else if cfg!(target_os = "macos") { "osx" } else { "linux" }));
     let assets_root = data_dir.join("assets");
-    let client_jar = data_dir.join("versions").join(&final_version).join(format!("{final_version}.jar"));
 
     let profile_path = data_dir.join("versions").join(&final_version).join(format!("{final_version}.json"));
     let profile_text = std::fs::read_to_string(&profile_path).map_err(|e| format!("Version {final_version} is not installed: {e}"))?;
     let profile: Value = serde_json::from_str(&profile_text).map_err(|e| e.to_string())?;
+
+    let client_jar = if let Some(parent) = profile.get("inheritsFrom").and_then(|i| i.as_str()) {
+        let parent_jar = data_dir.join("versions").join(parent).join(format!("{parent}.jar"));
+        if parent_jar.exists() {
+            parent_jar
+        } else {
+            data_dir.join("versions").join(&final_version).join(format!("{final_version}.jar"))
+        }
+    } else {
+        data_dir.join("versions").join(&final_version).join(format!("{final_version}.jar"))
+    };
 
     let mut asset_index_url = profile
         .get("assetIndex")

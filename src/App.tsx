@@ -682,14 +682,20 @@ export const App: React.FC = () => {
       : "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions";
     const ramToUse = selectedInstance.ramGb || settings?.ram || 4;
 
+    const loader = selectedInstance.loader || "Vanilla";
+    const versionToLaunch =
+      loader !== "Vanilla" && !selectedInstance.mcVersion.toLowerCase().includes(loader.toLowerCase())
+        ? `${selectedInstance.mcVersion}-${loader.toLowerCase()}`
+        : selectedInstance.mcVersion;
+
     setIsRunning(true);
     pushLog(
-      `[launcher/INFO] Запуск "${selectedInstance.name}" (Minecraft ${selectedInstance.mcVersion}, ${selectedInstance.loader}) от имени "${activeAccount.name}" [RAM: ${ramToUse}G, JVM: ${customJvmArgs}]...`,
+      `[launcher/INFO] Запуск "${selectedInstance.name}" (Minecraft ${selectedInstance.mcVersion}, ${loader}) от имени "${activeAccount.name}" [RAM: ${ramToUse}G, JVM: ${customJvmArgs}]...`,
       "INFO"
     );
     try {
       await ipc.launchMinecraft({
-        version: selectedInstance.mcVersion,
+        version: versionToLaunch,
         server: "",
         username: activeAccount.name,
         ram: ramToUse,
@@ -818,12 +824,18 @@ export const App: React.FC = () => {
         : "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions";
       const ramToUse = inst.ramGb || settings?.ram || 4;
 
+      const loader = inst.loader || "Vanilla";
+      const versionToLaunch =
+        loader !== "Vanilla" && !inst.mcVersion.toLowerCase().includes(loader.toLowerCase())
+          ? `${inst.mcVersion}-${loader.toLowerCase()}`
+          : inst.mcVersion;
+
       setIsRunning(true);
       setActiveScreen("home");
       pushLog(`[launcher/INFO] Прямое подключение к серверу "${serverName}" (${ip}) [RAM: ${ramToUse}G, JVM: ${customJvmArgs}]...`, "INFO");
       try {
         await ipc.launchMinecraft({
-          version: inst.mcVersion,
+          version: versionToLaunch,
           server: ip,
           username: activeAccount.name,
           ram: ramToUse,
