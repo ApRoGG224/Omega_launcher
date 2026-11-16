@@ -56,6 +56,15 @@ export interface InstanceData {
   ramGb?: number;
 }
 
+export interface ImportSummary {
+  name: string;
+  mcVersion: string;
+  loader: "Fabric" | "Forge" | "NeoForge" | "Quilt" | "Vanilla" | "Rust";
+  icon?: string;
+  modCount: number;
+  description?: string;
+}
+
 export interface AccountData {
   id: string;
   name: string;

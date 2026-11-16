@@ -226,6 +226,20 @@
   border: 1px solid var(--import-line);
 }
 
+.import-dlg .tag-accent {
+  background: rgba(230, 232, 236, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.import-dlg .meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
 .import-dlg .err {
   color: var(--import-red);
   font-size: 12px;

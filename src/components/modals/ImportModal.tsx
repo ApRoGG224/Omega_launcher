@@ -1,8 +1,29 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import type { InstanceData } from "../../types";
+import type { InstanceData, ImportSummary } from "../../types";
+import { InstanceAvatarIcon, type InstanceAvatarVariant } from "../icons/MinecraftIcons";
+import { ipc } from "../../services/ipc";
 import { useLanguage } from "../../context/LanguageContext";
 import "../../styles/import-modal.css";
+
+const LAUNCHER_RANDOM_ICONS: InstanceAvatarVariant[] = [
+  "diamond_sword",
+  "diamond_pickaxe",
+  "obsidian",
+  "end_crystal",
+  "totem_of_undying",
+  "golden_apple",
+  "ender_pearl",
+  "tnt",
+  "netherite_sword",
+];
+
+interface SelectedArchiveInfo {
+  name: string;
+  size: number;
+  path?: string;
+  fileObj?: File;
+}
 
 interface ImportModalProps {
   isOpen: boolean;
@@ -19,8 +40,11 @@ export const ImportModal: React.FC<ImportModalProps> = ({
 }) => {
   const { lang } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<SelectedArchiveInfo | null>(null);
+  const [summary, setSummary] = useState<ImportSummary | null>(null);
+  const [assignedIcon, setAssignedIcon] = useState<string>("diamond_sword");
   const [isOver, setIsOver] = useState(false);
+  const [isInspecting, setIsInspecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [installState, setInstallState] = useState<"idle" | "installing" | "installed">("idle");
   const [progress, setProgress] = useState(0);
@@ -32,7 +56,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({
       timerRef.current = null;
     }
     setSelectedFile(null);
+    setSummary(null);
+    setAssignedIcon("diamond_sword");
     setIsOver(false);
+    setIsInspecting(false);
     setError(null);
     setInstallState("idle");
     setProgress(0);
@@ -73,10 +100,108 @@ export const ImportModal: React.FC<ImportModalProps> = ({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isOpen, installState, handleClose]);
 
-  const processFile = (file?: File) => {
-    setError(null);
-    if (!file) return;
+  // Listen to native Tauri webview file drag-and-drop events
+  useEffect(() => {
+    if (!isOpen) return;
+    let unlisten: (() => void) | undefined;
 
+    import("@tauri-apps/api/webview")
+      .then(({ getCurrentWebview }) => {
+        getCurrentWebview()
+          .onDragDropEvent((event) => {
+            if (event.payload.type === "over") {
+              setIsOver(true);
+            } else if (event.payload.type === "leave") {
+              setIsOver(false);
+            } else if (event.payload.type === "drop") {
+              setIsOver(false);
+              const paths = event.payload.paths;
+              if (paths && paths.length > 0) {
+                handleSelectPath(paths[0]);
+              }
+            }
+          })
+          .then((fn) => {
+            unlisten = fn;
+          })
+          .catch(() => {});
+      })
+      .catch(() => {});
+
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, [isOpen]);
+
+  // Inspect archive metadata and pick/assign icon
+  const inspectArchiveData = async (info: SelectedArchiveInfo) => {
+    setIsInspecting(true);
+    setError(null);
+
+    // Pick a random authentic launcher icon in case archive does not contain one
+    const randomIcon =
+      LAUNCHER_RANDOM_ICONS[Math.floor(Math.random() * LAUNCHER_RANDOM_ICONS.length)];
+
+    try {
+      let parsed: ImportSummary;
+      if (info.path) {
+        parsed = await ipc.inspectArchive(info.path);
+      } else if (info.fileObj) {
+        const buffer = await info.fileObj.arrayBuffer();
+        const bytes = Array.from(new Uint8Array(buffer));
+        parsed = await ipc.inspectArchiveBytes(info.name, bytes);
+      } else {
+        throw new Error("No file or path provided");
+      }
+
+      setSummary(parsed);
+      // If archive has its own icon use it; otherwise use random launcher icon
+      if (parsed.icon && parsed.icon.trim().length > 0) {
+        setAssignedIcon(parsed.icon);
+      } else {
+        setAssignedIcon(randomIcon);
+      }
+    } catch {
+      // In case of inspection fallback, set default values and random icon
+      const nameWithoutExt = info.name.replace(/\.(zip|mrpack)$/i, "");
+      setAssignedIcon(randomIcon);
+      setSummary({
+        name: nameWithoutExt || "Imported Instance",
+        mcVersion: "1.21.4",
+        loader: info.name.toLowerCase().endsWith(".mrpack") ? "Fabric" : "Forge",
+        modCount: 0,
+      });
+    } finally {
+      setIsInspecting(false);
+    }
+  };
+
+  const handleSelectPath = (fullPath: string) => {
+    setError(null);
+    const fileName = fullPath.split(/[\\/]/).pop() || "archive.zip";
+    const extMatch = fileName.match(/\.(zip|mrpack)$/i);
+    if (!extMatch) {
+      setError(
+        lang === "uk"
+          ? "Підходять лише файли .zip та .mrpack"
+          : lang === "ru"
+          ? "Подходят только файлы .zip и .mrpack"
+          : "Only .zip and .mrpack files are supported"
+      );
+      return;
+    }
+
+    const info: SelectedArchiveInfo = {
+      name: fileName,
+      size: 0,
+      path: fullPath,
+    };
+    setSelectedFile(info);
+    inspectArchiveData(info);
+  };
+
+  const handleSelectFileObj = (file: File) => {
+    setError(null);
     const extMatch = file.name.match(/\.(zip|mrpack)$/i);
     if (!extMatch) {
       setError(
@@ -89,14 +214,47 @@ export const ImportModal: React.FC<ImportModalProps> = ({
       return;
     }
 
-    setSelectedFile(file);
-    setInstallState("idle");
-    setProgress(0);
+    const path = (file as unknown as { path?: string }).path;
+    const info: SelectedArchiveInfo = {
+      name: file.name,
+      size: file.size,
+      path: path && path.length > 0 ? path : undefined,
+      fileObj: file,
+    };
+    setSelectedFile(info);
+    inspectArchiveData(info);
+  };
+
+  const handleChooseButtonClick = async () => {
+    if (installState === "installing") return;
+
+    try {
+      const { open } = await import("@tauri-apps/plugin-dialog");
+      const selected = await open({
+        multiple: false,
+        filters: [
+          {
+            name: "Minecraft Archive (.zip, .mrpack)",
+            extensions: ["zip", "mrpack"],
+          },
+        ],
+      });
+
+      if (selected && typeof selected === "string") {
+        handleSelectPath(selected);
+        return;
+      }
+    } catch {
+      // Fallback to standard input click
+      fileInputRef.current?.click();
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    processFile(file);
+    if (file) {
+      handleSelectFileObj(file);
+    }
   };
 
   const handleDragEnter = (e: React.DragEvent) => {
@@ -122,59 +280,118 @@ export const ImportModal: React.FC<ImportModalProps> = ({
     e.stopPropagation();
     setIsOver(false);
     const file = e.dataTransfer.files?.[0];
-    processFile(file);
+    if (file) {
+      handleSelectFileObj(file);
+    }
   };
 
   const handleZoneKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      fileInputRef.current?.click();
+      handleChooseButtonClick();
     }
   };
 
-  const handleInstall = () => {
+  const handleInstall = async () => {
     if (!selectedFile || installState === "installing") return;
 
     setInstallState("installing");
-    setProgress(0);
+    setProgress(5);
 
-    let currentProgress = 0;
-    timerRef.current = setInterval(() => {
-      currentProgress += 8 + Math.random() * 12;
-      if (currentProgress >= 100) {
-        currentProgress = 100;
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
+    const instanceId = "inst_" + Date.now();
+    let unlistenProgress: (() => void) | undefined;
+
+    // Listen to real backend installation progress events
+    try {
+      const { listen } = await import("@tauri-apps/api/event");
+      unlistenProgress = await listen<{ step: string; current: number; total: number }>(
+        "install-progress",
+        (event) => {
+          if (event.payload) {
+            const { step, current, total } = event.payload;
+            if (step === "mods" && total > 0) {
+              const pct = Math.min(92, Math.max(10, Math.round((current / total) * 88)));
+              setProgress(pct);
+            } else if (step === "overrides" || step === "extract") {
+              setProgress(94);
+            } else if (step === "done") {
+              setProgress(100);
+            }
+          }
         }
-        setProgress(100);
-        setInstallState("installed");
+      );
+    } catch {
+      // Fallback local animation timer
+      let p = 10;
+      timerRef.current = setInterval(() => {
+        p += 8 + Math.random() * 10;
+        if (p < 95) setProgress(Math.round(p));
+      }, 150);
+    }
 
-        const nameWithoutExt = selectedFile.name.replace(/\.(zip|mrpack)$/i, "");
-        const isMrpack = selectedFile.name.toLowerCase().endsWith(".mrpack");
-        const newInst: InstanceData = {
-          id: "inst_" + Date.now(),
-          name: nameWithoutExt || (lang === "uk" ? "Імпортована версія" : lang === "ru" ? "Импортированная версия" : "Imported version"),
-          mcVersion: "1.21.4",
-          loader: isMrpack ? "Fabric" : "Forge",
-          playTimeMinutes: 0,
-          modCount: 15,
-          isReady: true,
-          folderId: folderId === "all" ? undefined : folderId,
-        };
+    try {
+      let finalSummary: ImportSummary;
 
-        onImport(newInst);
-
-        setTimeout(() => {
-          handleClose();
-        }, 700);
+      if (selectedFile.path) {
+        finalSummary = await ipc.importArchive(instanceId, selectedFile.path);
+      } else if (selectedFile.fileObj) {
+        const buffer = await selectedFile.fileObj.arrayBuffer();
+        const bytes = Array.from(new Uint8Array(buffer));
+        finalSummary = await ipc.importArchiveBytes(instanceId, selectedFile.name, bytes);
       } else {
-        setProgress(currentProgress);
+        throw new Error("No archive source available");
       }
-    }, 180);
+
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setProgress(100);
+      setInstallState("installed");
+
+      // Use extracted icon or fallback to launcher icon
+      const finalIcon =
+        finalSummary.icon && finalSummary.icon.length > 0
+          ? finalSummary.icon
+          : assignedIcon;
+
+      const nameWithoutExt = selectedFile.name.replace(/\.(zip|mrpack)$/i, "");
+      const newInst: InstanceData = {
+        id: instanceId,
+        name: finalSummary.name || summary?.name || nameWithoutExt || "Imported Instance",
+        mcVersion: finalSummary.mcVersion || summary?.mcVersion || "1.21.4",
+        loader: (finalSummary.loader as InstanceData["loader"]) || summary?.loader || "Fabric",
+        playTimeMinutes: 0,
+        modCount: finalSummary.modCount ?? summary?.modCount ?? 0,
+        isReady: true,
+        folderId: folderId === "all" ? undefined : folderId,
+        icon: finalIcon,
+        description: finalSummary.description || summary?.description,
+      };
+
+      onImport(newInst);
+
+      setTimeout(() => {
+        handleClose();
+      }, 700);
+    } catch (err: unknown) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setInstallState("idle");
+      setProgress(0);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setError(errMsg || "Ошибка распаковки архива");
+    } finally {
+      if (unlistenProgress) {
+        unlistenProgress();
+      }
+    }
   };
 
   const formatSize = (bytes: number): string => {
+    if (!bytes || bytes <= 0) return "";
     const mb = lang === "en" ? " MB" : " МБ";
     const kb = lang === "en" ? " KB" : " КБ";
     if (bytes > 1048576) {
@@ -185,9 +402,11 @@ export const ImportModal: React.FC<ImportModalProps> = ({
 
   if (!isOpen) return null;
 
-  const ext = selectedFile ? (selectedFile.name.match(/\.(zip|mrpack)$/i)?.[1]?.toLowerCase() || "zip") : "zip";
+  const ext = selectedFile
+    ? selectedFile.name.match(/\.(zip|mrpack)$/i)?.[1]?.toLowerCase() || "zip"
+    : "zip";
 
-  const isBusy = installState === "installing";
+  const isBusy = installState === "installing" || isInspecting;
 
   return createPortal(
     <div
@@ -234,7 +453,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                 ? "Выбрать архив или перетащить сюда"
                 : "Choose archive or drag here"
             }
-            onClick={() => fileInputRef.current?.click()}
+            onClick={handleChooseButtonClick}
             onKeyDown={handleZoneKeyDown}
             onDragEnter={handleDragEnter}
             onDragOver={handleDragOver}
@@ -290,23 +509,30 @@ export const ImportModal: React.FC<ImportModalProps> = ({
           </div>
         ) : (
           <div className="file" id="file">
-            <div className="ico">
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#e6e8ec"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8zM14 3v5h5" />
-              </svg>
+            <div className="ico" style={{ overflow: "hidden", display: "grid", placeItems: "center" }}>
+              <InstanceAvatarIcon icon={assignedIcon} size={30} />
             </div>
             <div className="w">
-              <b id="fn">{selectedFile.name}</b>
-              <span id="fs">{formatSize(selectedFile.size)}</span>
+              <b id="fn">{summary?.name || selectedFile.name}</b>
+              <div className="meta-row">
+                {selectedFile.size > 0 && <span>{formatSize(selectedFile.size)}</span>}
+                {summary && (
+                  <>
+                    <span className="tag tag-accent">{summary.mcVersion}</span>
+                    <span className="tag tag-accent">{summary.loader}</span>
+                    {summary.modCount > 0 && (
+                      <span className="tag">
+                        {summary.modCount}{" "}
+                        {lang === "uk"
+                          ? "модів"
+                          : lang === "ru"
+                          ? "модов"
+                          : "mods"}
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
               {installState !== "idle" && (
                 <div className="bar" id="bar">
                   <i id="bi" style={{ width: `${progress}%` }} />
@@ -348,7 +574,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
             type="button"
             className="b"
             id="choose"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={handleChooseButtonClick}
             disabled={isBusy}
           >
             {selectedFile

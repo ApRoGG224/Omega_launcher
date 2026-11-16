@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { ProjectType } from "../types";
+import type { ProjectType, ImportSummary } from "../types";
 
 export interface DownloadModArgs {
   modId: string;
@@ -149,6 +149,43 @@ export const ipc = {
     zipPath: string,
   ): Promise<string> {
     return invoke<string>(`import_${kind}`, { instanceId, zipPath });
+  },
+
+  async inspectArchive(zipPath: string): Promise<ImportSummary> {
+    const raw = await invoke<string>("inspect_archive", { zipPath });
+    return JSON.parse(raw);
+  },
+
+  async inspectArchiveBytes(
+    fileName: string,
+    fileBytes: number[],
+  ): Promise<ImportSummary> {
+    const raw = await invoke<string>("inspect_archive_bytes", {
+      fileName,
+      fileBytes,
+    });
+    return JSON.parse(raw);
+  },
+
+  async importArchive(
+    instanceId: string,
+    zipPath: string,
+  ): Promise<ImportSummary> {
+    const raw = await invoke<string>("import_archive", { instanceId, zipPath });
+    return JSON.parse(raw);
+  },
+
+  async importArchiveBytes(
+    instanceId: string,
+    fileName: string,
+    fileBytes: number[],
+  ): Promise<ImportSummary> {
+    const raw = await invoke<string>("import_archive_bytes", {
+      instanceId,
+      fileName,
+      fileBytes,
+    });
+    return JSON.parse(raw);
   },
 
   async openFolder(instanceId: string): Promise<void> {
