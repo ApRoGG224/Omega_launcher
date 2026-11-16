@@ -105,21 +105,6 @@ export class RoamingCharacterController {
   private risingDuration: number = 0.55;
   private risingPlatform: WorldPlatform | null = null;
 
-  public isBoosted: boolean = false;
-  public boostTimer: number = 0;
-  public boostDuration: number = 20.0;
-  public onBoostChanged?: (isBoosted: boolean, remainingSeconds: number) => void;
-
-  private speedParticlesGroup: THREE.Group | null = null;
-  private speedParticles: THREE.Mesh[] = [];
-  private speedParticleAngles: number[] = [];
-  private speedParticleSpeeds: number[] = [];
-  private speedParticleHeights: number[] = [];
-
-  private sprintPuffGroup: THREE.Group | null = null;
-  private sprintPuffs: { mesh: THREE.Mesh; life: number; maxLife: number; vx: number; vy: number }[] = [];
-  private lastPuffTime: number = 0;
-
   private dizzyStars: THREE.Group | null = null;
 
   private shadowMesh: THREE.Mesh | null = null;
@@ -137,8 +122,6 @@ export class RoamingCharacterController {
     this.player = player;
     this.limbs = limbs;
     this.initDizzyStars();
-    this.initSpeedParticles();
-    this.initSprintPuffs(scene);
     this.initContactShadow(scene);
     this.currentY = this.floorY;
     this.player.position.set(this.currentX, this.currentY, this.currentZ);
@@ -189,186 +172,6 @@ export class RoamingCharacterController {
     group.visible = false;
     skin.head.add(group);
     this.dizzyStars = group;
-  }
-
-  private initSpeedParticles(): void {
-    const group = new THREE.Group();
-    group.name = "characterSpeedParticles";
-
-    // Authentic Minecraft Speed Potion palette: cyan, light blue, emerald, aqua (zero neon)
-    const colors = [0x38bdf8, 0x34d399, 0x47cfeb, 0x5eead4, 0x22c55e, 0x38ef7d];
-    const particleGeo = new THREE.BoxGeometry(0.52, 0.52, 0.52);
-
-    for (let i = 0; i < 14; i++) {
-      const color = colors[i % colors.length];
-      const mat = new THREE.MeshBasicMaterial({
-        color,
-        transparent: true,
-        opacity: 0.85,
-      });
-      const mesh = new THREE.Mesh(particleGeo, mat);
-      const angle = (i * Math.PI * 2) / 14;
-      const height = -12.0 + (i * 26.0) / 14;
-      mesh.position.set(Math.cos(angle) * 4.8, height, Math.sin(angle) * 4.8);
-      group.add(mesh);
-
-      this.speedParticles.push(mesh);
-      this.speedParticleAngles.push(angle);
-      this.speedParticleSpeeds.push(2.5 + (i % 3) * 0.8);
-      this.speedParticleHeights.push(height);
-    }
-
-    group.visible = false;
-    this.player.add(group);
-    this.speedParticlesGroup = group;
-  }
-
-  private initSprintPuffs(scene?: THREE.Scene): void {
-    const targetScene = scene || (this.player.parent as THREE.Scene | null);
-    if (!targetScene) return;
-
-    const group = new THREE.Group();
-    group.name = "characterSprintPuffs";
-
-    const puffGeo = new THREE.BoxGeometry(0.55, 0.55, 0.55);
-    const puffColors = [0x70737f, 0x5a5d66, 0x828694, 0x474950];
-
-    for (let i = 0; i < 8; i++) {
-      const mat = new THREE.MeshBasicMaterial({
-        color: puffColors[i % puffColors.length],
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-      });
-      const mesh = new THREE.Mesh(puffGeo, mat);
-      mesh.visible = false;
-      group.add(mesh);
-
-      this.sprintPuffs.push({
-        mesh,
-        life: 0,
-        maxLife: 0.28,
-        vx: 0,
-        vy: 0,
-      });
-    }
-
-    targetScene.add(group);
-    this.sprintPuffGroup = group;
-  }
-
-  public triggerBoost(duration: number = 20.0): void {
-    this.isBoosted = true;
-    this.boostTimer = duration;
-    this.boostDuration = duration;
-
-    // Instantly revive character if unconscious or waking up
-    if (this.state === "unconscious" || this.state === "waking_up") {
-      this.unconsciousTimer = 0;
-      this.wakeTimer = 0;
-      if (this.dizzyStars) this.dizzyStars.visible = false;
-      this.state = "idle";
-      this.limbs.resetBends();
-    }
-
-    // Energizing leap when on a solid surface
-    if (this.state === "idle" || this.state === "walking") {
-      this.velocityY = 18.0;
-      this.state = "falling";
-      this.fallCycle = 0;
-    }
-
-    if (this.speedParticlesGroup) {
-      this.speedParticlesGroup.visible = true;
-    }
-
-    if (this.onBoostChanged) {
-      this.onBoostChanged(true, this.boostTimer);
-    }
-  }
-
-  public cancelBoost(): void {
-    if (!this.isBoosted) return;
-    this.isBoosted = false;
-    this.boostTimer = 0;
-    if (this.speedParticlesGroup) {
-      this.speedParticlesGroup.visible = false;
-    }
-    const skin = this.player.skin as any;
-    if (skin) {
-      skin.body.rotation.x = 0;
-      skin.head.rotation.x = 0.04;
-    }
-    if (this.onBoostChanged) {
-      this.onBoostChanged(false, 0);
-    }
-  }
-
-  private updateSpeedParticles(dt: number): void {
-    if (!this.speedParticlesGroup || !this.speedParticlesGroup.visible) return;
-
-    for (let i = 0; i < this.speedParticles.length; i++) {
-      const mesh = this.speedParticles[i];
-      this.speedParticleAngles[i] += this.speedParticleSpeeds[i] * dt;
-      this.speedParticleHeights[i] += dt * 16.0;
-
-      if (this.speedParticleHeights[i] > 15.0) {
-        this.speedParticleHeights[i] = -12.0;
-      }
-
-      const angle = this.speedParticleAngles[i];
-      const radius = 4.6 + Math.sin(angle * 2.5) * 0.7;
-      mesh.position.set(
-        Math.cos(angle) * radius,
-        this.speedParticleHeights[i],
-        Math.sin(angle) * radius
-      );
-      mesh.rotation.x += dt * 3.5;
-      mesh.rotation.y += dt * 4.2;
-    }
-  }
-
-  private spawnSprintPuff(): void {
-    if (!this.sprintPuffGroup) return;
-    const puff = this.sprintPuffs.find((p) => p.life <= 0);
-    if (!puff) return;
-
-    const dir = this.rotationY > 0 ? 1 : -1;
-    const surfaceY = this.findPlatformUnder(this.currentX, this.currentY).surfaceY;
-    const feetY = surfaceY - CHAR_FEET_OFFSET + 0.35;
-
-    puff.mesh.position.set(
-      this.currentX - dir * 2.0 + (Math.random() - 0.5) * 0.8,
-      feetY + Math.random() * 0.4,
-      this.currentZ + (Math.random() - 0.5) * 1.0
-    );
-    puff.vx = -dir * (2.0 + Math.random() * 2.5);
-    puff.vy = 1.2 + Math.random() * 1.5;
-    puff.life = puff.maxLife;
-    puff.mesh.visible = true;
-    (puff.mesh.material as THREE.MeshBasicMaterial).opacity = 0.6;
-    puff.mesh.scale.set(1, 1, 1);
-  }
-
-  private updateSprintPuffs(dt: number): void {
-    if (!this.sprintPuffGroup) return;
-
-    for (const puff of this.sprintPuffs) {
-      if (puff.life > 0) {
-        puff.life -= dt;
-        if (puff.life <= 0) {
-          puff.mesh.visible = false;
-          (puff.mesh.material as THREE.MeshBasicMaterial).opacity = 0;
-        } else {
-          const progress = 1.0 - puff.life / puff.maxLife;
-          puff.mesh.position.x += puff.vx * dt;
-          puff.mesh.position.y += puff.vy * dt;
-          const scale = Math.max(0.2, 1.0 - progress * 0.6);
-          puff.mesh.scale.set(scale, scale, scale);
-          (puff.mesh.material as THREE.MeshBasicMaterial).opacity = (1.0 - progress) * 0.55;
-        }
-      }
-    }
   }
 
   public setPlatforms(
@@ -677,15 +480,6 @@ export class RoamingCharacterController {
 
   public update(delta: number): void {
     const dt = Math.min(Math.max(0.001, delta), 0.033);
-    if (this.isBoosted) {
-      this.boostTimer -= dt;
-      if (this.boostTimer <= 0) {
-        this.cancelBoost();
-      } else {
-        this.updateSpeedParticles(dt);
-        this.updateSprintPuffs(dt);
-      }
-    }
     this.stepSimulation(dt);
     this.applyTransformations();
   }
@@ -839,20 +633,7 @@ export class RoamingCharacterController {
       }
     }
 
-    if (this.isBoosted) {
-      this.stateTimer = Math.min(this.stateTimer, 1.2);
-    }
-
     if (this.stateTimer <= 0) {
-      if (this.isBoosted && Math.random() < 0.35) {
-        this.state = "falling";
-        this.velocityY = 36.0;
-        const dir = this.currentX > 0 ? -1 : 1;
-        this.velocityX = dir * 26.0;
-        this.rotationY = dir > 0 ? Math.PI / 2 : -Math.PI / 2;
-        return;
-      }
-
       const groundObstacle = this.platforms.find((p) => p.isGroundReaching);
       if (!this.currentPlatform && groundObstacle) {
         const distToLeft = Math.abs(this.currentX - (groundObstacle.minX - CHAR_HALF_WIDTH));
@@ -909,9 +690,9 @@ export class RoamingCharacterController {
     let diffRot = this.targetRotationY - this.rotationY;
     while (diffRot < -Math.PI) diffRot += Math.PI * 2;
     while (diffRot > Math.PI) diffRot -= Math.PI * 2;
-    this.rotationY += diffRot * Math.min(1.0, dt * (this.isBoosted ? 12.0 : 8.0));
+    this.rotationY += diffRot * Math.min(1.0, dt * 8.0);
 
-    const speed = this.isBoosted ? 32.0 : 14.0;
+    const speed = 14.0;
     const step = (dx > 0 ? 1 : -1) * speed * dt;
     let nextX = this.currentX + step;
     let hitObstacle = false;
@@ -947,56 +728,37 @@ export class RoamingCharacterController {
       return;
     }
 
-    this.walkCycle += dt * (this.isBoosted ? 15.0 : 8.0);
-    const legSwing = Math.sin(this.walkCycle) * (this.isBoosted ? 0.78 : 0.62);
-    const armSwing = -legSwing * (this.isBoosted ? 0.95 : 0.75);
+    this.walkCycle += dt * 8.0;
+    const legSwing = Math.sin(this.walkCycle) * 0.62;
+    const armSwing = -legSwing * 0.75;
 
     const skin = this.player.skin as any;
     if (skin) {
       skin.leftLeg.rotation.x = legSwing;
       skin.rightLeg.rotation.x = -legSwing;
 
-      const kneeMultiplier = this.isBoosted ? 1.25 : 1.05;
-      const leftKneeBend = legSwing < 0 ? Math.abs(legSwing) * kneeMultiplier : 0.03;
-      const rightKneeBend = legSwing > 0 ? Math.abs(legSwing) * kneeMultiplier : 0.03;
+      const leftKneeBend = legSwing < 0 ? Math.abs(legSwing) * 1.05 : 0.03;
+      const rightKneeBend = legSwing > 0 ? Math.abs(legSwing) * 1.05 : 0.03;
       this.limbs.setKnees(rightKneeBend, leftKneeBend);
 
       skin.leftArm.rotation.x = armSwing;
-      skin.leftArm.rotation.z = this.isBoosted ? 0.14 : 0.08;
+      skin.leftArm.rotation.z = 0.08;
       skin.rightArm.rotation.x = -armSwing;
-      skin.rightArm.rotation.z = this.isBoosted ? -0.14 : -0.08;
+      skin.rightArm.rotation.z = -0.08;
 
-      const elbowMultiplier = this.isBoosted ? 0.95 : 0.75;
-      const elbowBase = this.isBoosted ? 0.22 : 0.15;
-      const leftElbowBend = armSwing > 0 ? armSwing * elbowMultiplier + elbowBase : 0.12;
-      const rightElbowBend = -armSwing > 0 ? -armSwing * elbowMultiplier + elbowBase : 0.12;
+      const leftElbowBend = armSwing > 0 ? armSwing * 0.75 + 0.15 : 0.12;
+      const rightElbowBend = -armSwing > 0 ? -armSwing * 0.75 + 0.15 : 0.12;
       this.limbs.setElbows(rightElbowBend, leftElbowBend);
 
-      this.currentY = surfaceY + Math.abs(Math.sin(this.walkCycle)) * (this.isBoosted ? 0.65 : 0.4);
+      this.currentY = surfaceY + Math.abs(Math.sin(this.walkCycle)) * 0.4;
       this.rotationZ = THREE.MathUtils.lerp(this.rotationZ, 0, Math.min(1.0, dt * 10.0));
-
-      const blend = Math.min(1.0, dt * 12.0);
-      const targetBodyX = this.isBoosted ? 0.24 : 0;
-      skin.body.rotation.set(THREE.MathUtils.lerp(skin.body.rotation.x, targetBodyX, blend), 0, 0);
-
-      const targetHeadX = this.isBoosted ? -0.10 : 0.04;
-      skin.head.rotation.x = THREE.MathUtils.lerp(skin.head.rotation.x, targetHeadX, blend);
+      skin.body.rotation.set(0, 0, 0);
+      skin.head.rotation.x = 0.04;
       skin.head.rotation.y = 0;
       skin.head.rotation.z = 0;
 
       if (this.player.cape) {
-        const targetCapeX = this.isBoosted
-          ? Math.PI * 0.32 + Math.sin(this.walkCycle * 2) * 0.12
-          : Math.PI * 0.14 + Math.sin(this.walkCycle * 2) * 0.05;
-        this.player.cape.rotation.x = THREE.MathUtils.lerp(this.player.cape.rotation.x, targetCapeX, blend);
-      }
-    }
-
-    if (this.isBoosted) {
-      this.lastPuffTime += dt;
-      if (this.lastPuffTime >= 0.12) {
-        this.lastPuffTime = 0;
-        this.spawnSprintPuff();
+        this.player.cape.rotation.x = Math.PI * 0.14 + Math.sin(this.walkCycle * 2) * 0.05;
       }
     }
   }
@@ -1400,24 +1162,6 @@ export class RoamingCharacterController {
       });
       this.dizzyStars.parent?.remove(this.dizzyStars);
       this.dizzyStars = null;
-    }
-    if (this.speedParticlesGroup) {
-      this.speedParticlesGroup.traverse((child: any) => {
-        if (child.geometry) child.geometry.dispose();
-        if (child.material) child.material.dispose();
-      });
-      this.speedParticlesGroup.parent?.remove(this.speedParticlesGroup);
-      this.speedParticlesGroup = null;
-      this.speedParticles = [];
-    }
-    if (this.sprintPuffGroup) {
-      this.sprintPuffGroup.traverse((child: any) => {
-        if (child.geometry) child.geometry.dispose();
-        if (child.material) child.material.dispose();
-      });
-      this.sprintPuffGroup.parent?.remove(this.sprintPuffGroup);
-      this.sprintPuffGroup = null;
-      this.sprintPuffs = [];
     }
   }
 }
