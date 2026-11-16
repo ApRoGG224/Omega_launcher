@@ -1,0 +1,294 @@
+/* Import Modal Styles - matching /home/bogdan/Завантажене/Импорт версии или сборки.html */
+
+.import-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px 14px;
+  animation: import-fade-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes import-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes import-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.import-dlg {
+  --import-bg: #07090d;
+  --import-panel: #0d1117;
+  --import-btn: #1a1d24;
+  --import-line: rgba(255, 255, 255, 0.08);
+  --import-line2: rgba(255, 255, 255, 0.22);
+  --import-tx: #e6e8ec;
+  --import-mut: #8b919c;
+  --import-red: #f87171;
+
+  width: 100%;
+  max-width: 520px;
+  background: var(--import-panel);
+  border: 1px solid var(--import-line);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+  animation: import-slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  color: var(--import-tx);
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  user-select: none;
+}
+
+.import-dlg * {
+  box-sizing: border-box;
+}
+
+.import-dlg .hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 0;
+}
+
+.import-dlg .hd h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--import-tx);
+  letter-spacing: -0.01em;
+}
+
+.import-dlg .b {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 11px;
+  border: 1px solid var(--import-line);
+  background: var(--import-btn);
+  color: var(--import-tx);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: inherit;
+  outline: none;
+}
+
+.import-dlg .b:hover:not(:disabled) {
+  border-color: var(--import-line2);
+  background: #22262e;
+}
+
+.import-dlg .b:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.import-dlg .b.sq {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+}
+
+.import-dlg .b.go {
+  background: #e6e8ec;
+  color: #0d1117;
+  border-color: #fff;
+}
+
+.import-dlg .b.go:hover:not(:disabled) {
+  background: #fff;
+}
+
+.import-dlg .b.on {
+  background: var(--import-btn);
+  color: var(--import-mut);
+  border-color: var(--import-line2);
+  cursor: default;
+}
+
+.import-dlg .b.del {
+  background: transparent;
+  color: var(--import-red);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.import-dlg .b.del:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.6);
+}
+
+.import-dlg .b:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.import-dlg .b:focus-visible,
+.import-dlg .zone:focus-visible {
+  outline: 2px solid var(--import-line2);
+  outline-offset: 2px;
+}
+
+.import-dlg .zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 34px 20px 28px;
+  background: #090c11;
+  border: 1.5px dashed var(--import-line2);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+  outline: none;
+}
+
+.import-dlg .zone:hover,
+.import-dlg .zone.over {
+  border-color: #e6e8ec;
+  background: #0c1017;
+}
+
+.import-dlg .ico {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: #12151b;
+  border: 1px solid var(--import-line);
+  display: grid;
+  place-items: center;
+  margin-bottom: 10px;
+  transition: transform 0.15s;
+}
+
+.import-dlg .zone.over .ico,
+.import-dlg .zone:hover .ico {
+  transform: translateY(-3px);
+}
+
+.import-dlg .zone h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--import-tx);
+}
+
+.import-dlg .zone p {
+  margin: 0;
+  color: var(--import-mut);
+  font-size: 12px;
+  max-width: 340px;
+  line-height: 1.4;
+}
+
+.import-dlg .ext {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.import-dlg .tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 7px;
+  font-size: 10.5px;
+  line-height: 1.6;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--import-mut);
+  border: 1px solid var(--import-line);
+}
+
+.import-dlg .err {
+  color: var(--import-red);
+  font-size: 12px;
+  text-align: center;
+  min-height: 0;
+  padding: 2px 0;
+}
+
+.import-dlg .file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #090c11;
+  border: 1px solid var(--import-line);
+  border-radius: 14px;
+}
+
+.import-dlg .file .ico {
+  margin: 0;
+  width: 44px;
+  height: 44px;
+  flex: none;
+}
+
+.import-dlg .file .w {
+  flex: 1;
+  min-width: 0;
+}
+
+.import-dlg .file b {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--import-tx);
+}
+
+.import-dlg .file span {
+  color: var(--import-mut);
+  font-size: 12px;
+}
+
+.import-dlg .bar {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.import-dlg .bar i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: #e6e8ec;
+  transition: width 0.2s ease-out;
+}
+
+.import-dlg .ft {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}

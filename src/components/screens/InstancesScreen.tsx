@@ -6,11 +6,12 @@ import {
   INSTANCE_AVATAR_OPTIONS,
   type InstanceAvatarVariant,
 } from "../icons/MinecraftIcons";
-import { Download, FolderPlus, Settings2, Trash2, Check, Folder, Edit3, ChevronDown, Plus } from "lucide-react";
+import { FolderPlus, Settings2, Trash2, Check, Folder, Edit3, ChevronDown, Plus } from "lucide-react";
 import type { InstanceData, InstanceFolder } from "../../types";
 import { ipc } from "../../services/ipc";
 import { useVersions, FALLBACK_UI_VERSIONS } from "../../hooks/useVersions";
 import { useLanguage } from "../../context/LanguageContext";
+import { ImportModal } from "../modals/ImportModal";
 import "../../styles/screens.css";
 import "../../design-system/pixelPlates.css";
 
@@ -178,8 +179,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isFolderMenuOpen, setIsFolderMenuOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [importStatus, setImportStatus] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [newVersion, setNewVersion] = useState("1.21.4");
   const [newLoader, setNewLoader] = useState<InstanceData["loader"]>("Fabric");
@@ -342,34 +341,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
     onCreateInstance(created);
     setIsCreating(false);
     setNewName("Моя версия 1.21");
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-
-    const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      const nameWithoutExt = file.name.replace(/\.(zip|mrpack)$/i, "");
-      const newInst: InstanceData = {
-        id: "inst_" + Date.now(),
-        name: nameWithoutExt || "Импортированная версия",
-        mcVersion: "1.21.4",
-        loader: file.name.endsWith(".mrpack") ? "Fabric" : "Forge",
-        playTimeMinutes: 0,
-        modCount: 15,
-        isReady: true,
-        folderId: selectedFolderId === "all" ? undefined : selectedFolderId,
-      };
-      onCreateInstance(newInst);
-      setImportStatus(`Версия "${newInst.name}" успешно импортирована!`);
-      setTimeout(() => {
-        setImportStatus(null);
-        setIsImporting(false);
-      }, 1500);
-    }
   };
 
   const filteredInstances = instances.filter((inst) => {
@@ -1045,69 +1016,12 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
           document.body
         )}
 
-      {isImporting &&
-        createPortal(
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(0, 0, 0, 0.82)",
-              backdropFilter: "blur(14px)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 9999,
-              padding: "20px",
-            }}
-            onClick={() => setIsImporting(false)}
-          >
-          <div
-            className="tactical-modal-card"
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragOver(true);
-            }}
-            onDragLeave={() => setIsDragOver(false)}
-            onDrop={handleDrop}
-            style={{
-              width: "100%",
-              maxWidth: "480px",
-              padding: "28px",
-              textAlign: "center",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "14px",
-              border: isDragOver ? "2px dashed var(--accent)" : "2px dashed var(--border-bright)",
-              background: isDragOver ? "var(--accent-bg-subtle)" : undefined,
-              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.85)",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Download size={36} color="var(--accent-bright)" />
-            <h4 style={{ fontSize: "16px", fontWeight: 800, color: "var(--text-pure)", margin: 0 }}>
-              Перетащите архив версии или сборки (.zip или .mrpack)
-            </h4>
-            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-              Импорт автоматически распакует конфигурацию и установит моды
-            </span>
-            {importStatus && (
-              <span style={{ fontSize: "13px", color: "var(--color-success)", fontWeight: 800 }}>
-                {importStatus}
-              </span>
-            )}
-            <button
-              type="button"
-              className="screen-back-btn pixel-plate-dark"
-              onClick={() => setIsImporting(false)}
-              style={{ marginTop: "6px", minHeight: "36px", height: "36px", padding: "0 18px" }}
-            >
-              Закрыть
-            </button>
-          </div>
-          </div>,
-          document.body
-        )}
+      <ImportModal
+        isOpen={isImporting}
+        onClose={() => setIsImporting(false)}
+        onImport={onCreateInstance}
+        folderId={selectedFolderId}
+      />
 
       {editingFolder &&
         createPortal(
