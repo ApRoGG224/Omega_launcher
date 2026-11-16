@@ -115,9 +115,6 @@ export class RoamingCharacterController {
   private cachedPlatform: WorldPlatform | null = null;
   private isSurfaceDirty: boolean = true;
 
-  private accumulator: number = 0;
-  private static readonly FIXED_STEP: number = 1 / 60;
-
   constructor(player: PlayerObject, limbs: ArticulatedLimbHandles, scene?: THREE.Scene) {
     this.player = player;
     this.limbs = limbs;
@@ -479,7 +476,7 @@ export class RoamingCharacterController {
   }
 
   public update(delta: number): void {
-    const dt = Math.min(Math.max(0.001, delta), 0.033);
+    const dt = Math.min(Math.max(0.0005, delta), 0.05);
     this.stepSimulation(dt);
     this.applyTransformations();
   }

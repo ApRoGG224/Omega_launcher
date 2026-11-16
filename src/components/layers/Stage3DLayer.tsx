@@ -208,28 +208,90 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         this.renderer.render(this.scene, this.camera);
       };
 
-      // Adaptive frame rate pacing: ~60 FPS during active interaction/physics, ~42 FPS during roaming
-      // Eliminates massive 144Hz/240Hz power consumption on gaming monitors
-      let lastDrawTime = performance.now();
-      (viewer as any).draw = function () {
-        if (this._renderPaused || this._disposed) return;
+      const tempCurWorld = new THREE.Vector3();
+      const tempHitPos = new THREE.Vector3();
 
-        const now = performance.now();
+      const pointerState = {
+        clientX: 0,
+        clientY: 0,
+        isOverUI: false,
+        dirty: false,
+      };
+
+      const processPointerFrame = () => {
         const ctrl = controllerRef.current;
-        const targetFps = (ctrl?.state === "dragged" || ctrl?.state === "falling") ? 60 : 42;
-        const frameInterval = 1000 / targetFps;
-        const elapsed = now - lastDrawTime;
+        const vwr = viewerRef.current;
+        if (!ctrl || !vwr) return;
 
-        if (elapsed >= frameInterval) {
-          lastDrawTime = now - (elapsed % frameInterval);
-          const dt = this.clock.getDelta();
-          if (this._animation !== null) {
-            this._animation.update(this.playerObject, dt);
-          }
-          this.render();
+        if (isPointerDownOnChar.current) {
+          screenPointToWorld(
+            pointerState.clientX,
+            pointerState.clientY,
+            vwr.camera,
+            raycasterRef.current,
+            planeRef.current,
+            tempCurWorld
+          );
+          ctrl.updateDrag(
+            tempCurWorld.x + grabOffset.current.x,
+            tempCurWorld.y + grabOffset.current.y
+          );
+          document.body.style.cursor = "grabbing";
+          return;
         }
 
-        this.animationID = window.requestAnimationFrame(() => (viewer as any).draw());
+        if (!pointerState.dirty) return;
+        pointerState.dirty = false;
+
+        const screenH = window.innerHeight || 720;
+        if (pointerState.clientY < screenH * 0.4 || pointerState.isOverUI) {
+          if (document.body.style.cursor === "grab") {
+            document.body.style.cursor = "";
+          }
+          return;
+        }
+
+        if (ctrl.state !== "unconscious" && ctrl.state !== "waking_up") {
+          const isOver = isPointerOverCharacter(
+            pointerState.clientX,
+            pointerState.clientY,
+            ctrl,
+            vwr,
+            raycasterRef.current,
+            planeRef.current,
+            tempCurWorld
+          );
+          if (isOver) {
+            document.body.style.cursor = "grab";
+          } else if (document.body.style.cursor === "grab") {
+            document.body.style.cursor = "";
+          }
+        }
+      };
+
+      // Native VSync animation loop with timestamp-based delta time and 0.05s clamp
+      let lastTime = 0;
+      (viewer as any).draw = function (timestamp?: number) {
+        if (this._renderPaused || this._disposed) return;
+
+        const t = typeof timestamp === "number" ? timestamp : performance.now();
+        if (lastTime === 0) {
+          lastTime = t;
+        }
+
+        const rawDelta = (t - lastTime) / 1000;
+        lastTime = t;
+        const dt = Math.min(Math.max(0.0005, rawDelta), 0.05);
+
+        // Process pointer hover/drag once per visual frame (never directly in pointermove)
+        processPointerFrame();
+
+        if (this._animation !== null) {
+          this._animation.update(this.playerObject, dt);
+        }
+        this.render();
+
+        this.animationID = window.requestAnimationFrame((nextT) => (viewer as any).draw(nextT));
       };
 
       viewer.animation = new PhysicalRoamingAnimation();
@@ -271,6 +333,7 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
             viewerRef.current.animation.paused = isHidden;
           }
           if (!isHidden) {
+            lastTime = 0;
             (viewerRef.current as any).clock?.getDelta();
           }
         }
@@ -292,6 +355,7 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
           if (viewerRef.current.animation) {
             viewerRef.current.animation.paused = false;
           }
+          lastTime = 0;
           (viewerRef.current as any).clock?.getDelta();
         }
       };
@@ -299,12 +363,11 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
       window.addEventListener("blur", onWindowBlur);
       window.addEventListener("focus", onWindowFocus);
 
-      const tempCurWorld = new THREE.Vector3();
-      const tempHitPos = new THREE.Vector3();
-      let lastHoverCheckTime = 0;
-
       const onWindowPointerDown = (e: PointerEvent) => {
         if (!visibleRef.current) return;
+
+        pointerState.clientX = e.clientX;
+        pointerState.clientY = e.clientY;
 
         const target = e.target as HTMLElement | null;
         if (target && target.closest(".menu-customizer-modal-backdrop, .modal, [role='dialog'], .hud-container, .dock-container, button, a, input, select")) {
@@ -351,63 +414,16 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
 
       const onWindowPointerMove = (e: PointerEvent) => {
         if (!visibleRef.current) return;
-        const ctrl = controllerRef.current;
-        const vwr = viewerRef.current;
-        if (!ctrl || !vwr) return;
-
-        if (isPointerDownOnChar.current) {
-          screenPointToWorld(
-            e.clientX,
-            e.clientY,
-            vwr.camera,
-            raycasterRef.current,
-            planeRef.current,
-            tempCurWorld
-          );
-          ctrl.updateDrag(
-            tempCurWorld.x + grabOffset.current.x,
-            tempCurWorld.y + grabOffset.current.y
-          );
-          document.body.style.cursor = "grabbing";
-          return;
-        }
-
-        const screenH = window.innerHeight || 720;
-        if (e.clientY < screenH * 0.4) {
-          if (document.body.style.cursor === "grab") {
-            document.body.style.cursor = "";
-          }
-          return;
-        }
-
-        const now = performance.now();
-        if (now - lastHoverCheckTime < 30) return;
-        lastHoverCheckTime = now;
-
+        pointerState.clientX = e.clientX;
+        pointerState.clientY = e.clientY;
         const target = e.target as HTMLElement | null;
-        if (target && target.closest(".menu-customizer-modal-backdrop, .modal, [role='dialog'], .hud-container, .dock-container, button, a, input, select")) {
-          if (document.body.style.cursor === "grab") {
-            document.body.style.cursor = "";
-          }
-          return;
-        }
-
-        if (ctrl.state !== "unconscious" && ctrl.state !== "waking_up") {
-          const isOver = isPointerOverCharacter(
-            e.clientX,
-            e.clientY,
-            ctrl,
-            vwr,
-            raycasterRef.current,
-            planeRef.current,
-            tempCurWorld
-          );
-          if (isOver) {
-            document.body.style.cursor = "grab";
-          } else if (document.body.style.cursor === "grab") {
-            document.body.style.cursor = "";
-          }
-        }
+        pointerState.isOverUI = !!(
+          target &&
+          target.closest(
+            ".menu-customizer-modal-backdrop, .modal, [role='dialog'], .hud-container, .dock-container, button, a, input, select"
+          )
+        );
+        pointerState.dirty = true;
       };
 
       const onWindowPointerUp = (e: PointerEvent) => {
@@ -443,7 +459,7 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
       };
 
       window.addEventListener("pointerdown", onWindowPointerDown, { capture: true });
-      window.addEventListener("pointermove", onWindowPointerMove);
+      window.addEventListener("pointermove", onWindowPointerMove, { passive: true });
       window.addEventListener("pointerup", onWindowPointerUp);
 
       return () => {
