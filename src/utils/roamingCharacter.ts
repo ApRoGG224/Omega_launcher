@@ -115,6 +115,10 @@ export class RoamingCharacterController {
   private cachedPlatform: WorldPlatform | null = null;
   private isSurfaceDirty: boolean = true;
 
+  private physicsAccumulator: number = 0;
+  private static readonly FIXED_STEP: number = 1 / 60;
+  private readonly platformQuery = { surfaceY: -26, platform: null as WorldPlatform | null };
+
   constructor(player: PlayerObject, limbs: ArticulatedLimbHandles, scene?: THREE.Scene) {
     this.player = player;
     this.limbs = limbs;
@@ -254,7 +258,8 @@ export class RoamingCharacterController {
     let bestPlatform: WorldPlatform | null = null;
     let highestY = this.floorY;
 
-    for (const p of this.platforms) {
+    for (let i = 0; i < this.platforms.length; i++) {
+      const p = this.platforms[i];
       if (x >= p.minX - 1.2 && x <= p.maxX + 1.2) {
         if (p.isGroundReaching) {
           if (p.topY >= highestY) {
@@ -270,7 +275,9 @@ export class RoamingCharacterController {
       }
     }
 
-    return { surfaceY: highestY, platform: bestPlatform };
+    this.platformQuery.surfaceY = highestY;
+    this.platformQuery.platform = bestPlatform;
+    return this.platformQuery;
   }
 
   public startDrag(worldX: number, worldY: number): void {
@@ -476,8 +483,18 @@ export class RoamingCharacterController {
   }
 
   public update(delta: number): void {
-    const dt = Math.min(Math.max(0.0005, delta), 0.05);
-    this.stepSimulation(dt);
+    const clampedDelta = Math.min(Math.max(0.0005, delta), 0.1);
+    this.physicsAccumulator += clampedDelta;
+
+    if (this.physicsAccumulator > 0.15) {
+      this.physicsAccumulator = 0.15;
+    }
+
+    while (this.physicsAccumulator >= RoamingCharacterController.FIXED_STEP) {
+      this.stepSimulation(RoamingCharacterController.FIXED_STEP);
+      this.physicsAccumulator -= RoamingCharacterController.FIXED_STEP;
+    }
+
     this.applyTransformations();
   }
 
@@ -532,9 +549,13 @@ export class RoamingCharacterController {
     this.player.rotation.z = this.rotationZ;
 
     if (this.shadowMesh && this.shadowMat) {
-      const surfaceY = this.isSurfaceDirty
-        ? this.findPlatformUnder(this.currentX, this.currentY).surfaceY
-        : this.cachedSurfaceY;
+      if (this.isSurfaceDirty) {
+        const res = this.findPlatformUnder(this.currentX, this.currentY);
+        this.cachedSurfaceY = res.surfaceY;
+        this.cachedPlatform = res.platform;
+        this.isSurfaceDirty = false;
+      }
+      const surfaceY = this.cachedSurfaceY;
       const groundY = surfaceY - CHAR_FEET_OFFSET;
       const heightAboveGround = Math.max(0, this.currentY - surfaceY);
       this.shadowMesh.position.set(this.currentX, groundY + 0.08, this.currentZ);
@@ -670,6 +691,9 @@ export class RoamingCharacterController {
 
     const { surfaceY, platform } = this.findPlatformUnder(this.currentX, this.currentY);
     this.currentPlatform = platform;
+    this.cachedSurfaceY = surfaceY;
+    this.cachedPlatform = platform;
+    this.isSurfaceDirty = false;
     if (this.currentY > surfaceY + 1.5) {
       this.state = "falling";
       return;
@@ -761,7 +785,14 @@ export class RoamingCharacterController {
   }
 
   private updateWaving(dt: number): void {
-    const { surfaceY } = this.findPlatformUnder(this.currentX, this.currentY);
+    if (this.isSurfaceDirty) {
+      const res = this.findPlatformUnder(this.currentX, this.currentY);
+      this.cachedSurfaceY = res.surfaceY;
+      this.cachedPlatform = res.platform;
+      this.isSurfaceDirty = false;
+    }
+    const surfaceY = this.cachedSurfaceY;
+    this.currentPlatform = this.cachedPlatform;
     this.currentY = surfaceY;
     this.waveCycle += dt * 6.5;
     this.stateTimer -= dt;
@@ -955,6 +986,9 @@ export class RoamingCharacterController {
     }
 
     const { surfaceY, platform } = this.findPlatformUnder(this.currentX, this.currentY);
+    this.cachedSurfaceY = surfaceY;
+    this.cachedPlatform = platform;
+    this.isSurfaceDirty = false;
     if (this.currentY <= surfaceY) {
       const impactSpeed = Math.abs(this.velocityY);
       this.currentY = surfaceY;
@@ -1047,9 +1081,15 @@ export class RoamingCharacterController {
     this.unconsciousTimer -= dt;
     this.rotationZ = 0;
 
-    const checkY = this.currentPlatform ? this.currentPlatform.topY : this.currentY + 11;
-    const { surfaceY, platform } = this.findPlatformUnder(this.currentX, checkY);
-    this.currentPlatform = platform;
+    if (this.isSurfaceDirty) {
+      const checkY = this.currentPlatform ? this.currentPlatform.topY : this.currentY + 11;
+      const res = this.findPlatformUnder(this.currentX, checkY);
+      this.cachedSurfaceY = res.surfaceY;
+      this.cachedPlatform = res.platform;
+      this.isSurfaceDirty = false;
+    }
+    const surfaceY = this.cachedSurfaceY;
+    this.currentPlatform = this.cachedPlatform;
     this.currentY = surfaceY - 10.5;
 
     if (this.dizzyStars) {
@@ -1101,9 +1141,15 @@ export class RoamingCharacterController {
     this.rotationZ = 0;
     const progress = Math.max(0, Math.min(1, 1.0 - this.wakeTimer / 0.8));
 
-    const checkY = this.currentPlatform ? this.currentPlatform.topY : this.currentY + 11;
-    const { surfaceY, platform } = this.findPlatformUnder(this.currentX, checkY);
-    this.currentPlatform = platform;
+    if (this.isSurfaceDirty) {
+      const checkY = this.currentPlatform ? this.currentPlatform.topY : this.currentY + 11;
+      const res = this.findPlatformUnder(this.currentX, checkY);
+      this.cachedSurfaceY = res.surfaceY;
+      this.cachedPlatform = res.platform;
+      this.isSurfaceDirty = false;
+    }
+    const surfaceY = this.cachedSurfaceY;
+    this.currentPlatform = this.cachedPlatform;
     this.currentY = surfaceY - 10.5 * (1.0 - progress);
 
     const skin = this.player.skin as any;

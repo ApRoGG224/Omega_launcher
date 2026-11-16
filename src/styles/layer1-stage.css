@@ -10,7 +10,6 @@
   transform: translateZ(0);
   will-change: transform;
   backface-visibility: hidden;
-  perspective: 1000px;
 }
 
 .layer-stage.hidden {
@@ -35,8 +34,6 @@
   height: 100% !important;
   display: block;
   outline: none;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
   transform: translate3d(0, 0, 0);
   will-change: transform;
   backface-visibility: hidden;

@@ -176,7 +176,6 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
 
       // Explicit hardware acceleration configurations on WebGLRenderer
       viewer.renderer.sortObjects = false;
-      (viewer.renderer as any).info.autoReset = false;
 
       viewer.camera.position.set(0, 14, 95);
       viewer.camera.lookAt(0, -2, 0);
@@ -214,8 +213,16 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
       const pointerState = {
         clientX: 0,
         clientY: 0,
-        isOverUI: false,
+        target: null as HTMLElement | null,
         dirty: false,
+      };
+
+      let activeBodyCursor = "";
+      const setBodyCursor = (cursor: string) => {
+        if (activeBodyCursor !== cursor) {
+          activeBodyCursor = cursor;
+          document.body.style.cursor = cursor;
+        }
       };
 
       const processPointerFrame = () => {
@@ -236,7 +243,7 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
             tempCurWorld.x + grabOffset.current.x,
             tempCurWorld.y + grabOffset.current.y
           );
-          document.body.style.cursor = "grabbing";
+          setBodyCursor("grabbing");
           return;
         }
 
@@ -244,9 +251,22 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         pointerState.dirty = false;
 
         const screenH = window.innerHeight || 720;
-        if (pointerState.clientY < screenH * 0.4 || pointerState.isOverUI) {
-          if (document.body.style.cursor === "grab") {
-            document.body.style.cursor = "";
+        if (pointerState.clientY < screenH * 0.4) {
+          if (activeBodyCursor === "grab") {
+            setBodyCursor("");
+          }
+          return;
+        }
+
+        const target = pointerState.target;
+        if (
+          target &&
+          target.closest(
+            ".menu-customizer-modal-backdrop, .modal, [role='dialog'], .hud-container, .dock-container, button, a, input, select"
+          )
+        ) {
+          if (activeBodyCursor === "grab") {
+            setBodyCursor("");
           }
           return;
         }
@@ -262,28 +282,46 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
             tempCurWorld
           );
           if (isOver) {
-            document.body.style.cursor = "grab";
-          } else if (document.body.style.cursor === "grab") {
-            document.body.style.cursor = "";
+            setBodyCursor("grab");
+          } else if (activeBodyCursor === "grab") {
+            setBodyCursor("");
           }
         }
       };
 
-      // Native VSync animation loop with timestamp-based delta time and 0.05s clamp
-      let lastTime = 0;
+      // Native VSync animation loop with adaptive frame pacing
+      let lastDrawTime = 0;
       (viewer as any).draw = function (timestamp?: number) {
         if (this._renderPaused || this._disposed) return;
 
         const t = typeof timestamp === "number" ? timestamp : performance.now();
-        if (lastTime === 0) {
-          lastTime = t;
+        if (lastDrawTime === 0) {
+          lastDrawTime = t;
         }
 
-        const rawDelta = (t - lastTime) / 1000;
-        lastTime = t;
-        const dt = Math.min(Math.max(0.0005, rawDelta), 0.05);
+        const elapsed = (t - lastDrawTime) / 1000;
+        const ctrl = controllerRef.current;
+        // Pacing: cap at 60 FPS for active states (prevent 144Hz/240Hz screen overheating),
+        // and 36 FPS for idle/unconscious states to save CPU/GPU fill-rate.
+        const isInteracting =
+          isPointerDownOnChar.current ||
+          (ctrl && (ctrl.state === "dragged" || ctrl.state === "falling"));
+        const targetFPS = isInteracting
+          ? 60
+          : ctrl && (ctrl.state === "idle" || ctrl.state === "unconscious")
+          ? 36
+          : 48;
+        const minInterval = 1 / (targetFPS + 2);
 
-        // Process pointer hover/drag once per visual frame (never directly in pointermove)
+        if (elapsed < minInterval) {
+          this.animationID = window.requestAnimationFrame((nextT) => (viewer as any).draw(nextT));
+          return;
+        }
+
+        lastDrawTime = t;
+        const dt = Math.min(Math.max(0.001, elapsed), 0.1);
+
+        // Process pointer hover/drag once per visual frame
         processPointerFrame();
 
         if (this._animation !== null) {
@@ -333,7 +371,7 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
             viewerRef.current.animation.paused = isHidden;
           }
           if (!isHidden) {
-            lastTime = 0;
+            lastDrawTime = 0;
             (viewerRef.current as any).clock?.getDelta();
           }
         }
@@ -355,7 +393,7 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
           if (viewerRef.current.animation) {
             viewerRef.current.animation.paused = false;
           }
-          lastTime = 0;
+          lastDrawTime = 0;
           (viewerRef.current as any).clock?.getDelta();
         }
       };
@@ -408,7 +446,7 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
           };
 
           ctrl.startDrag(tempHitPos.x + grabOffset.current.x, tempHitPos.y + grabOffset.current.y);
-          document.body.style.cursor = "grabbing";
+          setBodyCursor("grabbing");
         }
       };
 
@@ -416,13 +454,7 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         if (!visibleRef.current) return;
         pointerState.clientX = e.clientX;
         pointerState.clientY = e.clientY;
-        const target = e.target as HTMLElement | null;
-        pointerState.isOverUI = !!(
-          target &&
-          target.closest(
-            ".menu-customizer-modal-backdrop, .modal, [role='dialog'], .hud-container, .dock-container, button, a, input, select"
-          )
-        );
+        pointerState.target = e.target as HTMLElement | null;
         pointerState.dirty = true;
       };
 
@@ -455,7 +487,7 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
           ctrl.endDrag();
         }
 
-        document.body.style.cursor = "";
+        setBodyCursor("");
       };
 
       window.addEventListener("pointerdown", onWindowPointerDown, { capture: true });
@@ -471,7 +503,7 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         window.removeEventListener("pointerdown", onWindowPointerDown, { capture: true });
         window.removeEventListener("pointermove", onWindowPointerMove);
         window.removeEventListener("pointerup", onWindowPointerUp);
-        document.body.style.cursor = "";
+        setBodyCursor("");
 
         controller.dispose();
         viewer.dispose();
