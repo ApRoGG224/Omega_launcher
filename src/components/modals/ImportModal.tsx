@@ -100,36 +100,54 @@ export const ImportModal: React.FC<ImportModalProps> = ({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isOpen, installState, handleClose]);
 
-  // Listen to native Tauri webview file drag-and-drop events
+  const lastNativePathRef = useRef<string | null>(null);
+
+  // Listen to native Tauri webview and window file drag-and-drop events
   useEffect(() => {
     if (!isOpen) return;
-    let unlisten: (() => void) | undefined;
+    let unlistenWebview: (() => void) | undefined;
+    let unlistenWindow: (() => void) | undefined;
+
+    const handleTauriDrop = (event: { payload: { type: string; paths?: string[] } }) => {
+      if (event.payload.type === "over" || event.payload.type === "enter") {
+        setIsOver(true);
+      } else if (event.payload.type === "leave" || event.payload.type === "cancel") {
+        setIsOver(false);
+      } else if (event.payload.type === "drop") {
+        setIsOver(false);
+        const paths = event.payload.paths;
+        if (paths && paths.length > 0) {
+          lastNativePathRef.current = paths[0];
+          handleSelectPath(paths[0]);
+        }
+      }
+    };
 
     import("@tauri-apps/api/webview")
       .then(({ getCurrentWebview }) => {
         getCurrentWebview()
-          .onDragDropEvent((event) => {
-            if (event.payload.type === "over") {
-              setIsOver(true);
-            } else if (event.payload.type === "leave") {
-              setIsOver(false);
-            } else if (event.payload.type === "drop") {
-              setIsOver(false);
-              const paths = event.payload.paths;
-              if (paths && paths.length > 0) {
-                handleSelectPath(paths[0]);
-              }
-            }
-          })
+          .onDragDropEvent(handleTauriDrop)
           .then((fn) => {
-            unlisten = fn;
+            unlistenWebview = fn;
+          })
+          .catch(() => {});
+      })
+      .catch(() => {});
+
+    import("@tauri-apps/api/window")
+      .then(({ getCurrentWindow }) => {
+        getCurrentWindow()
+          .onDragDropEvent(handleTauriDrop)
+          .then((fn) => {
+            unlistenWindow = fn;
           })
           .catch(() => {});
       })
       .catch(() => {});
 
     return () => {
-      if (unlisten) unlisten();
+      if (unlistenWebview) unlistenWebview();
+      if (unlistenWindow) unlistenWindow();
     };
   }, [isOpen]);
 
@@ -143,10 +161,30 @@ export const ImportModal: React.FC<ImportModalProps> = ({
       LAUNCHER_RANDOM_ICONS[Math.floor(Math.random() * LAUNCHER_RANDOM_ICONS.length)];
 
     try {
+      let resolvedPath = info.path;
+      if (!resolvedPath) {
+        try {
+          const found = await ipc.findLocalArchive(info.name);
+          if (found) {
+            resolvedPath = found;
+            setSelectedFile((prev) => (prev ? { ...prev, path: found } : prev));
+          }
+        } catch {}
+      }
+
       let parsed: ImportSummary;
-      if (info.path) {
-        parsed = await ipc.inspectArchive(info.path);
+      if (resolvedPath) {
+        parsed = await ipc.inspectArchive(resolvedPath);
       } else if (info.fileObj) {
+        if (info.fileObj.size > 50 * 1024 * 1024) {
+          throw new Error(
+            lang === "uk"
+              ? "Файл завеликий для читання через браузер. Будь ласка, оберіть файл через кнопку 'Вибрати файл'."
+              : lang === "ru"
+              ? "Файл слишком большой для чтения через браузер. Пожалуйста, выберите файл через кнопку 'Выбрать файл'."
+              : "File is too large for browser memory. Please use 'Choose File' button below."
+          );
+        }
         const buffer = await info.fileObj.arrayBuffer();
         const bytes = Array.from(new Uint8Array(buffer));
         parsed = await ipc.inspectArchiveBytes(info.name, bytes);
@@ -161,16 +199,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({
       } else {
         setAssignedIcon(randomIcon);
       }
-    } catch {
-      // In case of inspection fallback, set default values and random icon
-      const nameWithoutExt = info.name.replace(/\.(zip|mrpack)$/i, "");
-      setAssignedIcon(randomIcon);
-      setSummary({
-        name: nameWithoutExt || "Imported Instance",
-        mcVersion: "1.21.4",
-        loader: info.name.toLowerCase().endsWith(".mrpack") ? "Fabric" : "Forge",
-        modCount: 0,
-      });
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setError(errMsg);
     } finally {
       setIsInspecting(false);
     }
@@ -178,6 +209,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
 
   const handleSelectPath = (fullPath: string) => {
     setError(null);
+    lastNativePathRef.current = fullPath;
     const fileName = fullPath.split(/[\\/]/).pop() || "archive.zip";
     const extMatch = fileName.match(/\.(zip|mrpack)$/i);
     if (!extMatch) {
@@ -200,7 +232,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
     inspectArchiveData(info);
   };
 
-  const handleSelectFileObj = (file: File) => {
+  const handleSelectFileObj = async (file: File) => {
     setError(null);
     const extMatch = file.name.match(/\.(zip|mrpack)$/i);
     if (!extMatch) {
@@ -214,7 +246,18 @@ export const ImportModal: React.FC<ImportModalProps> = ({
       return;
     }
 
-    const path = (file as unknown as { path?: string }).path;
+    // Try resolving file system path first (from electron/webview2 or via local disk search)
+    let path = (file as unknown as { path?: string }).path;
+    if (!path && lastNativePathRef.current) {
+      path = lastNativePathRef.current;
+    }
+    if (!path) {
+      try {
+        const found = await ipc.findLocalArchive(file.name);
+        if (found) path = found;
+      } catch {}
+    }
+
     const info: SelectedArchiveInfo = {
       name: file.name,
       size: file.size,
@@ -275,14 +318,49 @@ export const ImportModal: React.FC<ImportModalProps> = ({
     setIsOver(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      handleSelectFileObj(file);
+
+    // 1. If native drop listener captured the path recently, use it
+    if (lastNativePathRef.current) {
+      handleSelectPath(lastNativePathRef.current);
+      return;
     }
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    // 2. Direct path if exposed (Electron or Windows WebView2)
+    const directPath = (file as unknown as { path?: string }).path;
+    if (directPath && directPath.length > 0) {
+      handleSelectPath(directPath);
+      return;
+    }
+
+    // 3. Resolve path on Linux WebKitGTK where browser event strips absolute file path
+    try {
+      const resolved = await ipc.findLocalArchive(file.name);
+      if (resolved) {
+        handleSelectPath(resolved);
+        return;
+      }
+    } catch {}
+
+    // 4. Fallback: check file size to avoid OOM
+    if (file.size > 50 * 1024 * 1024) {
+      setError(
+        lang === "uk"
+          ? "Файл завеликий для читання через браузер. Будь ласка, натисніть кнопку 'Вибрати файл' нижче."
+          : lang === "ru"
+          ? "Файл слишком большой для чтения через браузер. Пожалуйста, нажмите кнопку 'Выбрать файл' ниже."
+          : "File is too large for browser memory. Please use the 'Choose File' button below."
+      );
+      return;
+    }
+
+    handleSelectFileObj(file);
   };
 
   const handleZoneKeyDown = (e: React.KeyboardEvent) => {
@@ -332,9 +410,26 @@ export const ImportModal: React.FC<ImportModalProps> = ({
     try {
       let finalSummary: ImportSummary;
 
-      if (selectedFile.path) {
-        finalSummary = await ipc.importArchive(instanceId, selectedFile.path);
+      let pathToUse = selectedFile.path;
+      if (!pathToUse) {
+        try {
+          const resolved = await ipc.findLocalArchive(selectedFile.name);
+          if (resolved) pathToUse = resolved;
+        } catch {}
+      }
+
+      if (pathToUse) {
+        finalSummary = await ipc.importArchive(instanceId, pathToUse);
       } else if (selectedFile.fileObj) {
+        if (selectedFile.fileObj.size > 50 * 1024 * 1024) {
+          throw new Error(
+            lang === "uk"
+              ? "Файл завеликий для читання через браузер. Будь ласка, оберіть файл через кнопку 'Вибрати файл'."
+              : lang === "ru"
+              ? "Файл слишком большой для чтения через браузер. Пожалуйста, выберите файл через кнопку 'Выбрать файл'."
+              : "File is too large for browser memory. Please use 'Choose file' button below."
+          );
+        }
         const buffer = await selectedFile.fileObj.arrayBuffer();
         const bytes = Array.from(new Uint8Array(buffer));
         finalSummary = await ipc.importArchiveBytes(instanceId, selectedFile.name, bytes);

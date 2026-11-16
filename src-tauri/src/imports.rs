@@ -39,14 +39,25 @@ fn read_zip_text<R: std::io::Read + std::io::Seek>(
     archive: &mut zip::ZipArchive<R>,
     wanted: &str,
 ) -> Option<String> {
-    for i in 0..archive.len() {
-        let mut entry = archive.by_index(i).ok()?;
-        let name = entry.name().to_string();
-        if name == wanted || name.ends_with(&format!("/{wanted}")) {
-            let mut buf = String::new();
-            use std::io::Read;
-            entry.read_to_string(&mut buf).ok()?;
+    use std::io::Read;
+    // 1. Direct O(1) hash lookup first
+    if let Ok(mut entry) = archive.by_name(wanted) {
+        let mut buf = String::new();
+        if entry.read_to_string(&mut buf).is_ok() {
             return Some(buf);
+        }
+    }
+    // 2. Scan if nested inside folder e.g. "my_pack/mmc-pack.json"
+    let suffix = format!("/{wanted}");
+    for i in 0..archive.len() {
+        if let Ok(mut entry) = archive.by_index(i) {
+            let name = entry.name().to_string();
+            if name == wanted || name.ends_with(&suffix) {
+                let mut buf = String::new();
+                if entry.read_to_string(&mut buf).is_ok() {
+                    return Some(buf);
+                }
+            }
         }
     }
     None
@@ -55,34 +66,54 @@ fn read_zip_text<R: std::io::Read + std::io::Seek>(
 fn extract_archive_icon_from_archive<R: std::io::Read + std::io::Seek>(
     archive: &mut zip::ZipArchive<R>,
 ) -> Option<String> {
-    let icon_candidates = [
+    use std::io::Read;
+    use base64::Engine as _;
+
+    // 1. Priority root / standard locations
+    let root_candidates = [
         "icon.png", "instance.png", "pack.png", "logo.png",
-        "modpack.png", "server-icon.png", "icon.ico", "icon.jpg", "icon.jpeg"
+        "modpack.png", "server-icon.png", "icon.ico", "icon.jpg", "icon.jpeg",
+        "minecraft/icon.png", ".minecraft/icon.png", "overrides/icon.png",
+        "minecraft/instance.png", ".minecraft/instance.png", "overrides/pack.png",
     ];
+
+    for candidate in &root_candidates {
+        if let Ok(mut entry) = archive.by_name(candidate) {
+            if entry.is_dir() { continue; }
+            let mut bytes = Vec::new();
+            if entry.read_to_end(&mut bytes).is_ok() && !bytes.is_empty() {
+                let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+                let mime = if candidate.ends_with(".png") {
+                    "image/png"
+                } else if candidate.ends_with(".ico") {
+                    "image/x-icon"
+                } else {
+                    "image/jpeg"
+                };
+                return Some(format!("data:{mime};base64,{b64}"));
+            }
+        }
+    }
+
+    // 2. Secondary scan across archive, ignoring world saves, dimensions and backups
+    let icon_names = ["icon.png", "instance.png", "pack.png", "logo.png", "modpack.png"];
     for i in 0..archive.len() {
-        let mut entry = archive.by_index(i).ok()?;
-        if entry.is_dir() { continue; }
-        let name = entry.name().to_string();
-        let lower = name.to_lowercase();
-        let parts: Vec<&str> = lower.split('/').collect();
-        let file_name = parts.last().unwrap_or(&"");
-        for candidate in &icon_candidates {
-            if file_name == candidate {
-                use std::io::Read;
-                let mut bytes = Vec::new();
-                if entry.read_to_end(&mut bytes).is_ok() && !bytes.is_empty() {
-                    use base64::Engine as _;
-                    let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
-                    let mime = if file_name.ends_with(".png") {
-                        "image/png"
-                    } else if file_name.ends_with(".ico") {
-                        "image/x-icon"
-                    } else if file_name.ends_with(".jpg") || file_name.ends_with(".jpeg") {
-                        "image/jpeg"
-                    } else {
-                        "image/png"
-                    };
-                    return Some(format!("data:{mime};base64,{b64}"));
+        if let Ok(mut entry) = archive.by_index(i) {
+            if entry.is_dir() { continue; }
+            let name = entry.name().to_string();
+            let lower = name.to_lowercase();
+            if lower.contains("/saves/") || lower.contains("/worlds/") || lower.contains("/backups/") || lower.contains("/dim") {
+                continue;
+            }
+            let parts: Vec<&str> = lower.split('/').collect();
+            let file_name = parts.last().unwrap_or(&"");
+            for candidate in &icon_names {
+                if file_name == candidate {
+                    let mut bytes = Vec::new();
+                    if entry.read_to_end(&mut bytes).is_ok() && !bytes.is_empty() {
+                        let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+                        return Some(format!("data:image/png;base64,{b64}"));
+                    }
                 }
             }
         }
@@ -351,22 +382,50 @@ pub fn inspect_archive_internal(zip_path: &Path) -> Result<ImportSummary, String
             if let Ok(json) = serde_json::from_str::<Value>(&text) {
                 if let Some(components) = json.get("components").and_then(|c| c.as_array()) {
                     for c in components {
-                        let uid = c.get("uid").and_then(|v| v.as_str()).unwrap_or("");
-                        match uid {
-                            "net.minecraft" => {
-                                if let Some(v) = c.get("version").and_then(|v| v.as_str()) {
-                                    mc_version = v.to_string();
-                                }
+                        let uid = c.get("uid").and_then(|v| v.as_str()).unwrap_or("").to_lowercase();
+                        let cached_name = c.get("cachedName").and_then(|v| v.as_str()).unwrap_or("").to_lowercase();
+
+                        if uid == "net.minecraft" {
+                            if let Some(v) = c.get("version").or_else(|| c.get("cachedVersion")).and_then(|v| v.as_str()) {
+                                mc_version = v.to_string();
                             }
-                            "net.fabricmc.fabric-loader" => loader = "Fabric".to_string(),
-                            "net.minecraftforge" => loader = "Forge".to_string(),
-                            "net.neoforged" => loader = "NeoForge".to_string(),
-                            "com.quiltmc.quilt-loader" => loader = "Quilt".to_string(),
-                            _ => {}
+                        } else if uid.contains("fabric") || cached_name.contains("fabric") {
+                            loader = "Fabric".to_string();
+                        } else if uid.contains("neoforge") || cached_name.contains("neoforge") {
+                            loader = "NeoForge".to_string();
+                        } else if uid.contains("forge") || cached_name.contains("forge") {
+                            loader = "Forge".to_string();
+                        } else if uid.contains("quilt") || cached_name.contains("quilt") {
+                            loader = "Quilt".to_string();
                         }
                     }
                 }
             }
+        }
+
+        // If loader is still Vanilla or unrecognized, check if any jar mods in the archive identify the loader
+        if loader == "Vanilla" && jar_mod_count > 0 {
+            for name in &file_names {
+                let lower = name.to_lowercase();
+                if lower.contains("fabric") || lower.contains("fabric.mod.json") {
+                    loader = "Fabric".to_string();
+                    break;
+                } else if lower.contains("neoforge") {
+                    loader = "NeoForge".to_string();
+                    break;
+                } else if lower.contains("forge") {
+                    loader = "Forge".to_string();
+                    break;
+                } else if lower.contains("quilt") {
+                    loader = "Quilt".to_string();
+                    break;
+                }
+            }
+        }
+
+        // If mc_version defaulted but instance name looks like a version (e.g. "26.3" or "1.21.1")
+        if (mc_version == "1.20.1" || mc_version == "1.21.4") && (name.starts_with("1.") || name.starts_with("26.") || name.starts_with("25.")) {
+            mc_version = name.clone();
         }
 
         return Ok(ImportSummary {
@@ -416,6 +475,32 @@ pub fn inspect_archive_internal(zip_path: &Path) -> Result<ImportSummary, String
         mod_count: jar_mod_count,
         description: None,
     })
+}
+
+#[tauri::command]
+pub fn find_local_archive(file_name: String) -> Option<String> {
+    let clean_name = Path::new(&file_name).file_name()?.to_str()?;
+    let home = dirs::home_dir()?;
+
+    let candidate_dirs = [
+        home.join("Завантажене"),
+        home.join("Downloads"),
+        home.join("Загрузки"),
+        home.join("Рабочий стол"),
+        home.join("Стільниця"),
+        home.join("Desktop"),
+        home.join("Документи"),
+        home.join("Documents"),
+        std::path::PathBuf::from("/tmp"),
+    ];
+
+    for dir in &candidate_dirs {
+        let p = dir.join(clean_name);
+        if p.is_file() {
+            return Some(p.to_string_lossy().to_string());
+        }
+    }
+    None
 }
 
 #[tauri::command]
@@ -1142,5 +1227,18 @@ mod tests {
         assert_eq!(summary.icon, None);
 
         let _ = std::fs::remove_file(test_file);
+    }
+
+    #[test]
+    fn test_inspect_real_user_archive() {
+        let p = Path::new("/home/bogdan/Завантажене/26.3.zip");
+        if p.exists() {
+            let res = inspect_archive_internal(p).unwrap();
+            assert_eq!(res.name, "26.3");
+            assert_eq!(res.mc_version, "26.3");
+            assert_eq!(res.loader, "Fabric");
+            assert_eq!(res.mod_count, 60);
+            assert!(res.icon.is_some());
+        }
     }
 }

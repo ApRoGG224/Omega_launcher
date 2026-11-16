@@ -459,6 +459,7 @@ pub fn run() {
             imports::import_archive_bytes,
             imports::inspect_archive,
             imports::inspect_archive_bytes,
+            imports::find_local_archive,
             db::db_load_instances,
             db::db_save_instances,
             db::db_delete_instance,

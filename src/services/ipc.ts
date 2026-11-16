@@ -188,6 +188,10 @@ export const ipc = {
     return JSON.parse(raw);
   },
 
+  async findLocalArchive(fileName: string): Promise<string | null> {
+    return invoke<string | null>("find_local_archive", { fileName });
+  },
+
   async openFolder(instanceId: string): Promise<void> {
     await invoke("open_folder", { instanceId });
   },
