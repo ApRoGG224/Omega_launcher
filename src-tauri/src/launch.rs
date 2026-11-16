@@ -431,6 +431,7 @@ pub async fn launch_minecraft(
     ram: u32,
     instance_id: String,
     custom_jvm_args: Option<String>,
+    enable_gamemode: Option<bool>,
 ) -> Result<String, String> {
     let data_dir = app_data_dir(&app);
     let vanilla_version: String = version
@@ -722,7 +723,18 @@ pub async fn launch_minecraft(
     };
 
     let ram_g = if ram == 0 { 4 } else { ram };
-    let mut command = std::process::Command::new(&java_path);
+    let use_gamemode = enable_gamemode.unwrap_or(false);
+    let gamemoderun_path = std::path::Path::new("/usr/bin/gamemoderun");
+
+    let mut command = if use_gamemode && gamemoderun_path.exists() {
+        emit_line(&app, "[launcher/INFO] Feral GameMode (gamemoderun) enabled for Minecraft process");
+        let mut cmd = std::process::Command::new("/usr/bin/gamemoderun");
+        cmd.arg(&java_path);
+        cmd
+    } else {
+        std::process::Command::new(&java_path)
+    };
+
     command
         .current_dir(&game_dir)
         .arg(format!("-Xmx{ram_g}G"))

@@ -710,6 +710,7 @@ export const App: React.FC = () => {
       ? settings.jvmArgs.trim()
       : "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions";
     const ramToUse = selectedInstance.ramGb || settings?.ram || 4;
+    const enableGamemode = Boolean(settings?.enableGameMode);
 
     const loader = selectedInstance.loader || "Vanilla";
     const versionToLaunch =
@@ -730,6 +731,7 @@ export const App: React.FC = () => {
         ram: ramToUse,
         instanceId: selectedInstance.id,
         customJvmArgs,
+        enableGamemode,
       });
     } catch (e: any) {
       pushLog(`[launcher/ERROR] Ошибка запуска: ${e?.message || e}`, "ERROR");
@@ -874,6 +876,7 @@ export const App: React.FC = () => {
         ? settings.jvmArgs.trim()
         : "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions";
       const ramToUse = inst.ramGb || settings?.ram || 4;
+      const enableGamemode = Boolean(settings?.enableGameMode);
 
       const loader = inst.loader || "Vanilla";
       const versionToLaunch =
@@ -892,6 +895,7 @@ export const App: React.FC = () => {
           ram: ramToUse,
           instanceId: inst.id,
           customJvmArgs,
+          enableGamemode,
         });
       } catch (e: any) {
         pushLog(`[launcher/ERROR] Ошибка прямого подключения: ${e?.message || e}`, "ERROR");

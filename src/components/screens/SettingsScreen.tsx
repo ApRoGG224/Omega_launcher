@@ -1,8 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { MINECRAFT_BACKGROUNDS } from "../../constants/backgrounds";
 import { ipc } from "../../services/ipc";
 import { setStoredCloseOnLaunch } from "../../services/storage";
 import { useLanguage } from "../../context/LanguageContext";
+import {
+  Sparkles,
+  Trash2,
+  Cpu,
+  RotateCcw,
+  Gauge,
+  Zap,
+  CheckCircle2,
+} from "lucide-react";
 import type {
   TopBarItemId,
   BottomBarItemId,
@@ -17,6 +26,7 @@ import "../../styles/screens.css";
 
 interface SettingsScreenProps {
   onBack?: () => void;
+  onNavigate?: (screen: import("../layers/ScreensLayer").ScreenId) => void;
   bgIndex: number;
   isBgAutoPlay: boolean;
   onSelectBg: (index: number) => void;
@@ -43,7 +53,7 @@ interface SettingsScreenProps {
   onResetZoneCustomization?: (zone: import("../../types/menuCustomization").CustomizerZoneId) => void;
 }
 
-type SettingsTab = "paths" | "memory" | "network" | "versions" | "launch" | "appearance";
+type SettingsTab = "paths" | "memory" | "network" | "versions" | "launch" | "appearance" | "optimization";
 
 interface StoredSettings {
   ram: number;
@@ -62,6 +72,8 @@ interface StoredSettings {
   showSnapshots: boolean;
   showBetas: boolean;
   showAlphas: boolean;
+  enableGameMode?: boolean;
+  launcherEcoMode?: boolean;
 }
 
 const DEFAULT_SETTINGS: StoredSettings = {
@@ -81,6 +93,8 @@ const DEFAULT_SETTINGS: StoredSettings = {
   showSnapshots: false,
   showBetas: false,
   showAlphas: false,
+  enableGameMode: true,
+  launcherEcoMode: false,
 };
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
@@ -108,6 +122,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onOpenMenuCustomizer,
   onUpdateMenusCustomization,
   onResetZoneCustomization,
+  onNavigate,
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>("paths");
   const [appearanceSubTab, setAppearanceSubTab] = useState<"topbar" | "bottombar" | "background">("topbar");
@@ -138,6 +153,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [accountGateway, setAccountGateway] = useState<"offline" | "ely" | "microsoft">(initialSettings.accountGateway);
   const [showStatusFriends, setShowStatusFriends] = useState<boolean>(initialSettings.showStatusFriends);
   const [proxyType, setProxyType] = useState<string>(initialSettings.proxyType);
+  const [enableGameMode, setEnableGameMode] = useState<boolean>(
+    initialSettings.enableGameMode !== undefined ? Boolean(initialSettings.enableGameMode) : true
+  );
+  const [launcherEcoMode, setLauncherEcoMode] = useState<boolean>(
+    Boolean(initialSettings.launcherEcoMode)
+  );
+  const [cacheSizeText, setCacheSizeText] = useState<string>("");
+  const [isCleaningCache, setIsCleaningCache] = useState<boolean>(false);
+  const [isCleaningLogs, setIsCleaningLogs] = useState<boolean>(false);
+  const [isCleaningGameLogs, setIsCleaningGameLogs] = useState<boolean>(false);
+  const [feedbackMsg, setFeedbackMsg] = useState<{ text: string } | null>(null);
 
   useEffect(() => {
     if (globalLang) {
@@ -172,6 +198,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         showSnapshots,
         showBetas,
         showAlphas,
+        enableGameMode,
+        launcherEcoMode,
       };
       localStorage.setItem("omega_launcher_settings", JSON.stringify(toSave));
     } catch {}
@@ -192,9 +220,180 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     showSnapshots,
     showBetas,
     showAlphas,
+    enableGameMode,
+    launcherEcoMode,
   ]);
 
-  const showFeedback = (_msg: string) => {};
+  const showFeedback = useCallback((msg: string) => {
+    setFeedbackMsg({ text: msg });
+    setTimeout(() => {
+      setFeedbackMsg((curr) => (curr?.text === msg ? null : curr));
+    }, 3800);
+  }, []);
+
+  const formatBytes = (bytes: number): string => {
+    if (!bytes || bytes === 0) return "0 Б";
+    const k = 1024;
+    const sizes = ["Б", "КБ", "МБ", "ГБ"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  };
+
+  const updateCacheSize = useCallback(async () => {
+    try {
+      const size = await ipc.getLauncherCacheSize();
+      setCacheSizeText(formatBytes(size));
+    } catch {
+      setCacheSizeText("");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "optimization") {
+      void updateCacheSize();
+    }
+  }, [activeTab, updateCacheSize]);
+
+  useEffect(() => {
+    if (launcherEcoMode) {
+      document.body.classList.add("launcher-eco-mode");
+    } else {
+      document.body.classList.remove("launcher-eco-mode");
+    }
+  }, [launcherEcoMode]);
+
+  const handleClearCache = async () => {
+    setIsCleaningCache(true);
+    try {
+      const freed = await ipc.clearLauncherCache();
+      showFeedback(
+        globalLang === "uk"
+          ? `Кеш лаунчера очищено (звільнено ${formatBytes(freed)})`
+          : globalLang === "ru"
+          ? `Кэш лаунчера очищен (освобождено ${formatBytes(freed)})`
+          : `Launcher cache cleared (freed ${formatBytes(freed)})`
+      );
+      void updateCacheSize();
+    } catch (e: any) {
+      showFeedback(`Помилка: ${e?.message || e}`);
+    } finally {
+      setIsCleaningCache(false);
+    }
+  };
+
+  const handleClearLauncherLogs = async () => {
+    setIsCleaningLogs(true);
+    try {
+      const freed = await ipc.clearLauncherLogs();
+      showFeedback(
+        globalLang === "uk"
+          ? `Логи лаунчера видалено (звільнено ${formatBytes(freed)})`
+          : globalLang === "ru"
+          ? `Логи лаунчера удалены (освобождено ${formatBytes(freed)})`
+          : `Launcher logs deleted (freed ${formatBytes(freed)})`
+      );
+    } catch (e: any) {
+      showFeedback(`Помилка: ${e?.message || e}`);
+    } finally {
+      setIsCleaningLogs(false);
+    }
+  };
+
+  const handleClearGameLogs = async () => {
+    setIsCleaningGameLogs(true);
+    try {
+      const freed = await ipc.clearGameLogs(gameDir);
+      showFeedback(
+        globalLang === "uk"
+          ? `Ігрові логи та дампи очищено (звільнено ${formatBytes(freed)})`
+          : globalLang === "ru"
+          ? `Игровые логи и отчеты о сбоях очищены (освобождено ${formatBytes(freed)})`
+          : `Game logs and crash reports cleaned (freed ${formatBytes(freed)})`
+      );
+    } catch (e: any) {
+      showFeedback(`Помилка: ${e?.message || e}`);
+    } finally {
+      setIsCleaningGameLogs(false);
+    }
+  };
+
+  const handleTrimMemory = () => {
+    try {
+      if ((window as any).gc) {
+        (window as any).gc();
+      }
+    } catch {}
+    showFeedback(
+      globalLang === "uk"
+        ? "Пам'ять інтерфейсу оптимізована (вивантажено невикористовувані об'єкти)"
+        : globalLang === "ru"
+        ? "Память интерфейса оптимизирована (выгружены неиспользуемые объекты)"
+        : "Interface memory trimmed (unused objects evicted)"
+    );
+  };
+
+  const AIKAR_FLAGS =
+    "-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1";
+
+  const handleApplyAikarFlags = () => {
+    setGcType("G1GC");
+    setJvmArgs(AIKAR_FLAGS);
+    showFeedback(
+      globalLang === "uk"
+        ? "Застосовано рекомендовані прапорці Aikar's Flags для G1GC"
+        : globalLang === "ru"
+        ? "Применены рекомендованные флаги Aikar's Flags для G1GC"
+        : "Applied recommended Aikar's Flags for G1GC"
+    );
+  };
+
+  const ZGC_FLAGS = "-XX:+UseZGC -XX:+ZGenerational -XX:+UnlockExperimentalVMOptions -XX:+AlwaysPreTouch";
+
+  const handleApplyZGCFlags = () => {
+    setGcType("ZGC");
+    setJvmArgs(ZGC_FLAGS);
+    showFeedback(
+      globalLang === "uk"
+        ? "Застосовано конфігурацію ZGC Generational (наднизька затримка)"
+        : globalLang === "ru"
+        ? "Применена конфигурация ZGC Generational (сверхнизкая задержка)"
+        : "Applied ZGC Generational configuration (ultra-low latency)"
+    );
+  };
+
+  const SHENANDOAH_FLAGS = "-XX:+UseShenandoahGC -XX:+UnlockExperimentalVMOptions -XX:+AlwaysPreTouch";
+
+  const handleApplyShenandoahFlags = () => {
+    setGcType("Shenandoah");
+    setJvmArgs(SHENANDOAH_FLAGS);
+    showFeedback(
+      globalLang === "uk"
+        ? "Застосовано збирач сміття Shenandoah GC"
+        : globalLang === "ru"
+        ? "Применен сборщик мусора Shenandoah GC"
+        : "Applied Shenandoah GC"
+    );
+  };
+
+  const DEFAULT_JVM_FLAGS = "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions";
+
+  const handleResetJvmFlags = () => {
+    setGcType("G1GC");
+    setJvmArgs(DEFAULT_JVM_FLAGS);
+    showFeedback(
+      globalLang === "uk"
+        ? "Параметри JVM скинуто до стандартних"
+        : globalLang === "ru"
+        ? "Параметры JVM сброшены к стандартным"
+        : "JVM flags reset to default"
+    );
+  };
+
+  const handleNavigateToOptimizationMods = () => {
+    if (onNavigate) {
+      onNavigate("modrinth");
+    }
+  };
 
   const handleRamChange = (v: number) => {
     setRam(v);
@@ -288,6 +487,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             >
               {globalLang === "uk" ? "Оформлення" : globalLang === "ru" ? "Оформление" : "Appearance"}
             </button>
+            <button
+              type="button"
+              className={activeTab === "optimization" ? "on" : ""}
+              onClick={() => setActiveTab("optimization")}
+            >
+              {globalLang === "uk" ? "Оптимізація" : globalLang === "ru" ? "Оптимизация" : "Optimization"}
+            </button>
           </div>
 
           <div className="set-card set-prof">
@@ -323,6 +529,22 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   ? "ЗАКРЫВАТЬ ЛАУНЧЕР"
                   : "CLOSE ON LAUNCH"}
               </span>
+            </div>
+            <div className="set-pr">
+              <b style={{ color: enableGameMode ? "#5fc9a0" : "#8b919c" }}>
+                {enableGameMode
+                  ? globalLang === "uk"
+                    ? "Увімк."
+                    : globalLang === "ru"
+                    ? "Вкл."
+                    : "On"
+                  : globalLang === "uk"
+                  ? "Вимк."
+                  : globalLang === "ru"
+                  ? "Выкл."
+                  : "Off"}
+              </b>
+              <span>GAMEMODE</span>
             </div>
             <div className="set-pr">
               <b style={{ maxWidth: 120, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }} title={activeBg.title}>
@@ -824,8 +1046,412 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               />
             )}
           </div>
+
+          <div className={`set-pn ${activeTab === "optimization" ? "on" : ""}`}>
+            <div>
+              <h1>
+                {globalLang === "uk"
+                  ? "Оптимізація лаунчера та гри"
+                  : globalLang === "ru"
+                  ? "Оптимизация лаунчера и игры"
+                  : "Launcher & Game Optimization"}
+              </h1>
+              <div className="set-sub">
+                {globalLang === "uk"
+                  ? "Тонке налаштування продуктивності, очищення кешу та оптимізація Java Virtual Machine"
+                  : globalLang === "ru"
+                  ? "Тонкая настройка производительности, очистка кэша и тюнинг Java Virtual Machine"
+                  : "Performance tuning, cache cleanup, and Java Virtual Machine optimization"}
+              </div>
+            </div>
+
+            {/* Launcher Optimization Section */}
+            <div className="set-opt-section">
+              <div className="set-opt-section-header">
+                <span className="set-opt-badge">
+                  <Sparkles size={13} />
+                  {globalLang === "uk"
+                    ? "Оптимізація лаунчера"
+                    : globalLang === "ru"
+                    ? "Оптимизация лаунчера"
+                    : "Launcher Optimization"}
+                </span>
+                {cacheSizeText && (
+                  <span style={{ fontSize: "11.5px", color: "#8b919c" }}>
+                    {globalLang === "uk" ? "Розмір кешу: " : globalLang === "ru" ? "Размер кэша: " : "Cache size: "}
+                    <b style={{ color: "#e6e8ec" }}>{cacheSizeText}</b>
+                  </span>
+                )}
+              </div>
+
+              <div className="set-opt-grid">
+                {/* Clear Launcher Cache */}
+                <div className="set-opt-card">
+                  <div className="set-opt-card-header">
+                    <div className="set-opt-card-icon">
+                      <Trash2 size={18} />
+                    </div>
+                    <div className="set-opt-card-info">
+                      <b>
+                        {globalLang === "uk"
+                          ? "Очистити кеш лаунчера"
+                          : globalLang === "ru"
+                          ? "Очистить кэш лаунчера"
+                          : "Clear Launcher Cache"}
+                      </b>
+                      <small>
+                        {globalLang === "uk"
+                          ? "Видаляє завантажені іконки модів, списки версій та тимчасові файли"
+                          : globalLang === "ru"
+                          ? "Удаляет кэшированные иконки модов, списки версий и временные файлы"
+                          : "Deletes cached mod icons, version manifests, and temp files"}
+                      </small>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="set-b"
+                    disabled={isCleaningCache}
+                    onClick={handleClearCache}
+                  >
+                    {isCleaningCache
+                      ? globalLang === "uk"
+                        ? "Очищення..."
+                        : globalLang === "ru"
+                        ? "Очистка..."
+                        : "Cleaning..."
+                      : globalLang === "uk"
+                      ? "Очистити кеш"
+                      : globalLang === "ru"
+                      ? "Очистить кэш"
+                      : "Clear Cache"}
+                  </button>
+                </div>
+
+                {/* Clear Launcher Logs */}
+                <div className="set-opt-card">
+                  <div className="set-opt-card-header">
+                    <div className="set-opt-card-icon">
+                      <RotateCcw size={18} />
+                    </div>
+                    <div className="set-opt-card-info">
+                      <b>
+                        {globalLang === "uk"
+                          ? "Очистити логи лаунчера"
+                          : globalLang === "ru"
+                          ? "Очистить логи лаунчера"
+                          : "Clear Launcher Logs"}
+                      </b>
+                      <small>
+                        {globalLang === "uk"
+                          ? "Видаляє застарілі файли launcher.log та журнали сесій"
+                          : globalLang === "ru"
+                          ? "Удаляет устаревшие файлы launcher.log и журналы сессий"
+                          : "Deletes old launcher.log files and session journals"}
+                      </small>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="set-b"
+                    disabled={isCleaningLogs}
+                    onClick={handleClearLauncherLogs}
+                  >
+                    {isCleaningLogs
+                      ? globalLang === "uk"
+                        ? "Видалення..."
+                        : globalLang === "ru"
+                        ? "Удаление..."
+                        : "Deleting..."
+                      : globalLang === "uk"
+                      ? "Видалити логи"
+                      : globalLang === "ru"
+                      ? "Удалить логи"
+                      : "Delete Logs"}
+                  </button>
+                </div>
+
+                {/* Free Interface Memory / Trim */}
+                <div className="set-opt-card">
+                  <div className="set-opt-card-header">
+                    <div className="set-opt-card-icon">
+                      <Cpu size={18} />
+                    </div>
+                    <div className="set-opt-card-info">
+                      <b>
+                        {globalLang === "uk"
+                          ? "Звільнити пам'ять інтерфейсу"
+                          : globalLang === "ru"
+                          ? "Освободить память интерфейса"
+                          : "Trim Launcher Memory"}
+                      </b>
+                      <small>
+                        {globalLang === "uk"
+                          ? "Вивантажує неактивні ресурси веб-рушія та текстури 3D-сцени"
+                          : globalLang === "ru"
+                          ? "Выгружает неактивные ресурсы веб-движка и текстуры 3D-сцены"
+                          : "Trims inactive web engine resources and 3D scene textures"}
+                      </small>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="set-b"
+                    onClick={handleTrimMemory}
+                  >
+                    {globalLang === "uk"
+                      ? "Оптимізувати RAM"
+                      : globalLang === "ru"
+                      ? "Оптимизировать RAM"
+                      : "Trim Memory"}
+                  </button>
+                </div>
+
+                {/* Eco / Low-Spec Mode */}
+                <div className="set-opt-card">
+                  <div className="set-opt-card-header">
+                    <div className="set-opt-card-icon">
+                      <Gauge size={18} />
+                    </div>
+                    <div className="set-opt-card-info">
+                      <b>
+                        {globalLang === "uk"
+                          ? "Режим енергозбереження (Low-Spec)"
+                          : globalLang === "ru"
+                          ? "Режим энергосбережения (Low-Spec)"
+                          : "Eco / Low-Spec Mode"}
+                      </b>
+                      <small>
+                        {globalLang === "uk"
+                          ? "Вимикає важкі ефекти розмиття та зменшує навантаження на GPU"
+                          : globalLang === "ru"
+                          ? "Отключает тяжелые эффекты размытия и снижает нагрузку на GPU"
+                          : "Disables heavy blur effects and reduces GPU load"}
+                      </small>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      className={`set-sw ${launcherEcoMode ? "on" : ""}`}
+                      onClick={() => setLauncherEcoMode((prev) => !prev)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Game Optimization Section */}
+            <div className="set-opt-section" style={{ marginTop: "12px" }}>
+              <div className="set-opt-section-header">
+                <span className="set-opt-badge">
+                  <Zap size={13} />
+                  {globalLang === "uk"
+                    ? "Оптимізація гри Minecraft"
+                    : globalLang === "ru"
+                    ? "Оптимизация игры Minecraft"
+                    : "Minecraft Game Optimization"}
+                </span>
+              </div>
+
+              {/* Linux Feral GameMode */}
+              <div className="set-row">
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <b>
+                      {globalLang === "uk"
+                        ? "Linux Feral GameMode (gamemoderun)"
+                        : globalLang === "ru"
+                        ? "Linux Feral GameMode (gamemoderun)"
+                        : "Linux Feral GameMode (gamemoderun)"}
+                    </b>
+                    <span
+                      style={{
+                        fontSize: "10.5px",
+                        padding: "1px 6px",
+                        background: "rgba(95, 201, 160, 0.15)",
+                        color: "#5fc9a0",
+                        borderRadius: "4px",
+                        fontWeight: 700,
+                      }}
+                    >
+                      RECOMMENDED
+                    </span>
+                  </div>
+                  <small>
+                    {globalLang === "uk"
+                      ? "Автоматично підвищує пріоритет CPU, частоти GPU та планувальник I/O для максимального FPS"
+                      : globalLang === "ru"
+                      ? "Автоматически повышает приоритет CPU, частоты GPU и планировщик ввода в Linux для максимального FPS"
+                      : "Elevates CPU priority, GPU clock frequencies, and I/O scheduler in Linux for maximum FPS"}
+                  </small>
+                </div>
+                <button
+                  type="button"
+                  className={`set-sw ${enableGameMode ? "on" : ""}`}
+                  onClick={() => setEnableGameMode((prev) => !prev)}
+                />
+              </div>
+
+              {/* Clean Game Logs and Crash Reports */}
+              <div className="set-row">
+                <div>
+                  <b>
+                    {globalLang === "uk"
+                      ? "Очистити старі логи та краш-дампи гри"
+                      : globalLang === "ru"
+                      ? "Очистить старые логи и отчеты о сбоях игры"
+                      : "Clean Game Logs & Crash Reports"}
+                  </b>
+                  <small>
+                    {globalLang === "uk"
+                      ? "Видаляє архіви логів (.log.gz) та звіти crash-reports у папці гри та всіх збірках"
+                      : globalLang === "ru"
+                      ? "Удаляет сжатые логи (.log.gz) и отчеты crash-reports в папке игры и всех сборках"
+                      : "Removes compressed logs (.log.gz) and crash-reports from game dir and instances"}
+                  </small>
+                </div>
+                <button
+                  type="button"
+                  className="set-b"
+                  disabled={isCleaningGameLogs}
+                  onClick={handleClearGameLogs}
+                >
+                  {isCleaningGameLogs
+                    ? globalLang === "uk"
+                      ? "Очищення..."
+                      : globalLang === "ru"
+                      ? "Очистка..."
+                      : "Cleaning..."
+                    : globalLang === "uk"
+                    ? "Очистити логи гри"
+                    : globalLang === "ru"
+                    ? "Очистить логи игры"
+                    : "Clean Game Logs"}
+                </button>
+              </div>
+
+              {/* JVM Presets */}
+              <div>
+                <div className="set-lab">
+                  <span>
+                    {globalLang === "uk"
+                      ? "Оптимізовані пресети аргументів JVM:"
+                      : globalLang === "ru"
+                      ? "Оптимизированные пресеты аргументов JVM:"
+                      : "Optimized JVM Argument Presets:"}
+                  </span>
+                  <b style={{ fontSize: "12px", color: "#8b919c" }}>{gcType}</b>
+                </div>
+                <div className="set-seg c4">
+                  <button
+                    type="button"
+                    className={
+                      gcType === "G1GC" && jvmArgs.includes("InitiatingHeapOccupancyPercent")
+                        ? "on"
+                        : ""
+                    }
+                    onClick={handleApplyAikarFlags}
+                  >
+                    Aikar's Flags
+                    <small>
+                      {globalLang === "uk"
+                        ? "Мінімум фризів G1GC"
+                        : globalLang === "ru"
+                        ? "Минимум фризов G1GC"
+                        : "Zero lag spikes"}
+                    </small>
+                  </button>
+                  <button
+                    type="button"
+                    className={gcType === "ZGC" ? "on" : ""}
+                    onClick={handleApplyZGCFlags}
+                  >
+                    ZGC Low-Latency
+                    <small>
+                      {globalLang === "uk"
+                        ? "Паузи кадру <1 мс"
+                        : globalLang === "ru"
+                        ? "Паузы кадра <1 мс"
+                        : "Sub-millisecond"}
+                    </small>
+                  </button>
+                  <button
+                    type="button"
+                    className={gcType === "Shenandoah" ? "on" : ""}
+                    onClick={handleApplyShenandoahFlags}
+                  >
+                    Shenandoah GC
+                    <small>
+                      {globalLang === "uk"
+                        ? "Ультракороткі паузи"
+                        : globalLang === "ru"
+                        ? "Ультракороткие паузы"
+                        : "Ultra-short pause"}
+                    </small>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResetJvmFlags}
+                  >
+                    {globalLang === "uk" ? "Стандартні" : globalLang === "ru" ? "Стандартные" : "Default"}
+                    <small>
+                      {globalLang === "uk"
+                        ? "Базовий G1GC"
+                        : globalLang === "ru"
+                        ? "Базовый G1GC"
+                        : "Standard flags"}
+                    </small>
+                  </button>
+                </div>
+                <div className="set-hint" style={{ marginTop: "8px" }}>
+                  {globalLang === "uk"
+                    ? "Прапорці Aikar's Flags оптимізують паралельну обробку посилань та розміри поколінь NewSize, значно знижуючи лаги при завантаженні чанків."
+                    : globalLang === "ru"
+                    ? "Флаги Aikar's Flags оптимизируют параллельную обработку ссылок и размеры поколений NewSize, значительно снижая лаги при прогрузке чанков."
+                    : "Aikar's Flags optimize parallel reference processing and generation sizes to smooth chunk generation."}
+                </div>
+              </div>
+
+              {/* Optimization Mods Hub */}
+              <div className="set-row">
+                <div>
+                  <b>
+                    {globalLang === "uk"
+                      ? "Каталог рекомендованих модів оптимізації"
+                      : globalLang === "ru"
+                      ? "Каталог рекомендованных модов оптимизации"
+                      : "Recommended Optimization Mods Hub"}
+                  </b>
+                  <small>
+                    {globalLang === "uk"
+                      ? "Sodium, Lithium, FerriteCore, ImmediatelyFast, Entity Culling для суттєвого підвищення FPS"
+                      : globalLang === "ru"
+                      ? "Sodium, Lithium, FerriteCore, ImmediatelyFast, Entity Culling для существенного прироста FPS"
+                      : "Sodium, Lithium, FerriteCore, ImmediatelyFast, Entity Culling for massive FPS boost"}
+                  </small>
+                </div>
+                {onNavigate && (
+                  <button
+                    type="button"
+                    className="set-b go"
+                    onClick={handleNavigateToOptimizationMods}
+                  >
+                    {globalLang === "uk" ? "Знайти моди" : globalLang === "ru" ? "Найти моды" : "Browse Mods"} →
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </main>
       </div>
+
+      {feedbackMsg && (
+        <div className="set-toast">
+          <CheckCircle2 size={16} color="#5fc9a0" />
+          <span>{feedbackMsg.text}</span>
+        </div>
+      )}
     </div>
   );
 };

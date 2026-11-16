@@ -99,8 +99,33 @@ export const ipc = {
     ram: number;
     instanceId: string;
     customJvmArgs?: string;
+    enableGamemode?: boolean;
   }): Promise<void> {
-    await invoke("launch_minecraft", args);
+    await invoke("launch_minecraft", {
+      version: args.version,
+      server: args.server,
+      username: args.username,
+      ram: args.ram,
+      instanceId: args.instanceId,
+      customJvmArgs: args.customJvmArgs ?? null,
+      enableGamemode: args.enableGamemode ?? null,
+    });
+  },
+
+  async clearLauncherCache(): Promise<number> {
+    return invoke<number>("clear_launcher_cache");
+  },
+
+  async clearLauncherLogs(): Promise<number> {
+    return invoke<number>("clear_launcher_logs");
+  },
+
+  async getLauncherCacheSize(): Promise<number> {
+    return invoke<number>("get_launcher_cache_size");
+  },
+
+  async clearGameLogs(gameDir?: string): Promise<number> {
+    return invoke<number>("clear_game_logs", { gameDir: gameDir ?? null });
   },
 
   async killMinecraft(instanceId: string): Promise<string> {

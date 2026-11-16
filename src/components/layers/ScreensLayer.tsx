@@ -235,6 +235,7 @@ export const ScreensLayer: React.FC<ScreensLayerProps> = React.memo(({
       {activeScreen === "settings" && (
         <SettingsScreen
           onBack={() => onNavigate("home")}
+          onNavigate={onNavigate}
           bgIndex={bgIndex}
           isBgAutoPlay={isBgAutoPlay}
           onSelectBg={onSelectBg}
