@@ -13,15 +13,18 @@ tasks:
 
   dev:
     desc: "Run the launcher in development mode"
+    cmds:
+      - npm run tauri dev
+
+  dev:no-compositing:
+    desc: "Run the launcher with WEBKIT_DISABLE_COMPOSITING_MODE=1"
     env:
-      WEBKIT_DISABLE_DMABUF_RENDERER: 1
+      WEBKIT_DISABLE_COMPOSITING_MODE: 1
     cmds:
       - npm run tauri dev
 
   build:
     desc: "Build the launcher for production (generic)"
-    env:
-      WEBKIT_DISABLE_DMABUF_RENDERER: 1
     cmds:
       - npm run tauri build
 
