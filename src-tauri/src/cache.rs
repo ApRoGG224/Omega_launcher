@@ -1,7 +1,28 @@
 use std::path::Path;
 
+use serde::Serialize;
 use serde_json::Value;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
+use crate::db::Db;
+
+#[derive(Serialize, Default, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SystemMemoryInfo {
+    pub total_ram_mb: u64,
+    pub available_ram_mb: u64,
+    pub used_ram_mb: u64,
+    pub launcher_rss_mb: u64,
+}
+
+#[derive(Serialize, Default, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct BackendOptimizationResult {
+    pub db_freed_bytes: u64,
+    pub temp_freed_bytes: u64,
+    pub logs_freed_bytes: u64,
+    pub total_freed_bytes: u64,
+    pub message: String,
+}
 
 #[tauri::command]
 pub async fn cache_mod_icon(app: AppHandle, url: String) -> Result<String, String> {
@@ -208,4 +229,154 @@ pub async fn get_cached_version_manifest(app: AppHandle) -> Result<Value, String
         Err(_) => {}
     }
     Ok(manifest)
+}
+
+#[tauri::command]
+pub async fn clear_temp_files(app: AppHandle) -> Result<u64, String> {
+    let mut freed: u64 = 0;
+    let cache_dir = app
+        .path()
+        .app_cache_dir()
+        .unwrap_or_else(|_| std::path::PathBuf::from("."));
+    let data_dir = app
+        .path()
+        .app_data_dir()
+        .unwrap_or_else(|_| std::path::PathBuf::from("."));
+
+    let clean_temp_in_dir = |dir: &Path| -> u64 {
+        let mut d_freed = 0;
+        if dir.exists() {
+            if let Ok(entries) = std::fs::read_dir(dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    let name = entry.file_name().to_string_lossy().to_string();
+                    if name.ends_with(".tmp")
+                        || name.ends_with(".part")
+                        || name.ends_with(".crdownload")
+                        || name.starts_with(".temp")
+                    {
+                        if let Ok(meta) = path.metadata() {
+                            d_freed += meta.len();
+                        }
+                        let _ = std::fs::remove_file(path);
+                    }
+                }
+            }
+        }
+        d_freed
+    };
+
+    freed += clean_temp_in_dir(&cache_dir);
+    freed += clean_temp_in_dir(&data_dir);
+
+    let temp_folder = data_dir.join("temp");
+    if temp_folder.exists() {
+        freed += get_dir_size(&temp_folder);
+        let _ = std::fs::remove_dir_all(&temp_folder);
+        let _ = std::fs::create_dir_all(&temp_folder);
+    }
+
+    Ok(freed)
+}
+
+#[tauri::command]
+pub fn get_system_memory_info() -> Result<SystemMemoryInfo, String> {
+    let mut info = SystemMemoryInfo::default();
+
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(meminfo) = std::fs::read_to_string("/proc/meminfo") {
+            let mut total_kb: u64 = 0;
+            let mut avail_kb: u64 = 0;
+            for line in meminfo.lines() {
+                if line.starts_with("MemTotal:") {
+                    if let Some(val) = line.split_whitespace().nth(1) {
+                        total_kb = val.parse().unwrap_or(0);
+                    }
+                } else if line.starts_with("MemAvailable:") {
+                    if let Some(val) = line.split_whitespace().nth(1) {
+                        avail_kb = val.parse().unwrap_or(0);
+                    }
+                }
+            }
+            info.total_ram_mb = total_kb / 1024;
+            info.available_ram_mb = avail_kb / 1024;
+            if total_kb >= avail_kb {
+                info.used_ram_mb = (total_kb - avail_kb) / 1024;
+            }
+        }
+
+        if let Ok(status) = std::fs::read_to_string("/proc/self/status") {
+            for line in status.lines() {
+                if line.starts_with("VmRSS:") {
+                    if let Some(val) = line.split_whitespace().nth(1) {
+                        let rss_kb: u64 = val.parse().unwrap_or(0);
+                        info.launcher_rss_mb = rss_kb / 1024;
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(info)
+}
+
+#[tauri::command]
+pub async fn optimize_launcher_backend(
+    app: AppHandle,
+    db: State<'_, Db>,
+) -> Result<BackendOptimizationResult, String> {
+    let data_dir = app
+        .path()
+        .app_data_dir()
+        .unwrap_or_else(|_| std::path::PathBuf::from("."));
+
+    // 1. Initial DB size
+    let db_path = data_dir.join("omega.db");
+    let wal_path = data_dir.join("omega.db-wal");
+    let mut initial_db_size: u64 = 0;
+    if let Ok(m) = db_path.metadata() {
+        initial_db_size += m.len();
+    }
+    if let Ok(m) = wal_path.metadata() {
+        initial_db_size += m.len();
+    }
+
+    // 2. Run DB VACUUM and optimize
+    if let Ok(conn) = db.0.lock() {
+        let _ = conn.execute_batch(
+            "PRAGMA optimize;
+             PRAGMA wal_checkpoint(TRUNCATE);
+             VACUUM;
+             PRAGMA shrink_memory;",
+        );
+    }
+
+    let mut after_db_size: u64 = 0;
+    if let Ok(m) = db_path.metadata() {
+        after_db_size += m.len();
+    }
+    if let Ok(m) = wal_path.metadata() {
+        after_db_size += m.len();
+    }
+    let db_freed = initial_db_size.saturating_sub(after_db_size);
+
+    // 3. Clear temporary files
+    let temp_freed = clear_temp_files(app.clone()).await.unwrap_or(0);
+
+    // 4. Clear launcher logs
+    let logs_freed = clear_launcher_logs(app.clone()).await.unwrap_or(0);
+
+    let total = db_freed + temp_freed + logs_freed;
+
+    Ok(BackendOptimizationResult {
+        db_freed_bytes: db_freed,
+        temp_freed_bytes: temp_freed,
+        logs_freed_bytes: logs_freed,
+        total_freed_bytes: total,
+        message: format!(
+            "Бэкенд успешно оптимизирован: база данных сжата, временные файлы и старые журналы очищены (всего освобождено {} байт)",
+            total
+        ),
+    })
 }

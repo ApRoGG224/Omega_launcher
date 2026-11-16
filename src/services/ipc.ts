@@ -37,6 +37,21 @@ export interface MinecraftInsidePage {
   hasNext: boolean;
 }
 
+export interface SystemMemoryInfo {
+  totalRamMb: number;
+  availableRamMb: number;
+  usedRamMb: number;
+  launcherRssMb: number;
+}
+
+export interface BackendOptimizationResult {
+  dbFreedBytes: number;
+  tempFreedBytes: number;
+  logsFreedBytes: number;
+  totalFreedBytes: number;
+  message: string;
+}
+
 export const ipc = {
   async loginMicrosoft(): Promise<string> {
     return invoke<string>("login_microsoft");
@@ -100,6 +115,8 @@ export const ipc = {
     instanceId: string;
     customJvmArgs?: string;
     enableGamemode?: boolean;
+    fullscreen?: boolean;
+    resolution?: string;
   }): Promise<void> {
     await invoke("launch_minecraft", {
       version: args.version,
@@ -109,6 +126,8 @@ export const ipc = {
       instanceId: args.instanceId,
       customJvmArgs: args.customJvmArgs ?? null,
       enableGamemode: args.enableGamemode ?? null,
+      fullscreen: args.fullscreen ?? null,
+      resolution: args.resolution ?? null,
     });
   },
 
@@ -126,6 +145,26 @@ export const ipc = {
 
   async clearGameLogs(gameDir?: string): Promise<number> {
     return invoke<number>("clear_game_logs", { gameDir: gameDir ?? null });
+  },
+
+  async clearTempFiles(): Promise<number> {
+    return invoke<number>("clear_temp_files");
+  },
+
+  async optimizeDatabase(): Promise<string> {
+    return invoke<string>("db_optimize");
+  },
+
+  async getDatabaseSize(): Promise<number> {
+    return invoke<number>("db_get_size");
+  },
+
+  async getSystemMemoryInfo(): Promise<SystemMemoryInfo> {
+    return invoke<SystemMemoryInfo>("get_system_memory_info");
+  },
+
+  async optimizeLauncherBackend(): Promise<BackendOptimizationResult> {
+    return invoke<BackendOptimizationResult>("optimize_launcher_backend");
   },
 
   async killMinecraft(instanceId: string): Promise<string> {

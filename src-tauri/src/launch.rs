@@ -432,6 +432,8 @@ pub async fn launch_minecraft(
     instance_id: String,
     custom_jvm_args: Option<String>,
     enable_gamemode: Option<bool>,
+    fullscreen: Option<bool>,
+    resolution: Option<String>,
 ) -> Result<String, String> {
     let data_dir = app_data_dir(&app);
     let vanilla_version: String = version
@@ -783,6 +785,28 @@ pub async fn launch_minecraft(
         resolved_game.push("--port".to_string());
         resolved_game.push(parts.get(1).map(|p| p.to_string()).unwrap_or_else(|| "25565".to_string()));
     }
+
+    if let Some(true) = fullscreen {
+        emit_line(&app, "[launcher/INFO] Fullscreen mode enabled for launch");
+        resolved_game.push("--fullscreen".to_string());
+    }
+
+    if let Some(res) = &resolution {
+        let trimmed_res = res.trim();
+        if trimmed_res.contains('x') && trimmed_res != "default" {
+            let mut parts = trimmed_res.split('x');
+            if let (Some(w), Some(h)) = (parts.next(), parts.next()) {
+                if let (Ok(width_num), Ok(height_num)) = (w.trim().parse::<u32>(), h.trim().parse::<u32>()) {
+                    emit_line(&app, &format!("[launcher/INFO] Setting launch resolution: {width_num}x{height_num}"));
+                    resolved_game.push("--width".to_string());
+                    resolved_game.push(width_num.to_string());
+                    resolved_game.push("--height".to_string());
+                    resolved_game.push(height_num.to_string());
+                }
+            }
+        }
+    }
+
     command.args(&resolved_game);
 
     emit_line(&app, "[launcher/INFO] =========================================");

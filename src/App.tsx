@@ -191,6 +191,56 @@ export const App: React.FC = () => {
     return true;
   });
 
+  const [ultraPerformanceMode, setUltraPerformanceMode] = useState<boolean>(() => {
+    try {
+      const raw = localStorage.getItem("omega_launcher_settings");
+      if (raw) {
+        const s = JSON.parse(raw);
+        return Boolean(s.ultraPerformanceMode);
+      }
+    } catch {}
+    return false;
+  });
+
+  const [disable3DCharacter, setDisable3DCharacter] = useState<boolean>(() => {
+    try {
+      const raw = localStorage.getItem("omega_launcher_settings");
+      if (raw) {
+        const s = JSON.parse(raw);
+        return Boolean(s.disable3DCharacter || s.ultraPerformanceMode);
+      }
+    } catch {}
+    return false;
+  });
+
+  useEffect(() => {
+    const handleSettingsUpdated = () => {
+      try {
+        const raw = localStorage.getItem("omega_launcher_settings");
+        if (raw) {
+          const s = JSON.parse(raw);
+          const isUltra = Boolean(s.ultraPerformanceMode);
+          const noChar = Boolean(s.disable3DCharacter || s.ultraPerformanceMode);
+          setUltraPerformanceMode(isUltra);
+          setDisable3DCharacter(noChar);
+          if (isUltra || s.disableAnimations) {
+            document.body.classList.add("ultra-performance-mode");
+          } else {
+            document.body.classList.remove("ultra-performance-mode");
+          }
+        }
+      } catch {}
+    };
+
+    handleSettingsUpdated();
+    window.addEventListener("storage", handleSettingsUpdated);
+    window.addEventListener("omega_settings_updated", handleSettingsUpdated);
+    return () => {
+      window.removeEventListener("storage", handleSettingsUpdated);
+      window.removeEventListener("omega_settings_updated", handleSettingsUpdated);
+    };
+  }, []);
+
   const handleSelectBg = (index: number) => {
     if (index >= 0 && index < MINECRAFT_BACKGROUNDS.length) {
       setBgIndex(index);
@@ -718,6 +768,9 @@ export const App: React.FC = () => {
         ? `${selectedInstance.mcVersion}-${loader.toLowerCase()}`
         : selectedInstance.mcVersion;
 
+    const fullscreen = Boolean(settings?.fullscreen);
+    const resolution = typeof settings?.resolution === "string" ? settings.resolution : undefined;
+
     setIsRunning(true);
     pushLog(
       `[launcher/INFO] Запуск "${selectedInstance.name}" (Minecraft ${selectedInstance.mcVersion}, ${loader}) от имени "${activeAccount.name}" [RAM: ${ramToUse}G, JVM: ${customJvmArgs}]...`,
@@ -732,7 +785,18 @@ export const App: React.FC = () => {
         instanceId: selectedInstance.id,
         customJvmArgs,
         enableGamemode,
+        fullscreen,
+        resolution,
       });
+
+      if (Boolean(settings?.closeOnLaunch)) {
+        pushLog(`[launcher/INFO] Закрытие лаунчера согласно настройкам (closeOnLaunch)...`, "INFO");
+        setTimeout(async () => {
+          try {
+            await ipc.appExit();
+          } catch {}
+        }, 1200);
+      }
     } catch (e: any) {
       pushLog(`[launcher/ERROR] Ошибка запуска: ${e?.message || e}`, "ERROR");
       setIsRunning(false);
@@ -884,6 +948,9 @@ export const App: React.FC = () => {
           ? `${inst.mcVersion}-${loader.toLowerCase()}`
           : inst.mcVersion;
 
+      const fullscreen = Boolean(settings?.fullscreen);
+      const resolution = typeof settings?.resolution === "string" ? settings.resolution : undefined;
+
       setIsRunning(true);
       setActiveScreen("home");
       pushLog(`[launcher/INFO] Прямое подключение к серверу "${serverName}" (${ip}) [RAM: ${ramToUse}G, JVM: ${customJvmArgs}]...`, "INFO");
@@ -896,7 +963,18 @@ export const App: React.FC = () => {
           instanceId: inst.id,
           customJvmArgs,
           enableGamemode,
+          fullscreen,
+          resolution,
         });
+
+        if (Boolean(settings?.closeOnLaunch)) {
+          pushLog(`[launcher/INFO] Закрытие лаунчера согласно настройкам (closeOnLaunch)...`, "INFO");
+          setTimeout(async () => {
+            try {
+              await ipc.appExit();
+            } catch {}
+          }, 1200);
+        }
       } catch (e: any) {
         pushLog(`[launcher/ERROR] Ошибка прямого подключения: ${e?.message || e}`, "ERROR");
         setIsRunning(false);
@@ -989,12 +1067,14 @@ export const App: React.FC = () => {
         backgroundCustomization={menusCustomization.background}
       />
 
-      <Stage3DLayer
-        visible={activeScreen === "home" && !menuCustomizerModal.isOpen && !isOmegaModalOpen}
-        skinUrl={activeSkinUrl}
-        capeUrl={activeCapeUrl}
-        model={skinModel}
-      />
+      {!disable3DCharacter && (
+        <Stage3DLayer
+          visible={activeScreen === "home" && !menuCustomizerModal.isOpen && !isOmegaModalOpen}
+          skinUrl={activeSkinUrl}
+          capeUrl={activeCapeUrl}
+          model={skinModel}
+        />
+      )}
 
       <HudLayer
         visible={true}

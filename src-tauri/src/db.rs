@@ -303,3 +303,31 @@ pub fn db_save_icon(app: AppHandle, instance_id: String, data_url: String) -> Re
     std::fs::write(&icon_path, bytes).map_err(|e| e.to_string())?;
     Ok(icon_path.to_string_lossy().to_string())
 }
+
+#[tauri::command]
+pub fn db_optimize(db: State<'_, Db>) -> Result<String, String> {
+    let conn = db.0.lock().map_err(|e| e.to_string())?;
+    conn.execute_batch(
+        "PRAGMA optimize;
+         PRAGMA wal_checkpoint(TRUNCATE);
+         VACUUM;
+         PRAGMA shrink_memory;",
+    )
+    .map_err(|e| format!("Database optimization error: {e}"))?;
+    Ok("База данных успешно дефрагментирована и сжата".to_string())
+}
+
+#[tauri::command]
+pub fn db_get_size(app: AppHandle) -> Result<u64, String> {
+    let data_dir = app_data_dir(&app);
+    let db_path = data_dir.join("omega.db");
+    let mut total: u64 = 0;
+    if let Ok(meta) = db_path.metadata() {
+        total += meta.len();
+    }
+    let wal_path = data_dir.join("omega.db-wal");
+    if let Ok(meta) = wal_path.metadata() {
+        total += meta.len();
+    }
+    Ok(total)
+}

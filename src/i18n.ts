@@ -39,6 +39,7 @@ export const translations = {
 
     settingsTitle: "Налаштування",
     settingsSubtitle: "Конфігурація лаунчера",
+    sidebarMemory: "Пам'ять та очищення",
     sidebarOptimization: "Оптимізація",
     optTitle: "Оптимізація лаунчера та гри",
     optSubtitle: "Тонке налаштування продуктивності, очищення кешу та оптимізація Java Virtual Machine",
@@ -472,6 +473,7 @@ export const translations = {
 
     settingsTitle: "Настройки",
     settingsSubtitle: "Конфигурация лаунчера",
+    sidebarMemory: "Память и очистка",
     sidebarOptimization: "Оптимизация",
     optTitle: "Оптимизация лаунчера и игры",
     optSubtitle: "Тонкая настройка производительности, очистка кэша и тюнинг Java Virtual Machine",
@@ -905,6 +907,7 @@ export const translations = {
 
     settingsTitle: "Settings",
     settingsSubtitle: "Launcher configuration",
+    sidebarMemory: "Memory & Storage",
     sidebarOptimization: "Optimization",
     optTitle: "Launcher & Game Optimization",
     optSubtitle: "Performance tuning, cache cleanup, and Java Virtual Machine optimization",

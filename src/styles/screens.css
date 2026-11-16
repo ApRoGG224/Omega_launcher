@@ -5726,3 +5726,90 @@ body.launcher-eco-mode .bg-dust-particles {
   display: none !important;
 }
 
+/* Ultra-Performance Mode: zero animations, instant transitions, zero 3D load */
+body.ultra-performance-mode,
+body.ultra-performance-mode *,
+body.ultra-performance-mode *::before,
+body.ultra-performance-mode *::after {
+  animation: none !important;
+  transition: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+body.ultra-performance-mode .atmosphere-particles,
+body.ultra-performance-mode .bg-dust-particles,
+body.ultra-performance-mode canvas.stage-3d-canvas,
+body.ultra-performance-mode .stage-3d-canvas-wrap {
+  display: none !important;
+}
+
+/* Memory Stats Card in settings */
+.set-mem-stats-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+  gap: 10px !important;
+  margin-top: 6px !important;
+  margin-bottom: 8px !important;
+}
+
+.set-mem-stat-card {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  padding: 12px 14px !important;
+  border-radius: 12px !important;
+  background: #090c11 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.set-mem-stat-val {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  font-family: var(--font-primary), Inter, system-ui, sans-serif !important;
+}
+
+.set-mem-stat-lbl {
+  font-size: 11px !important;
+  color: #8b919c !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+}
+
+.set-hero-card {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  padding: 20px 22px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.08) 0%, rgba(13, 17, 23, 0.95) 100%) !important;
+  border: 1px solid rgba(124, 92, 255, 0.28) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+.set-hero-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.set-hero-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+.set-hero-desc {
+  font-size: 12.5px !important;
+  color: #a0a6b5 !important;
+  line-height: 1.5 !important;
+}
+
