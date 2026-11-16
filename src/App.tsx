@@ -310,14 +310,21 @@ export const App: React.FC = () => {
   }, [activeAccountId]);
 
   const [liveLogs, setLiveLogs] = useState<LogEntry[]>([]);
+  const [gamePid, setGamePid] = useState<number | null>(null);
+  const [gameStartTime, setGameStartTime] = useState<number | null>(null);
+  const [exitStatus, setExitStatus] = useState<{ code: number | null; crashed: boolean } | null>(null);
 
   const pushLog = useCallback((message: string, tag: LogEntry["tag"] = "INFO") => {
     const now = new Date();
     const time = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`;
-    setLiveLogs((prev) => [
-      ...prev.slice(-300),
-      { id: `${Date.now()}_${Math.random()}`, time, tag, message },
-    ]);
+    setLiveLogs((prev) => {
+      // Maintain up to 10,000 lines for complete instance logs without dropping
+      const next = prev.length >= 10000 ? prev.slice(prev.length - 8000) : prev;
+      return [
+        ...next,
+        { id: `${Date.now()}_${Math.random()}`, time, tag, message },
+      ];
+    });
   }, []);
 
   useEffect(() => {
@@ -326,13 +333,35 @@ export const App: React.FC = () => {
 
     listen<string>("download-progress", (event) => {
       const line = event.payload;
-      if (line.includes("Minecraft process spawned with PID:")) {
+      const pidMatch = line.match(/process spawned with PID:\s*(\d+)/i);
+      if (pidMatch) {
         setIsRunning(true);
+        setGamePid(parseInt(pidMatch[1], 10));
+        setGameStartTime(Date.now());
+        setExitStatus(null);
       }
-      if (line.includes("Minecraft process exited")) {
+      const exitMatch = line.match(/process exited with code:\s*(\d+)/i);
+      if (exitMatch) {
         setIsRunning(false);
+        setGamePid(null);
+        setExitStatus({ code: parseInt(exitMatch[1], 10), crashed: false });
       }
-      const tag: LogEntry["tag"] = line.includes("[ERROR]")
+      const crashMatch = line.match(/process crashed with exit code:\s*(-?\d+)/i);
+      if (crashMatch) {
+        setIsRunning(false);
+        setGamePid(null);
+        setExitStatus({ code: parseInt(crashMatch[1], 10), crashed: true });
+      }
+      if (line.includes("terminated by signal")) {
+        setIsRunning(false);
+        setGamePid(null);
+        setExitStatus({ code: 137, crashed: true });
+      } else if (line.includes("Minecraft process exited") && !exitMatch && !crashMatch) {
+        setIsRunning(false);
+        setGamePid(null);
+      }
+
+      const tag: LogEntry["tag"] = (line.includes("[ERROR]") || line.includes("Exception in thread") || line.includes("Caused by:"))
         ? "ERROR"
         : line.includes("[WARN]")
         ? "WARN"
@@ -705,8 +734,30 @@ export const App: React.FC = () => {
     } catch (e: any) {
       pushLog(`[launcher/ERROR] Ошибка запуска: ${e?.message || e}`, "ERROR");
       setIsRunning(false);
+      setGamePid(null);
     }
   }, [selectedInstance, isRunning, activeAccount.name, pushLog]);
+
+  const handleKillMinecraft = useCallback(async () => {
+    if (!selectedInstance) return;
+    pushLog(`[launcher/WARN] Принудительная остановка Minecraft для "${selectedInstance.name}"...`, "WARN");
+    try {
+      await ipc.killMinecraft(selectedInstance.id);
+    } catch (e: any) {
+      pushLog(`[launcher/ERROR] Ошибка принудительной остановки: ${e?.message || e}`, "ERROR");
+    }
+    setIsRunning(false);
+    setGamePid(null);
+  }, [selectedInstance, pushLog]);
+
+  const handleOpenLogsFolder = useCallback(async () => {
+    if (!selectedInstance) return;
+    try {
+      await ipc.openInstanceLogs(selectedInstance.id);
+    } catch {
+      await ipc.openFolder(selectedInstance.id);
+    }
+  }, [selectedInstance]);
 
   const handleToggleSound = () => {
     setSoundMuted((prev) => {
@@ -1019,6 +1070,11 @@ export const App: React.FC = () => {
         onClearLogs={() => setLiveLogs([])}
         onDirectConnect={handleDirectConnect}
         isRunning={isRunning}
+        gamePid={gamePid}
+        gameStartTime={gameStartTime}
+        exitStatus={exitStatus}
+        onKillMinecraft={handleKillMinecraft}
+        onOpenLogsFolder={handleOpenLogsFolder}
         bgIndex={bgIndex}
         isBgAutoPlay={isBgAutoPlay}
         onSelectBg={handleSelectBg}

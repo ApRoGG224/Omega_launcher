@@ -773,9 +773,17 @@ pub async fn launch_minecraft(
     }
     command.args(&resolved_game);
 
-    emit_line(&app, &format!("[launcher/INFO] Spawning Minecraft in {}", game_dir.display()));
+    emit_line(&app, "[launcher/INFO] =========================================");
+    emit_line(&app, "[launcher/INFO] Omega Launcher - Starting Minecraft Instance");
+    emit_line(&app, &format!("[launcher/INFO] Instance: {}", instance_id));
+    emit_line(&app, &format!("[launcher/INFO] Minecraft Version: {} (Launch Target: {})", vanilla_version, final_version));
+    emit_line(&app, &format!("[launcher/INFO] Java Binary: {}", java_path));
+    emit_line(&app, &format!("[launcher/INFO] Main Class: {}", config.main_class));
+    emit_line(&app, &format!("[launcher/INFO] Game Directory: {}", game_dir.display()));
+    emit_line(&app, &format!("[launcher/INFO] Allocated RAM: {} GB", ram_g));
+    emit_line(&app, "[launcher/INFO] =========================================");
 
-    let child = command
+    let mut child = command
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
@@ -786,11 +794,14 @@ pub async fn launch_minecraft(
     std::fs::write(&pid_file, pid.to_string()).map_err(|e| e.to_string())?;
     emit_line(&app, &format!("[launcher/INFO] Minecraft process spawned with PID: {pid}"));
 
-    let stdout = child.stdout.expect("stdout piped");
-    let stderr = child.stderr.expect("stderr piped");
+    let stdout = child.stdout.take().expect("stdout piped");
+    let stderr = child.stderr.take().expect("stderr piped");
     let app1 = app.clone();
+    let app2 = app.clone();
+    let app3 = app.clone();
     let pid_file_exit = pid_file.clone();
-    std::thread::spawn(move || {
+
+    let stdout_handle = std::thread::spawn(move || {
         let reader = BufReader::new(stdout);
         for line in reader.lines() {
             if let Ok(line) = line {
@@ -798,15 +809,37 @@ pub async fn launch_minecraft(
                 let _ = app1.emit("download-progress", line);
             }
         }
-        let _ = app1.emit("download-progress", "[launcher/INFO] Minecraft process exited");
-        let _ = std::fs::remove_file(&pid_file_exit);
     });
-    std::thread::spawn(move || {
+
+    let stderr_handle = std::thread::spawn(move || {
         let reader = BufReader::new(stderr);
         for line in reader.lines() {
             if let Ok(line) = line {
                 eprintln!("[ERROR] {line}");
-                let _ = app.emit("download-progress", format!("[ERROR] {}", line));
+                let _ = app2.emit("download-progress", format!("[ERROR] {}", line));
+            }
+        }
+    });
+
+    std::thread::spawn(move || {
+        let _ = stdout_handle.join();
+        let _ = stderr_handle.join();
+        let wait_res = child.wait();
+        let _ = std::fs::remove_file(&pid_file_exit);
+        match wait_res {
+            Ok(status) => {
+                if let Some(code) = status.code() {
+                    if code == 0 {
+                        let _ = app3.emit("download-progress", "[launcher/INFO] Minecraft process exited with code: 0");
+                    } else {
+                        let _ = app3.emit("download-progress", format!("[launcher/ERROR] Minecraft process crashed with exit code: {code}"));
+                    }
+                } else {
+                    let _ = app3.emit("download-progress", "[launcher/WARN] Minecraft process terminated by signal");
+                }
+            }
+            Err(e) => {
+                let _ = app3.emit("download-progress", format!("[launcher/ERROR] Failed waiting for Minecraft process: {e}"));
             }
         }
     });

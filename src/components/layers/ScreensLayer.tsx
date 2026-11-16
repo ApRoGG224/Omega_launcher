@@ -68,6 +68,11 @@ interface ScreensLayerProps {
   capeUrl?: string | null;
   model?: "default" | "slim";
   selectedInstance?: InstanceData | null;
+  gamePid?: number | null;
+  gameStartTime?: number | null;
+  exitStatus?: { code: number | null; crashed: boolean } | null;
+  onKillMinecraft?: () => Promise<void>;
+  onOpenLogsFolder?: () => Promise<void>;
   menusCustomization?: import("../../types/menuCustomization").MenusCustomizationState;
   onOpenMenuCustomizer?: (zone: import("../../types/menuCustomization").CustomizerZoneId) => void;
   onUpdateMenusCustomization?: (state: import("../../types/menuCustomization").MenusCustomizationState) => void;
@@ -122,6 +127,11 @@ export const ScreensLayer: React.FC<ScreensLayerProps> = React.memo(({
   capeUrl,
   model,
   selectedInstance,
+  gamePid,
+  gameStartTime,
+  exitStatus,
+  onKillMinecraft,
+  onOpenLogsFolder,
   menusCustomization,
   onOpenMenuCustomizer,
   onUpdateMenusCustomization,
@@ -213,6 +223,12 @@ export const ScreensLayer: React.FC<ScreensLayerProps> = React.memo(({
           isRunning={isRunning}
           logs={logs}
           onClearLogs={onClearLogs}
+          selectedInstance={selectedInstance || instances.find((i) => i.id === selectedInstanceId)}
+          gamePid={gamePid}
+          gameStartTime={gameStartTime}
+          exitStatus={exitStatus}
+          onKillMinecraft={onKillMinecraft}
+          onOpenLogsFolder={onOpenLogsFolder}
         />
       )}
 

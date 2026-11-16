@@ -1,0 +1,570 @@
+/* ==========================================================================
+   Omega Launcher - Prism Launcher Style Console
+   Matte obsidian Minecraft terminal with zero neon, high performance & 60 FPS
+   ========================================================================== */
+
+.console-screen-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  padding: 74px 20px 16px 20px !important;
+  box-sizing: border-box !important;
+  background: #07090e !important;
+  backdrop-filter: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  z-index: 100 !important;
+}
+
+.console-main-container {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  min-height: 0 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* --- Top Header Bar --- */
+.console-header-bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 8px 12px !important;
+  background: #0c0f17 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  flex-shrink: 0 !important;
+  flex-wrap: wrap !important;
+}
+
+.console-status-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.console-status-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 5px 12px !important;
+  background: #111622 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 7px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace !important;
+  letter-spacing: 0.03em !important;
+  color: #f1f5f9 !important;
+}
+
+.console-status-dot {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  flex-shrink: 0 !important;
+}
+
+@keyframes console-pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(1.2);
+  }
+}
+
+.console-status-dot.running {
+  background: #22c55e !important;
+  animation: console-pulse-glow 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+.console-status-dot.success {
+  background: #3b82f6 !important;
+}
+
+.console-status-dot.crashed {
+  background: #ef4444 !important;
+}
+
+.console-status-dot.idle {
+  background: #64748b !important;
+}
+
+.console-timer-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  color: #94a3b8 !important;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace !important;
+  font-size: 11.5px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+}
+
+.console-instance-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  color: #cbd5e1 !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.console-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.console-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 32px !important;
+  padding: 0 11px !important;
+  border-radius: 6px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  background: #111622 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #cbd5e1 !important;
+  user-select: none !important;
+}
+
+.console-btn:hover {
+  background: #1a2234 !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+}
+
+.console-btn:active {
+  transform: translateY(1px) !important;
+}
+
+.console-btn-danger {
+  background: #7f1d1d !important;
+  border-color: #b91c1c !important;
+  color: #fee2e2 !important;
+}
+
+.console-btn-danger:hover {
+  background: #991b1b !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+.console-btn-primary {
+  background: #1e3a8a !important;
+  border-color: #2563eb !important;
+  color: #dbeafe !important;
+}
+
+.console-btn-primary:hover {
+  background: #1d4ed8 !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+/* --- Filter & Search Bar --- */
+.console-sub-bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 6px 10px !important;
+  background: #0c0f17 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  flex-shrink: 0 !important;
+  flex-wrap: wrap !important;
+}
+
+.console-filter-tabs {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-wrap: wrap !important;
+}
+
+.console-filter-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  height: 28px !important;
+  padding: 0 9px !important;
+  border-radius: 5px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: #8b949e !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.console-filter-pill:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: #cbd5e1 !important;
+}
+
+.console-filter-pill.active {
+  background: #1a2234 !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #f8fafc !important;
+}
+
+.console-filter-count {
+  font-size: 10px !important;
+  padding: 1px 5px !important;
+  border-radius: 4px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #94a3b8 !important;
+}
+
+.console-filter-pill.active .console-filter-count {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+
+/* Search Box */
+.console-search-box {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 30px !important;
+  padding: 0 8px !important;
+  background: #111622 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 6px !important;
+  min-width: 220px !important;
+  max-width: 340px !important;
+  flex: 1 !important;
+}
+
+.console-search-input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #f1f5f9 !important;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace !important;
+  font-size: 11.5px !important;
+  width: 100% !important;
+}
+
+.console-search-input::placeholder {
+  color: #64748b !important;
+}
+
+.console-search-badge {
+  font-size: 10.5px !important;
+  font-family: ui-monospace, monospace !important;
+  color: #94a3b8 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  padding: 1px 5px !important;
+  border-radius: 4px !important;
+  white-space: nowrap !important;
+}
+
+.console-search-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  border: none !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+}
+
+.console-search-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+/* View Options Toggles */
+.console-view-toggles {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+.console-toggle-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  height: 28px !important;
+  padding: 0 8px !important;
+  border-radius: 5px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  background: #111622 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #8b949e !important;
+  transition: all 0.15s ease !important;
+  user-select: none !important;
+}
+
+.console-toggle-btn:hover {
+  color: #cbd5e1 !important;
+  background: #161d2d !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.console-toggle-btn.active {
+  background: #1a2744 !important;
+  border-color: #3b82f6 !important;
+  color: #93c5fd !important;
+}
+
+/* --- Log Viewport Body --- */
+.console-body-wrapper {
+  position: relative !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #080a0f !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+.console-viewport {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  padding: 6px 0 !important;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace !important;
+  font-size: 12px !important;
+  line-height: 1.48 !important;
+  color: #cbd5e1 !important;
+  user-select: text !important;
+  scroll-behavior: auto !important;
+}
+
+/* Scrollbar styling */
+.console-viewport::-webkit-scrollbar {
+  width: 9px !important;
+  height: 9px !important;
+}
+
+.console-viewport::-webkit-scrollbar-track {
+  background: #080a0f !important;
+}
+
+.console-viewport::-webkit-scrollbar-thumb {
+  background: #1e2638 !important;
+  border-radius: 4px !important;
+  border: 2px solid #080a0f !important;
+}
+
+.console-viewport::-webkit-scrollbar-thumb:hover {
+  background: #2b374f !important;
+}
+
+/* Log Line Rows */
+.console-line {
+  display: flex !important;
+  align-items: baseline !important;
+  min-height: 22px !important;
+  padding: 1px 12px !important;
+  transition: background 0.1s ease !important;
+  content-visibility: auto !important;
+  contain-intrinsic-size: 22px !important;
+}
+
+.console-line:hover {
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+.console-line.active-match {
+  background: rgba(234, 179, 8, 0.18) !important;
+  outline: 1px solid #eab308 !important;
+}
+
+.console-line-num {
+  width: 44px !important;
+  flex-shrink: 0 !important;
+  text-align: right !important;
+  padding-right: 14px !important;
+  color: #475569 !important;
+  user-select: none !important;
+  font-size: 11px !important;
+}
+
+.console-line-time {
+  color: #64748b !important;
+  flex-shrink: 0 !important;
+  margin-right: 10px !important;
+  font-size: 11px !important;
+}
+
+.console-line-badge {
+  display: inline-block !important;
+  flex-shrink: 0 !important;
+  min-width: 52px !important;
+  text-align: center !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 0 4px !important;
+  border-radius: 3px !important;
+  margin-right: 10px !important;
+  line-height: 16px !important;
+  letter-spacing: 0.02em !important;
+}
+
+.badge-info {
+  background: rgba(34, 197, 94, 0.12) !important;
+  color: #4ade80 !important;
+  border: 1px solid rgba(34, 197, 94, 0.25) !important;
+}
+
+.badge-warn {
+  background: rgba(234, 179, 8, 0.12) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(234, 179, 8, 0.25) !important;
+}
+
+.badge-error {
+  background: rgba(239, 68, 68, 0.14) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.badge-auth {
+  background: rgba(45, 212, 191, 0.12) !important;
+  color: #2dd4bf !important;
+  border: 1px solid rgba(45, 212, 191, 0.25) !important;
+}
+
+.badge-launcher {
+  background: rgba(168, 85, 247, 0.14) !important;
+  color: #c084fc !important;
+  border: 1px solid rgba(168, 85, 247, 0.3) !important;
+}
+
+.console-line-content {
+  flex: 1 !important;
+  word-break: break-all !important;
+}
+
+.console-line.wrap .console-line-content {
+  white-space: pre-wrap !important;
+}
+
+.console-line.nowrap .console-line-content {
+  white-space: pre !important;
+}
+
+/* Java Stack Trace / Exception highlight */
+.console-line.stack-trace {
+  background: rgba(239, 68, 68, 0.06) !important;
+  border-left: 2px solid #ef4444 !important;
+}
+
+.console-line.stack-trace .console-line-content {
+  color: #fca5a5 !important;
+  padding-left: 4px !important;
+}
+
+/* ModLoader highlights */
+.modloader-tag {
+  color: #67e8f9 !important;
+  font-weight: 600 !important;
+}
+
+/* Search Highlights */
+.console-mark {
+  background: #ca8a04 !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  padding: 0 2px !important;
+  border-radius: 2px !important;
+}
+
+.console-mark-active {
+  background: #f97316 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  padding: 0 3px !important;
+  border-radius: 2px !important;
+  outline: 1px solid #ffffff !important;
+}
+
+/* Empty State */
+.console-empty-state {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 80px 20px !important;
+  color: #64748b !important;
+  text-align: center !important;
+  gap: 12px !important;
+}
+
+.console-empty-icon {
+  width: 48px !important;
+  height: 48px !important;
+  opacity: 0.4 !important;
+}
+
+.console-empty-title {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+}
+
+.console-empty-desc {
+  font-size: 12.5px !important;
+  color: #64748b !important;
+  max-width: 400px !important;
+  line-height: 1.5 !important;
+}
+
+/* Floating Resume Auto-Scroll Button */
+.console-resume-pill {
+  position: absolute !important;
+  bottom: 16px !important;
+  right: 20px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 7px 14px !important;
+  background: #1e293b !important;
+  border: 1px solid #3b82f6 !important;
+  border-radius: 20px !important;
+  color: #93c5fd !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6) !important;
+  z-index: 20 !important;
+  transition: transform 0.15s ease, background 0.15s ease !important;
+}
+
+.console-resume-pill:hover {
+  transform: translateY(-2px) !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+}

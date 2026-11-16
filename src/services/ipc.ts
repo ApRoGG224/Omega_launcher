@@ -196,6 +196,14 @@ export const ipc = {
     await invoke("open_folder", { instanceId });
   },
 
+  async openInstanceLogs(instanceId: string): Promise<void> {
+    try {
+      await invoke("open_instance_logs", { instanceId });
+    } catch {
+      await invoke("open_folder", { instanceId });
+    }
+  },
+
   async openPath(path: string): Promise<void> {
     await invoke("open_path", { path });
   },

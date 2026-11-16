@@ -252,6 +252,22 @@ fn open_folder(app: tauri::AppHandle, instance_id: String) {
 }
 
 #[tauri::command]
+fn open_instance_logs(app: tauri::AppHandle, instance_id: String) {
+    let mut path = std::path::PathBuf::from(get_data_dir(&app));
+    path.push("instances");
+    path.push(&instance_id);
+    path.push("minecraft");
+    path.push("logs");
+    let _ = std::fs::create_dir_all(&path);
+
+    if let Ok(abs_path) = std::fs::canonicalize(&path) {
+        let path_str = abs_path.to_string_lossy().to_string();
+        use tauri_plugin_opener::OpenerExt;
+        let _ = app.opener().open_path(path_str, None::<&str>);
+    }
+}
+
+#[tauri::command]
 fn create_shortcut(app: tauri::AppHandle, instance_id: String) -> Result<String, String> {
     let mut instance_path = std::path::PathBuf::from(get_data_dir(&app));
     instance_path.push("instances");
@@ -442,6 +458,7 @@ pub fn run() {
             auth::logout_microsoft,
             auth::open_ely_login,
             open_folder,
+            open_instance_logs,
             create_shortcut,
             count_installed_mods,
             list_installed_mod_files,
