@@ -368,8 +368,9 @@ export const App: React.FC = () => {
     const now = new Date();
     const time = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`;
     setLiveLogs((prev) => {
-      // Maintain up to 10,000 lines for complete instance logs without dropping
-      const next = prev.length >= 10000 ? prev.slice(prev.length - 8000) : prev;
+      // Keep memory footprint tiny: maintain up to 500 lines for live UI inspection
+      const maxLogs = 500;
+      const next = prev.length >= maxLogs ? prev.slice(prev.length - 400) : prev;
       return [
         ...next,
         { id: `${Date.now()}_${Math.random()}`, time, tag, message },
