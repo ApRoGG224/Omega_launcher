@@ -208,6 +208,30 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         this.renderer.render(this.scene, this.camera);
       };
 
+      // Adaptive frame rate pacing: ~60 FPS during active interaction/physics, ~42 FPS during roaming
+      // Eliminates massive 144Hz/240Hz power consumption on gaming monitors
+      let lastDrawTime = performance.now();
+      (viewer as any).draw = function () {
+        if (this._renderPaused || this._disposed) return;
+
+        const now = performance.now();
+        const ctrl = controllerRef.current;
+        const targetFps = (ctrl?.state === "dragged" || ctrl?.state === "falling") ? 60 : 42;
+        const frameInterval = 1000 / targetFps;
+        const elapsed = now - lastDrawTime;
+
+        if (elapsed >= frameInterval) {
+          lastDrawTime = now - (elapsed % frameInterval);
+          const dt = this.clock.getDelta();
+          if (this._animation !== null) {
+            this._animation.update(this.playerObject, dt);
+          }
+          this.render();
+        }
+
+        this.animationID = window.requestAnimationFrame(() => (viewer as any).draw());
+      };
+
       viewer.animation = new PhysicalRoamingAnimation();
       viewerRef.current = viewer;
 
@@ -252,6 +276,28 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         }
       };
       document.addEventListener("visibilitychange", onVisibilityChange);
+
+      const onWindowBlur = () => {
+        if (viewerRef.current) {
+          viewerRef.current.renderPaused = true;
+          if (viewerRef.current.animation) {
+            viewerRef.current.animation.paused = true;
+          }
+        }
+      };
+
+      const onWindowFocus = () => {
+        if (viewerRef.current && visibleRef.current && !document.hidden) {
+          viewerRef.current.renderPaused = false;
+          if (viewerRef.current.animation) {
+            viewerRef.current.animation.paused = false;
+          }
+          (viewerRef.current as any).clock?.getDelta();
+        }
+      };
+
+      window.addEventListener("blur", onWindowBlur);
+      window.addEventListener("focus", onWindowFocus);
 
       const tempCurWorld = new THREE.Vector3();
       const tempHitPos = new THREE.Vector3();
@@ -404,6 +450,8 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         if (resizeRaf !== null) cancelAnimationFrame(resizeRaf);
         window.removeEventListener("resize", onResize);
         document.removeEventListener("visibilitychange", onVisibilityChange);
+        window.removeEventListener("blur", onWindowBlur);
+        window.removeEventListener("focus", onWindowFocus);
         window.removeEventListener("pointerdown", onWindowPointerDown, { capture: true });
         window.removeEventListener("pointermove", onWindowPointerMove);
         window.removeEventListener("pointerup", onWindowPointerUp);

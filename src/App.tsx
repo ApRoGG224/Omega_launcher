@@ -1069,7 +1069,7 @@ export const App: React.FC = () => {
 
       {!disable3DCharacter && (
         <Stage3DLayer
-          visible={activeScreen === "home" && !menuCustomizerModal.isOpen && !isOmegaModalOpen}
+          visible={activeScreen === "home" && !menuCustomizerModal.isOpen && !isOmegaModalOpen && !isRunning}
           skinUrl={activeSkinUrl}
           capeUrl={activeCapeUrl}
           model={skinModel}
