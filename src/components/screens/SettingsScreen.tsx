@@ -1758,10 +1758,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <b>
                       {globalLang === "uk"
-                        ? "Повністю вимкнути 3D-персонажа"
+                        ? "3D-персонаж (який ходить по екрану)"
                         : globalLang === "ru"
-                        ? "Полностью отключить 3D-персонажа"
-                        : "Completely Disable 3D Character"}
+                        ? "3D-персонаж (который ходит по экрану)"
+                        : "Walking 3D Character"}
                     </b>
                     <span
                       style={{
@@ -1778,17 +1778,45 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   </div>
                   <small>
                     {globalLang === "uk"
-                      ? "Повністю розмонтовує сцену Three.js зі скіном на головному екрані. Повністю звільняє ресурси відеокарти та CPU від рендерингу сцени"
+                      ? "Повністю розмонтовує сцену Three.js зі скіном на головному екрані. Звільняє ресурси відеокарти та CPU від постійного рендерингу ходьби"
                       : globalLang === "ru"
-                      ? "Полностью размонтирует сцену Three.js со скином на главном экране. Полностью освобождает ресурсы видеокарты и CPU от рендеринга сцены"
+                      ? "Полностью размонтирует сцену Three.js со скином на главном экране. Освобождает ресурсы видеокарты и CPU от постоянного рендеринга ходьбы"
                       : "Completely unmounts Three.js Canvas with the skin. Saves 100% of GPU resources and requestAnimationFrame cycles"}
                   </small>
                 </div>
-                <button
-                  type="button"
-                  className={`set-sw ${disable3DCharacter ? "on" : ""}`}
-                  onClick={() => setDisable3DCharacter((prev) => !prev)}
-                />
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <button
+                    type="button"
+                    className={`set-b ${disable3DCharacter ? "go" : ""}`}
+                    onClick={() => {
+                      const next = !disable3DCharacter;
+                      setDisable3DCharacter(next);
+                      showFeedback(
+                        next
+                          ? (globalLang === "uk"
+                              ? "3D-персонажа (який ходить) вимкнено"
+                              : globalLang === "ru"
+                              ? "3D-персонаж (который ходит) выключен"
+                              : "Walking 3D character disabled")
+                          : (globalLang === "uk"
+                              ? "3D-персонажа увімкнено"
+                              : globalLang === "ru"
+                              ? "3D-персонаж включен"
+                              : "Walking 3D character enabled")
+                      );
+                    }}
+                    style={{ height: "30px", fontSize: "12px", whiteSpace: "nowrap" }}
+                  >
+                    {disable3DCharacter
+                      ? (globalLang === "uk" ? "Увімкнути персонажа" : globalLang === "ru" ? "Включить персонажа" : "Enable Character")
+                      : (globalLang === "uk" ? "Вимкнути персонажа" : globalLang === "ru" ? "Выключить персонажа" : "Disable Character")}
+                  </button>
+                  <button
+                    type="button"
+                    className={`set-sw ${disable3DCharacter ? "on" : ""}`}
+                    onClick={() => setDisable3DCharacter((prev) => !prev)}
+                  />
+                </div>
               </div>
 
               {/* Disable Animations */}

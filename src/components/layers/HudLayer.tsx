@@ -20,6 +20,7 @@ import {
   ChevronRight,
   ChevronDown,
   User,
+  UserX,
   Plus,
   Loader2,
 } from "lucide-react";
@@ -59,6 +60,8 @@ interface HudLayerProps {
   onDirectConnect?: (serverName: string, ip: string) => void;
   topBarLayout?: TopBarItemId[];
   topBarCustomization?: import("../../types/menuCustomization").ZoneCustomizationConfig;
+  disable3DCharacter?: boolean;
+  onToggle3DCharacter?: () => void;
 }
 
 export const HudLayer: React.FC<HudLayerProps> = React.memo(({
@@ -84,6 +87,8 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
   onDirectConnect,
   topBarLayout = DEFAULT_TOPBAR_LAYOUT,
   topBarCustomization,
+  disable3DCharacter = false,
+  onToggle3DCharacter,
 }) => {
   const { t, lang } = useLanguage();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -489,6 +494,36 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
           </button>
         );
 
+      case "character_toggle":
+        return (
+          <button
+            key="character_toggle"
+            type="button"
+            className={`hud-dock-btn ${disable3DCharacter ? "muted" : ""}`}
+            onClick={onToggle3DCharacter}
+            aria-label={
+              disable3DCharacter
+                ? (lang === "uk" ? "Увімкнути 3D-персонажа" : lang === "ru" ? "Включить 3D-персонажа" : "Enable 3D character")
+                : (lang === "uk" ? "Вимкнути 3D-персонажа" : lang === "ru" ? "Выключить 3D-персонажа" : "Disable 3D character")
+            }
+          >
+            {disable3DCharacter ? <UserX size={18} /> : <User size={18} />}
+            <div className="hud-dock-tooltip">
+              {disable3DCharacter
+                ? (lang === "uk"
+                    ? "Увімкнути 3D-персонажа"
+                    : lang === "ru"
+                    ? "Включить 3D-персонажа"
+                    : "Enable 3D character")
+                : (lang === "uk"
+                    ? "Вимкнути 3D-персонажа"
+                    : lang === "ru"
+                    ? "Выключить 3D-персонажа"
+                    : "Disable 3D character")}
+            </div>
+          </button>
+        );
+
       default:
         return null;
     }
@@ -553,6 +588,47 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
       {activeScreen === "home" && (
         <aside className="hud-flank-right">
           <div className="hud-side-controls">
+            <button
+              type="button"
+              className={`hud-flank-btn hud-character-toggle-btn ${disable3DCharacter ? "muted" : ""}`}
+              onClick={onToggle3DCharacter}
+              title={
+                disable3DCharacter
+                  ? (lang === "uk"
+                      ? "Увімкнути 3D-персонажа (який ходить)"
+                      : lang === "ru"
+                      ? "Включить 3D-персонажа (который ходит)"
+                      : "Enable walking 3D character")
+                  : (lang === "uk"
+                      ? "Вимкнути 3D-персонажа (який ходить)"
+                      : lang === "ru"
+                      ? "Выключить 3D-персонажа (который ходит)"
+                      : "Disable walking 3D character")
+              }
+              aria-label={
+                disable3DCharacter
+                  ? (lang === "uk" ? "Увімкнути 3D-персонажа" : "Включить 3D-персонажа")
+                  : (lang === "uk" ? "Вимкнути 3D-персонажа" : "Выключить 3D-персонажа")
+              }
+            >
+              {disable3DCharacter ? <UserX size={17} /> : <User size={17} />}
+              <div
+                className="hud-dock-tooltip"
+                style={{ right: 0, left: "auto", transform: "none", top: "calc(100% + 9px)" }}
+              >
+                {disable3DCharacter
+                  ? (lang === "uk"
+                      ? "Увімкнути персонажа"
+                      : lang === "ru"
+                      ? "Включить персонажа"
+                      : "Enable character")
+                  : (lang === "uk"
+                      ? "Вимкнути персонажа"
+                      : lang === "ru"
+                      ? "Выключить персонажа"
+                      : "Disable character")}
+              </div>
+            </button>
             <button
               type="button"
               className={`hud-flank-btn ${soundMuted ? "muted" : ""}`}

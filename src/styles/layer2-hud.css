@@ -445,6 +445,7 @@
 }
 
 .hud-flank-btn {
+  position: relative;
   width: 38px;
   height: 38px;
   min-width: 38px;
@@ -470,9 +471,17 @@
   transform: translateY(-1px);
 }
 
+.hud-flank-btn:hover .hud-dock-tooltip,
+.hud-flank-btn:focus-visible .hud-dock-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
 .hud-flank-btn.muted {
   color: #ef4444;
   border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .hud-flank-btn.active {

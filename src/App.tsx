@@ -207,7 +207,7 @@ export const App: React.FC = () => {
       const raw = localStorage.getItem("omega_launcher_settings");
       if (raw) {
         const s = JSON.parse(raw);
-        return Boolean(s.disable3DCharacter || s.ultraPerformanceMode);
+        return Boolean(s.disable3DCharacter);
       }
     } catch {}
     return false;
@@ -220,7 +220,7 @@ export const App: React.FC = () => {
         if (raw) {
           const s = JSON.parse(raw);
           const isUltra = Boolean(s.ultraPerformanceMode);
-          const noChar = Boolean(s.disable3DCharacter || s.ultraPerformanceMode);
+          const noChar = Boolean(s.disable3DCharacter);
           setUltraPerformanceMode(isUltra);
           setDisable3DCharacter(noChar);
           if (isUltra || s.disableAnimations) {
@@ -833,6 +833,21 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleToggle3DCharacter = useCallback(() => {
+    setDisable3DCharacter((prev) => {
+      const next = !prev;
+      try {
+        const raw = localStorage.getItem("omega_launcher_settings");
+        const s = raw ? JSON.parse(raw) : {};
+        s.disable3DCharacter = next;
+        localStorage.setItem("omega_launcher_settings", JSON.stringify(s));
+        window.dispatchEvent(new Event("omega_settings_updated"));
+      } catch {}
+      showToast(next ? "3D-персонаж выключен (нагрузка на GPU 0%)" : "3D-персонаж включен");
+      return next;
+    });
+  }, [showToast]);
+
   const handleEquipSkin = (url: string, model: "default" | "slim") => {
     setActiveSkinUrl(url);
     setSkinModel(model);
@@ -1089,6 +1104,8 @@ export const App: React.FC = () => {
         skinUrl={activeSkinUrl}
         onNavigate={(screen) => setActiveScreen(screen as ScreenId)}
         onToggleSound={handleToggleSound}
+        disable3DCharacter={disable3DCharacter}
+        onToggle3DCharacter={handleToggle3DCharacter}
         onOpenModal={(modal: ActiveModal) => {
           if (modal) setActiveScreen(modal as ScreenId);
         }}

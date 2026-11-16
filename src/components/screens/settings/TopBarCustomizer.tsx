@@ -21,6 +21,7 @@ import {
   Trash2,
   Plus,
   Palette,
+  User,
 } from "lucide-react";
 import { SkinHeadAvatar } from "../../common/SkinHeadAvatar";
 import { InstanceAvatarIcon } from "../../icons/MinecraftIcons";
@@ -293,6 +294,13 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
         return (
           <div className="hud-dock-btn hud-dock-chevron" style={{ pointerEvents: "none" }}>
             <ChevronRight size={16} />
+          </div>
+        );
+
+      case "character_toggle":
+        return (
+          <div className="hud-dock-btn" style={{ pointerEvents: "none" }}>
+            <User size={18} />
           </div>
         );
 

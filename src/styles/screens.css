@@ -5740,9 +5740,7 @@ body.ultra-performance-mode *::after {
 }
 
 body.ultra-performance-mode .atmosphere-particles,
-body.ultra-performance-mode .bg-dust-particles,
-body.ultra-performance-mode canvas.stage-3d-canvas,
-body.ultra-performance-mode .stage-3d-canvas-wrap {
+body.ultra-performance-mode .bg-dust-particles {
   display: none !important;
 }
 
