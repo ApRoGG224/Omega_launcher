@@ -426,18 +426,10 @@ async fn translate_text(text: String, target_lang: String) -> Result<String, Str
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     #[cfg(target_os = "linux")]
+    if std::path::Path::new("/proc/driver/nvidia/version").exists()
+        && std::env::var("WEBKIT_DISABLE_DMABUF_RENDERER").is_err()
     {
-        for arg in std::env::args() {
-            if arg == "--no-compositing" || arg == "--disable-compositing" {
-                std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
-                break;
-            }
-        }
-        if std::path::Path::new("/proc/driver/nvidia/version").exists()
-            && std::env::var("WEBKIT_DISABLE_DMABUF_RENDERER").is_err()
-        {
-            std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
-        }
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
     }
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
