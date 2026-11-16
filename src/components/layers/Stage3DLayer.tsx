@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import React, { useEffect, useRef } from "react";
-import { SkinViewer } from "skinview3d";
+import { SkinViewer, PlayerAnimation, type PlayerObject } from "skinview3d";
+import { buildArticulatedLimbs, type ArticulatedLimbHandles } from "../../utils/articulatedPlayer";
+import { RoamingCharacterController, type WorldPlatform } from "../../utils/roamingCharacter";
 import { PRESET_SKINS } from "../../constants/skinPresets";
 import { createCrownObject, disposeThreeHierarchy } from "../../utils/cosmetics3D";
 import "../../styles/layer1-stage.css";
@@ -12,7 +14,6 @@ interface Stage3DLayerProps {
   model?: "default" | "slim";
 }
 
-const tempVec = new THREE.Vector3();
 const tempTL = new THREE.Vector3();
 const tempBR = new THREE.Vector3();
 const tempNDC = new THREE.Vector2();
@@ -33,35 +34,67 @@ function screenPointToWorld(
   return hit !== null;
 }
 
-function createContactShadow(): THREE.Mesh {
-  const canvas = document.createElement("canvas");
-  canvas.width = 128;
-  canvas.height = 128;
-  const ctx = canvas.getContext("2d");
-  if (ctx) {
-    const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-    gradient.addColorStop(0, "rgba(0, 0, 0, 0.65)");
-    gradient.addColorStop(0.35, "rgba(0, 0, 0, 0.38)");
-    gradient.addColorStop(0.7, "rgba(0, 0, 0, 0.1)");
-    gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 128, 128);
+function scanLauncherPlatforms(
+  camera: THREE.PerspectiveCamera,
+  raycaster: THREE.Raycaster,
+  plane: THREE.Plane
+): { platforms: WorldPlatform[]; floorLevel: number; minX: number; maxX: number } {
+  const w = window.innerWidth || 1280;
+  const h = window.innerHeight || 720;
+
+  screenPointToWorld(0, h * 0.5, camera, raycaster, plane, tempTL);
+  const minX = tempTL.x + 22.0;
+  screenPointToWorld(w, h * 0.5, camera, raycaster, plane, tempTL);
+  const maxX = tempTL.x - 22.0;
+
+  screenPointToWorld(w * 0.5, h - 6, camera, raycaster, plane, tempTL);
+  const floorLevel = tempTL.y + 24.0;
+
+  const platforms: WorldPlatform[] = [];
+  const dockEl = document.querySelector(".dock-container") || document.querySelector(".layer-dock");
+
+  if (dockEl && !dockEl.closest(".hidden")) {
+    const rect = dockEl.getBoundingClientRect();
+    if (rect.width > 20 && rect.height > 10) {
+      screenPointToWorld(rect.left, rect.top, camera, raycaster, plane, tempTL);
+      screenPointToWorld(rect.right, rect.bottom, camera, raycaster, plane, tempBR);
+
+      const leftX = Math.min(tempTL.x, tempBR.x);
+      const rightX = Math.max(tempTL.x, tempBR.x);
+      const topWorldY = Math.max(tempTL.y, tempBR.y);
+      const bottomWorldY = Math.min(tempTL.y, tempBR.y);
+
+      platforms.push({
+        id: "dock",
+        minX: leftX - 1.2,
+        maxX: rightX + 1.2,
+        topY: topWorldY + 23.2,
+        bottomY: bottomWorldY - 8.8,
+        isSolid: true,
+        isGroundReaching: true,
+      });
+    }
   }
 
-  const texture = new THREE.CanvasTexture(canvas);
-  const geo = new THREE.PlaneGeometry(16.0, 9.0);
-  geo.rotateX(-Math.PI / 2);
+  return { platforms, floorLevel, minX, maxX };
+}
 
-  const mat = new THREE.MeshBasicMaterial({
-    map: texture,
-    transparent: true,
-    opacity: 0.85,
-    depthWrite: false,
-  });
+function isPointerOverCharacter(
+  clientX: number,
+  clientY: number,
+  controller: RoamingCharacterController,
+  viewer: SkinViewer,
+  raycaster: THREE.Raycaster,
+  plane: THREE.Plane,
+  outWorldPos: THREE.Vector3
+): boolean {
+  if (!screenPointToWorld(clientX, clientY, viewer.camera, raycaster, plane, outWorldPos)) {
+    return false;
+  }
 
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.name = "contact_shadow";
-  return mesh;
+  const dx = Math.abs(outWorldPos.x - controller.currentX);
+  const dy = Math.abs(outWorldPos.y - (controller.currentY + 14.0));
+  return dx <= 7.0 && dy <= 17.0;
 }
 
 export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
@@ -72,427 +105,310 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewerRef = useRef<SkinViewer | null>(null);
+  const limbsRef = useRef<ArticulatedLimbHandles | null>(null);
+  const controllerRef = useRef<RoamingCharacterController | null>(null);
   const visibleRef = useRef<boolean>(visible);
-  visibleRef.current = visible;
+
+  const isPointerDownOnChar = useRef<boolean>(false);
+  const pointerDownPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const pointerDownTime = useRef<number>(0);
+  const grabOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const raycasterRef = useRef<THREE.Raycaster>(new THREE.Raycaster());
   const planeRef = useRef<THREE.Plane>(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0));
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    let disposed = false;
-    let animId: number | null = null;
-
-    const initialW = Math.max(1, window.innerWidth || 1280);
-    const initialH = Math.max(1, window.innerHeight || 720);
-
-    const viewer = new SkinViewer({
-      canvas,
-      width: initialW,
-      height: initialH,
-      skin: skinUrl,
-      model: model || "default",
-      cape: capeUrl || undefined,
-      pixelRatio: Math.min(window.devicePixelRatio || 1, 1.0),
-      enableControls: false,
-    });
-    viewerRef.current = viewer;
-
-    viewer.camera.position.set(0, 14, 95);
-    viewer.camera.lookAt(0, -2, 0);
-    viewer.controls.enableRotate = false;
-    viewer.controls.enableZoom = false;
-    viewer.controls.enablePan = false;
-
-    const shadow = createContactShadow();
-    viewer.scene.add(shadow);
-
-    (viewer as any).render = function () {
-      this.renderer.render(this.scene, this.camera);
-    };
-
-    let floorY = -54;
-    let dockTopY = -34.6;
-    let dockMinX = -50;
-    let dockMaxX = 50;
-    let screenMinX = -85;
-    let screenMaxX = 85;
-
-    const updateMetrics = () => {
-      const w = Math.max(1, window.innerWidth || 1280);
-      const h = Math.max(1, window.innerHeight || 720);
-
-      viewer.setSize(w, h);
-      viewer.camera.aspect = w / h;
-      viewer.camera.updateProjectionMatrix();
-
-      screenPointToWorld(w * 0.5, h - 8, viewer.camera, raycasterRef.current, planeRef.current, tempVec);
-      floorY = tempVec.y + 16.0;
-
-      const dockEl = document.querySelector(".dock-container") || document.querySelector(".layer-dock");
-      if (dockEl) {
-        const rect = dockEl.getBoundingClientRect();
-        screenPointToWorld(rect.left, rect.top, viewer.camera, raycasterRef.current, planeRef.current, tempTL);
-        screenPointToWorld(rect.right, rect.bottom, viewer.camera, raycasterRef.current, planeRef.current, tempBR);
-        dockMinX = Math.min(tempTL.x, tempBR.x) + 2.0;
-        dockMaxX = Math.max(tempTL.x, tempBR.x) - 2.0;
-        dockTopY = Math.max(tempTL.y, tempBR.y) + 16.0;
-      } else {
-        dockMinX = -45;
-        dockMaxX = 45;
-        dockTopY = floorY + 20;
+    visibleRef.current = visible;
+    const vwr = viewerRef.current;
+    if (vwr) {
+      vwr.renderPaused = !visible;
+      if (vwr.animation) {
+        vwr.animation.paused = !visible;
       }
-
-      screenPointToWorld(24, h * 0.5, viewer.camera, raycasterRef.current, planeRef.current, tempTL);
-      screenPointToWorld(w - 24, h * 0.5, viewer.camera, raycasterRef.current, planeRef.current, tempBR);
-      screenMinX = Math.min(tempTL.x, tempBR.x);
-      screenMaxX = Math.max(tempTL.x, tempBR.x);
-    };
-
-    updateMetrics();
-
-    let charX = 0;
-    let charY = dockTopY;
-    let vx = 0;
-    let vy = 0;
-    let state: "idle" | "walking" | "falling" | "dragged" = "idle";
-    let curRotationY = 0.28;
-    let targetRotationY = 0.28;
-    let curRotationZ = 0;
-    let walkTargetX = 0;
-    let walkTime = 0;
-    let idleTimer = 2.5;
-    let totalTime = 0;
-    let flashTimer = 0;
-
-    let isDragging = false;
-    let dragStartX = 0;
-    let dragStartTime = 0;
-    let grabOffsetX = 0;
-    let grabOffsetY = 0;
-    let lastDragWorldX = 0;
-    let lastDragWorldY = 0;
-    let lastDragTime = 0;
-    let dragVelocityX = 0;
-    let dragVelocityY = 0;
-
-    let targetHeadYaw = 0;
-    let targetHeadPitch = 0;
-    let curHeadYaw = 0;
-    let curHeadPitch = 0;
-
-    const clock = new THREE.Clock();
-
-    const getGroundY = (x: number, y: number): number => {
-      if (x >= dockMinX && x <= dockMaxX && y >= dockTopY - 4) {
-        return dockTopY;
-      }
-      return floorY;
-    };
-
-    const triggerDamageFlash = () => {
-      flashTimer = 0.22;
-      const skin = viewer.playerObject.skin as any;
-      if (skin) {
-        if (skin.layer1Material) skin.layer1Material.color.setRGB(1.0, 0.35, 0.35);
-        if (skin.layer1MaterialBiased) skin.layer1MaterialBiased.color.setRGB(1.0, 0.35, 0.35);
-        if (skin.layer2Material) skin.layer2Material.color.setRGB(1.0, 0.35, 0.35);
-        if (skin.layer2MaterialBiased) skin.layer2MaterialBiased.color.setRGB(1.0, 0.35, 0.35);
-      }
-    };
-
-    const resetSkinColor = () => {
-      const skin = viewer.playerObject.skin as any;
-      if (skin) {
-        if (skin.layer1Material) skin.layer1Material.color.setRGB(1.0, 1.0, 1.0);
-        if (skin.layer1MaterialBiased) skin.layer1MaterialBiased.color.setRGB(1.0, 1.0, 1.0);
-        if (skin.layer2Material) skin.layer2Material.color.setRGB(1.0, 1.0, 1.0);
-        if (skin.layer2MaterialBiased) skin.layer2MaterialBiased.color.setRGB(1.0, 1.0, 1.0);
-      }
-    };
-
-    const renderLoop = () => {
-      if (disposed) return;
-
-      if (!visibleRef.current || document.hidden) {
-        animId = requestAnimationFrame(renderLoop);
-        return;
-      }
-
-      const dt = Math.min(clock.getDelta(), 0.05);
-      totalTime += dt;
-
-      if (state === "falling") {
-        vy -= 95 * dt;
-        charX += vx * dt;
-        charY += vy * dt;
-        vx *= Math.pow(0.92, dt * 60);
-        curRotationZ *= Math.pow(0.90, dt * 60);
-
-        if (charX < screenMinX) {
-          charX = screenMinX;
-          vx = Math.abs(vx) * 0.6;
-        } else if (charX > screenMaxX) {
-          charX = screenMaxX;
-          vx = -Math.abs(vx) * 0.6;
+      if (visible) {
+        (vwr as any).clock?.getDelta();
+        if (controllerRef.current) {
+          const res = scanLauncherPlatforms(vwr.camera, raycasterRef.current, planeRef.current);
+          controllerRef.current.setPlatforms(res.platforms, res.floorLevel, res.minX, res.maxX);
         }
+      }
+    }
+  }, [visible]);
 
-        const groundY = getGroundY(charX, charY);
-        if (charY <= groundY) {
-          charY = groundY;
-          vy = 0;
-          vx = 0;
-          curRotationZ = 0;
-          state = "idle";
-          idleTimer = 2.5 + Math.random() * 3.0;
-        }
-      } else if (state === "walking") {
-        const dist = walkTargetX - charX;
-        if (Math.abs(dist) < 0.8) {
-          charX = walkTargetX;
-          state = "idle";
-          idleTimer = 3.0 + Math.random() * 4.0;
-        } else {
-          const dir = Math.sign(dist);
-          charX += dir * 16 * dt;
-          targetRotationY = dir > 0 ? 1.4 : -1.4;
+  useEffect(() => {
+    if (!canvasRef.current) return;
 
-          const groundY = getGroundY(charX, charY);
-          if (charY > groundY + 1.0) {
-            state = "falling";
-            vy = 0;
+    try {
+      const initialWidth = Math.max(1, window.innerWidth || 1280);
+      const initialHeight = Math.max(1, window.innerHeight || 720);
+
+      const viewer = new SkinViewer({
+        canvas: canvasRef.current,
+        width: initialWidth,
+        height: initialHeight,
+        skin: skinUrl,
+        model: model || "default",
+        cape: capeUrl || undefined,
+        pixelRatio: Math.min(window.devicePixelRatio || 1, 1.0),
+        enableControls: false,
+      });
+
+      viewer.camera.position.set(0, 14, 95);
+      viewer.camera.lookAt(0, -2, 0);
+      viewer.controls.target.set(0, -2, 0);
+      viewer.controls.enableRotate = false;
+      viewer.controls.enableZoom = false;
+      viewer.controls.enablePan = false;
+      viewer.controls.update();
+
+      const isSlim = viewer.playerObject.skin.modelType === "slim" || model === "slim";
+      const limbs = buildArticulatedLimbs(viewer.playerObject, isSlim);
+      limbsRef.current = limbs;
+
+      const controller = new RoamingCharacterController(viewer.playerObject, limbs, viewer.scene);
+      controllerRef.current = controller;
+
+      const initialData = scanLauncherPlatforms(viewer.camera, raycasterRef.current, planeRef.current);
+      controller.setPlatforms(initialData.platforms, initialData.floorLevel, initialData.minX, initialData.maxX);
+
+      class PhysicalRoamingAnimation extends PlayerAnimation {
+        animate(_player: PlayerObject, delta: number): void {
+          if (controllerRef.current) {
+            controllerRef.current.update(delta || 0.016);
           }
         }
-      } else if (state === "idle") {
-        idleTimer -= dt;
-        if (idleTimer <= 0) {
-          const isDock = charY >= dockTopY - 2;
-          const minP = isDock ? dockMinX + 5 : screenMinX + 10;
-          const maxP = isDock ? dockMaxX - 5 : screenMaxX - 10;
-          walkTargetX = minP + Math.random() * (maxP - minP);
-          state = "walking";
-          walkTime = 0;
-        }
       }
 
-      const player = viewer.playerObject;
-      const skin = player.skin as any;
-      const cape = player.cape;
+      (viewer as any).render = function () {
+        this.renderer.render(this.scene, this.camera);
+      };
 
-      if (skin) {
-        if (state === "idle") {
-          const t = totalTime * 2.2;
-          const breath = Math.sin(t) * 0.03;
-          skin.leftArm.rotation.x = breath;
-          skin.leftArm.rotation.z = 0.06 + breath * 0.5;
-          skin.rightArm.rotation.x = -breath;
-          skin.rightArm.rotation.z = -0.06 - breath * 0.5;
-          skin.leftLeg.rotation.set(0, 0, 0);
-          skin.rightLeg.rotation.set(0, 0, 0);
-          if (cape) cape.rotation.x = 0.16 + Math.sin(t) * 0.03;
-        } else if (state === "walking") {
-          walkTime += dt;
-          const t = walkTime * 8.0;
-          skin.leftLeg.rotation.x = Math.sin(t) * 0.65;
-          skin.rightLeg.rotation.x = -Math.sin(t) * 0.65;
-          skin.leftArm.rotation.x = -Math.sin(t) * 0.65;
-          skin.leftArm.rotation.z = 0.08;
-          skin.rightArm.rotation.x = Math.sin(t) * 0.65;
-          skin.rightArm.rotation.z = -0.08;
-          if (cape) cape.rotation.x = 0.38 + Math.abs(Math.sin(t)) * 0.15;
-        } else if (state === "dragged") {
-          skin.leftArm.rotation.z = 2.2 + Math.sin(totalTime * 6) * 0.1;
-          skin.rightArm.rotation.z = -2.2 - Math.sin(totalTime * 6) * 0.1;
-          skin.leftArm.rotation.x = 0.2;
-          skin.rightArm.rotation.x = 0.2;
-          skin.leftLeg.rotation.x = Math.sin(totalTime * 5) * 0.3;
-          skin.rightLeg.rotation.x = -Math.sin(totalTime * 5) * 0.3;
-          if (cape) cape.rotation.x = 0.6;
-        } else if (state === "falling") {
-          skin.leftArm.rotation.x = 2.0 + Math.sin(totalTime * 10) * 0.3;
-          skin.rightArm.rotation.x = 2.0 - Math.sin(totalTime * 10) * 0.3;
-          skin.leftArm.rotation.z = 0.8;
-          skin.rightArm.rotation.z = -0.8;
-          skin.leftLeg.rotation.x = -0.4 + Math.sin(totalTime * 8) * 0.3;
-          skin.rightLeg.rotation.x = 0.4 - Math.sin(totalTime * 8) * 0.3;
-          if (cape) cape.rotation.x = 0.7 + Math.sin(totalTime * 10) * 0.2;
+      viewer.animation = new PhysicalRoamingAnimation();
+      viewerRef.current = viewer;
+
+      const refreshPlatforms = () => {
+        if (!viewerRef.current || !controllerRef.current) return;
+        const res = scanLauncherPlatforms(
+          viewerRef.current.camera,
+          raycasterRef.current,
+          planeRef.current
+        );
+        controllerRef.current.setPlatforms(res.platforms, res.floorLevel, res.minX, res.maxX);
+      };
+
+      let resizeRaf: number | null = null;
+      const onResize = () => {
+        if (viewerRef.current && controllerRef.current) {
+          const w = Math.max(1, window.innerWidth || 1280);
+          const h = Math.max(1, window.innerHeight || 720);
+          viewerRef.current.setSize(w, h);
+          viewerRef.current.camera.aspect = w / h;
+          viewerRef.current.camera.updateProjectionMatrix();
+
+          if (resizeRaf !== null) cancelAnimationFrame(resizeRaf);
+          resizeRaf = requestAnimationFrame(() => {
+            refreshPlatforms();
+            resizeRaf = null;
+          });
         }
+      };
+      window.addEventListener("resize", onResize);
 
-        if (state === "idle" || state === "walking") {
-          curHeadYaw += (targetHeadYaw - curHeadYaw) * 0.08;
-          curHeadPitch += (targetHeadPitch - curHeadPitch) * 0.08;
-          if (skin.head) {
-            skin.head.rotation.y = curHeadYaw;
-            skin.head.rotation.x = curHeadPitch;
+      const onVisibilityChange = () => {
+        if (viewerRef.current) {
+          const isHidden = document.hidden || !visibleRef.current;
+          viewerRef.current.renderPaused = isHidden;
+          if (viewerRef.current.animation) {
+            viewerRef.current.animation.paused = isHidden;
           }
-        } else if (skin.head) {
-          skin.head.rotation.set(0, 0, 0);
+          if (!isHidden) {
+            (viewerRef.current as any).clock?.getDelta();
+          }
         }
-      }
+      };
+      document.addEventListener("visibilitychange", onVisibilityChange);
 
-      curRotationY += (targetRotationY - curRotationY) * 0.1;
-      player.rotation.y = curRotationY;
-      player.rotation.z = curRotationZ;
+      const tempCurWorld = new THREE.Vector3();
+      const tempHitPos = new THREE.Vector3();
+      let lastHoverCheckTime = 0;
 
-      player.position.set(charX, charY, 0);
+      const onWindowPointerDown = (e: PointerEvent) => {
+        if (!visibleRef.current) return;
 
-      const groundY = getGroundY(charX, charY);
-      shadow.position.set(charX, groundY - 15.9, 0);
-      const heightAboveGround = Math.max(0, charY - groundY);
-      const shadowScale = Math.max(0.5, 1.0 - heightAboveGround * 0.025);
-      shadow.scale.set(shadowScale, shadowScale, 1.0);
-      (shadow.material as THREE.MeshBasicMaterial).opacity = Math.max(0.12, 0.85 - heightAboveGround * 0.035);
-
-      if (flashTimer > 0) {
-        flashTimer -= dt;
-        if (flashTimer <= 0) {
-          resetSkinColor();
+        const target = e.target as HTMLElement | null;
+        if (target && target.closest(".menu-customizer-modal-backdrop, .modal, [role='dialog'], .hud-container, .dock-container, button, a, input, select")) {
+          return;
         }
-      }
 
-      (viewer as any).render();
+        const screenH = window.innerHeight || 720;
+        if (e.clientY < screenH * 0.4) {
+          return;
+        }
 
-      animId = requestAnimationFrame(renderLoop);
-    };
+        const ctrl = controllerRef.current;
+        const vwr = viewerRef.current;
+        if (!ctrl || !vwr) return;
 
-    animId = requestAnimationFrame(renderLoop);
+        if (ctrl.state === "unconscious" || ctrl.state === "waking_up") return;
 
-    const onPointerDown = (e: PointerEvent) => {
-      if (!visibleRef.current) return;
-      const target = e.target as HTMLElement | null;
-      if (target && target.closest("button, a, input, select, .hud-container, .dock-container, .modal, [role='dialog']")) {
-        return;
-      }
+        if (
+          isPointerOverCharacter(
+            e.clientX,
+            e.clientY,
+            ctrl,
+            vwr,
+            raycasterRef.current,
+            planeRef.current,
+            tempHitPos
+          )
+        ) {
+          e.stopPropagation();
+          e.preventDefault();
 
-      screenPointToWorld(e.clientX, e.clientY, viewer.camera, raycasterRef.current, planeRef.current, tempVec);
+          isPointerDownOnChar.current = true;
+          pointerDownPos.current = { x: e.clientX, y: e.clientY };
+          pointerDownTime.current = performance.now();
+          grabOffset.current = {
+            x: ctrl.currentX - tempHitPos.x,
+            y: ctrl.currentY - tempHitPos.y,
+          };
 
-      const dx = Math.abs(tempVec.x - charX);
-      const dy = Math.abs(tempVec.y - (charY + 1.0));
+          ctrl.startDrag(tempHitPos.x + grabOffset.current.x, tempHitPos.y + grabOffset.current.y);
+          document.body.style.cursor = "grabbing";
+        }
+      };
 
-      if (dx <= 7.0 && dy <= 16.5) {
-        e.preventDefault();
-        e.stopPropagation();
+      const onWindowPointerMove = (e: PointerEvent) => {
+        if (!visibleRef.current) return;
+        const ctrl = controllerRef.current;
+        const vwr = viewerRef.current;
+        if (!ctrl || !vwr) return;
 
-        isDragging = true;
-        dragStartX = tempVec.x;
-        dragStartTime = performance.now();
-        grabOffsetX = charX - tempVec.x;
-        grabOffsetY = charY - tempVec.y;
-        lastDragWorldX = tempVec.x;
-        lastDragWorldY = tempVec.y;
-        lastDragTime = performance.now();
-        dragVelocityX = 0;
-        dragVelocityY = 0;
+        if (isPointerDownOnChar.current) {
+          screenPointToWorld(
+            e.clientX,
+            e.clientY,
+            vwr.camera,
+            raycasterRef.current,
+            planeRef.current,
+            tempCurWorld
+          );
+          ctrl.updateDrag(
+            tempCurWorld.x + grabOffset.current.x,
+            tempCurWorld.y + grabOffset.current.y
+          );
+          document.body.style.cursor = "grabbing";
+          return;
+        }
 
-        state = "dragged";
-        document.body.style.cursor = "grabbing";
-      }
-    };
+        const screenH = window.innerHeight || 720;
+        if (e.clientY < screenH * 0.4) {
+          if (document.body.style.cursor === "grab") {
+            document.body.style.cursor = "";
+          }
+          return;
+        }
 
-    const onPointerMove = (e: PointerEvent) => {
-      if (!visibleRef.current) return;
-
-      screenPointToWorld(e.clientX, e.clientY, viewer.camera, raycasterRef.current, planeRef.current, tempVec);
-
-      if (isDragging) {
         const now = performance.now();
-        const dt = Math.max(1, now - lastDragTime);
+        if (now - lastHoverCheckTime < 30) return;
+        lastHoverCheckTime = now;
 
-        dragVelocityX = ((tempVec.x - lastDragWorldX) / dt) * 1000;
-        dragVelocityY = ((tempVec.y - lastDragWorldY) / dt) * 1000;
+        const target = e.target as HTMLElement | null;
+        if (target && target.closest(".menu-customizer-modal-backdrop, .modal, [role='dialog'], .hud-container, .dock-container, button, a, input, select")) {
+          if (document.body.style.cursor === "grab") {
+            document.body.style.cursor = "";
+          }
+          return;
+        }
 
-        lastDragWorldX = tempVec.x;
-        lastDragWorldY = tempVec.y;
-        lastDragTime = now;
+        if (ctrl.state !== "unconscious" && ctrl.state !== "waking_up") {
+          const isOver = isPointerOverCharacter(
+            e.clientX,
+            e.clientY,
+            ctrl,
+            vwr,
+            raycasterRef.current,
+            planeRef.current,
+            tempCurWorld
+          );
+          if (isOver) {
+            document.body.style.cursor = "grab";
+          } else if (document.body.style.cursor === "grab") {
+            document.body.style.cursor = "";
+          }
+        }
+      };
 
-        charX = tempVec.x + grabOffsetX;
-        charY = tempVec.y + grabOffsetY;
-        document.body.style.cursor = "grabbing";
-        return;
-      }
+      const onWindowPointerUp = (e: PointerEvent) => {
+        if (!isPointerDownOnChar.current) return;
+        isPointerDownOnChar.current = false;
 
-      const dx = Math.abs(tempVec.x - charX);
-      const dy = Math.abs(tempVec.y - (charY + 1.0));
+        const ctrl = controllerRef.current;
+        const vwr = viewerRef.current;
+        if (!ctrl || !vwr) return;
 
-      if (dx <= 7.0 && dy <= 16.5) {
-        document.body.style.cursor = "grab";
-      } else if (document.body.style.cursor === "grab") {
+        const elapsed = performance.now() - pointerDownTime.current;
+        const dist = Math.hypot(
+          e.clientX - pointerDownPos.current.x,
+          e.clientY - pointerDownPos.current.y
+        );
+
+        screenPointToWorld(
+          e.clientX,
+          e.clientY,
+          vwr.camera,
+          raycasterRef.current,
+          planeRef.current,
+          tempCurWorld
+        );
+
+        if (dist < 8.0 && elapsed < 350) {
+          ctrl.punch(tempCurWorld.x, tempCurWorld.y);
+        } else {
+          ctrl.endDrag();
+        }
+
         document.body.style.cursor = "";
-      }
+      };
 
-      const lookDx = (tempVec.x - charX) / 40;
-      const lookDy = (tempVec.y - (charY + 14)) / 30;
-      targetHeadYaw = Math.max(-0.45, Math.min(0.45, lookDx));
-      targetHeadPitch = Math.max(-0.35, Math.min(0.35, -lookDy));
-    };
+      window.addEventListener("pointerdown", onWindowPointerDown, { capture: true });
+      window.addEventListener("pointermove", onWindowPointerMove);
+      window.addEventListener("pointerup", onWindowPointerUp);
 
-    const onPointerUp = (e: PointerEvent) => {
-      if (!isDragging) return;
-      isDragging = false;
-      document.body.style.cursor = "";
+      return () => {
+        if (resizeRaf !== null) cancelAnimationFrame(resizeRaf);
+        window.removeEventListener("resize", onResize);
+        document.removeEventListener("visibilitychange", onVisibilityChange);
+        window.removeEventListener("pointerdown", onWindowPointerDown, { capture: true });
+        window.removeEventListener("pointermove", onWindowPointerMove);
+        window.removeEventListener("pointerup", onWindowPointerUp);
+        document.body.style.cursor = "";
 
-      screenPointToWorld(e.clientX, e.clientY, viewer.camera, raycasterRef.current, planeRef.current, tempVec);
-
-      const elapsed = performance.now() - dragStartTime;
-      const dist = Math.abs(tempVec.x - dragStartX);
-
-      if (dist < 4.0 && elapsed < 280) {
-        triggerDamageFlash();
-        const dir = tempVec.x < charX ? 1 : -1;
-        vx = dir * (34 + Math.random() * 10);
-        vy = 26 + Math.random() * 8;
-        curRotationZ = -dir * 0.35;
-        state = "falling";
-      } else {
-        vx = Math.max(-60, Math.min(60, dragVelocityX * 0.75));
-        vy = Math.max(-30, Math.min(60, dragVelocityY * 0.75));
-        state = "falling";
-      }
-    };
-
-    window.addEventListener("pointerdown", onPointerDown, { capture: true });
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
-    window.addEventListener("pointerup", onPointerUp);
-
-    let resizeTimer: number | null = null;
-    const onResize = () => {
-      if (resizeTimer !== null) window.clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(() => {
-        updateMetrics();
-      }, 100);
-    };
-
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      disposed = true;
-      if (animId !== null) cancelAnimationFrame(animId);
-      if (resizeTimer !== null) window.clearTimeout(resizeTimer);
-
-      window.removeEventListener("pointerdown", onPointerDown, { capture: true });
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
-      window.removeEventListener("resize", onResize);
-
-      document.body.style.cursor = "";
-
-      const existingShadow = viewer.scene.getObjectByName("contact_shadow");
-      if (existingShadow) {
-        viewer.scene.remove(existingShadow);
-        disposeThreeHierarchy(existingShadow);
-      }
-
-      viewer.dispose();
-      viewerRef.current = null;
-    };
+        controller.dispose();
+        viewer.dispose();
+        viewerRef.current = null;
+        limbsRef.current = null;
+        controllerRef.current = null;
+      };
+    } catch (err) {
+      console.warn("Failed to init Fullscreen 3D Stage:", err);
+    }
   }, []);
 
   useEffect(() => {
     let canceled = false;
     if (viewerRef.current) {
-      viewerRef.current.loadSkin(skinUrl, { model: model || "default" })?.catch?.((err: any) => {
+      viewerRef.current.loadSkin(skinUrl, { model: model || "default" })?.then(() => {
+        if (canceled) return;
+        if (viewerRef.current) {
+          const isSlim = viewerRef.current.playerObject.skin.modelType === "slim" || model === "slim";
+          const limbs = buildArticulatedLimbs(viewerRef.current.playerObject, isSlim);
+          limbsRef.current = limbs;
+          if (controllerRef.current) {
+            controllerRef.current.limbs = limbs;
+          }
+        }
+      }).catch?.((err: any) => {
         if (!canceled) {
           console.warn("Failed to load skin:", err);
         }
