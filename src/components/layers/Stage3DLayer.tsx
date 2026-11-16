@@ -1,8 +1,7 @@
 import * as THREE from "three";
 import React, { useEffect, useRef } from "react";
-import { SkinViewer, PlayerAnimation, type PlayerObject } from "skinview3d";
-import { buildArticulatedLimbs, type ArticulatedLimbHandles } from "../../utils/articulatedPlayer";
-import { RoamingCharacterController, type WorldPlatform } from "../../utils/roamingCharacter";
+import { SkinViewer, WaveAnimation } from "skinview3d";
+import { CleanIdleAnimation } from "../../utils/skinAnimations";
 import { PRESET_SKINS } from "../../constants/skinPresets";
 import { createCrownObject, disposeThreeHierarchy } from "../../utils/cosmetics3D";
 import "../../styles/layer1-stage.css";
@@ -14,467 +13,264 @@ interface Stage3DLayerProps {
   model?: "default" | "slim";
 }
 
-const tempTL = new THREE.Vector3();
-const tempBR = new THREE.Vector3();
-const tempNDC = new THREE.Vector2();
-
-function screenPointToWorld(
-  clientX: number,
-  clientY: number,
-  camera: THREE.PerspectiveCamera,
-  raycaster: THREE.Raycaster,
-  plane: THREE.Plane,
-  outVec: THREE.Vector3
-): boolean {
-  const w = window.innerWidth || 1280;
-  const h = window.innerHeight || 720;
-  tempNDC.set((clientX / w) * 2 - 1, -(clientY / h) * 2 + 1);
-  raycaster.setFromCamera(tempNDC, camera);
-  const hit = raycaster.ray.intersectPlane(plane, outVec);
-  return hit !== null;
-}
-
-function scanLauncherPlatforms(
-  camera: THREE.PerspectiveCamera,
-  raycaster: THREE.Raycaster,
-  plane: THREE.Plane
-): { platforms: WorldPlatform[]; floorLevel: number; minX: number; maxX: number } {
-  const w = window.innerWidth || 1280;
-  const h = window.innerHeight || 720;
-
-  screenPointToWorld(0, h * 0.5, camera, raycaster, plane, tempTL);
-  const minX = tempTL.x + 22.0;
-  screenPointToWorld(w, h * 0.5, camera, raycaster, plane, tempTL);
-  const maxX = tempTL.x - 22.0;
-
-  screenPointToWorld(w * 0.5, h - 6, camera, raycaster, plane, tempTL);
-  const floorLevel = tempTL.y + 24.0;
-
-  const platforms: WorldPlatform[] = [];
-
-  const selectors = [
-    ".dock-container",
-  ];
-
-  for (const sel of selectors) {
-    const elements = document.querySelectorAll(sel);
-    elements.forEach((el) => {
-      const htmlEl = el as HTMLElement;
-      if (htmlEl.closest(".hidden")) return;
-      const rect = htmlEl.getBoundingClientRect();
-      if (rect.width > 20 && rect.height > 10) {
-        screenPointToWorld(rect.left, rect.top, camera, raycaster, plane, tempTL);
-        screenPointToWorld(rect.right, rect.bottom, camera, raycaster, plane, tempBR);
-
-        const leftX = Math.min(tempTL.x, tempBR.x);
-        const rightX = Math.max(tempTL.x, tempBR.x);
-        const topWorldY = Math.max(tempTL.y, tempBR.y);
-        const bottomWorldY = Math.min(tempTL.y, tempBR.y);
-
-        const topY = topWorldY + 23.2;
-        const bottomY = bottomWorldY - 8.8;
-
-        const isDock = sel.includes("dock");
-        const isGroundReaching = isDock || bottomWorldY <= (floorLevel - 24.0) + 8.0;
-
-        platforms.push({
-          id: sel,
-          minX: leftX - 1.2,
-          maxX: rightX + 1.2,
-          topY: topY,
-          bottomY: bottomY,
-          isSolid: true,
-          isGroundReaching: isGroundReaching,
-        });
-      }
-    });
+function createContactShadow(): THREE.Mesh {
+  const canvas = document.createElement("canvas");
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gradient.addColorStop(0, "rgba(0, 0, 0, 0.65)");
+    gradient.addColorStop(0.35, "rgba(0, 0, 0, 0.38)");
+    gradient.addColorStop(0.7, "rgba(0, 0, 0, 0.1)");
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 128, 128);
   }
 
-  return { platforms, floorLevel, minX, maxX };
-}
+  const texture = new THREE.CanvasTexture(canvas);
+  const geo = new THREE.PlaneGeometry(16.0, 9.0);
+  geo.rotateX(-Math.PI / 2);
 
-function isPointerOverCharacter(
-  clientX: number,
-  clientY: number,
-  controller: RoamingCharacterController,
-  viewer: SkinViewer,
-  raycaster: THREE.Raycaster,
-  plane: THREE.Plane,
-  outWorldPos: THREE.Vector3
-): boolean {
-  if (!screenPointToWorld(clientX, clientY, viewer.camera, raycaster, plane, outWorldPos)) {
-    return false;
-  }
+  const mat = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    opacity: 0.85,
+    depthWrite: false,
+  });
 
-  const dx = Math.abs(outWorldPos.x - controller.currentX);
-  const dy = Math.abs(outWorldPos.y - (controller.currentY + 14.0));
-  if (dx > 8.5 || dy > 18.0) {
-    return false;
-  }
-
-  if (dx <= 6.5 && dy <= 16.5) {
-    return true;
-  }
-
-  const intersects = raycaster.intersectObject(viewer.playerObject, true);
-  return intersects.length > 0;
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.name = "contact_shadow";
+  mesh.position.set(0, -16.05, 0);
+  return mesh;
 }
 
 export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
   visible,
   skinUrl = PRESET_SKINS.dream,
   capeUrl,
-  model = "slim",
+  model = "default",
 }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewerRef = useRef<SkinViewer | null>(null);
-  const limbsRef = useRef<ArticulatedLimbHandles | null>(null);
-  const controllerRef = useRef<RoamingCharacterController | null>(null);
   const visibleRef = useRef<boolean>(visible);
+  visibleRef.current = visible;
 
-  const isPointerDownOnChar = useRef<boolean>(false);
-  const pointerDownPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const pointerDownTime = useRef<number>(0);
-  const grabOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const lastMouseWorld = useRef<THREE.Vector3>(new THREE.Vector3());
+  const isDragging = useRef<boolean>(false);
+  const dragStartX = useRef<number>(0);
+  const dragStartTime = useRef<number>(0);
+  const lastX = useRef<number>(0);
+  const lastTime = useRef<number>(0);
+  const angularVelocity = useRef<number>(0);
 
-  const raycasterRef = useRef<THREE.Raycaster>(new THREE.Raycaster());
-  const planeRef = useRef<THREE.Plane>(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0));
+  const targetHeadYaw = useRef<number>(0);
+  const targetHeadPitch = useRef<number>(0);
+  const curHeadYaw = useRef<number>(0);
+  const curHeadPitch = useRef<number>(0);
 
-  useEffect(() => {
-    visibleRef.current = visible;
-    if (viewerRef.current) {
-      viewerRef.current.renderPaused = !visible;
-      if (viewerRef.current.animation) {
-        viewerRef.current.animation.paused = !visible;
-      }
-      if (visible) {
-        (viewerRef.current as any).clock?.getDelta();
-        if (controllerRef.current) {
-          const res = scanLauncherPlatforms(
-            viewerRef.current.camera,
-            raycasterRef.current,
-            planeRef.current
-          );
-          controllerRef.current.setPlatforms(res.platforms, res.floorLevel, res.minX, res.maxX);
-        }
-      }
-    }
-  }, [visible]);
+  const animTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
 
-    try {
-      const initialWidth = Math.max(1, window.innerWidth || 1280);
-      const initialHeight = Math.max(1, window.innerHeight || 720);
+    let disposed = false;
+    let animId: number | null = null;
 
-      const viewer = new SkinViewer({
-        canvas: canvasRef.current,
-        width: initialWidth,
-        height: initialHeight,
-        skin: skinUrl,
-        model: model,
-        cape: capeUrl || undefined,
-        pixelRatio: Math.min(window.devicePixelRatio || 1, 1.0),
-        enableControls: false,
-      });
+    const initialW = container.clientWidth || 460;
+    const initialH = container.clientHeight || 560;
 
-      viewer.camera.position.set(0, 14, 95);
-      viewer.camera.lookAt(0, -2, 0);
-      viewer.controls.target.set(0, -2, 0);
-      viewer.controls.enableRotate = false;
-      viewer.controls.enableZoom = false;
-      viewer.controls.enablePan = false;
-      viewer.controls.update();
+    const viewer = new SkinViewer({
+      canvas,
+      width: initialW,
+      height: initialH,
+      skin: skinUrl,
+      model: model || "default",
+      cape: capeUrl || undefined,
+      pixelRatio: Math.min(window.devicePixelRatio || 1, 1.25),
+      enableControls: false,
+    });
+    viewerRef.current = viewer;
 
-      const isSlim = viewer.playerObject.skin.modelType === "slim" || model === "slim";
-      const limbs = buildArticulatedLimbs(viewer.playerObject, isSlim);
-      limbsRef.current = limbs;
+    viewer.camera.position.set(0, 1.5, 46);
+    viewer.camera.lookAt(0, 0, 0);
 
-      const controller = new RoamingCharacterController(viewer.playerObject, limbs, viewer.scene);
-      controllerRef.current = controller;
+    viewer.playerObject.position.set(0, 0, 0);
+    viewer.playerObject.rotation.y = 0.28;
 
-      const initialData = scanLauncherPlatforms(viewer.camera, raycasterRef.current, planeRef.current);
-      controller.setPlatforms(initialData.platforms, initialData.floorLevel, initialData.minX, initialData.maxX);
+    const shadow = createContactShadow();
+    viewer.scene.add(shadow);
 
-      class PhysicalRoamingAnimation extends PlayerAnimation {
-        animate(_player: PlayerObject, delta: number): void {
-          if (controllerRef.current) {
-            controllerRef.current.update(delta || 0.016);
-          }
-        }
+    const clock = new THREE.Clock();
+    const idleAnimation = new CleanIdleAnimation();
+    viewer.animation = idleAnimation;
+
+    (viewer as any).render = function () {
+      this.renderer.render(this.scene, this.camera);
+    };
+
+    const renderLoop = () => {
+      if (disposed) return;
+
+      if (!visibleRef.current || document.hidden) {
+        animId = requestAnimationFrame(renderLoop);
+        return;
       }
 
-      (viewer as any).render = function () {
-        this.renderer.render(this.scene, this.camera);
-      };
+      const player = viewer.playerObject;
 
-      let lastRenderTime = performance.now();
-      const TARGET_FPS_IDLE = 36;
-      const TARGET_FPS_DRAG = 50;
-      const FRAME_INTERVAL_IDLE = 1000 / TARGET_FPS_IDLE;
-      const FRAME_INTERVAL_DRAG = 1000 / TARGET_FPS_DRAG;
-
-      (viewer as any).draw = function () {
-        if (this._disposed) return;
-        if (this._renderPaused) {
-          this.animationID = null;
-          return;
-        }
-
-        const now = performance.now();
-        const targetInterval = isPointerDownOnChar.current ? FRAME_INTERVAL_DRAG : FRAME_INTERVAL_IDLE;
-        const elapsed = now - lastRenderTime;
-
-        if (elapsed >= targetInterval) {
-          lastRenderTime = now - (elapsed % targetInterval);
-          const dt = this.clock.getDelta();
-
-          if (this._animation !== null) {
-            this._animation.update(this.playerObject, dt);
-          }
-          this.render();
-        }
-
-        this.animationID = window.requestAnimationFrame(() => this.draw());
-      };
-
-      viewer.animation = new PhysicalRoamingAnimation();
-      viewerRef.current = viewer;
-      (window as any).__skinViewer = viewer;
-      (window as any).__controller = controller;
-
-      const refreshPlatforms = () => {
-        if (!viewerRef.current || !controllerRef.current) return;
-        const res = scanLauncherPlatforms(
-          viewerRef.current.camera,
-          raycasterRef.current,
-          planeRef.current
-        );
-        controllerRef.current.setPlatforms(res.platforms, res.floorLevel, res.minX, res.maxX);
-      };
-
-      let resizeObserver: ResizeObserver | null = null;
-      if (typeof ResizeObserver !== "undefined") {
-        resizeObserver = new ResizeObserver(() => {
-          refreshPlatforms();
-        });
-        const dockEl = document.querySelector(".dock-container") || document.querySelector(".layer-dock");
-        if (dockEl) {
-          resizeObserver.observe(dockEl);
-        }
-      }
-
-      let resizeRaf: number | null = null;
-      const onResize = () => {
-        if (viewerRef.current && controllerRef.current) {
-          const w = Math.max(1, window.innerWidth || 1280);
-          const h = Math.max(1, window.innerHeight || 720);
-          viewerRef.current.setSize(w, h);
-          viewerRef.current.camera.aspect = w / h;
-          viewerRef.current.camera.updateProjectionMatrix();
-
-          if (resizeRaf !== null) cancelAnimationFrame(resizeRaf);
-          resizeRaf = requestAnimationFrame(() => {
-            refreshPlatforms();
-            resizeRaf = null;
-          });
-        }
-      };
-      window.addEventListener("resize", onResize);
-
-      const tempCurWorld = new THREE.Vector3();
-      const tempHitPos = new THREE.Vector3();
-      let lastHoverCheckTime = 0;
-
-      const onWindowPointerDown = (e: PointerEvent) => {
-        if (!visibleRef.current) return;
-
-        const target = e.target as HTMLElement | null;
-        if (target && target.closest(".menu-customizer-modal-backdrop, .modal, [role='dialog'], .hud-container")) {
-          return;
-        }
-
-        const screenH = window.innerHeight || 720;
-        if (e.clientY < screenH * 0.45) {
-          return;
-        }
-
-        const ctrl = controllerRef.current;
-        const vwr = viewerRef.current;
-        if (!ctrl || !vwr) return;
-
-        if (ctrl.state === "unconscious" || ctrl.state === "waking_up") return;
-
-        if (
-          isPointerOverCharacter(
-            e.clientX,
-            e.clientY,
-            ctrl,
-            vwr,
-            raycasterRef.current,
-            planeRef.current,
-            tempHitPos
-          )
-        ) {
-          e.stopPropagation();
-          e.preventDefault();
-
-          isPointerDownOnChar.current = true;
-          pointerDownPos.current = { x: e.clientX, y: e.clientY };
-          pointerDownTime.current = performance.now();
-          grabOffset.current = {
-            x: ctrl.currentX - tempHitPos.x,
-            y: ctrl.currentY - tempHitPos.y,
-          };
-          lastMouseWorld.current.copy(tempHitPos);
-
-          ctrl.startDrag(tempHitPos.x + grabOffset.current.x, tempHitPos.y + grabOffset.current.y);
-          document.body.style.cursor = "grabbing";
-        }
-      };
-
-      const onWindowPointerMove = (e: PointerEvent) => {
-        if (!visibleRef.current) return;
-        const ctrl = controllerRef.current;
-        const vwr = viewerRef.current;
-        if (!ctrl || !vwr) return;
-
-        if (isPointerDownOnChar.current) {
-          screenPointToWorld(
-            e.clientX,
-            e.clientY,
-            vwr.camera,
-            raycasterRef.current,
-            planeRef.current,
-            tempCurWorld
-          );
-          ctrl.updateDrag(
-            tempCurWorld.x + grabOffset.current.x,
-            tempCurWorld.y + grabOffset.current.y
-          );
-          lastMouseWorld.current.copy(tempCurWorld);
-          document.body.style.cursor = "grabbing";
-          return;
-        }
-
-        const screenH = window.innerHeight || 720;
-        if (e.clientY < screenH * 0.45) {
-          if (document.body.style.cursor === "grab") {
-            document.body.style.cursor = "";
-          }
-          return;
-        }
-
-        const now = performance.now();
-        if (now - lastHoverCheckTime < 24) return;
-        lastHoverCheckTime = now;
-
-        const target = e.target as HTMLElement | null;
-        if (target && target.closest(".menu-customizer-modal-backdrop, .modal, [role='dialog'], .hud-container")) {
-          if (document.body.style.cursor === "grab") {
-            document.body.style.cursor = "";
-          }
-          return;
-        }
-
-        screenPointToWorld(
-          e.clientX,
-          e.clientY,
-          vwr.camera,
-          raycasterRef.current,
-          planeRef.current,
-          tempCurWorld
-        );
-
-        if (ctrl.state !== "unconscious" && ctrl.state !== "waking_up") {
-          const isOver = isPointerOverCharacter(
-            e.clientX,
-            e.clientY,
-            ctrl,
-            vwr,
-            raycasterRef.current,
-            planeRef.current,
-            tempCurWorld
-          );
-          if (isOver) {
-            document.body.style.cursor = "grab";
-          } else if (document.body.style.cursor === "grab") {
-            document.body.style.cursor = "";
-          }
-        }
-      };
-
-      const onWindowPointerUp = (e: PointerEvent) => {
-        if (!isPointerDownOnChar.current) return;
-        isPointerDownOnChar.current = false;
-
-        const ctrl = controllerRef.current;
-        const vwr = viewerRef.current;
-        if (!ctrl || !vwr) return;
-
-        const elapsed = performance.now() - pointerDownTime.current;
-        const dist = Math.hypot(
-          e.clientX - pointerDownPos.current.x,
-          e.clientY - pointerDownPos.current.y
-        );
-
-        screenPointToWorld(
-          e.clientX,
-          e.clientY,
-          vwr.camera,
-          raycasterRef.current,
-          planeRef.current,
-          tempCurWorld
-        );
-
-        if (dist < 8.0 && elapsed < 350) {
-          ctrl.punch(tempCurWorld.x, tempCurWorld.y);
+      if (!isDragging.current) {
+        if (Math.abs(angularVelocity.current) > 0.0002) {
+          player.rotation.y += angularVelocity.current;
+          angularVelocity.current *= 0.92;
         } else {
-          ctrl.endDrag();
+          angularVelocity.current = 0;
         }
+      }
 
-        document.body.style.cursor = "";
-      };
+      curHeadYaw.current += (targetHeadYaw.current - curHeadYaw.current) * 0.08;
+      curHeadPitch.current += (targetHeadPitch.current - curHeadPitch.current) * 0.08;
 
-      window.addEventListener("pointerdown", onWindowPointerDown, { capture: true });
-      window.addEventListener("pointermove", onWindowPointerMove);
-      window.addEventListener("pointerup", onWindowPointerUp);
+      if (player.skin?.head) {
+        player.skin.head.rotation.y = curHeadYaw.current;
+        player.skin.head.rotation.x = curHeadPitch.current;
+      }
 
-      return () => {
-        if (resizeObserver) resizeObserver.disconnect();
-        if (resizeRaf !== null) cancelAnimationFrame(resizeRaf);
-        window.removeEventListener("resize", onResize);
-        window.removeEventListener("pointerdown", onWindowPointerDown, { capture: true });
-        window.removeEventListener("pointermove", onWindowPointerMove);
-        window.removeEventListener("pointerup", onWindowPointerUp);
-        document.body.style.cursor = "";
-        controller.dispose();
-        viewer.dispose();
-        viewerRef.current = null;
-        limbsRef.current = null;
-        controllerRef.current = null;
-      };
-    } catch (err) {
-      console.warn("Failed to init Fullscreen 3D Stage:", err);
-    }
+      const dt = clock.getDelta();
+      if (viewer.animation && !viewer.animation.paused) {
+        viewer.animation.update(player, dt);
+      }
+
+      (viewer as any).render();
+
+      animId = requestAnimationFrame(renderLoop);
+    };
+
+    animId = requestAnimationFrame(renderLoop);
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (!visibleRef.current) return;
+      isDragging.current = true;
+      dragStartX.current = e.clientX;
+      dragStartTime.current = performance.now();
+      lastX.current = e.clientX;
+      lastTime.current = performance.now();
+      angularVelocity.current = 0;
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDragging.current) return;
+      const deltaX = e.clientX - lastX.current;
+      const now = performance.now();
+      const dt = Math.max(1, now - lastTime.current);
+
+      viewer.playerObject.rotation.y += deltaX * 0.012;
+      angularVelocity.current = (deltaX / dt) * 0.16;
+
+      lastX.current = e.clientX;
+      lastTime.current = now;
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch {}
+
+      const elapsed = performance.now() - dragStartTime.current;
+      const dist = Math.abs(e.clientX - dragStartX.current);
+
+      if (dist < 6 && elapsed < 280) {
+        if (animTimeoutRef.current) {
+          window.clearTimeout(animTimeoutRef.current);
+        }
+        viewer.animation = new WaveAnimation();
+        animTimeoutRef.current = window.setTimeout(() => {
+          if (!disposed && viewerRef.current) {
+            viewerRef.current.animation = new CleanIdleAnimation();
+          }
+        }, 1300);
+      }
+    };
+
+    const onDoubleClick = () => {
+      angularVelocity.current = 0;
+      viewer.playerObject.rotation.y = 0.28;
+    };
+
+    const viewportEl = container;
+    viewportEl.addEventListener("pointerdown", onPointerDown);
+    viewportEl.addEventListener("pointermove", onPointerMove);
+    viewportEl.addEventListener("pointerup", onPointerUp);
+    viewportEl.addEventListener("pointercancel", onPointerUp);
+    viewportEl.addEventListener("dblclick", onDoubleClick);
+
+    const onWindowPointerMove = (e: PointerEvent) => {
+      if (!visibleRef.current || isDragging.current) return;
+      const rect = container.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height * 0.35;
+
+      const dx = (e.clientX - centerX) / (window.innerWidth * 0.45);
+      const dy = (e.clientY - centerY) / (window.innerHeight * 0.45);
+
+      targetHeadYaw.current = Math.max(-0.45, Math.min(0.45, dx));
+      targetHeadPitch.current = Math.max(-0.35, Math.min(0.35, -dy));
+    };
+
+    const onMouseLeave = () => {
+      targetHeadYaw.current = 0;
+      targetHeadPitch.current = 0;
+    };
+
+    window.addEventListener("pointermove", onWindowPointerMove, { passive: true });
+    document.addEventListener("mouseleave", onMouseLeave);
+
+    const onResize = () => {
+      if (!container || !viewerRef.current) return;
+      const w = container.clientWidth || 460;
+      const h = container.clientHeight || 560;
+      viewerRef.current.setSize(w, h);
+      viewerRef.current.camera.aspect = w / h;
+      viewerRef.current.camera.updateProjectionMatrix();
+    };
+
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      disposed = true;
+      if (animId !== null) cancelAnimationFrame(animId);
+      if (animTimeoutRef.current) window.clearTimeout(animTimeoutRef.current);
+
+      viewportEl.removeEventListener("pointerdown", onPointerDown);
+      viewportEl.removeEventListener("pointermove", onPointerMove);
+      viewportEl.removeEventListener("pointerup", onPointerUp);
+      viewportEl.removeEventListener("pointercancel", onPointerUp);
+      viewportEl.removeEventListener("dblclick", onDoubleClick);
+
+      window.removeEventListener("pointermove", onWindowPointerMove);
+      document.removeEventListener("mouseleave", onMouseLeave);
+      window.removeEventListener("resize", onResize);
+
+      const existingShadow = viewer.scene.getObjectByName("contact_shadow");
+      if (existingShadow) {
+        viewer.scene.remove(existingShadow);
+        disposeThreeHierarchy(existingShadow);
+      }
+
+      viewer.dispose();
+      viewerRef.current = null;
+    };
   }, []);
 
   useEffect(() => {
     let canceled = false;
     if (viewerRef.current) {
-      viewerRef.current.loadSkin(skinUrl, { model })?.then(() => {
-        if (canceled) return;
-        if (viewerRef.current) {
-          const isSlim = viewerRef.current.playerObject.skin.modelType === "slim" || model === "slim";
-          const limbs = buildArticulatedLimbs(viewerRef.current.playerObject, isSlim);
-          limbsRef.current = limbs;
-          if (controllerRef.current) {
-            controllerRef.current.limbs = limbs;
-          }
-        }
-      }).catch?.((err: any) => {
+      viewerRef.current.loadSkin(skinUrl, { model: model || "default" })?.catch?.((err: any) => {
         if (!canceled) {
           console.warn("Failed to load skin:", err);
         }
@@ -552,10 +348,8 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
 
   return (
     <div className={`layer-stage ${!visible ? "hidden" : ""}`}>
-      <div className="stage-viewport-container">
-        <div className="stage-canvas-wrapper">
-          <canvas ref={canvasRef} style={{ outline: "none" }} />
-        </div>
+      <div className="stage-character-viewport" ref={containerRef}>
+        <canvas ref={canvasRef} style={{ outline: "none" }} />
       </div>
     </div>
   );
