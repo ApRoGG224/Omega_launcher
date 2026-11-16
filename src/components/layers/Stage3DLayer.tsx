@@ -142,6 +142,27 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
       const initialWidth = Math.max(1, window.innerWidth || 1280);
       const initialHeight = Math.max(1, window.innerHeight || 720);
 
+      // Initialize high-performance hardware-accelerated WebGL context
+      canvasRef.current.getContext("webgl2", {
+        powerPreference: "high-performance",
+        alpha: true,
+        depth: true,
+        stencil: false,
+        desynchronized: true,
+        antialias: false,
+        failIfMajorPerformanceCaveat: false,
+        preserveDrawingBuffer: false,
+      }) ||
+      canvasRef.current.getContext("webgl", {
+        powerPreference: "high-performance",
+        alpha: true,
+        depth: true,
+        stencil: false,
+        desynchronized: true,
+        antialias: false,
+        preserveDrawingBuffer: false,
+      });
+
       const viewer = new SkinViewer({
         canvas: canvasRef.current,
         width: initialWidth,
@@ -152,6 +173,10 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
         pixelRatio: Math.min(window.devicePixelRatio || 1, 1.0),
         enableControls: false,
       });
+
+      // Explicit hardware acceleration configurations on WebGLRenderer
+      viewer.renderer.sortObjects = false;
+      (viewer.renderer as any).info.autoReset = false;
 
       viewer.camera.position.set(0, 14, 95);
       viewer.camera.lookAt(0, -2, 0);

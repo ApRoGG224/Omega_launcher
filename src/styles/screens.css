@@ -2355,7 +2355,7 @@
 
 .friends-screen-overlay .sp.open span {
   opacity: 1;
-  user-select: text;
+  user-select: none;
 }
 
 .friends-screen-overlay .sp:focus-visible {

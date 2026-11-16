@@ -297,13 +297,6 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
           </div>
         );
 
-      case "character_toggle":
-        return (
-          <div className="hud-dock-btn" style={{ pointerEvents: "none" }}>
-            <User size={18} />
-          </div>
-        );
-
       default:
         return null;
     }

@@ -359,7 +359,27 @@
   line-height: 1.48 !important;
   color: #cbd5e1 !important;
   user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
   scroll-behavior: auto !important;
+}
+
+/* Allow text selection ONLY in log lines and log viewport for copying */
+.console-viewport *:not(.console-line-num):not(button):not(input):not(svg):not(path),
+.console-line,
+.console-line-content,
+.console-line-time,
+.console-line-badge,
+.console-logs-container,
+.console-logs-container *:not(button):not(input),
+.console-row,
+.console-screen-overlay pre,
+.console-screen-overlay code {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
 }
 
 /* Scrollbar styling */

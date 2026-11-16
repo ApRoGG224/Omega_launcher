@@ -12,8 +12,7 @@ export type TopBarItemId =
   | "shortcuts"
   | "divider_friends"
   | "friends"
-  | "chevron"
-  | "character_toggle";
+  | "chevron";
 
 export type BottomBarItemId =
   | "instance_icon"
@@ -127,12 +126,6 @@ export const TOPBAR_ITEMS_META: Record<TopBarItemId, TopBarItemMeta> = {
     category: "navigation",
     description: "Быстрое открытие меню настроек",
   },
-  character_toggle: {
-    id: "character_toggle",
-    title: "3D-персонаж",
-    category: "navigation",
-    description: "Переключатель отображения ходящего 3D-персонажа",
-  },
 };
 
 export const BOTTOMBAR_ITEMS_META: Record<BottomBarItemId, BottomBarItemMeta> = {
@@ -187,7 +180,7 @@ export const DEFAULT_BUTTON_SHAPE_PRESET: ButtonShapePreset = "tactical";
 
 export const sanitizeTopBarLayout = (input: unknown): TopBarItemId[] => {
   if (!Array.isArray(input)) return [...DEFAULT_TOPBAR_LAYOUT];
-  const validIds = new Set<TopBarItemId>([...DEFAULT_TOPBAR_LAYOUT, "character_toggle"]);
+  const validIds = new Set<TopBarItemId>(DEFAULT_TOPBAR_LAYOUT);
   const result: TopBarItemId[] = [];
   for (const item of input) {
     if (typeof item === "string" && validIds.has(item as TopBarItemId) && !result.includes(item as TopBarItemId)) {
