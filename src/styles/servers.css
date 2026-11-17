@@ -1,0 +1,1138 @@
+/**
+ * Omega Launcher - Servers Screen Styles
+ * Authentic Minecraft Stepped Notched / Obsidian Pixel-Art Design System
+ * STRICT RULE: ZERO NEON (No neon glow, no radioactive highlights, authentic matte obsidian & stone tones)
+ */
+
+.servers-screen-overlay {
+  position: absolute;
+  top: 68px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--layer-4-z, 40);
+  background: rgba(6, 9, 15, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  padding: 16px 36px 24px;
+  animation: screen-fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Main Container */
+.srv-container {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Top Header Bar
+   ========================================================================== */
+
+.srv-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-medium, #1f293d);
+  flex-shrink: 0;
+}
+
+.srv-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.srv-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.srv-heading {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-pure, #f8fafc);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+}
+
+.srv-count-pill {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #151e2f;
+  color: var(--text-accent, #93c5fd);
+  border: 1px solid var(--border-medium, #273b5c);
+  letter-spacing: normal;
+}
+
+.srv-subheading {
+  font-size: 11.5px;
+  color: var(--text-muted, #64748b);
+  font-weight: 500;
+}
+
+/* Assembly Dropdown Selector */
+.srv-instance-selector {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.srv-instance-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 14px;
+  background: #0f1624;
+  border: 1px solid var(--border-medium, #25364e);
+  border-radius: 8px;
+  color: var(--text-pure, #f8fafc);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+.srv-instance-trigger-btn:hover {
+  background: #141f33;
+  border-color: var(--border-bright, #3b82f6);
+}
+
+.srv-instance-icon-box {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.srv-instance-name {
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #f1f5f9;
+}
+
+.srv-instance-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #1c273b;
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-transform: uppercase;
+}
+
+.srv-instance-chevron {
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  transition: transform 0.15s ease;
+}
+
+.srv-instance-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.srv-instance-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 280px;
+  max-height: 340px;
+  overflow-y: auto;
+  background: #0a0e17;
+  border: 1px solid var(--border-medium, #25364e);
+  border-radius: 10px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8);
+  z-index: 100;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium, #25364e) transparent;
+}
+
+.srv-dropdown-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  padding: 8px 10px 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.srv-instance-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-primary, #e2e8f0);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.12s ease;
+}
+
+.srv-instance-option-btn:hover {
+  background: #131b2b;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.srv-instance-option-btn.active {
+  background: #17243c;
+  border-color: rgba(59, 130, 246, 0.4);
+  color: var(--text-pure, #ffffff);
+}
+
+.srv-option-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.srv-option-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.srv-option-sub {
+  font-size: 10.5px;
+  color: var(--text-muted, #64748b);
+}
+
+.srv-option-check {
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+}
+
+/* Header Right Actions */
+.srv-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Auto-Refresh Timer Badge */
+.srv-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  background: #0b0f19;
+  border: 1px solid var(--border-dim, #152033);
+  border-radius: 8px;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 12px;
+  font-weight: 600;
+  user-select: none;
+}
+
+.srv-timer-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  transition: background-color 0.2s ease;
+}
+
+.srv-timer-badge.refreshing .srv-timer-dot {
+  background: #f59e0b;
+  animation: srvPulse 1s infinite alternate;
+}
+
+@keyframes srvPulse {
+  0% { transform: scale(0.85); opacity: 0.6; }
+  100% { transform: scale(1.15); opacity: 1; }
+}
+
+.srv-btn-refresh,
+.srv-btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.srv-btn-refresh {
+  background: #0f1624;
+  border: 1px solid var(--border-medium, #25364e);
+  color: var(--text-primary, #e2e8f0);
+}
+
+.srv-btn-refresh:hover:not(:disabled) {
+  background: #162238;
+  border-color: var(--border-bright, #38537f);
+  color: #ffffff;
+}
+
+.srv-btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.srv-btn-refresh svg.spinning {
+  animation: srvSpin 1s linear infinite;
+}
+
+@keyframes srvSpin {
+  100% { transform: rotate(360deg); }
+}
+
+.srv-btn-add {
+  background: #101e33;
+  border: 1px solid #1e40af;
+  color: #bfdbfe;
+}
+
+.srv-btn-add:hover {
+  background: #1d4ed8;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.srv-btn-add.active {
+  background: #7e3230;
+  border-color: #9e4a46;
+  color: #faefee;
+}
+
+/* ==========================================================================
+   Active Assembly Hero Banner
+   ========================================================================== */
+
+.srv-assembly-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  background: #0b0f19;
+  border: 1px solid var(--border-dim, #152033);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.srv-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.srv-hero-icon-plate {
+  width: 44px;
+  height: 44px;
+  background: #080c14;
+  border: 1px solid var(--border-medium, #25364e);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.srv-hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.srv-hero-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.srv-hero-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.srv-hero-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 4px;
+  background: #162032;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #93c5fd;
+  text-transform: uppercase;
+}
+
+.srv-hero-tag.loader {
+  background: #182236;
+  color: #60a5fa;
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.srv-hero-desc {
+  font-size: 11.5px;
+  color: var(--text-muted, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.srv-hero-dat-badge {
+  color: #34d399;
+  font-weight: 600;
+}
+
+.srv-hero-stats {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+}
+
+.srv-stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.srv-stat-val {
+  font-size: 15px;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.srv-stat-lbl {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ==========================================================================
+   Add Server Drawer Panel
+   ========================================================================== */
+
+.srv-add-panel {
+  background: #090e18;
+  border: 1px solid var(--border-medium, #25364e);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: srvSlideDown 0.18s ease-out;
+  flex-shrink: 0;
+}
+
+@keyframes srvSlideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.srv-add-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.srv-add-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.srv-add-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.srv-input {
+  flex: 1;
+  min-width: 220px;
+  height: 38px;
+  padding: 0 14px;
+  background: #05080f;
+  border: 1px solid var(--border-medium, #25364e);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.srv-input:focus {
+  border-color: var(--accent-light, #3b82f6);
+}
+
+.srv-input::placeholder {
+  color: #475569;
+}
+
+.srv-btn-save {
+  height: 38px;
+  padding: 0 18px;
+  background: var(--btn-bg-play, #4a6839);
+  border: 1px solid var(--btn-bc-play, #698852);
+  border-radius: 8px;
+  color: var(--btn-text-play, #f4f6ee);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.srv-btn-save:hover {
+  background: #587c44;
+  border-color: #7ea363;
+}
+
+.srv-add-hint {
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* ==========================================================================
+   Filter & Search Toolbar
+   ========================================================================== */
+
+.srv-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.srv-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #090e18;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--border-dim, #152033);
+}
+
+.srv-filter-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.srv-filter-tab:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.srv-filter-tab.active {
+  background: #141f33;
+  border-color: var(--border-medium, #25364e);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.srv-tab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.srv-tab-dot.online {
+  background: #10b981;
+}
+
+.srv-tab-dot.offline {
+  background: #ef4444;
+}
+
+.srv-search-box {
+  flex: 1;
+  max-width: 380px;
+  min-width: 240px;
+  height: 38px;
+  background: #090e18;
+  border: 1px solid var(--border-dim, #152033);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+  transition: border-color 0.15s ease;
+}
+
+.srv-search-box:focus-within {
+  border-color: var(--border-bright, #38537f);
+}
+
+.srv-search-icon {
+  color: #64748b;
+  display: flex;
+  align-items: center;
+}
+
+.srv-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f8fafc;
+  font-size: 12.5px;
+  font-family: inherit;
+}
+
+.srv-search-input::placeholder {
+  color: #475569;
+}
+
+.srv-search-clear {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
+
+.srv-search-clear:hover {
+  color: #cbd5e1;
+}
+
+/* ==========================================================================
+   Servers Scroll Area & List
+   ========================================================================== */
+
+.srv-scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium, #25364e) transparent;
+}
+
+.srv-scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.srv-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.srv-scroll-area::-webkit-scrollbar-thumb {
+  background: var(--border-medium, #25364e);
+  border-radius: 3px;
+}
+
+.srv-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: var(--border-bright, #38537f);
+}
+
+.srv-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 24px;
+}
+
+/* ==========================================================================
+   Server Card (Authentic Launcher Pixel Plate)
+   ========================================================================== */
+
+.srv-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 18px;
+  background: #0b0f19;
+  border: 1px solid var(--border-dim, #152033);
+  border-radius: 12px;
+  transition: transform 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+  box-sizing: border-box;
+}
+
+.srv-card:hover {
+  background: #0f1624;
+  border-color: var(--border-medium, #25364e);
+  transform: translateY(-1px);
+}
+
+.srv-card.is-offline {
+  border-color: rgba(239, 68, 68, 0.18);
+}
+
+.srv-card.is-offline:hover {
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+/* Favicon */
+.srv-favicon-box {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  background: #060910;
+  border: 1px solid var(--border-medium, #25364e);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  user-select: none;
+}
+
+.srv-favicon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.srv-favicon-fallback {
+  font-size: 18px;
+  font-weight: 800;
+  color: #93c5fd;
+  text-transform: uppercase;
+}
+
+/* Info Column */
+.srv-card-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.srv-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.srv-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+/* IP Chip with Click-to-Copy */
+.srv-ip-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  background: #060a12;
+  border: 1px solid var(--border-medium, #25364e);
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 11.5px;
+  font-family: monospace;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.srv-ip-chip:hover {
+  background: #111a2c;
+  color: #e2e8f0;
+  border-color: var(--border-bright, #38537f);
+}
+
+.srv-ip-copy-tag {
+  color: #64748b;
+  display: flex;
+  align-items: center;
+}
+
+.srv-ip-chip.copied {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.srv-ip-chip.copied .srv-ip-copy-tag {
+  color: #34d399;
+}
+
+/* Badges */
+.srv-ver-chip {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: #131b2a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.srv-assembly-chip {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  letter-spacing: 0.02em;
+}
+
+/* MOTD */
+.srv-card-motd {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #8b949e;
+  word-break: break-word;
+  white-space: pre-wrap;
+  max-height: 38px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Metrics Column */
+.srv-card-metrics {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  min-width: 130px;
+  flex-shrink: 0;
+}
+
+.srv-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.srv-status-badge.online {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.srv-status-badge.offline {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.srv-status-bullet {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.srv-players-row {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2e8f0;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.srv-players-slash {
+  color: #64748b;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.srv-players-max {
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.srv-ping-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.srv-ping-text {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.srv-ping-text.ping-good { color: #34d399; }
+.srv-ping-text.ping-med  { color: #fbbf24; }
+.srv-ping-text.ping-bad  { color: #f87171; }
+.srv-ping-text.ping-none { color: #64748b; }
+
+/* 5-Bar Signal Antenna Indicator */
+.srv-signal-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+  padding-bottom: 1px;
+}
+
+.srv-signal-bars .bar {
+  width: 2.5px;
+  border-radius: 0.5px;
+  display: block;
+  transition: background-color 0.15s ease;
+}
+
+.srv-signal-bars .bar-1 { height: 3px; }
+.srv-signal-bars .bar-2 { height: 5px; }
+.srv-signal-bars .bar-3 { height: 7px; }
+.srv-signal-bars .bar-4 { height: 9px; }
+.srv-signal-bars .bar-5 { height: 11px; }
+
+.srv-signal-bars.good .bar.on   { background: #10b981; }
+.srv-signal-bars.medium .bar.on { background: #fbbf24; }
+.srv-signal-bars.poor .bar.on   { background: #ef4444; }
+.srv-signal-bars .bar.off       { background: rgba(255, 255, 255, 0.15); }
+
+.srv-signal-bars.offline {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.srv-signal-x {
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* Actions Column */
+.srv-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Play Button */
+.srv-btn-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 18px;
+  background: var(--btn-bg-play, #4a6839);
+  border: 1px solid var(--btn-bc-play, #698852);
+  border-radius: 8px;
+  color: var(--btn-text-play, #f4f6ee);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.srv-btn-play:hover {
+  background: #587c44;
+  border-color: #7ea363;
+  filter: brightness(1.08);
+}
+
+.srv-btn-play:active {
+  transform: translateY(1.5px);
+}
+
+.srv-btn-play.connecting {
+  background: #1c2b44;
+  border-color: #3b82f6;
+  color: #93c5fd;
+  cursor: wait;
+}
+
+.srv-btn-play.game-running {
+  background: #1d5dc7;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.srv-btn-play-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.srv-btn-play-texts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.srv-btn-play-label {
+  line-height: 1.1;
+}
+
+.srv-btn-play-sub {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #c0d6ad;
+  text-transform: none;
+  letter-spacing: normal;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.srv-btn-play.game-running .srv-btn-play-sub {
+  color: #bfdbfe;
+}
+
+/* Delete Button */
+.srv-btn-delete {
+  width: 38px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 8px;
+  color: #f87171;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  flex-shrink: 0;
+}
+
+.srv-btn-delete:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+.srv-btn-delete:active {
+  transform: translateY(1.5px);
+}
+
+/* ==========================================================================
+   Empty State
+   ========================================================================== */
+
+.srv-empty-card {
+  padding: 48px 24px;
+  background: #090e18;
+  border: 1px solid var(--border-dim, #152033);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.srv-empty-icon {
+  font-size: 42px;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.srv-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.srv-empty-desc {
+  font-size: 13px;
+  color: var(--text-muted, #64748b);
+  max-width: 440px;
+  line-height: 1.5;
+}
+
+.srv-empty-action {
+  margin-top: 6px;
+}

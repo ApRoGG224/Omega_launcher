@@ -1,12 +1,25 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
+import {
+  RefreshCw,
+  Plus,
+  Trash2,
+  Copy,
+  Check,
+  ChevronDown,
+  Search,
+  X,
+  Globe,
+  Layers,
+} from "lucide-react";
 import { ipc, InstanceServerEntry } from "../../services/ipc";
 import { useLanguage } from "../../context/LanguageContext";
 import type { InstanceData } from "../../types";
 import { InstanceAvatarIcon } from "../icons/MinecraftIcons";
 import { IconPixelPlay } from "../icons/PixelIcons";
-import "../../styles/screens.css";
+import "../../styles/servers.css";
+import "../../design-system/pixelPlates.css";
 
-interface ServersScreenProps {
+export interface ServersScreenProps {
   onBack?: () => void;
   onDirectConnect: (serverName: string, ip: string, instanceId?: string) => void;
   instances?: InstanceData[];
@@ -99,32 +112,38 @@ function renderMinecraftMotd(motd: string): React.ReactNode {
   let currentColor = "#c9d1d9";
   let isBold = false;
   let isItalic = false;
+  let isUnderline = false;
 
-  return parts.map((part, idx) => {
+  return parts.map((part, index) => {
     if (part.startsWith("§")) {
       const code = part.charAt(1).toLowerCase();
       if (MC_COLOR_MAP[code]) {
         currentColor = MC_COLOR_MAP[code];
         isBold = false;
         isItalic = false;
+        isUnderline = false;
       } else if (code === "l") {
         isBold = true;
       } else if (code === "o") {
         isItalic = true;
+      } else if (code === "n") {
+        isUnderline = true;
       } else if (code === "r") {
         currentColor = "#c9d1d9";
         isBold = false;
         isItalic = false;
+        isUnderline = false;
       }
       return null;
     }
     return (
       <span
-        key={idx}
+        key={index}
         style={{
           color: currentColor,
-          fontWeight: isBold ? 700 : 400,
+          fontWeight: isBold ? 800 : 400,
           fontStyle: isItalic ? "italic" : "normal",
+          textDecoration: isUnderline ? "underline" : "none",
         }}
       >
         {part}
@@ -182,14 +201,14 @@ const AutoRefreshTimerBadge: React.FC<{
       className={`srv-timer-badge ${isRefreshing ? "refreshing" : ""}`}
       title={
         lang === "uk"
-          ? "Автоматичне оновлення кожну хвилину"
+          ? "Автоматичне оновлення щохвилини"
           : "Автоматическое обновление каждую минуту"
       }
       role="status"
       aria-atomic="true"
     >
       <span className="srv-timer-dot" />
-      <span className="srv-timer-text">
+      <span>
         {isRefreshing
           ? lang === "uk"
             ? "Опитування…"
@@ -228,16 +247,13 @@ const ServerCard = memo<ServerCardProps>(
     onDelete,
     onCopyIp,
   }) => {
-    const isFull =
-      server.onlinePlayers >= server.maxPlayers && server.maxPlayers > 0;
-
     return (
       <div
         className={`srv-card ${server.online ? "is-online" : "is-offline"}`}
-        style={{ contentVisibility: "auto", containIntrinsicSize: "auto 96px" }}
+        style={{ contentVisibility: "auto", containIntrinsicSize: "auto 88px" }}
       >
-        {/* Favicon */}
-        <div className="srv-ico">
+        {/* Favicon Box */}
+        <div className="srv-favicon-box">
           {server.favicon && server.favicon.startsWith("data:image") ? (
             <img
               src={server.favicon}
@@ -246,19 +262,21 @@ const ServerCard = memo<ServerCardProps>(
               loading="lazy"
             />
           ) : (
-            <span className="srv-ico-fallback">{server.favicon || "MC"}</span>
+            <span className="srv-favicon-fallback">{server.favicon || "MC"}</span>
           )}
         </div>
 
-        {/* Info */}
-        <div className="srv-info">
-          <div className="srv-nm">
-            <span className="srv-title-text">{server.name}</span>
+        {/* Info Column */}
+        <div className="srv-card-main">
+          <div className="srv-card-title-row">
+            <span className="srv-card-title" title={server.name}>
+              {server.name}
+            </span>
 
-            {/* Click to copy IP badge */}
+            {/* Click to copy IP chip */}
             <button
               type="button"
-              className="srv-ip-badge"
+              className={`srv-ip-chip ${isCopied ? "copied" : ""}`}
               onClick={() => onCopyIp(server.ip, server.id)}
               title={
                 lang === "uk"
@@ -266,92 +284,88 @@ const ServerCard = memo<ServerCardProps>(
                   : "Нажмите, чтобы скопировать IP адрес"
               }
             >
-              <span className="srv-ip-text">{server.ip}</span>
-              <span className="srv-copy-tag">
-                {isCopied ? "✓ Скопировано!" : "📋"}
+              <span>{server.ip}</span>
+              <span className="srv-ip-copy-tag">
+                {isCopied ? <Check size={12} /> : <Copy size={12} />}
               </span>
             </button>
 
-            {/* Version badge */}
+            {/* Version tag */}
             {server.version && (
-              <span className="srv-ver-badge">{server.version}</span>
+              <span className="srv-ver-chip">{server.version}</span>
             )}
 
-            {/* Assembly badge if from servers.dat */}
+            {/* Assembly tag if from servers.dat */}
             {server.isAssemblyServer && (
-              <span className="srv-assembly-badge">
+              <span className="srv-assembly-chip">
                 {lang === "uk" ? "Зі збірки" : "Из сборки"}
               </span>
             )}
           </div>
 
           {/* MOTD */}
-          <div className="srv-ds">{renderMinecraftMotd(server.motd)}</div>
+          <div className="srv-card-motd">
+            {renderMinecraftMotd(server.motd)}
+          </div>
         </div>
 
-        {/* Status & Online */}
-        <div className="srv-st">
-          <div className="srv-status-row">
-            <span
-              className={`srv-status-pill ${
-                server.online ? "online" : "offline"
-              }`}
-            >
-              <span className="srv-status-indicator" />
-              {server.online
-                ? lang === "uk"
-                  ? "В МЕРЕЖІ"
-                  : "В СЕТИ"
-                : lang === "uk"
-                ? "НЕ В МЕРЕЖІ"
-                : "НЕ В СЕТИ"}
-            </span>
-          </div>
+        {/* Metrics Column */}
+        <div className="srv-card-metrics">
+          <span
+            className={`srv-status-badge ${server.online ? "online" : "offline"}`}
+          >
+            <span className="srv-status-bullet" />
+            {server.online
+              ? lang === "uk"
+                ? "В МЕРЕЖІ"
+                : "В СЕТИ"
+              : lang === "uk"
+              ? "НЕ В МЕРЕЖІ"
+              : "НЕ В СЕТИ"}
+          </span>
 
-          <div className={`srv-on-n ${isFull ? "full" : ""}`}>
+          <div className="srv-players-row">
             {server.online ? (
               <>
-                <span className="srv-players-num">
-                  {server.onlinePlayers.toLocaleString("en-US")}
-                </span>
-                <span className="srv-players-slash"> / </span>
+                <span>{server.onlinePlayers.toLocaleString("en-US")}</span>
+                <span className="srv-players-slash">/</span>
                 <span className="srv-players-max">
                   {server.maxPlayers.toLocaleString("en-US")}
                 </span>
               </>
             ) : (
-              <span className="srv-offline-text">Офлайн</span>
+              <span style={{ color: "#64748b", fontSize: "11.5px" }}>
+                {lang === "uk" ? "Недоступний" : "Недоступен"}
+              </span>
             )}
           </div>
 
-          <div className="srv-ping">
+          <div className="srv-ping-row">
             <MinecraftSignalBars
               online={server.online}
               pingMs={server.pingMs}
             />
-            {server.online ? (
-              <span
-                className={`srv-ping-val ${
-                  server.pingMs < 60
-                    ? "ping-good"
-                    : server.pingMs < 150
-                    ? "ping-med"
-                    : "ping-bad"
-                }`}
-              >
-                {server.pingMs} мс
-              </span>
-            ) : (
-              <span className="srv-ping-dash">—</span>
-            )}
+            <span
+              className={`srv-ping-text ${
+                !server.online
+                  ? "ping-none"
+                  : server.pingMs < 60
+                  ? "ping-good"
+                  : server.pingMs < 150
+                  ? "ping-med"
+                  : "ping-bad"
+              }`}
+            >
+              {server.online ? `${server.pingMs} мс` : "—"}
+            </span>
           </div>
         </div>
 
-        {/* Action: Play & Delete */}
-        <div className="srv-acts">
+        {/* Actions Column */}
+        <div className="srv-card-actions">
           <button
             type="button"
-            className={`srv-play-btn ${isConnecting ? "connecting" : ""} ${
+            className={`srv-btn-play ${isConnecting ? "connecting" : ""} ${
               isRunning ? "game-running" : ""
             }`}
             onClick={() => onPlay(server)}
@@ -361,11 +375,11 @@ const ServerCard = memo<ServerCardProps>(
                 : "Запустить Minecraft и подключиться к серверу"
             }
           >
-            <span className="srv-play-icon">
-              <IconPixelPlay size={15} />
+            <span className="srv-btn-play-icon">
+              <IconPixelPlay size={14} />
             </span>
-            <div className="srv-play-text-group">
-              <span className="srv-play-label">
+            <div className="srv-btn-play-texts">
+              <span className="srv-btn-play-label">
                 {isConnecting
                   ? "Запуск…"
                   : isRunning
@@ -377,7 +391,7 @@ const ServerCard = memo<ServerCardProps>(
                   : "Играть"}
               </span>
               {currentInstanceName && (
-                <span className="srv-play-instance-sub">
+                <span className="srv-btn-play-sub" title={currentInstanceName}>
                   {currentInstanceName}
                 </span>
               )}
@@ -386,7 +400,7 @@ const ServerCard = memo<ServerCardProps>(
 
           <button
             type="button"
-            className="srv-del-btn"
+            className="srv-btn-delete"
             onClick={() => onDelete(server)}
             title={
               lang === "uk"
@@ -394,7 +408,7 @@ const ServerCard = memo<ServerCardProps>(
                 : "Удалить сервер из списка сборки"
             }
           >
-            ✕
+            <Trash2 size={15} />
           </button>
         </div>
       </div>
@@ -404,6 +418,7 @@ const ServerCard = memo<ServerCardProps>(
 ServerCard.displayName = "ServerCard";
 
 export const ServersScreen: React.FC<ServersScreenProps> = ({
+  onBack,
   onDirectConnect,
   instances = [],
   selectedInstance,
@@ -761,31 +776,54 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
     () => servers.filter((s) => !s.online).length,
     [servers]
   );
+  const totalPlayersOnline = useMemo(
+    () =>
+      servers.reduce(
+        (sum, s) => sum + (s.online ? s.onlinePlayers : 0),
+        0
+      ),
+    [servers]
+  );
+  const assemblyServersCount = useMemo(
+    () => servers.filter((s) => s.isAssemblyServer).length,
+    [servers]
+  );
 
   return (
     <div className="screens-overlay-layer servers-screen-overlay">
-      <div className="srv-wrap">
-        {/* Top Header */}
-        <div className="srv-top">
+      <div className="srv-container">
+        {/* Top Header Bar */}
+        <div className="srv-header-bar">
           <div className="srv-header-left">
-            <h1 className="srv-title">
-              {lang === "uk" ? "СЕРВЕРИ" : lang === "ru" ? "СЕРВЕРЫ" : "SERVERS"}
-              <span className="srv-total-count">({servers.length})</span>
-            </h1>
+            {onBack && (
+              <button
+                type="button"
+                className="screen-back-btn"
+                onClick={onBack}
+                title={lang === "uk" ? "Повернутися назад" : "Вернуться назад"}
+              >
+                ← {lang === "uk" ? "Назад" : lang === "ru" ? "Назад" : "Back"}
+              </button>
+            )}
+
+            <div className="srv-title-wrap">
+              <h1 className="srv-heading">
+                {lang === "uk" ? "СЕРВЕРИ" : lang === "ru" ? "СЕРВЕРЫ" : "SERVERS"}
+                <span className="srv-count-pill">{servers.length}</span>
+              </h1>
+              <span className="srv-subheading">
+                {lang === "uk"
+                  ? "Моніторинг мережі та список серверів у збірці"
+                  : "Мониторинг сети и список серверов в сборке"}
+              </span>
+            </div>
 
             {/* Assembly Selector Dropdown */}
             {instances.length > 0 && (
               <div className="srv-instance-selector" ref={dropdownRef}>
-                <span className="srv-instance-label">
-                  {lang === "uk"
-                    ? "Складання:"
-                    : lang === "ru"
-                    ? "Сборка:"
-                    : "Instance:"}
-                </span>
                 <button
                   type="button"
-                  className="srv-instance-btn"
+                  className="srv-instance-trigger-btn"
                   onClick={() => setIsInstanceDropdownOpen((prev) => !prev)}
                   title={
                     lang === "uk"
@@ -809,14 +847,18 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                         }`.trim()
                       : ""}
                   </span>
-                  <span className="srv-instance-arrow">
-                    {isInstanceDropdownOpen ? "▲" : "▼"}
+                  <span
+                    className={`srv-instance-chevron ${
+                      isInstanceDropdownOpen ? "open" : ""
+                    }`}
+                  >
+                    <ChevronDown size={14} />
                   </span>
                 </button>
 
                 {isInstanceDropdownOpen && (
-                  <div className="srv-instance-menu">
-                    <div className="srv-instance-menu-header">
+                  <div className="srv-instance-dropdown-menu">
+                    <div className="srv-dropdown-header">
                       {lang === "uk"
                         ? "Оберіть збірку Minecraft:"
                         : "Выберите сборку Minecraft:"}
@@ -825,7 +867,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                       <button
                         key={inst.id}
                         type="button"
-                        className={`srv-instance-option ${
+                        className={`srv-instance-option-btn ${
                           inst.id === activeInstanceId ? "active" : ""
                         }`}
                         onClick={() => handleSwitchInstance(inst)}
@@ -833,16 +875,16 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                         <span className="srv-instance-icon-box">
                           <InstanceAvatarIcon icon={inst.icon} size={18} />
                         </span>
-                        <div className="srv-instance-option-info">
-                          <div className="srv-instance-option-name">
-                            {inst.name}
-                          </div>
-                          <div className="srv-instance-option-sub">
+                        <div className="srv-option-info">
+                          <div className="srv-option-title">{inst.name}</div>
+                          <div className="srv-option-sub">
                             {inst.mcVersion} • {inst.loader || "Vanilla"}
                           </div>
                         </div>
                         {inst.id === activeInstanceId && (
-                          <span className="srv-instance-check">✓</span>
+                          <span className="srv-option-check">
+                            <Check size={14} />
+                          </span>
                         )}
                       </button>
                     ))}
@@ -862,85 +904,153 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
 
             <button
               type="button"
-              className="srv-b srv-b-refresh"
+              className="srv-btn-refresh"
               onClick={handleManualRefresh}
               disabled={isRefreshing}
               title={
                 lang === "uk"
-                  ? "Оновити пінг та онлайн"
-                  : "Обновить пинг и онлайн"
+                  ? "Оновити пінг та статус серверів"
+                  : "Обновить пинг и статус серверов"
               }
             >
-              {isRefreshing
-                ? lang === "uk"
-                  ? "⟳ Опитування…"
-                  : "⟳ Опрос…"
-                : lang === "uk"
-                ? "⟳ Оновити"
-                : "⟳ Обновить"}
+              <RefreshCw
+                size={14}
+                className={isRefreshing ? "spinning" : ""}
+              />
+              <span>
+                {isRefreshing
+                  ? lang === "uk"
+                    ? "Опитування…"
+                    : "Опрос…"
+                  : lang === "uk"
+                  ? "Оновити"
+                  : "Обновить"}
+              </span>
             </button>
 
             <button
               type="button"
-              className="srv-b srv-b-add"
+              className={`srv-btn-add ${showAddForm ? "active" : ""}`}
               onClick={() => setShowAddForm((prev) => !prev)}
             >
-              {showAddForm
-                ? lang === "uk"
-                  ? "✕ Скасувати"
-                  : "✕ Отмена"
-                : lang === "uk"
-                ? "+ Додати сервер"
-                : "+ Добавить сервер"}
+              {showAddForm ? <X size={15} /> : <Plus size={15} />}
+              <span>
+                {showAddForm
+                  ? lang === "uk"
+                    ? "Скасувати"
+                    : "Отмена"
+                  : lang === "uk"
+                  ? "Додати сервер"
+                  : "Добавить сервер"}
+              </span>
             </button>
           </div>
         </div>
 
-        {/* Add Server Form */}
+        {/* Active Assembly Hero Banner */}
+        {currentInstance && (
+          <div className="srv-assembly-hero">
+            <div className="srv-hero-left">
+              <div className="srv-hero-icon-plate">
+                <InstanceAvatarIcon icon={currentInstance.icon} size={28} />
+              </div>
+              <div className="srv-hero-text">
+                <div className="srv-hero-title-row">
+                  <span className="srv-hero-name">{currentInstance.name}</span>
+                  <span className="srv-hero-tag loader">
+                    {currentInstance.loader?.toUpperCase() || "VANILLA"}
+                  </span>
+                  <span className="srv-hero-tag">
+                    {currentInstance.mcVersion}
+                  </span>
+                </div>
+                <div className="srv-hero-desc">
+                  <span>
+                    {lang === "uk" ? "Файл збірки:" : "Файл сборки:"}{" "}
+                    <b className="srv-hero-dat-badge">servers.dat</b>
+                  </span>
+                  <span>•</span>
+                  <span>
+                    {lang === "uk"
+                      ? `${assemblyServersCount} серверів у конфізі`
+                      : `${assemblyServersCount} серверов в конфиге`}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="srv-hero-stats">
+              <div className="srv-stat-box">
+                <span className="srv-stat-val">
+                  {onlineCount} / {servers.length}
+                </span>
+                <span className="srv-stat-lbl">
+                  {lang === "uk" ? "В мережі" : "В сети"}
+                </span>
+              </div>
+              <div className="srv-stat-box">
+                <span className="srv-stat-val">
+                  {totalPlayersOnline.toLocaleString("en-US")}
+                </span>
+                <span className="srv-stat-lbl">
+                  {lang === "uk" ? "Гравців онлайн" : "Игроков онлайн"}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add Server Drawer */}
         {showAddForm && (
-          <form onSubmit={handleAddServer} className="srv-form">
-            <div className="srv-form-row">
+          <div className="srv-add-panel">
+            <div className="srv-add-header">
+              <span className="srv-add-title">
+                <Plus size={15} />
+                {lang === "uk"
+                  ? `Додати сервер до servers.dat збірки «${currentInstance?.name || "Minecraft"}»`
+                  : `Добавить сервер в servers.dat сборки «${currentInstance?.name || "Minecraft"}»`}
+              </span>
+            </div>
+            <form onSubmit={handleAddServer} className="srv-add-form">
               <input
                 type="text"
                 required
                 placeholder={
                   lang === "uk"
-                    ? "Назва сервера (наприклад, Мій Сервер)"
-                    : "Название сервера (например, Мой Сервер)"
+                    ? "Назва сервера (наприклад: Hypixel Network)"
+                    : "Название сервера (например: Hypixel Network)"
                 }
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                className="srv-form-input"
+                className="srv-input"
               />
               <input
                 type="text"
                 required
                 placeholder={
                   lang === "uk"
-                    ? "Адреса або IP (наприклад, mc.hypixel.net або 127.0.0.1:25565)"
-                    : "Адрес или IP (например, mc.hypixel.net или 127.0.0.1:25565)"
+                    ? "Адреса або IP:порт (наприклад: mc.hypixel.net)"
+                    : "Адрес или IP:порт (например: mc.hypixel.net)"
                 }
                 value={newIp}
                 onChange={(e) => setNewIp(e.target.value)}
-                className="srv-form-input"
+                className="srv-input"
               />
-              <button type="submit" className="srv-b srv-b-save">
+              <button type="submit" className="srv-btn-save">
                 {lang === "uk" ? "Зберегти в збірку" : "Сохранить в сборку"}
               </button>
+            </form>
+            <div className="srv-add-hint">
+              {lang === "uk"
+                ? "Сервер миттєво з'явиться в меню гри Minecraft та у списку вище"
+                : "Сервер мгновенно появится в игровом меню Minecraft и в списке выше"}
             </div>
-            <div className="srv-form-hint">
-              {activeInstanceId
-                ? lang === "uk"
-                  ? `Сервер буде збережений у файл servers.dat збірки "${currentInstance?.name}"`
-                  : `Сервер будет сохранён в файл servers.dat сборки "${currentInstance?.name}"`
-                : ""}
-            </div>
-          </form>
+          </div>
         )}
 
-        {/* Toolbar: Filter tabs & Search */}
+        {/* Filter and Search Toolbar */}
         <div className="srv-toolbar">
-          <div className="srv-filters">
+          <div className="srv-filter-tabs">
             <button
               type="button"
               className={`srv-filter-tab ${
@@ -948,38 +1058,43 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               }`}
               onClick={() => setFilterType("all")}
             >
-              {lang === "uk" ? "Всі" : "Все"} ({servers.length})
+              <span>{lang === "uk" ? "Всі" : "Все"}</span>
+              <span style={{ opacity: 0.7 }}>({servers.length})</span>
             </button>
             <button
               type="button"
-              className={`srv-filter-tab srv-filter-online ${
+              className={`srv-filter-tab ${
                 filterType === "online" ? "active" : ""
               }`}
               onClick={() => setFilterType("online")}
             >
               <span className="srv-tab-dot online" />
-              {lang === "uk" ? "В мережі" : "В сети"} ({onlineCount})
+              <span>{lang === "uk" ? "В мережі" : "В сети"}</span>
+              <span style={{ opacity: 0.7 }}>({onlineCount})</span>
             </button>
             <button
               type="button"
-              className={`srv-filter-tab srv-filter-offline ${
+              className={`srv-filter-tab ${
                 filterType === "offline" ? "active" : ""
               }`}
               onClick={() => setFilterType("offline")}
             >
               <span className="srv-tab-dot offline" />
-              {lang === "uk" ? "Офлайн" : "Офлайн"} ({offlineCount})
+              <span>{lang === "uk" ? "Офлайн" : "Офлайн"}</span>
+              <span style={{ opacity: 0.7 }}>({offlineCount})</span>
             </button>
           </div>
 
           <div className="srv-search-box">
-            <span className="srv-search-icon">🔍</span>
+            <span className="srv-search-icon">
+              <Search size={14} />
+            </span>
             <input
               type="text"
               placeholder={
                 lang === "uk"
-                  ? "Пошук сервера за назвою або IP…"
-                  : "Поиск сервера по названию или IP…"
+                  ? "Пошук сервера за назвою, IP або описом…"
+                  : "Поиск сервера по названию, IP или описанию…"
               }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -990,8 +1105,9 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                 type="button"
                 className="srv-search-clear"
                 onClick={() => setSearchQuery("")}
+                title="Очистить"
               >
-                ✕
+                <X size={14} />
               </button>
             )}
           </div>
@@ -999,10 +1115,12 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
 
         {/* Servers List Area */}
         <div className="srv-scroll-area">
-          <div className="srv-list">
+          <div className="srv-cards-list">
             {filteredServers.length === 0 ? (
-              <div className="srv-empty">
-                <div className="srv-empty-icon">🌐</div>
+              <div className="srv-empty-card">
+                <div className="srv-empty-icon">
+                  <Globe size={48} />
+                </div>
                 <div className="srv-empty-title">
                   {searchQuery
                     ? lang === "uk"
@@ -1018,9 +1136,25 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                       ? "Спробуйте змінити пошуковий запит або скинути фільтри"
                       : "Попробуйте изменить поисковый запрос или сбросить фильтры"
                     : lang === "uk"
-                    ? "Додайте новий сервер вище, щоб він з'явився у списку мультиплеєра Minecraft!"
-                    : "Добавьте новый сервер выше, чтобы он появился в списке мультиплеера Minecraft!"}
+                    ? "Додайте новий сервер вище, і він автоматично з'явиться в меню мультиплеєра Minecraft!"
+                    : "Добавьте новый сервер выше, и он автоматически появится в меню мультиплеера Minecraft!"}
                 </div>
+                {!searchQuery && (
+                  <div className="srv-empty-action">
+                    <button
+                      type="button"
+                      className="srv-btn-add"
+                      onClick={() => setShowAddForm(true)}
+                    >
+                      <Plus size={14} />
+                      <span>
+                        {lang === "uk"
+                          ? "Додати перший сервер"
+                          : "Добавить первый сервер"}
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               filteredServers.map((server) => (
