@@ -9,12 +9,19 @@ import {
 } from "../../services/catalogService";
 import { IsometricCube } from "../icons/IsometricCube";
 import { useLanguage } from "../../context/LanguageContext";
+import type { InstanceData } from "../../types";
+import { ipc, type InstalledInstanceContent } from "../../services/ipc";
+import { CartModal, type CartItem } from "../modals/CartModal";
 import "../../styles/screens.css";
+import "../../styles/cart-modal.css";
 
 interface ModrinthScreenProps {
   onBack?: () => void;
   onInstallMod: (modName: string) => void;
   onInstallModpack?: (modpack: CatalogItem) => void;
+  selectedInstance?: InstanceData | null;
+  onPushLog?: (message: string, level?: "INFO" | "WARN" | "ERROR") => void;
+  onRefreshInstance?: () => void;
 }
 
 interface SourceItem {
@@ -78,30 +85,104 @@ function renderFallbackIcon(type: CatalogItem["iconFallback"]) {
 interface CatalogCardProps {
   item: CatalogItem;
   isDone: boolean;
+  isInCart: boolean;
+  isInstalled: boolean;
   failedImage: boolean;
   onImageError: (id: string) => void;
   onInstall: (item: CatalogItem, itemKey: string) => void;
+  onToggleCart: (item: CatalogItem, itemKey: string) => void;
   activeTab: CatalogTab;
 }
 
 const CatalogCard = React.memo<CatalogCardProps>(
-  ({ item, isDone, failedImage, onImageError, onInstall, activeTab }) => {
+  ({
+    item,
+    isDone,
+    isInCart,
+    isInstalled,
+    failedImage,
+    onImageError,
+    onInstall,
+    onToggleCart,
+    activeTab,
+  }) => {
     const { t, lang } = useLanguage();
     const itemKey = `${item.source}-${item.id}`;
     const showImg = !!item.iconUrl && !failedImage;
 
-    const handleInstallClick = useCallback(() => {
-      onInstall(item, itemKey);
-    }, [item, itemKey, onInstall]);
+    const handleButtonClick = useCallback(() => {
+      if (isInstalled) return;
+      if (activeTab === "modpacks") {
+        onInstall(item, itemKey);
+      } else {
+        onToggleCart(item, itemKey);
+      }
+    }, [isInstalled, activeTab, onInstall, onToggleCart, item, itemKey]);
 
     const handleImgError = useCallback(() => {
       onImageError(item.id);
     }, [item.id, onImageError]);
 
-    const noDescText = lang === "uk" ? "Немає опису" : lang === "ru" ? "Нет описания" : "No description";
-    const installedPackText = lang === "uk" ? "Збірку встановлено" : lang === "ru" ? "Сборка установлена" : "Modpack installed";
-    const downloadPackText = lang === "uk" ? "+ Завантажити збірку" : lang === "ru" ? "+ Скачать сборку" : "+ Download modpack";
-    const installModText = lang === "uk" ? "+ Встановити" : lang === "ru" ? "+ Установить" : "+ Install";
+    const noDescText =
+      lang === "uk" ? "Немає опису" : lang === "ru" ? "Нет описания" : "No description";
+    const installedPackText =
+      lang === "uk"
+        ? "Збірку встановлено"
+        : lang === "ru"
+        ? "Сборка установлена"
+        : "Modpack installed";
+    const downloadPackText =
+      lang === "uk"
+        ? "+ Завантажити збірку"
+        : lang === "ru"
+        ? "+ Скачать сборку"
+        : "+ Download modpack";
+
+    const buttonLabel = useMemo(() => {
+      if (activeTab === "modpacks") {
+        return isDone ? installedPackText : downloadPackText;
+      }
+      if (isInstalled) {
+        return lang === "uk"
+          ? "Встановлено"
+          : lang === "ru"
+          ? "Установлено"
+          : "Installed";
+      }
+      if (isInCart) {
+        return lang === "uk"
+          ? "✓ У кошику"
+          : lang === "ru"
+          ? "✓ В корзине"
+          : "✓ In cart";
+      }
+      return lang === "uk"
+        ? "+ У кошик"
+        : lang === "ru"
+        ? "+ В корзину"
+        : "+ To cart";
+    }, [
+      activeTab,
+      isDone,
+      isInstalled,
+      isInCart,
+      installedPackText,
+      downloadPackText,
+      lang,
+    ]);
+
+    const buttonClass = useMemo(() => {
+      if (activeTab === "modpacks") {
+        return `b ${isDone ? "done" : ""}`;
+      }
+      if (isInstalled) {
+        return "b done installed-disabled";
+      }
+      if (isInCart) {
+        return "b in-cart";
+      }
+      return "b";
+    }, [activeTab, isDone, isInstalled, isInCart]);
 
     return (
       <div className="card">
@@ -167,16 +248,18 @@ const CatalogCard = React.memo<CatalogCardProps>(
             <div className="dl">{item.downloadsFormatted}</div>
             <button
               type="button"
-              className={`b ${isDone ? "done" : ""}`}
-              onClick={handleInstallClick}
+              className={buttonClass}
+              onClick={handleButtonClick}
+              disabled={isInstalled}
+              title={
+                isInstalled
+                  ? "Уже установлено в выбранную сборку"
+                  : isInCart
+                  ? "Убрать из корзины"
+                  : undefined
+              }
             >
-              {isDone
-                ? activeTab === "modpacks"
-                  ? installedPackText
-                  : t("installed", "Встановлено")
-                : activeTab === "modpacks"
-                ? downloadPackText
-                : installModText}
+              {buttonLabel}
             </button>
           </div>
         </div>
@@ -190,6 +273,9 @@ CatalogCard.displayName = "CatalogCard";
 export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
   onInstallMod,
   onInstallModpack,
+  selectedInstance,
+  onPushLog,
+  onRefreshInstance,
 }) => {
   const { t, lang, setLang } = useLanguage();
   const [activeSource, setActiveSource] = useState<CatalogSource>("Modrinth");
@@ -205,6 +291,136 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+
+  // Cart & Installed Content states
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [installedContent, setInstalledContent] = useState<InstalledInstanceContent | null>(null);
+
+  const fetchInstalledContent = useCallback(async () => {
+    if (!selectedInstance) {
+      setInstalledContent(null);
+      return;
+    }
+    try {
+      const data = await ipc.listInstalledInstanceItems(selectedInstance.id);
+      setInstalledContent(data);
+    } catch (err) {
+      console.warn("Failed to fetch installed instance items:", err);
+    }
+  }, [selectedInstance]);
+
+  useEffect(() => {
+    fetchInstalledContent();
+  }, [fetchInstalledContent]);
+
+  const checkIsInstalled = useCallback(
+    (item: CatalogItem): boolean => {
+      if (!installedContent || !selectedInstance) return false;
+      if (item.projectType === "modpacks") return false;
+
+      const idLower = item.id.toLowerCase();
+      const slugLower = item.slug ? item.slug.toLowerCase() : "";
+      const titleClean = item.title.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+      // 1. Check SQLite db_records
+      if (installedContent.db_records && installedContent.db_records.length > 0) {
+        const matchDb = installedContent.db_records.some((rec) => {
+          const modId = (rec.modId || rec.mod_id || "").toLowerCase();
+          return (
+            modId === idLower ||
+            (slugLower && modId === slugLower) ||
+            (titleClean.length >= 3 && modId.replace(/[^a-z0-9]/g, "").includes(titleClean))
+          );
+        });
+        if (matchDb) return true;
+      }
+
+      // 2. Check files on disk depending on project type
+      const files =
+        item.projectType === "shaders"
+          ? installedContent.shader_files
+          : item.projectType === "tex"
+          ? installedContent.resourcepack_files
+          : installedContent.mod_files;
+
+      if (files && files.length > 0) {
+        const matchFile = files.some((filename) => {
+          const cleanFile = filename.toLowerCase().replace(/[^a-z0-9]/g, "");
+          return (
+            cleanFile.includes(idLower) ||
+            (slugLower && cleanFile.includes(slugLower)) ||
+            (titleClean.length >= 4 && cleanFile.includes(titleClean))
+          );
+        });
+        if (matchFile) return true;
+      }
+
+      return false;
+    },
+    [installedContent, selectedInstance]
+  );
+
+  const handleToggleCart = useCallback(
+    (item: CatalogItem, itemKey: string) => {
+      setCartItems((prev) => {
+        const exists = prev.some((ci) => ci.id === itemKey);
+        if (exists) {
+          return prev.filter((ci) => ci.id !== itemKey);
+        } else {
+          return [
+            ...prev,
+            {
+              id: itemKey,
+              catalogItem: item,
+              checked: true,
+              status: "idle",
+            },
+          ];
+        }
+      });
+    },
+    []
+  );
+
+  const handleToggleCartItem = useCallback((id: string) => {
+    setCartItems((prev) =>
+      prev.map((ci) => (ci.id === id ? { ...ci, checked: !ci.checked } : ci))
+    );
+  }, []);
+
+  const handleRemoveCartItem = useCallback((id: string) => {
+    setCartItems((prev) => prev.filter((ci) => ci.id !== id));
+  }, []);
+
+  const handleSelectAllCart = useCallback(() => {
+    setCartItems((prev) => prev.map((ci) => ({ ...ci, checked: true })));
+  }, []);
+
+  const handleDeselectAllCart = useCallback(() => {
+    setCartItems((prev) => prev.map((ci) => ({ ...ci, checked: false })));
+  }, []);
+
+  const handleClearCart = useCallback(() => {
+    setCartItems([]);
+  }, []);
+
+  const handleInstallSuccess = useCallback(
+    async (installed: CartItem[]) => {
+      const installedIds = new Set(installed.map((i) => i.id));
+      setCartItems((prev) => prev.filter((ci) => !installedIds.has(ci.id)));
+      setDone((prev) => {
+        const next = { ...prev };
+        for (const item of installed) {
+          next[item.id] = true;
+        }
+        return next;
+      });
+      await fetchInstalledContent();
+      onRefreshInstance?.();
+    },
+    [fetchInstalledContent, onRefreshInstance]
+  );
 
   const categories = useMemo(
     () => [
@@ -520,14 +736,19 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
           ) : (
             items.map((item) => {
               const itemKey = `${item.source}-${item.id}`;
+              const isInstalled = checkIsInstalled(item);
+              const isInCart = cartItems.some((ci) => ci.id === itemKey);
               return (
                 <CatalogCard
                   key={itemKey}
                   item={item}
                   isDone={!!done[itemKey]}
+                  isInCart={isInCart}
+                  isInstalled={isInstalled}
                   failedImage={!!failedImages[item.id]}
                   onImageError={handleImageError}
                   onInstall={handleInstall}
+                  onToggleCart={handleToggleCart}
                   activeTab={activeTab}
                 />
               );
@@ -563,6 +784,41 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
           </div>
         )}
       </div>
+
+      {/* Floating Cart Badge Button when >= 1 item in cart */}
+      {cartItems.length > 0 && (
+        <button
+          type="button"
+          className="catalog-cart-float-btn"
+          onClick={() => setIsCartOpen(true)}
+          title="Открыть корзину установки"
+        >
+          <div className="catalog-cart-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <circle cx="8" cy="21" r="1" />
+              <circle cx="19" cy="21" r="1" />
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+            </svg>
+          </div>
+          <span>{lang === "uk" ? "Кошик" : lang === "ru" ? "Корзина" : "Cart"}</span>
+          <span className="catalog-cart-badge">{cartItems.length}</span>
+        </button>
+      )}
+
+      {/* Cart Modal */}
+      <CartModal
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        items={cartItems}
+        onToggleItem={handleToggleCartItem}
+        onRemoveItem={handleRemoveCartItem}
+        onSelectAll={handleSelectAllCart}
+        onDeselectAll={handleDeselectAllCart}
+        onClearCart={handleClearCart}
+        selectedInstance={selectedInstance || null}
+        onInstallSuccess={handleInstallSuccess}
+        onPushLog={onPushLog}
+      />
     </div>
   );
 };

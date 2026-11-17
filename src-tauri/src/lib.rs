@@ -309,6 +309,61 @@ fn count_installed_mods(app: tauri::AppHandle, instance_id: String) -> Result<us
     Ok(count)
 }
 
+#[derive(serde::Serialize)]
+pub struct InstalledInstanceContent {
+    pub db_records: Vec<crate::db::DbModRecord>,
+    pub mod_files: Vec<String>,
+    pub shader_files: Vec<String>,
+    pub resourcepack_files: Vec<String>,
+}
+
+fn scan_dir_files(dir: &std::path::Path) -> Vec<String> {
+    if !dir.exists() {
+        return Vec::new();
+    }
+    let entries = match std::fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(_) => return Vec::new(),
+    };
+    let mut files: Vec<String> = entries
+        .filter_map(|entry| entry.ok())
+        .filter_map(|entry| {
+            let ft = entry.file_type().ok()?;
+            if ft.is_file() {
+                Some(entry.file_name().to_string_lossy().to_string())
+            } else {
+                None
+            }
+        })
+        .collect();
+    files.sort();
+    files
+}
+
+#[tauri::command]
+fn list_installed_instance_items(
+    app: tauri::AppHandle,
+    db: tauri::State<'_, crate::db::Db>,
+    instance_id: String,
+) -> Result<InstalledInstanceContent, String> {
+    let db_records = crate::db::db_list_installed_mods(db, instance_id.clone()).unwrap_or_default();
+    let mc_dir = std::path::PathBuf::from(get_data_dir(&app))
+        .join("instances")
+        .join(&instance_id)
+        .join("minecraft");
+
+    let mod_files = scan_dir_files(&mc_dir.join("mods"));
+    let shader_files = scan_dir_files(&mc_dir.join("shaderpacks"));
+    let resourcepack_files = scan_dir_files(&mc_dir.join("resourcepacks"));
+
+    Ok(InstalledInstanceContent {
+        db_records,
+        mod_files,
+        shader_files,
+        resourcepack_files,
+    })
+}
+
 #[tauri::command]
 fn list_installed_mod_files(app: tauri::AppHandle, instance_id: String) -> Result<Vec<String>, String> {
     let mut path = std::path::PathBuf::from(get_data_dir(&app));
@@ -464,6 +519,7 @@ pub fn run() {
             create_shortcut,
             count_installed_mods,
             list_installed_mod_files,
+            list_installed_instance_items,
             list_worlds,
             open_path,
             open_url,

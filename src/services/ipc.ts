@@ -284,6 +284,10 @@ export const ipc = {
     return invoke<string[]>("list_installed_mod_files", { instanceId });
   },
 
+  async listInstalledInstanceItems(instanceId: string): Promise<InstalledInstanceContent> {
+    return invoke<InstalledInstanceContent>("list_installed_instance_items", { instanceId });
+  },
+
   async listWorlds(instanceId: string): Promise<string[]> {
     return invoke<string[]>("list_worlds", { instanceId });
   },
@@ -409,8 +413,17 @@ export interface DbAccount {
 }
 
 export interface DbModRecord {
-  instanceId: string;
-  modId: string;
-  version: string;
+  instanceId?: string;
+  modId?: string;
+  instance_id?: string;
+  mod_id?: string;
+  version: string | null;
   filename: string;
+}
+
+export interface InstalledInstanceContent {
+  db_records: DbModRecord[];
+  mod_files: string[];
+  shader_files: string[];
+  resourcepack_files: string[];
 }

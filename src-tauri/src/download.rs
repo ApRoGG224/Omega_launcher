@@ -40,6 +40,43 @@ async fn fetch_versions(client: &reqwest::Client, project_id: &str) -> Result<Ve
     get_json(client, &format!("https://api.modrinth.com/v2/project/{project_id}/version")).await
 }
 
+const CURSEFORGE_KEY: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm";
+
+#[derive(serde::Deserialize)]
+struct CfFile {
+    id: u64,
+    #[serde(rename = "fileName")]
+    file_name: String,
+    #[serde(rename = "downloadUrl")]
+    download_url: Option<String>,
+    #[serde(default, rename = "gameVersions")]
+    game_versions: Vec<String>,
+}
+
+#[derive(serde::Deserialize)]
+struct CfFilesResponse {
+    #[serde(default)]
+    data: Vec<CfFile>,
+}
+
+async fn fetch_curseforge_files(client: &reqwest::Client, mod_id: &str) -> Result<Vec<CfFile>, String> {
+    let url = format!("https://api.curseforge.com/v1/mods/{mod_id}/files");
+    let resp = client
+        .get(&url)
+        .header("x-api-key", CURSEFORGE_KEY)
+        .header("Accept", "application/json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("CurseForge API error: {}", resp.status()));
+    }
+
+    let json: CfFilesResponse = resp.json().await.map_err(|e| e.to_string())?;
+    Ok(json.data)
+}
+
 async fn download_dependency_tree(
     app: &AppHandle,
     client: &reqwest::Client,
@@ -231,26 +268,12 @@ pub async fn download_mod(
 ) -> Result<String, String> {
     let data_dir = app_data_dir(&app);
     let instance_dir = crate::validate::instance_minecraft_dir(&data_dir, &instance_id)?;
-    let p_type = project_type.unwrap_or_else(|| "mod".to_string());
+    let p_type = project_type.unwrap_or_else(|| "mod".to_string()).to_lowercase();
     let loader = loader.to_lowercase();
 
-    let client = reqwest::Client::new();
-    emit_line(&app, &format!("[DOWNLOADER] Fetching versions for mod {mod_id}..."));
-    let versions = fetch_versions(&client, &mod_id).await?;
-
-    let valid = versions
-        .iter()
-        .find(|v| {
-            v.game_versions.contains(&mc_version)
-                && (p_type == "resourcepack" || p_type == "shader" || v.loaders.contains(&loader))
-        })
-        .ok_or_else(|| format!("Не найдено подходящей версии мода для {mc_version} ({loader})"))?;
-
-    let file = pick_file(valid).ok_or("Mod has no downloadable files")?;
-
-    let dest_dir = if p_type == "resourcepack" {
+    let dest_dir = if p_type == "resourcepack" || p_type == "tex" || p_type == "textures" {
         instance_dir.join("resourcepacks")
-    } else if p_type == "shader" {
+    } else if p_type == "shader" || p_type == "shaders" {
         instance_dir.join("shaderpacks")
     } else if p_type == "datapack" {
         let world = world_name.as_deref().unwrap_or("");
@@ -261,62 +284,143 @@ pub async fn download_mod(
     };
     std::fs::create_dir_all(&dest_dir).map_err(|e| e.to_string())?;
 
-    let dest = dest_dir.join(&file.filename);
+    let is_numeric = mod_id.chars().all(|c| c.is_ascii_digit());
+    let client = reqwest::Client::new();
+
+    if !is_numeric {
+        emit_line(&app, &format!("[DOWNLOADER] Fetching Modrinth versions for mod {mod_id}..."));
+        if let Ok(versions) = fetch_versions(&client, &mod_id).await {
+            let valid = versions
+                .iter()
+                .find(|v| {
+                    v.game_versions.contains(&mc_version)
+                        && (p_type == "resourcepack"
+                            || p_type == "tex"
+                            || p_type == "shader"
+                            || p_type == "shaders"
+                            || v.loaders.contains(&loader))
+                })
+                .or_else(|| {
+                    if p_type == "resourcepack" || p_type == "tex" || p_type == "shader" || p_type == "shaders" {
+                        versions.first()
+                    } else {
+                        None
+                    }
+                });
+
+            if let Some(valid) = valid {
+                let file = pick_file(valid).ok_or("Mod has no downloadable files")?;
+                let dest = dest_dir.join(&file.filename);
+                if dest.exists() {
+                    return Err("ALREADY_EXISTS".to_string());
+                }
+
+                emit_line(&app, &format!("[DOWNLOADER] Downloading {}...", file.filename));
+                download_file(&app, &client, &file.url, &dest).await?;
+
+                let _ = crate::db::record_installed_mod_impl(
+                    &db,
+                    &instance_id,
+                    &mod_id,
+                    Some(valid.id.clone()),
+                    &file.filename,
+                );
+
+                if p_type == "mod" || p_type == "mods" {
+                    let _ = download_dependency_tree(
+                        &app,
+                        &client,
+                        &mod_id,
+                        &valid.dependencies,
+                        &mc_version,
+                        &loader,
+                        &dest_dir,
+                    )
+                    .await;
+                } else if (p_type == "shader" || p_type == "shaders") && loader == "fabric" {
+                    let iris_versions = fetch_versions(&client, "iris").await.unwrap_or_default();
+                    let iris_valid = iris_versions
+                        .iter()
+                        .find(|v| v.game_versions.contains(&mc_version) && v.loaders.contains(&"fabric".to_string()));
+                    if let Some(iris) = iris_valid {
+                        if let Some(iris_file) = pick_file(iris) {
+                            let mods_dir = instance_dir.join("mods");
+                            std::fs::create_dir_all(&mods_dir).map_err(|e| e.to_string())?;
+                            let iris_dest = mods_dir.join(&iris_file.filename);
+                            if !iris_dest.exists() {
+                                emit_line(&app, "[DOWNLOADER] Downloading Iris for Fabric shaders...");
+                                download_file(&app, &client, &iris_file.url, &iris_dest).await?;
+                            }
+                            let _ = download_dependency_tree(
+                                &app,
+                                &client,
+                                "iris",
+                                &iris.dependencies,
+                                &mc_version,
+                                "fabric",
+                                &mods_dir,
+                            )
+                            .await;
+                        }
+                    } else {
+                        emit_line(&app, &format!("[DOWNLOADER] Iris not found for {mc_version}, skipping automatic install"));
+                    }
+                }
+
+                emit_line(&app, &format!("[SUCCESS] Saved to {}", dest.display()));
+                return Ok(dest.to_string_lossy().to_string());
+            }
+        }
+    }
+
+    // Fallback or direct check on CurseForge
+    emit_line(&app, &format!("[DOWNLOADER] Fetching CurseForge files for mod {mod_id}..."));
+    let cf_files = fetch_curseforge_files(&client, &mod_id).await?;
+    let cf_valid = cf_files
+        .iter()
+        .find(|f| {
+            f.game_versions.contains(&mc_version)
+                && (p_type == "resourcepack"
+                    || p_type == "tex"
+                    || p_type == "shader"
+                    || p_type == "shaders"
+                    || f.game_versions.iter().any(|v| v.to_lowercase() == loader))
+        })
+        .or_else(|| {
+            if p_type == "resourcepack" || p_type == "tex" || p_type == "shader" || p_type == "shaders" {
+                cf_files.first()
+            } else {
+                None
+            }
+        })
+        .ok_or_else(|| format!("Не найдено подходящей версии для {mc_version} ({loader})"))?;
+
+    let download_url = match &cf_valid.download_url {
+        Some(url) => url.clone(),
+        None => format!(
+            "https://edge.forgecdn.net/files/{}/{}/{}",
+            cf_valid.id / 1000,
+            cf_valid.id % 1000,
+            cf_valid.file_name
+        ),
+    };
+
+    let dest = dest_dir.join(&cf_valid.file_name);
     if dest.exists() {
         return Err("ALREADY_EXISTS".to_string());
     }
 
-    emit_line(&app, &format!("[DOWNLOADER] Downloading {}...", file.filename));
-    download_file(&app, &client, &file.url, &dest).await?;
+    emit_line(&app, &format!("[DOWNLOADER] Downloading {}...", cf_valid.file_name));
+    download_file(&app, &client, &download_url, &dest).await?;
 
-    if p_type == "mod" {
-        let _ = crate::db::record_installed_mod_impl(
-            &db,
-            &instance_id,
-            &mod_id,
-            Some(valid.id.clone()),
-            &file.filename,
-        );
-        download_dependency_tree(
-            &app,
-            &client,
-            &mod_id,
-            &valid.dependencies,
-            &mc_version,
-            &loader,
-            &dest_dir,
-        )
-        .await?;
-    } else if p_type == "shader" && loader == "fabric" {
-        let iris_versions = fetch_versions(&client, "iris").await.unwrap_or_default();
-        let iris_valid = iris_versions
-            .iter()
-            .find(|v| v.game_versions.contains(&mc_version) && v.loaders.contains(&"fabric".to_string()));
-        if let Some(iris) = iris_valid {
-            if let Some(iris_file) = pick_file(iris) {
-                let mods_dir = instance_dir.join("mods");
-                std::fs::create_dir_all(&mods_dir).map_err(|e| e.to_string())?;
-                let iris_dest = mods_dir.join(&iris_file.filename);
-                if !iris_dest.exists() {
-                    emit_line(&app, "[DOWNLOADER] Downloading Iris for Fabric shaders...");
-                    download_file(&app, &client, &iris_file.url, &iris_dest).await?;
-                }
-                download_dependency_tree(
-                    &app,
-                    &client,
-                    "iris",
-                    &iris.dependencies,
-                    &mc_version,
-                    "fabric",
-                    &mods_dir,
-                )
-                .await?;
-            }
-        } else {
-            emit_line(&app, &format!("[DOWNLOADER] Iris not found for {mc_version}, skipping automatic install"));
-        }
-    }
+    let _ = crate::db::record_installed_mod_impl(
+        &db,
+        &instance_id,
+        &mod_id,
+        Some(cf_valid.id.to_string()),
+        &cf_valid.file_name,
+    );
 
-    emit_line(&app, &format!("[SUCCESS] Mod saved to {}", dest.display()));
+    emit_line(&app, &format!("[SUCCESS] Saved to {}", dest.display()));
     Ok(dest.to_string_lossy().to_string())
 }

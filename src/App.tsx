@@ -845,6 +845,18 @@ export const App: React.FC = () => {
     showToast(url ? "Плащ успешно экипирован!" : "Плащ снят");
   };
 
+  const handleRefreshSelectedInstanceMods = useCallback(async () => {
+    if (!selectedInstance) return;
+    try {
+      const count = await ipc.countInstalledMods(selectedInstance.id);
+      setInstances((prev) =>
+        prev.map((i) => (i.id === selectedInstance.id ? { ...i, modCount: count } : i))
+      );
+    } catch (err) {
+      console.warn("Failed to recount mods:", err);
+    }
+  }, [selectedInstance]);
+
   const handleInstallMod = useCallback(
     async (modName: string) => {
       if (!selectedInstance) {
@@ -1168,6 +1180,8 @@ export const App: React.FC = () => {
         onToggleBgAutoPlay={handleToggleBgAutoPlay}
         onInstallMod={handleInstallMod}
         onInstallModpack={handleInstallModpack}
+        onPushLog={pushLog}
+        onRefreshInstance={handleRefreshSelectedInstanceMods}
         topBarLayout={topBarLayout}
         onSaveTopBarLayout={handleSaveTopBarLayout}
         onResetTopBarLayout={handleResetTopBarLayout}

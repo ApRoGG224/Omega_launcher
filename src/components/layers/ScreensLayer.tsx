@@ -54,6 +54,8 @@ interface ScreensLayerProps {
   onToggleBgAutoPlay: () => void;
   onInstallMod: (modName: string) => void;
   onInstallModpack?: (modpack: { title: string; author?: string; desc?: string; loaders?: string[] }) => void;
+  onPushLog?: (message: string, level?: "INFO" | "WARN" | "ERROR") => void;
+  onRefreshInstance?: () => void;
   topBarLayout?: import("../../constants/launcherLayout").TopBarItemId[];
   onSaveTopBarLayout?: (layout: import("../../constants/launcherLayout").TopBarItemId[]) => void;
   onResetTopBarLayout?: () => void;
@@ -113,6 +115,8 @@ export const ScreensLayer: React.FC<ScreensLayerProps> = React.memo(({
   onToggleBgAutoPlay,
   onInstallMod,
   onInstallModpack,
+  onPushLog,
+  onRefreshInstance,
   topBarLayout,
   onSaveTopBarLayout,
   onResetTopBarLayout,
@@ -184,6 +188,9 @@ export const ScreensLayer: React.FC<ScreensLayerProps> = React.memo(({
           onBack={() => onNavigate("home")}
           onInstallMod={onInstallMod}
           onInstallModpack={onInstallModpack}
+          selectedInstance={selectedInstance || instances.find((i) => i.id === selectedInstanceId)}
+          onPushLog={onPushLog}
+          onRefreshInstance={onRefreshInstance}
         />
       )}
 
