@@ -23,7 +23,7 @@ export type ScreenId =
 interface ScreensLayerProps {
   activeScreen: ScreenId;
   onNavigate: (screen: ScreenId) => void;
-  onEquipSkin: (skinUrl: string, model: "default" | "slim") => void;
+  onEquipSkin: (skinUrl: string, model: "default" | "slim", skinName?: string) => Promise<void> | void;
   onEquipCape: (capeUrl: string | null) => void;
   instances: InstanceData[];
   selectedInstanceId: string;

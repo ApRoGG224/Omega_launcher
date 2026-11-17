@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Upload, Trash2 } from "lucide-react";
 import { PRESET_SKINS, PRESET_CAPES } from "../../constants/skinPresets";
 import {
   ipc,
@@ -15,7 +16,7 @@ import "../../styles/screens.css";
 
 interface StoreScreenProps {
   onBack?: () => void;
-  onEquipSkin: (skinUrl: string, model: "default" | "slim") => void;
+  onEquipSkin: (skinUrl: string, model: "default" | "slim", skinName?: string) => Promise<void> | void;
   onEquipCape: (capeUrl: string | null) => void;
   currentSkinUrl?: string;
   currentCapeUrl?: string | null;
@@ -171,8 +172,9 @@ const InsideSkinCard = React.memo<{
   skin: MinecraftInsideSkinItem;
   isEquipped: boolean;
   isApplying: boolean;
+  lang: string;
   onEquip: (skin: MinecraftInsideSkinItem) => void;
-}>(({ skin, isEquipped, isApplying, onEquip }) => {
+}>(({ skin, isEquipped, isApplying, lang, onEquip }) => {
   return (
     <div className="card ctr">
       <div className="pv">
@@ -199,7 +201,11 @@ const InsideSkinCard = React.memo<{
         disabled={isApplying}
         onClick={() => onEquip(skin)}
       >
-        {isEquipped ? "✓" : isApplying ? "..." : "3D"}
+        {isEquipped
+          ? tr(lang, "✓ Надягнуто", "✓ Надет", "✓ Equipped")
+          : isApplying
+          ? "..."
+          : tr(lang, "Приміряти", "Примерить", "Equip")}
       </button>
     </div>
   );
@@ -216,7 +222,9 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
   onLoginMicrosoft,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>("skins");
-  const [activeSkin, setActiveSkin] = useState<string>("Dream");
+  const [activeSkin, setActiveSkin] = useState<string>(() => {
+    return localStorage.getItem("omega:active_skin_name") || account?.name || "Dream";
+  });
   const [activeCape, setActiveCape] = useState<string>("");
   const [activePet, setActivePet] = useState<string>("Малая панда");
   const [activeCos, setActiveCos] = useState<string>(() => {
@@ -439,7 +447,47 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
       localStorage.removeItem(STORAGE_RECENT_SKINS_KEY);
     } catch {
     }
-    showToast("История очищена");
+    showToast(tr(lang, "Історію очищено", "История очищена", "History cleared"));
+  };
+
+  const handleRemoveRecentSkin = (name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRecentList((prev) => {
+      const updated = prev.filter((item) => item.name.toLowerCase() !== name.toLowerCase());
+      try {
+        localStorage.setItem(STORAGE_RECENT_SKINS_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+    showToast(tr(lang, "Скін видалено з історії", "Скин удалён из истории", "Skin removed from history"));
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".png")) {
+      showToast(tr(lang, "Оберіть файл у форматі PNG!", "Выберите файл в формате PNG!", "Choose a PNG file!"));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast(tr(lang, "Файл занадто великий (> 5MB)!", "Файл слишком большой (> 5MB)!", "File too large (> 5MB)!"));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = reader.result as string;
+      const cleanName = file.name.replace(/\.png$/i, "").trim() || "Custom Skin";
+      setActiveSkin(cleanName);
+      try {
+        localStorage.setItem("omega:active_skin_name", cleanName);
+      } catch {}
+      await onEquipSkin(dataUrl, "default", cleanName);
+      saveRecentSkin(cleanName, dataUrl, dataUrl, "default");
+      showToast(tr(lang, `Скін «${cleanName}» успішно завантажено!`, `Скин «${cleanName}» успешно загружен!`, `Skin "${cleanName}" uploaded successfully!`));
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   const handleEquipInsideSkin = useCallback(async (skin: MinecraftInsideSkinItem) => {
@@ -452,7 +500,10 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
         console.warn("Proxy download fallback to direct url:", err);
       }
       setActiveSkin(skin.nickname);
-      onEquipSkin(finalDataUrl, "default");
+      try {
+        localStorage.setItem("omega:active_skin_name", skin.nickname);
+      } catch {}
+      await onEquipSkin(finalDataUrl, "default", skin.nickname);
       saveRecentSkin(skin.nickname, finalDataUrl, skin.renderUrl, "default");
       showToast(`Скин «${skin.nickname}» надет!`);
     } catch (err: any) {
@@ -477,7 +528,10 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
         console.warn("fetchSkinAsDataUrl error, using direct url:", err);
       }
       setActiveSkin(clean);
-      onEquipSkin(finalDataUrl, "default");
+      try {
+        localStorage.setItem("omega:active_skin_name", clean);
+      } catch {}
+      await onEquipSkin(finalDataUrl, "default", clean);
       const renderAvatar = `https://minotar.net/avatar/${encodeURIComponent(clean)}/100`;
       saveRecentSkin(clean, finalDataUrl, renderAvatar, "default");
       setNick("");
@@ -670,24 +724,50 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
             )}
 
             {activeTab === "skins" && (
-              <form onSubmit={handleNickEquip} style={{ display: "contents" }}>
-                <div className="n">
-                  <input
-                    id="nick"
-                    placeholder={tr(lang, "Скін за нікнеймом…", "Скин по никнейму…", "Skin by nickname…")}
-                    value={nick}
-                    onChange={(e) => setNick(e.target.value)}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="b nb"
-                  id="nb"
-                  disabled={!nick.trim() || isApplying === nick.trim()}
+              <>
+                <form onSubmit={handleNickEquip} style={{ display: "contents" }}>
+                  <div className="n">
+                    <input
+                      id="nick"
+                      placeholder={tr(lang, "Скін за нікнеймом…", "Скин по никнейму…", "Skin by nickname…")}
+                      value={nick}
+                      onChange={(e) => setNick(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="b nb"
+                    id="nb"
+                    disabled={!nick.trim() || isApplying === nick.trim()}
+                  >
+                    {isApplying === nick.trim() ? "..." : tr(lang, "Приміряти", "Примерить", "Try on")}
+                  </button>
+                </form>
+                <label
+                  className="b"
+                  style={{
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "0 12px",
+                    height: "40px",
+                    boxSizing: "border-box",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                  }}
+                  title={tr(lang, "Завантажити власний скін із файлу PNG", "Загрузить свой скин из файла PNG", "Upload custom skin from PNG file")}
                 >
-                  {isApplying === nick.trim() ? "..." : tr(lang, "Приміряти", "Примерить", "Try on")}
-                </button>
-              </form>
+                  <Upload size={14} />
+                  <span>{tr(lang, "Завантажити PNG", "Загрузить PNG", "Upload PNG")}</span>
+                  <input
+                    type="file"
+                    accept="image/png"
+                    style={{ display: "none" }}
+                    onChange={handleFileUpload}
+                  />
+                </label>
+              </>
             )}
 
             {activeTab === "capes" && account?.type === "microsoft" && (
@@ -778,6 +858,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                           skin={skin}
                           isEquipped={isEquipped}
                           isApplying={isApplyingThis}
+                          lang={lang}
                           onEquip={handleEquipInsideSkin}
                         />
                       );
@@ -1149,18 +1230,39 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                           <div className="nm">{item.name}</div>
                           <div className="ms">{tr(lang, "Використовувався:", "Использовался:", "Used:")} {formatRelativeTime(item.timestamp, lang)}</div>
                         </div>
-                        <button
-                          type="button"
-                          className={`b ${isEquipped ? "on" : ""}`}
-                          onClick={() => {
-                            setActiveSkin(item.name);
-                            onEquipSkin(item.url, item.model || "default");
-                            saveRecentSkin(item.name, item.url, item.renderUrl, item.model);
-                            showToast(`Скин ${item.name} надет!`);
-                          }}
-                        >
-                          {isEquipped ? tr(lang, "✓ Надягнуто", "✓ Надет", "✓ Equipped") : tr(lang, "Надягнути знову", "Надеть снова", "Equip Again")}
-                        </button>
+                        <div style={{ display: "flex", gap: "6px", alignItems: "center", marginLeft: "auto" }}>
+                          <button
+                            type="button"
+                            className={`b ${isEquipped ? "on" : ""}`}
+                            onClick={async () => {
+                              setActiveSkin(item.name);
+                              try {
+                                localStorage.setItem("omega:active_skin_name", item.name);
+                              } catch {}
+                              await onEquipSkin(item.url, item.model || "default", item.name);
+                              saveRecentSkin(item.name, item.url, item.renderUrl, item.model);
+                              showToast(tr(lang, `Скін «${item.name}» надягнуто!`, `Скин «${item.name}» надет!`, `Skin "${item.name}" equipped!`));
+                            }}
+                          >
+                            {isEquipped ? tr(lang, "✓ Надягнуто", "✓ Надет", "✓ Equipped") : tr(lang, "Надягнути знову", "Надеть снова", "Equip Again")}
+                          </button>
+                          <button
+                            type="button"
+                            className="b rm"
+                            style={{
+                              padding: "0 10px",
+                              height: "36px",
+                              minWidth: "36px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                            onClick={(e) => handleRemoveRecentSkin(item.name, e)}
+                            title={tr(lang, "Видалити з історії", "Удалить из истории", "Remove from history")}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
                       </div>
                     );
                   })}

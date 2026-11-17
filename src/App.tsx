@@ -281,9 +281,21 @@ export const App: React.FC = () => {
 
   const showToast = (_msg: string) => {};
 
-  const [activeSkinUrl, setActiveSkinUrl] = useState<string>(PRESET_SKINS.dream);
-  const [skinModel, setSkinModel] = useState<"default" | "slim">("slim");
-  const [activeCapeUrl, setActiveCapeUrl] = useState<string | null>(null);
+  const [activeSkinUrl, setActiveSkinUrl] = useState<string>(() => {
+    const saved = localStorage.getItem("omega:activeSkinUrl");
+    if (saved) return saved;
+    const savedAccId = localStorage.getItem("omega_active_account_id") || "acc_1";
+    const accs = loadStorage<AccountData[]>("omega_accounts", DEFAULT_ACCOUNTS);
+    const current = accs.find((a) => a.id === savedAccId);
+    if (current?.skinUrl) return current.skinUrl;
+    return PRESET_SKINS.dream;
+  });
+  const [skinModel, setSkinModel] = useState<"default" | "slim">(() => {
+    return (localStorage.getItem("omega:skinModel") as "default" | "slim") || "slim";
+  });
+  const [activeCapeUrl, setActiveCapeUrl] = useState<string | null>(() => {
+    return localStorage.getItem("omega:activeCapeUrl") || null;
+  });
 
   const [instances, setInstances] = useState<InstanceData[]>(() => {
     const loaded = loadStorage<InstanceData[]>("omega_instances", DEFAULT_INSTANCES);
@@ -839,14 +851,66 @@ export const App: React.FC = () => {
     });
   };
 
-  const handleEquipSkin = (url: string, model: "default" | "slim") => {
+  const handleEquipSkin = async (url: string, model: "default" | "slim", skinName?: string) => {
     setActiveSkinUrl(url);
     setSkinModel(model);
-    showToast(t("toastSkinEquipped", "Скін успішно надягнуто на 3D модель!"));
+    try {
+      localStorage.setItem("omega:activeSkinUrl", url);
+      localStorage.setItem("omega:skinModel", model);
+      localStorage.setItem("omega:customSkin", url);
+      if (skinName) {
+        localStorage.setItem("omega:active_skin_name", skinName);
+      }
+    } catch {}
+
+    if (activeAccount?.type === "microsoft") {
+      pushLog(`[MS_SKIN] Відправка скіна "${skinName || "custom"}" на сервери Mojang...`, "AUTH");
+      try {
+        const variant = model === "slim" ? "slim" : "classic";
+        const resMsg = await ipc.uploadMicrosoftSkin(url, variant);
+        pushLog(`[MS_SKIN] ${resMsg}`, "AUTH");
+        showToast(t("toastSkinUploadedMicrosoft", "Скін збережено в офіційному профілі Microsoft!"));
+      } catch (err: any) {
+        const errMsg = err?.message || String(err);
+        pushLog(`[MS_SKIN] Помилка синхронізації з Mojang: ${errMsg}`, "WARN");
+        showToast(t("toastSkinEquipped", "Скін успішно надягнуто на 3D модель!"));
+      }
+    } else {
+      try {
+        if (activeAccount?.name) {
+          localStorage.setItem(`omega:ely_skin:${activeAccount.name}`, url);
+        }
+        localStorage.setItem("omega:ely_skin", url);
+        if (activeAccount?.id) {
+          localStorage.setItem(`omega:account_skin:${activeAccount.id}`, url);
+        }
+        localStorage.setItem("omega:skinSource", "ely");
+      } catch {}
+      showToast(t("toastSkinSavedProfile", "Скін збережено для профілю!"));
+    }
+
+    if (activeAccount) {
+      setAccounts((prev) => {
+        const updated = prev.map((a) =>
+          a.id === activeAccount.id ? { ...a, skinUrl: url } : a
+        );
+        try {
+          localStorage.setItem("omega_accounts", JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
+    }
   };
 
   const handleEquipCape = (url: string | null) => {
     setActiveCapeUrl(url);
+    try {
+      if (url) {
+        localStorage.setItem("omega:activeCapeUrl", url);
+      } else {
+        localStorage.removeItem("omega:activeCapeUrl");
+      }
+    } catch {}
     showToast(url ? t("toastCapeEquipped", "Плащ успішно екіпіровано!") : t("toastCapeUnequipped", "Плащ знято"));
   };
 
@@ -1040,6 +1104,13 @@ export const App: React.FC = () => {
         const skin = await ipc.getMicrosoftSkin(cached.name);
         if (skin) {
           setActiveSkinUrl(skin);
+          try {
+            localStorage.setItem("omega:activeSkinUrl", skin);
+            localStorage.setItem("omega:active_skin_name", cached.name);
+          } catch {}
+          setAccounts((prev) =>
+            prev.map((a) => (a.id === msAcc.id ? { ...a, skinUrl: skin } : a))
+          );
         }
       }
     } catch (err: any) {
@@ -1058,11 +1129,21 @@ export const App: React.FC = () => {
 
   const handleSelectAccount = (acc: AccountData) => {
     setActiveAccountId(acc.id);
-    if (acc.skinUrl) {
-      setActiveSkinUrl(acc.skinUrl);
-      setSkinModel(acc.name === "Alex_Gamer" ? "slim" : "default");
-    }
-    showToast(`Активен профиль: ${acc.name} (${acc.type === "microsoft" ? "Microsoft" : "Офлайн"})`);
+    const savedSkin =
+      acc.skinUrl ||
+      localStorage.getItem(`omega:ely_skin:${acc.name}`) ||
+      localStorage.getItem(`omega:account_skin:${acc.id}`) ||
+      (acc.name === "Alex_Gamer" ? PRESET_SKINS.alex : "/skins/steve.png");
+
+    setActiveSkinUrl(savedSkin);
+    const detectedModel = acc.name === "Alex_Gamer" ? "slim" : "default";
+    setSkinModel(detectedModel);
+    try {
+      localStorage.setItem("omega:activeSkinUrl", savedSkin);
+      localStorage.setItem("omega:skinModel", detectedModel);
+      localStorage.setItem("omega:active_skin_name", acc.name);
+    } catch {}
+    showToast(`Активен профіль: ${acc.name} (${acc.type === "microsoft" ? "Microsoft" : "Офлайн"})`);
   };
 
   const handleCreateOfflineAccount = (name: string) => {
