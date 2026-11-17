@@ -17,6 +17,7 @@ mod skins;
 mod util;
 mod validate;
 pub mod instances_edit;
+pub mod servers;
 
 const LAUNCHER_WINDOW_STATE_FILE: &str = "launcher-window-state.json";
 
@@ -582,7 +583,11 @@ pub fn run() {
             network::db_load_servers,
             network::db_save_server,
             network::db_save_server_favicon,
-            network::db_delete_server
+            network::db_delete_server,
+            servers::list_instance_servers,
+            servers::save_instance_servers,
+            servers::add_instance_server,
+            servers::delete_instance_server
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

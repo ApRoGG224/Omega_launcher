@@ -465,7 +465,30 @@ export const ipc = {
   async findSystemJava(mcVersion = "1.20.1"): Promise<string | null> {
     return invoke<string | null>("find_system_java", { mcVersion });
   },
+
+  async listInstanceServers(instanceId: string): Promise<InstanceServerEntry[]> {
+    return invoke<InstanceServerEntry[]>("list_instance_servers", { instanceId });
+  },
+
+  async saveInstanceServers(instanceId: string, servers: InstanceServerEntry[]): Promise<void> {
+    await invoke("save_instance_servers", { instanceId, servers });
+  },
+
+  async addInstanceServer(instanceId: string, name: string, ip: string): Promise<InstanceServerEntry> {
+    return invoke<InstanceServerEntry>("add_instance_server", { instanceId, name, ip });
+  },
+
+  async deleteInstanceServer(instanceId: string, ip: string): Promise<void> {
+    await invoke("delete_instance_server", { instanceId, ip });
+  },
 };
+
+export interface InstanceServerEntry {
+  name: string;
+  ip: string;
+  icon?: string | null;
+  acceptTextures?: number | null;
+}
 
 export interface ServerInfo {
   host: string;
@@ -477,6 +500,7 @@ export interface ServerInfo {
   online: boolean;
   latencyMs: number;
   favicon?: string | null;
+  version?: string | null;
 }
 
 export interface ServerRow {

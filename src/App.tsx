@@ -938,9 +938,18 @@ export const App: React.FC = () => {
   };
 
   const handleDirectConnect = useCallback(
-    async (serverName: string, ip: string) => {
-      const inst = selectedInstance || instances[0];
-      if (!inst) return;
+    async (serverName: string, ip: string, targetInstanceId?: string) => {
+      const inst =
+        (targetInstanceId ? instances.find((i) => i.id === targetInstanceId) : null) ||
+        selectedInstance ||
+        instances[0];
+      if (!inst) {
+        showToast("Нет доступной сборки для запуска");
+        return;
+      }
+      if (inst.id !== selectedInstanceId) {
+        setSelectedInstanceId(inst.id);
+      }
       const settings = (() => {
         try {
           const raw = localStorage.getItem("omega_launcher_settings");
@@ -966,7 +975,7 @@ export const App: React.FC = () => {
 
       setIsRunning(true);
       setActiveScreen("home");
-      pushLog(`[launcher/INFO] Прямое подключение к серверу "${serverName}" (${ip}) [RAM: ${ramToUse}G, JVM: ${customJvmArgs}]...`, "INFO");
+      pushLog(`[launcher/INFO] Прямое подключение к серверу "${serverName}" (${ip}) через сборку "${inst.name}" (${versionToLaunch}) [RAM: ${ramToUse}G, JVM: ${customJvmArgs}]...`, "INFO");
       try {
         await ipc.launchMinecraft({
           version: versionToLaunch,

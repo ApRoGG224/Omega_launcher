@@ -44,7 +44,7 @@ interface ScreensLayerProps {
   onLoginEly?: () => Promise<void>;
   logs?: import("../screens/ConsoleScreen").LogEntry[];
   onClearLogs?: () => void;
-  onDirectConnect: (serverName: string, ip: string) => void;
+  onDirectConnect: (serverName: string, ip: string, instanceId?: string) => void;
   isRunning: boolean;
   bgIndex: number;
   isBgAutoPlay: boolean;
@@ -222,6 +222,10 @@ export const ScreensLayer: React.FC<ScreensLayerProps> = React.memo(({
         <ServersScreen
           onBack={() => onNavigate("home")}
           onDirectConnect={onDirectConnect}
+          instances={instances}
+          selectedInstance={selectedInstance || instances[0] || null}
+          onSelectInstance={onSelectInstance}
+          isRunning={isRunning}
         />
       )}
 

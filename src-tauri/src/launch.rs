@@ -897,15 +897,17 @@ pub async fn launch_minecraft(
         .arg(&config.main_class);
 
     let mut resolved_game: Vec<String> = config.game_args.iter().map(|a| arg_replace(a, &config)).collect();
-    if !server.trim().is_empty() {
-        let parts: Vec<&str> = server.split(':').collect();
+    let clean_server = server.trim().trim_start_matches("https://").trim_start_matches("http://");
+    if !clean_server.is_empty() {
+        let parts: Vec<&str> = clean_server.split(':').collect();
         resolved_game.push("--server".to_string());
         resolved_game.push(parts[0].to_string());
         resolved_game.push("--port".to_string());
         resolved_game.push(parts.get(1).map(|p| p.to_string()).unwrap_or_else(|| "25565".to_string()));
     } else if let Some(ref auto_srv) = inst_cfg.as_ref().and_then(|c| c.autoconnect_server.as_ref()) {
-        if !auto_srv.trim().is_empty() {
-            let parts: Vec<&str> = auto_srv.trim().split(':').collect();
+        let clean_auto = auto_srv.trim().trim_start_matches("https://").trim_start_matches("http://");
+        if !clean_auto.is_empty() {
+            let parts: Vec<&str> = clean_auto.split(':').collect();
             resolved_game.push("--server".to_string());
             resolved_game.push(parts[0].to_string());
             resolved_game.push("--port".to_string());

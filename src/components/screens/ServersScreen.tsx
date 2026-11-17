@@ -1,14 +1,21 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { ipc } from "../../services/ipc";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { ipc, InstanceServerEntry } from "../../services/ipc";
 import { useLanguage } from "../../context/LanguageContext";
+import type { InstanceData } from "../../types";
+import { InstanceAvatarIcon } from "../icons/MinecraftIcons";
+import { IconPixelPlay } from "../icons/PixelIcons";
 import "../../styles/screens.css";
 
 interface ServersScreenProps {
   onBack?: () => void;
-  onDirectConnect: (serverName: string, ip: string) => void;
+  onDirectConnect: (serverName: string, ip: string, instanceId?: string) => void;
+  instances?: InstanceData[];
+  selectedInstance?: InstanceData | null;
+  onSelectInstance?: (instance: InstanceData) => void;
+  isRunning?: boolean;
 }
 
-interface ServerEntry {
+export interface ServerDisplayEntry {
   id: string;
   name: string;
   ip: string;
@@ -17,285 +24,805 @@ interface ServerEntry {
   onlinePlayers: number;
   maxPlayers: number;
   favicon: string;
+  version?: string;
   online: boolean;
+  isAssemblyServer: boolean;
+  isQuerying?: boolean;
 }
 
-const DEFAULT_SERVERS: ServerEntry[] = [
+const DEFAULT_SERVERS: ServerDisplayEntry[] = [
   {
     id: "hypixel",
     name: "Hypixel Network",
     ip: "mc.hypixel.net",
-    motd: "[1.8-1.21] SkyBlock • BedWars • Wool Wars • Autumn Festival!",
+    motd: "§e[1.8-1.21] §6SkyBlock §8• §bBedWars §8• §aWool Wars §8• §eAutumn Festival!",
     pingMs: 24,
     onlinePlayers: 48210,
     maxPlayers: 100000,
     favicon: "H",
     online: true,
+    isAssemblyServer: false,
   },
   {
     id: "2b2t",
     name: "2b2t Anarchy",
     ip: "2b2t.org",
-    motd: "The oldest anarchy server in Minecraft. Queue position: 142",
+    motd: "§cThe oldest anarchy server in Minecraft. §7Queue position: 142",
     pingMs: 86,
     onlinePlayers: 250,
     maxPlayers: 250,
     favicon: "2B",
     online: true,
+    isAssemblyServer: false,
   },
   {
     id: "omega_smp",
     name: "Omega Community SMP",
     ip: "play.omegalauncher.net",
-    motd: "Официальный приватный сервер с голосовым чатом Plasmo Voice",
+    motd: "§aОфициальный приватный сервер с голосовым чатом Plasmo Voice",
     pingMs: 14,
     onlinePlayers: 32,
     maxPlayers: 100,
     favicon: "Ω",
     online: true,
+    isAssemblyServer: false,
   },
 ];
 
+const MC_COLOR_MAP: Record<string, string> = {
+  "0": "#000000",
+  "1": "#0000aa",
+  "2": "#2ea043",
+  "3": "#00aaaa",
+  "4": "#cf222e",
+  "5": "#8250df",
+  "6": "#d29922",
+  "7": "#8b949e",
+  "8": "#57606a",
+  "9": "#58a6ff",
+  a: "#3fb950",
+  b: "#39c5bb",
+  c: "#f85149",
+  d: "#d2a8ff",
+  e: "#e3b341",
+  f: "#f0f6fc",
+};
+
+function renderMinecraftMotd(motd: string): React.ReactNode {
+  if (!motd) return null;
+  if (!motd.includes("§")) return motd;
+
+  const parts = motd.split(/(§[0-9a-fk-or])/gi);
+  let currentColor = "#c9d1d9";
+  let isBold = false;
+  let isItalic = false;
+
+  return parts.map((part, idx) => {
+    if (part.startsWith("§")) {
+      const code = part.charAt(1).toLowerCase();
+      if (MC_COLOR_MAP[code]) {
+        currentColor = MC_COLOR_MAP[code];
+        isBold = false;
+        isItalic = false;
+      } else if (code === "l") {
+        isBold = true;
+      } else if (code === "o") {
+        isItalic = true;
+      } else if (code === "r") {
+        currentColor = "#c9d1d9";
+        isBold = false;
+        isItalic = false;
+      }
+      return null;
+    }
+    return (
+      <span
+        key={idx}
+        style={{
+          color: currentColor,
+          fontWeight: isBold ? 700 : 400,
+          fontStyle: isItalic ? "italic" : "normal",
+        }}
+      >
+        {part}
+      </span>
+    );
+  });
+}
+
 export const ServersScreen: React.FC<ServersScreenProps> = ({
   onDirectConnect,
+  instances = [],
+  selectedInstance,
+  onSelectInstance,
+  isRunning = false,
 }) => {
-  const { t, lang } = useLanguage();
-  const [servers, setServers] = useState<ServerEntry[]>(() => {
-    try {
-      const saved = localStorage.getItem("omega_servers");
-      return saved ? JSON.parse(saved) : DEFAULT_SERVERS;
-    } catch {
-      return DEFAULT_SERVERS;
-    }
+  const { lang } = useLanguage();
+
+  const [activeInstanceId, setActiveInstanceId] = useState<string>(() => {
+    return selectedInstance?.id || instances[0]?.id || "";
   });
 
+  const [isInstanceDropdownOpen, setIsInstanceDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Sync active instance if selectedInstance prop updates
+  useEffect(() => {
+    if (selectedInstance && selectedInstance.id !== activeInstanceId) {
+      setActiveInstanceId(selectedInstance.id);
+    }
+  }, [selectedInstance]);
+
+  const currentInstance = useMemo(() => {
+    return instances.find((i) => i.id === activeInstanceId) || selectedInstance || instances[0] || null;
+  }, [instances, activeInstanceId, selectedInstance]);
+
+  const [servers, setServers] = useState<ServerDisplayEntry[]>([]);
+  const [filterType, setFilterType] = useState<"all" | "online" | "offline">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
   const [newIp, setNewIp] = useState("");
   const [newName, setNewName] = useState("");
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [connectingId, setConnectingId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [connectingId, setConnectingId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // 60-second auto-refresh countdown
+  const [refreshCountdown, setRefreshCountdown] = useState<number>(60);
+  const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isPingingRef = useRef(false);
+
+  // Close dropdown on click outside
   useEffect(() => {
-    try {
-      localStorage.setItem("omega_servers", JSON.stringify(servers));
-    } catch {}
-  }, [servers]);
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsInstanceDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  const pingServerEntry = useCallback(async (entry: ServerEntry) => {
+  const pingServerEntry = useCallback(async (entry: ServerDisplayEntry) => {
     try {
-      const parts = entry.ip.split(":");
-      const host = parts[0];
-      const port = parts[1] ? parseInt(parts[1], 10) || 25565 : 25565;
+      let rawHost = entry.ip.trim();
+      if (rawHost.startsWith("https://")) rawHost = rawHost.slice(8);
+      else if (rawHost.startsWith("http://")) rawHost = rawHost.slice(7);
+      if (rawHost.includes("/")) rawHost = rawHost.split("/")[0];
+
+      let host = rawHost;
+      let port = 25565;
+      if (rawHost.includes(":")) {
+        const parts = rawHost.split(":");
+        host = parts[0];
+        port = parseInt(parts[1], 10) || 25565;
+      }
+
       const res = await ipc.pingServer(host, port);
       setServers((prev) =>
         prev.map((s) =>
           s.id === entry.id
             ? {
                 ...s,
-                motd: res.motd ? res.motd.replace(/§[0-9a-fk-or]/gi, "") : s.motd,
+                motd: res.motd ? res.motd : s.motd,
                 pingMs: res.latencyMs || s.pingMs,
                 onlinePlayers: res.playersOnline !== undefined ? res.playersOnline : s.onlinePlayers,
                 maxPlayers: res.playersMax !== undefined ? res.playersMax : s.maxPlayers,
                 online: res.online,
                 favicon: res.favicon || s.favicon,
+                version: res.version || s.version,
+                isQuerying: false,
               }
             : s
         )
       );
     } catch {
+      setServers((prev) =>
+        prev.map((s) => (s.id === entry.id ? { ...s, isQuerying: false } : s))
+      );
     }
   }, []);
 
-  const refreshAllServers = useCallback(async (list: ServerEntry[]) => {
-    setIsRefreshing(true);
-    await Promise.allSettled(list.map((s) => pingServerEntry(s)));
-    setIsRefreshing(false);
-  }, [pingServerEntry]);
+  const refreshAllServers = useCallback(
+    async (list: ServerDisplayEntry[]) => {
+      if (isPingingRef.current) return;
+      isPingingRef.current = true;
+      setIsRefreshing(true);
+      setRefreshCountdown(60);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
+      // Set isQuerying indicator
+      setServers((prev) => prev.map((s) => ({ ...s, isQuerying: true })));
+
+      await Promise.allSettled(list.map((s) => pingServerEntry(s)));
+      setIsRefreshing(false);
+      isPingingRef.current = false;
+    },
+    [pingServerEntry]
+  );
+
+  // Load servers whenever active instance changes
+  const loadServersForInstance = useCallback(
+    async (instId: string) => {
+      let loadedList: ServerDisplayEntry[] = [];
+
       try {
-        const rows = await ipc.dbLoadServers();
-        if (cancelled) return;
-        if (rows && rows.length > 0) {
-          const loaded: ServerEntry[] = rows.map((r) => ({
-            id: `${r.host}:${r.port}`,
-            name: r.name,
-            ip: r.port === 25565 ? r.host : `${r.host}:${r.port}`,
-            motd: "Опрос статуса сервера...",
-            pingMs: 0,
-            onlinePlayers: 0,
-            maxPlayers: 0,
-            favicon: r.favicon || (r.name.charAt(0).toUpperCase() || "S"),
-            online: false,
-          }));
-          setServers(loaded);
-          void refreshAllServers(loaded);
-        } else {
-          void refreshAllServers(DEFAULT_SERVERS);
+        if (instId) {
+          const assemblyServers: InstanceServerEntry[] = await ipc.listInstanceServers(instId);
+          if (assemblyServers && assemblyServers.length > 0) {
+            loadedList = assemblyServers.map((s, idx) => ({
+              id: `assembly_${instId}_${s.ip}_${idx}`,
+              name: s.name || s.ip,
+              ip: s.ip,
+              motd: "Опрос статуса сервера...",
+              pingMs: 0,
+              onlinePlayers: 0,
+              maxPlayers: 0,
+              favicon: s.icon || s.name.charAt(0).toUpperCase() || "S",
+              online: false,
+              isAssemblyServer: true,
+              isQuerying: true,
+            }));
+          }
         }
+
+        // If instance has no servers.dat, check database
+        if (loadedList.length === 0) {
+          const dbRows = await ipc.dbLoadServers();
+          if (dbRows && dbRows.length > 0) {
+            loadedList = dbRows.map((r) => ({
+              id: `db_${r.host}:${r.port}`,
+              name: r.name,
+              ip: r.port === 25565 ? r.host : `${r.host}:${r.port}`,
+              motd: "Опрос статуса сервера...",
+              pingMs: 0,
+              onlinePlayers: 0,
+              maxPlayers: 0,
+              favicon: r.favicon || (r.name.charAt(0).toUpperCase() || "S"),
+              online: false,
+              isAssemblyServer: false,
+              isQuerying: true,
+            }));
+          }
+        }
+
+        // If still empty, use defaults
+        if (loadedList.length === 0) {
+          loadedList = DEFAULT_SERVERS.map((s) => ({ ...s, isQuerying: true }));
+        }
+
+        setServers(loadedList);
+        void refreshAllServers(loadedList);
       } catch {
+        setServers(DEFAULT_SERVERS);
         void refreshAllServers(DEFAULT_SERVERS);
       }
-    })();
+    },
+    [refreshAllServers]
+  );
+
+  // Initial load
+  useEffect(() => {
+    void loadServersForInstance(activeInstanceId);
+  }, [activeInstanceId, loadServersForInstance]);
+
+  // Periodic 60s auto-refresh
+  useEffect(() => {
+    setRefreshCountdown(60);
+    if (refreshTimerRef.current) {
+      clearInterval(refreshTimerRef.current);
+    }
+
+    refreshTimerRef.current = setInterval(() => {
+      setRefreshCountdown((prev) => {
+        if (prev <= 1) {
+          // Trigger refresh
+          setServers((cur) => {
+            void refreshAllServers(cur);
+            return cur;
+          });
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
     return () => {
-      cancelled = true;
+      if (refreshTimerRef.current) {
+        clearInterval(refreshTimerRef.current);
+      }
     };
   }, [refreshAllServers]);
 
-  const handleAddServer = (e: React.FormEvent) => {
+  const handleManualRefresh = () => {
+    void refreshAllServers(servers);
+  };
+
+  const handleSwitchInstance = (inst: InstanceData) => {
+    setActiveInstanceId(inst.id);
+    setIsInstanceDropdownOpen(false);
+    if (onSelectInstance) {
+      onSelectInstance(inst);
+    }
+  };
+
+  const handleAddServer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newIp.trim() || !newName.trim()) return;
 
-    const parts = newIp.trim().split(":");
+    const ipClean = newIp.trim();
+    const nameClean = newName.trim();
+
+    const parts = ipClean.split(":");
     const host = parts[0];
     const port = parts[1] ? parseInt(parts[1], 10) || 25565 : 25565;
 
-    const added: ServerEntry = {
-      id: `${host}:${port}_${Date.now()}`,
-      name: newName.trim(),
-      ip: newIp.trim(),
-      motd: "Опрос сервера...",
+    const added: ServerDisplayEntry = {
+      id: `srv_${activeInstanceId}_${Date.now()}`,
+      name: nameClean,
+      ip: ipClean,
+      motd: "Опрос статуса...",
       pingMs: 0,
       onlinePlayers: 0,
       maxPlayers: 0,
-      favicon: newName.trim().charAt(0).toUpperCase() || "S",
+      favicon: nameClean.charAt(0).toUpperCase() || "S",
       online: true,
+      isAssemblyServer: Boolean(activeInstanceId),
+      isQuerying: true,
     };
 
-    setServers((prev) => [...prev, added]);
+    setServers((prev) => [added, ...prev]);
     setShowAddForm(false);
     setNewName("");
     setNewIp("");
 
-    void ipc.dbSaveServer({ host, port, name: added.name, favicon: null }).catch(() => {});
+    // Save to active assembly's servers.dat
+    if (activeInstanceId) {
+      try {
+        await ipc.addInstanceServer(activeInstanceId, nameClean, ipClean);
+      } catch {}
+    }
+
+    // Save to database
+    void ipc.dbSaveServer({ host, port, name: nameClean, favicon: null }).catch(() => {});
     void pingServerEntry(added);
   };
 
-  const handleDeleteServer = (id: string) => {
-    const srv = servers.find((s) => s.id === id);
-    if (srv) {
-      const parts = srv.ip.split(":");
-      const host = parts[0];
-      const port = parts[1] ? parseInt(parts[1], 10) || 25565 : 25565;
-      void ipc.dbDeleteServer(host, port).catch(() => {});
+  const handleDeleteServer = async (server: ServerDisplayEntry) => {
+    if (activeInstanceId && server.isAssemblyServer) {
+      try {
+        await ipc.deleteInstanceServer(activeInstanceId, server.ip);
+      } catch {}
     }
-    setServers((prev) => prev.filter((s) => s.id !== id));
+
+    const parts = server.ip.split(":");
+    const host = parts[0];
+    const port = parts[1] ? parseInt(parts[1], 10) || 25565 : 25565;
+    void ipc.dbDeleteServer(host, port).catch(() => {});
+
+    setServers((prev) => prev.filter((s) => s.id !== server.id));
   };
 
-  const handleConnect = (server: ServerEntry) => {
+  const handlePlayOnServer = (server: ServerDisplayEntry) => {
     setConnectingId(server.id);
-    onDirectConnect(server.name, server.ip);
+    onDirectConnect(server.name, server.ip, activeInstanceId || undefined);
     setTimeout(() => {
       setConnectingId(null);
+    }, 2000);
+  };
+
+  const handleCopyIp = (ip: string, id: string) => {
+    navigator.clipboard.writeText(ip);
+    setCopiedId(id);
+    setTimeout(() => {
+      setCopiedId(null);
     }, 1500);
   };
+
+  // Filter and search
+  const filteredServers = useMemo(() => {
+    return servers.filter((s) => {
+      if (filterType === "online" && !s.online) return false;
+      if (filterType === "offline" && s.online) return false;
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const matchesName = s.name.toLowerCase().includes(query);
+        const matchesIp = s.ip.toLowerCase().includes(query);
+        const matchesMotd = s.motd.toLowerCase().includes(query);
+        if (!matchesName && !matchesIp && !matchesMotd) return false;
+      }
+      return true;
+    });
+  }, [servers, filterType, searchQuery]);
+
+  const onlineCount = useMemo(() => servers.filter((s) => s.online).length, [servers]);
+  const offlineCount = useMemo(() => servers.filter((s) => !s.online).length, [servers]);
 
   return (
     <div className="screens-overlay-layer servers-screen-overlay">
       <div className="srv-wrap">
+        {/* Top Header */}
         <div className="srv-top">
-          <h1>{lang === "uk" ? "СЕРВЕРИ" : lang === "ru" ? "СЕРВЕРЫ" : "SERVERS"} ({servers.length})</h1>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="srv-header-left">
+            <h1 className="srv-title">
+              {lang === "uk" ? "СЕРВЕРИ" : lang === "ru" ? "СЕРВЕРЫ" : "SERVERS"}
+              <span className="srv-total-count">({servers.length})</span>
+            </h1>
+
+            {/* Assembly Selector Dropdown */}
+            {instances.length > 0 && (
+              <div className="srv-instance-selector" ref={dropdownRef}>
+                <span className="srv-instance-label">
+                  {lang === "uk" ? "Складання:" : lang === "ru" ? "Сборка:" : "Instance:"}
+                </span>
+                <button
+                  type="button"
+                  className="srv-instance-btn"
+                  onClick={() => setIsInstanceDropdownOpen((prev) => !prev)}
+                  title={lang === "uk" ? "Оберіть збірку для перегляду та гри" : "Выберите сборку для просмотра и игры"}
+                >
+                  <span className="srv-instance-icon-box">
+                    <InstanceAvatarIcon icon={currentInstance?.icon} size={20} />
+                  </span>
+                  <span className="srv-instance-name">
+                    {currentInstance ? currentInstance.name : "Minecraft"}
+                  </span>
+                  <span className="srv-instance-tag">
+                    {currentInstance ? `${currentInstance.mcVersion} ${currentInstance.loader || ""}`.trim() : ""}
+                  </span>
+                  <span className="srv-instance-arrow">{isInstanceDropdownOpen ? "▲" : "▼"}</span>
+                </button>
+
+                {isInstanceDropdownOpen && (
+                  <div className="srv-instance-menu">
+                    <div className="srv-instance-menu-header">
+                      {lang === "uk" ? "Оберіть збірку Minecraft:" : "Выберите сборку Minecraft:"}
+                    </div>
+                    {instances.map((inst) => (
+                      <button
+                        key={inst.id}
+                        type="button"
+                        className={`srv-instance-option ${inst.id === activeInstanceId ? "active" : ""}`}
+                        onClick={() => handleSwitchInstance(inst)}
+                      >
+                        <span className="srv-instance-icon-box">
+                          <InstanceAvatarIcon icon={inst.icon} size={18} />
+                        </span>
+                        <div className="srv-instance-option-info">
+                          <div className="srv-instance-option-name">{inst.name}</div>
+                          <div className="srv-instance-option-sub">
+                            {inst.mcVersion} • {inst.loader || "Vanilla"}
+                          </div>
+                        </div>
+                        {inst.id === activeInstanceId && (
+                          <span className="srv-instance-check">✓</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Action buttons on the right */}
+          <div className="srv-header-right">
+            {/* Auto-refresh timer widget */}
+            <div
+              className={`srv-timer-badge ${isRefreshing ? "refreshing" : ""}`}
+              title={
+                lang === "uk"
+                  ? "Автоматичне оновлення кожну хвилину"
+                  : "Автоматическое обновление каждую минуту"
+              }
+            >
+              <span className="srv-timer-dot" />
+              <span className="srv-timer-text">
+                {isRefreshing
+                  ? lang === "uk"
+                    ? "Опитування…"
+                    : "Опрос…"
+                  : `${lang === "uk" ? "Авто" : "Авто"}: ${refreshCountdown}с`}
+              </span>
+            </div>
+
             <button
               type="button"
-              className="srv-b"
-              onClick={() => refreshAllServers(servers)}
+              className="srv-b srv-b-refresh"
+              onClick={handleManualRefresh}
               disabled={isRefreshing}
-              title={lang === "uk" ? "Оновити пінг та статус серверів" : lang === "ru" ? "Обновить пинг и статус серверов" : "Refresh ping & server status"}
+              title={lang === "uk" ? "Оновити пінг та онлайн" : "Обновить пинг и онлайн"}
             >
               {isRefreshing
-                ? (lang === "uk" ? "Опитування…" : lang === "ru" ? "Опрос…" : "Querying…")
-                : (lang === "uk" ? "⟳ Оновити" : lang === "ru" ? "⟳ Обновить" : "⟳ Refresh")}
+                ? lang === "uk"
+                  ? "⟳ Опитування…"
+                  : "⟳ Опрос…"
+                : lang === "uk"
+                ? "⟳ Оновити"
+                : "⟳ Обновить"}
             </button>
+
             <button
               type="button"
-              className="srv-b"
+              className="srv-b srv-b-add"
               onClick={() => setShowAddForm((prev) => !prev)}
             >
               {showAddForm
-                ? (lang === "uk" ? "✕ Скасувати" : lang === "ru" ? "✕ Отмена" : "✕ Cancel")
-                : (lang === "uk" ? "+ Додати сервер" : lang === "ru" ? "+ Добавить сервер" : "+ Add Server")}
+                ? lang === "uk"
+                  ? "✕ Скасувати"
+                  : "✕ Отмена"
+                : lang === "uk"
+                ? "+ Додати сервер"
+                : "+ Добавить сервер"}
             </button>
           </div>
         </div>
 
+        {/* Add Server Form */}
         {showAddForm && (
           <form onSubmit={handleAddServer} className="srv-form">
-            <input
-              type="text"
-              required
-              placeholder={lang === "uk" ? "Назва" : lang === "ru" ? "Название" : "Name"}
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-            />
-            <input
-              type="text"
-              required
-              placeholder={lang === "uk" ? "Адреса, наприклад mc.example.net" : lang === "ru" ? "Адрес, например mc.example.net" : "Address, e.g. mc.example.net"}
-              value={newIp}
-              onChange={(e) => setNewIp(e.target.value)}
-            />
-            <button type="submit" className="srv-b srv-b-go">
-              {lang === "uk" ? "Зберегти" : lang === "ru" ? "Сохранить" : "Save"}
-            </button>
+            <div className="srv-form-row">
+              <input
+                type="text"
+                required
+                placeholder={lang === "uk" ? "Назва сервера (наприклад, Мій Сервер)" : "Название сервера (например, Мой Сервер)"}
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="srv-form-input"
+              />
+              <input
+                type="text"
+                required
+                placeholder={lang === "uk" ? "Адреса або IP (наприклад, mc.hypixel.net або 127.0.0.1:25565)" : "Адрес или IP (например, mc.hypixel.net или 127.0.0.1:25565)"}
+                value={newIp}
+                onChange={(e) => setNewIp(e.target.value)}
+                className="srv-form-input"
+              />
+              <button type="submit" className="srv-b srv-b-save">
+                {lang === "uk" ? "Зберегти в збірку" : "Сохранить в сборку"}
+              </button>
+            </div>
+            <div className="srv-form-hint">
+              {activeInstanceId
+                ? lang === "uk"
+                  ? `Сервер буде збережений у файл servers.dat збірки "${currentInstance?.name}"`
+                  : `Сервер будет сохранён в файл servers.dat сборки "${currentInstance?.name}"`
+                : ""}
+            </div>
           </form>
         )}
 
+        {/* Toolbar: Filter tabs & Search */}
+        <div className="srv-toolbar">
+          <div className="srv-filters">
+            <button
+              type="button"
+              className={`srv-filter-tab ${filterType === "all" ? "active" : ""}`}
+              onClick={() => setFilterType("all")}
+            >
+              {lang === "uk" ? "Всі" : "Все"} ({servers.length})
+            </button>
+            <button
+              type="button"
+              className={`srv-filter-tab srv-filter-online ${filterType === "online" ? "active" : ""}`}
+              onClick={() => setFilterType("online")}
+            >
+              <span className="srv-tab-dot online" />
+              {lang === "uk" ? "В мережі" : "В сети"} ({onlineCount})
+            </button>
+            <button
+              type="button"
+              className={`srv-filter-tab srv-filter-offline ${filterType === "offline" ? "active" : ""}`}
+              onClick={() => setFilterType("offline")}
+            >
+              <span className="srv-tab-dot offline" />
+              {lang === "uk" ? "Офлайн" : "Офлайн"} ({offlineCount})
+            </button>
+          </div>
+
+          <div className="srv-search-box">
+            <span className="srv-search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder={lang === "uk" ? "Пошук сервера за назвою або IP…" : "Поиск сервера по названию или IP…"}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="srv-search-input"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="srv-search-clear"
+                onClick={() => setSearchQuery("")}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Servers List Area */}
         <div className="srv-scroll-area">
           <div className="srv-list">
-            {servers.length === 0 ? (
-              <div className="srv-empty">Серверов пока нет</div>
+            {filteredServers.length === 0 ? (
+              <div className="srv-empty">
+                <div className="srv-empty-icon">🌐</div>
+                <div className="srv-empty-title">
+                  {searchQuery
+                    ? lang === "uk"
+                      ? "Серверів за запитом не знайдено"
+                      : "Серверов по запросу не найдено"
+                    : lang === "uk"
+                    ? "У цій збірці поки немає серверів"
+                    : "В этой сборке пока нет серверов"}
+                </div>
+                <div className="srv-empty-desc">
+                  {searchQuery
+                    ? lang === "uk"
+                      ? "Спробуйте змінити пошуковий запит або скинути фільтри"
+                      : "Попробуйте изменить поисковый запрос или сбросить фильтры"
+                    : lang === "uk"
+                    ? "Додайте новий сервер вище, щоб він з'явився у списку мультиплеєра Minecraft!"
+                    : "Добавьте новый сервер выше, чтобы он появился в списке мультиплеера Minecraft!"}
+                </div>
+              </div>
             ) : (
-              servers.map((server) => {
-                const isFull = server.onlinePlayers >= server.maxPlayers && server.maxPlayers > 0;
+              filteredServers.map((server) => {
+                const isFull =
+                  server.onlinePlayers >= server.maxPlayers && server.maxPlayers > 0;
+                const isCopied = copiedId === server.id;
+
                 return (
-                  <div key={server.id} className="srv-row">
+                  <div key={server.id} className={`srv-card ${server.online ? "is-online" : "is-offline"}`}>
+                    {/* Server Favicon */}
                     <div className="srv-ico">
                       {server.favicon && server.favicon.startsWith("data:image") ? (
                         <img
                           src={server.favicon}
                           alt={server.name}
-                          style={{ width: "100%", height: "100%", objectFit: "contain", imageRendering: "pixelated" }}
+                          className="srv-favicon-img"
                         />
                       ) : (
-                        server.favicon
+                        <span className="srv-ico-fallback">{server.favicon || "MC"}</span>
                       )}
                     </div>
+
+                    {/* Server Details */}
                     <div className="srv-info">
                       <div className="srv-nm">
-                        <b>{server.name}</b>
-                        <span className="srv-tag">{server.ip}</span>
+                        <span className="srv-title-text">{server.name}</span>
+
+                        {/* Clickable IP tag to copy */}
+                        <button
+                          type="button"
+                          className="srv-ip-badge"
+                          onClick={() => handleCopyIp(server.ip, server.id)}
+                          title="Нажмите, чтобы скопировать IP адрес"
+                        >
+                          <span className="srv-ip-text">{server.ip}</span>
+                          <span className="srv-copy-tag">
+                            {isCopied ? "✓ Скопировано!" : "📋"}
+                          </span>
+                        </button>
+
+                        {/* Version badge if detected */}
+                        {server.version && (
+                          <span className="srv-ver-badge">{server.version}</span>
+                        )}
+
+                        {/* Assembly badge if from servers.dat */}
+                        {server.isAssemblyServer && (
+                          <span className="srv-assembly-badge">
+                            {lang === "uk" ? "Зі збірки" : "Из сборки"}
+                          </span>
+                        )}
                       </div>
-                      <div className="srv-ds">{server.motd}</div>
+
+                      {/* MOTD with Minecraft color codes */}
+                      <div className="srv-ds">
+                        {renderMinecraftMotd(server.motd)}
+                      </div>
                     </div>
+
+                    {/* Server Status & Online Players */}
                     <div className="srv-st">
-                      <div className={`srv-on-n ${isFull ? "full" : ""}`}>
-                        {server.online ? `${server.onlinePlayers.toLocaleString("en-US")} / ${server.maxPlayers.toLocaleString("en-US")}` : "Офлайн"}
+                      <div className="srv-status-row">
+                        <span className={`srv-status-pill ${server.online ? "online" : "offline"}`}>
+                          <span className="srv-status-indicator" />
+                          {server.online
+                            ? lang === "uk"
+                              ? "В МЕРЕЖІ"
+                              : "В СЕТИ"
+                            : lang === "uk"
+                            ? "НЕ В МЕРЕЖІ"
+                            : "НЕ В СЕТИ"}
+                        </span>
                       </div>
+
+                      <div className={`srv-on-n ${isFull ? "full" : ""}`}>
+                        {server.online ? (
+                          <>
+                            <span className="srv-players-num">
+                              {server.onlinePlayers.toLocaleString("en-US")}
+                            </span>
+                            <span className="srv-players-slash"> / </span>
+                            <span className="srv-players-max">
+                              {server.maxPlayers.toLocaleString("en-US")}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="srv-offline-text">Офлайн</span>
+                        )}
+                      </div>
+
                       <div className="srv-ping">
-                        {server.online ? `${server.pingMs} мс` : "—"}
+                        {server.online ? (
+                          <span
+                            className={`srv-ping-val ${
+                              server.pingMs < 60
+                                ? "ping-good"
+                                : server.pingMs < 150
+                                ? "ping-med"
+                                : "ping-bad"
+                            }`}
+                          >
+                            {server.pingMs} мс
+                          </span>
+                        ) : (
+                          <span className="srv-ping-dash">—</span>
+                        )}
                       </div>
                     </div>
+
+                    {/* Action Buttons: The Most Important Launch Button! */}
                     <div className="srv-acts">
                       <button
                         type="button"
-                        className="srv-b srv-b-go"
-                        onClick={() => handleConnect(server)}
-                        title="Запустить игру и подключиться к серверу напрямую"
+                        className={`srv-play-btn ${connectingId === server.id ? "connecting" : ""} ${
+                          isRunning ? "game-running" : ""
+                        }`}
+                        onClick={() => handlePlayOnServer(server)}
+                        title={
+                          currentInstance
+                            ? `Запустить Minecraft (${currentInstance.name}) и подключиться к ${server.name}`
+                            : "Запустить Minecraft и подключиться к серверу"
+                        }
                       >
-                        {connectingId === server.id
-                          ? "Подключение…"
-                          : "Играть на сервере"}
+                        <span className="srv-play-icon">
+                          <IconPixelPlay size={15} />
+                        </span>
+                        <div className="srv-play-text-group">
+                          <span className="srv-play-label">
+                            {connectingId === server.id
+                              ? lang === "uk"
+                                ? "Запуск…"
+                                : "Запуск…"
+                              : isRunning
+                              ? lang === "uk"
+                                ? "Підключитися"
+                                : "Подключиться"
+                              : lang === "uk"
+                              ? "Грати"
+                              : "Играть"}
+                          </span>
+                          {currentInstance && (
+                            <span className="srv-play-instance-sub">
+                              {currentInstance.name}
+                            </span>
+                          )}
+                        </div>
                       </button>
+
                       <button
                         type="button"
-                        className="srv-b srv-b-del"
-                        onClick={() => handleDeleteServer(server.id)}
-                        title="Удалить сервер"
+                        className="srv-del-btn"
+                        onClick={() => handleDeleteServer(server)}
+                        title={
+                          lang === "uk"
+                            ? "Видалити сервер зі списку збірки"
+                            : "Удалить сервер из списка сборки"
+                        }
                       >
-                        Удалить
+                        ✕
                       </button>
                     </div>
                   </div>

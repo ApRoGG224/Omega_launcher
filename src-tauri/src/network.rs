@@ -1,5 +1,5 @@
 use std::io::{Read, Write};
-use std::net::TcpStream;
+use std::net::{TcpStream, ToSocketAddrs};
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
@@ -20,6 +20,8 @@ pub struct ServerInfo {
     pub latency_ms: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub favicon: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -91,13 +93,34 @@ fn motd_from_chat(val: &serde_json::Value) -> String {
     }
 }
 
+fn connect_with_timeout(host: &str, port: u16, timeout: Duration) -> Result<TcpStream, String> {
+    let addrs: Vec<std::net::SocketAddr> = (host, port)
+        .to_socket_addrs()
+        .map_err(|e| format!("DNS resolution error: {e}"))?
+        .collect();
+    if addrs.is_empty() {
+        return Err("No address resolved".to_string());
+    }
+
+    let mut last_err = None;
+    for addr in addrs {
+        match TcpStream::connect_timeout(&addr, timeout) {
+            Ok(stream) => return Ok(stream),
+            Err(e) => last_err = Some(e),
+        }
+    }
+    Err(last_err
+        .map(|e| e.to_string())
+        .unwrap_or_else(|| "Connect timeout".to_string()))
+}
+
 fn modern_ping(
     host: &str,
     port: u16,
     timeout: Duration,
-) -> Result<(String, String, i32, i32, Option<String>, u64), String> {
+) -> Result<(String, String, i32, i32, Option<String>, Option<String>, u64), String> {
     let started = std::time::Instant::now();
-    let mut stream = TcpStream::connect((host, port)).map_err(|e| format!("Cannot connect: {e}"))?;
+    let mut stream = connect_with_timeout(host, port, timeout)?;
     stream
         .set_read_timeout(Some(timeout))
         .map_err(|e| e.to_string())?;
@@ -127,7 +150,8 @@ fn modern_ping(
     stream.read_exact(&mut buf).map_err(|e| e.to_string())?;
     let latency = started.elapsed().as_millis() as u64;
     let text = String::from_utf8_lossy(&buf).to_string();
-    let json: serde_json::Value = serde_json::from_str(&text).map_err(|e| format!("Bad status json: {e}"))?;
+    let json: serde_json::Value =
+        serde_json::from_str(&text).map_err(|e| format!("Bad status json: {e}"))?;
 
     let players = json.get("players").cloned().unwrap_or_default();
     let players_online = players.get("online").and_then(|n| n.as_i64()).unwrap_or(0) as i32;
@@ -140,12 +164,30 @@ fn modern_ping(
         .get("favicon")
         .and_then(|f| f.as_str())
         .map(|s| s.to_string());
-    Ok((motd, String::new(), players_online, players_max, favicon, latency))
+    let version = json
+        .get("version")
+        .and_then(|v| v.get("name"))
+        .and_then(|n| n.as_str())
+        .map(|s| s.to_string());
+
+    Ok((
+        motd,
+        String::new(),
+        players_online,
+        players_max,
+        favicon,
+        version,
+        latency,
+    ))
 }
 
-fn legacy_ping(host: &str, port: u16, timeout: Duration) -> Result<(String, String, i32, i32, u64), String> {
+fn legacy_ping(
+    host: &str,
+    port: u16,
+    timeout: Duration,
+) -> Result<(String, String, i32, i32, u64), String> {
     let started = std::time::Instant::now();
-    let mut stream = TcpStream::connect((host, port)).map_err(|e| format!("Cannot connect: {e}"))?;
+    let mut stream = connect_with_timeout(host, port, timeout)?;
     stream
         .set_read_timeout(Some(timeout))
         .map_err(|e| e.to_string())?;
@@ -188,28 +230,48 @@ fn legacy_ping(host: &str, port: u16, timeout: Duration) -> Result<(String, Stri
 
 #[tauri::command]
 pub async fn ping_server(host: String, port: Option<u16>) -> Result<ServerInfo, String> {
-    let port = port.unwrap_or(25565);
-    let host_trim = host.trim().to_string();
-    if host_trim.is_empty() {
+    let mut clean_host = host.trim().to_string();
+    if let Some(stripped) = clean_host.strip_prefix("https://") {
+        clean_host = stripped.to_string();
+    } else if let Some(stripped) = clean_host.strip_prefix("http://") {
+        clean_host = stripped.to_string();
+    }
+    if let Some(idx) = clean_host.find('/') {
+        clean_host = clean_host[..idx].to_string();
+    }
+
+    let mut clean_port = port.unwrap_or(25565);
+    if let Some(colon_pos) = clean_host.find(':') {
+        let p_str = &clean_host[colon_pos + 1..];
+        if let Ok(parsed_port) = p_str.parse::<u16>() {
+            clean_port = parsed_port;
+        }
+        clean_host = clean_host[..colon_pos].to_string();
+    }
+
+    if clean_host.is_empty() {
         return Err("Empty host".to_string());
     }
+
     let started = std::time::Instant::now();
-    let host_for_ping = host_trim.clone();
+    let host_for_ping = clean_host.clone();
     let result = tokio::task::spawn_blocking(move || {
-        match modern_ping(&host_for_ping, port, Duration::from_secs(3)) {
-            Ok((motd, name, players_online, players_max, favicon, latency)) => Ok((
+        match modern_ping(&host_for_ping, clean_port, Duration::from_millis(2500)) {
+            Ok((motd, name, players_online, players_max, favicon, version, latency)) => Ok((
                 motd,
                 name,
                 players_online,
                 players_max,
                 favicon,
+                version,
                 latency,
             )),
             Err(_) => {
-                legacy_ping(&host_for_ping, port, Duration::from_secs(3))
-                    .map(|(motd, name, players_online, players_max, latency)| {
-                        (motd, name, players_online, players_max, None, latency)
-                    })
+                legacy_ping(&host_for_ping, clean_port, Duration::from_millis(2500)).map(
+                    |(motd, name, players_online, players_max, latency)| {
+                        (motd, name, players_online, players_max, None, None, latency)
+                    },
+                )
             }
         }
     })
@@ -217,20 +279,23 @@ pub async fn ping_server(host: String, port: Option<u16>) -> Result<ServerInfo, 
     .map_err(|e| e.to_string())?;
 
     match result {
-        Ok((motd, name, players_online, players_max, favicon, latency)) => Ok(ServerInfo {
-            host: host_trim,
-            port,
-            name,
-            motd,
-            players_online,
-            players_max,
-            online: true,
-            latency_ms: latency,
-            favicon,
-        }),
+        Ok((motd, name, players_online, players_max, favicon, version, latency)) => {
+            Ok(ServerInfo {
+                host: clean_host,
+                port: clean_port,
+                name,
+                motd,
+                players_online,
+                players_max,
+                online: true,
+                latency_ms: latency,
+                favicon,
+                version,
+            })
+        }
         Err(_) => Ok(ServerInfo {
-            host: host_trim,
-            port,
+            host: clean_host,
+            port: clean_port,
             name: String::new(),
             motd: String::new(),
             players_online: 0,
@@ -238,6 +303,7 @@ pub async fn ping_server(host: String, port: Option<u16>) -> Result<ServerInfo, 
             online: false,
             latency_ms: started.elapsed().as_millis() as u64,
             favicon: None,
+            version: None,
         }),
     }
 }
