@@ -38,10 +38,10 @@ const CATEGORIES: Array<{
   id: CatalogTab;
   label: string;
 }> = [
-  { id: "modpacks", label: "Сборки" },
   { id: "mods", label: "Моды" },
   { id: "shaders", label: "Шейдеры" },
   { id: "tex", label: "Текстуры" },
+  { id: "modpacks", label: "Сборки" },
 ];
 
 const PAGE_SIZE = 15;
@@ -151,16 +151,16 @@ const CatalogCard = React.memo<CatalogCardProps>(
       }
       if (isInCart) {
         return lang === "uk"
-          ? "✓ У кошику"
+          ? "✓ В черзі"
           : lang === "ru"
-          ? "✓ В корзине"
-          : "✓ In cart";
+          ? "✓ В очереди"
+          : "✓ In queue";
       }
       return lang === "uk"
-        ? "+ У кошик"
+        ? "+ Встановити"
         : lang === "ru"
-        ? "+ В корзину"
-        : "+ To cart";
+        ? "+ Установить"
+        : "+ Install";
     }, [
       activeTab,
       isDone,
@@ -279,7 +279,7 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
 }) => {
   const { t, lang, setLang } = useLanguage();
   const [activeSource, setActiveSource] = useState<CatalogSource>("Modrinth");
-  const [activeTab, setActiveTab] = useState<CatalogTab>("modpacks");
+  const [activeTab, setActiveTab] = useState<CatalogTab>("mods");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedLoader, setSelectedLoader] = useState<CatalogLoader>("");
@@ -424,10 +424,10 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
 
   const categories = useMemo(
     () => [
-      { id: "modpacks" as CatalogTab, label: t("catModpacks", "Збірки") },
       { id: "mods" as CatalogTab, label: t("catMods", "Моди") },
       { id: "shaders" as CatalogTab, label: t("catShaders", "Шейдери") },
       { id: "tex" as CatalogTab, label: t("catTextures", "Текстури") },
+      { id: "modpacks" as CatalogTab, label: t("catModpacks", "Збірки") },
     ],
     [t]
   );
@@ -707,6 +707,19 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
             <option value="n">{t("sortRelevance", "За релевантністю")}</option>
             <option value="new">{t("sortRecentlyUpdated", "Нещодавно оновлені")}</option>
           </select>
+
+          {cartItems.length > 0 && (
+            <button
+              type="button"
+              className="cat-queue-trigger-btn"
+              onClick={() => setIsCartOpen(true)}
+              title={lang === "uk" ? "Відкрити чергу встановлення" : lang === "ru" ? "Открыть очередь установки" : "Open install queue"}
+            >
+              <IsometricCube size={18} variant="grass" />
+              <span>{lang === "uk" ? "До встановлення" : lang === "ru" ? "К установке" : "To install"}</span>
+              <span className="cat-queue-badge">{cartItems.length}</span>
+            </button>
+          )}
         </div>
 
         <div className="grid" id="grid">
@@ -785,23 +798,17 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
         )}
       </div>
 
-      {/* Floating Cart Badge Button when >= 1 item in cart */}
+      {/* Floating Queue Badge Button when >= 1 item selected */}
       {cartItems.length > 0 && (
         <button
           type="button"
-          className="catalog-cart-float-btn"
+          className="catalog-floating-queue-pill"
           onClick={() => setIsCartOpen(true)}
-          title="Открыть корзину установки"
+          title={lang === "uk" ? "Черга встановлення" : lang === "ru" ? "Очередь установки" : "Install queue"}
         >
-          <div className="catalog-cart-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-              <circle cx="8" cy="21" r="1" />
-              <circle cx="19" cy="21" r="1" />
-              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-            </svg>
-          </div>
-          <span>{lang === "uk" ? "Кошик" : lang === "ru" ? "Корзина" : "Cart"}</span>
-          <span className="catalog-cart-badge">{cartItems.length}</span>
+          <IsometricCube size={18} variant="grass" />
+          <span>{lang === "uk" ? "Встановити" : lang === "ru" ? "Установить" : "Install"}</span>
+          <span className="queue-pill-badge">{cartItems.length}</span>
         </button>
       )}
 

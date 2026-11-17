@@ -4,6 +4,7 @@ import type { CatalogItem, CatalogTab } from "../../services/catalogService";
 import type { InstanceData } from "../../types";
 import { ipc } from "../../services/ipc";
 import { IsometricCube } from "../icons/IsometricCube";
+import { InstanceAvatarIcon } from "../icons/MinecraftIcons";
 import { useLanguage } from "../../context/LanguageContext";
 import "../../styles/cart-modal.css";
 
@@ -29,30 +30,15 @@ interface CartModalProps {
   onPushLog?: (message: string, level?: "INFO" | "WARN" | "ERROR") => void;
 }
 
-function renderCategoryIcon(type: CatalogTab) {
+function renderCategoryFallback(type: CatalogTab) {
   switch (type) {
     case "shaders":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" />
-        </svg>
-      );
+      return <IsometricCube size={20} variant="diamond" />;
     case "tex":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="12" cy="12" r="9" />
-          <path d="m15.5 8.5-2 5-5 2 2-5z" />
-        </svg>
-      );
+      return <IsometricCube size={20} variant="obsidian" />;
     case "mods":
     default:
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="m12 3 9 5-9 5-9-5z" />
-          <path d="m3 13 9 5 9-5" />
-        </svg>
-      );
+      return <IsometricCube size={20} variant="stone" />;
   }
 }
 
@@ -176,18 +162,10 @@ export const CartModal: React.FC<CartModalProps> = ({
 
   const titleText =
     lang === "uk"
-      ? "Кошик встановлення"
+      ? "Черга встановлення"
       : lang === "ru"
-      ? "Корзина установки"
+      ? "Очередь установки"
       : "Installation Queue";
-
-  const targetInstanceText = selectedInstance
-    ? `${selectedInstance.name} (${selectedInstance.loader} ${selectedInstance.mcVersion})`
-    : lang === "uk"
-    ? "Не обрано збірку"
-    : lang === "ru"
-    ? "Сборка не выбрана"
-    : "No instance selected";
 
   return createPortal(
     <div
@@ -202,12 +180,17 @@ export const CartModal: React.FC<CartModalProps> = ({
         {/* Header */}
         <div className="cart-modal-header">
           <div className="cart-modal-title-wrap">
-            <h2 className="cart-modal-title">{titleText}</h2>
-            <div className="cart-target-instance-chip" title="Целевая сборка для установки">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z" />
-              </svg>
-              <span>{targetInstanceText}</span>
+            <div className="cart-modal-header-icon">
+              <IsometricCube size={24} variant="grass" />
+            </div>
+            <div className="cart-modal-title-col">
+              <h2 className="cart-modal-title">{titleText}</h2>
+              {selectedInstance && (
+                <div className="cart-target-instance-chip" title="Целевая сборка для установки">
+                  <InstanceAvatarIcon icon={selectedInstance.icon || "diamond_sword"} size={14} />
+                  <span>{selectedInstance.name} ({selectedInstance.loader} {selectedInstance.mcVersion})</span>
+                </div>
+              )}
             </div>
           </div>
           <button
@@ -215,7 +198,7 @@ export const CartModal: React.FC<CartModalProps> = ({
             className="cart-modal-close-btn"
             onClick={onClose}
             disabled={isInstalling}
-            title="Закрыть"
+            title={lang === "uk" ? "Закрити" : lang === "ru" ? "Закрыть" : "Close"}
           >
             ✕
           </button>
@@ -223,10 +206,12 @@ export const CartModal: React.FC<CartModalProps> = ({
 
         {/* Toolbar */}
         <div className="cart-modal-toolbar">
-          <span>
-            {lang === "uk" ? "Обрано: " : lang === "ru" ? "Выбрано: " : "Selected: "}
-            <b style={{ color: "#f3f4f6" }}>{checkedCount}</b> {lang === "uk" ? "з" : lang === "ru" ? "из" : "of"} {totalCount}
-          </span>
+          <div className="cart-toolbar-stats">
+            <span>
+              {lang === "uk" ? "Обрано для встановлення: " : lang === "ru" ? "Выбрано для установки: " : "Selected: "}
+              <b style={{ color: "#f3f4f6" }}>{checkedCount}</b> {lang === "uk" ? "з" : lang === "ru" ? "из" : "of"} {totalCount}
+            </span>
+          </div>
           <div className="cart-toolbar-actions">
             <button
               type="button"
@@ -250,7 +235,7 @@ export const CartModal: React.FC<CartModalProps> = ({
               onClick={onClearCart}
               disabled={isInstalling || totalCount === 0}
             >
-              {lang === "uk" ? "Очистити кошик" : lang === "ru" ? "Очистить" : "Clear"}
+              {lang === "uk" ? "Очистити список" : lang === "ru" ? "Очистить список" : "Clear"}
             </button>
           </div>
         </div>
@@ -259,17 +244,13 @@ export const CartModal: React.FC<CartModalProps> = ({
         <div className="cart-modal-list">
           {items.length === 0 ? (
             <div className="cart-empty-state">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="8" cy="21" r="1" />
-                <circle cx="19" cy="21" r="1" />
-                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-              </svg>
+              <IsometricCube size={40} variant="stone" />
               <span>
                 {lang === "uk"
-                  ? "Кошик порожній. Оберіть моди, шейдери або текстури в каталозі!"
+                  ? "Черга порожня. Натисніть «+ Встановити» на будь-якому моді, шейдері або текстурах у каталозі!"
                   : lang === "ru"
-                  ? "Корзина пуста. Выберите моды, шейдеры или текстуры в каталоге!"
-                  : "Cart is empty. Select mods, shaders or textures in catalog!"}
+                  ? "Очередь пуста. Нажмите «+ Установить» на любом моде, шейдере или текстурах в каталоге!"
+                  : "Queue is empty. Click '+ Install' on any mod, shader or texture in the catalog!"}
               </span>
             </div>
           ) : (
@@ -317,7 +298,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                     {item.catalogItem.iconUrl ? (
                       <img src={item.catalogItem.iconUrl} alt="" loading="lazy" />
                     ) : (
-                      renderCategoryIcon(item.catalogItem.projectType)
+                      renderCategoryFallback(item.catalogItem.projectType)
                     )}
                   </div>
 
@@ -364,7 +345,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                         className="cart-item-remove-btn"
                         onClick={() => onRemoveItem(item.id)}
                         disabled={isInstalling}
-                        title="Удалить из корзины"
+                        title="Удалить из очереди"
                       >
                         ✕
                       </button>
@@ -429,20 +410,18 @@ export const CartModal: React.FC<CartModalProps> = ({
               {isInstalling ? (
                 <>
                   <IsometricCube size={18} variant="rust" />
-                  <span>Установка...</span>
+                  <span>
+                    {lang === "uk" ? "Встановлення..." : lang === "ru" ? "Установка..." : "Installing..."}
+                  </span>
                 </>
               ) : (
                 <>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
+                  <IsometricCube size={16} variant="grass" />
                   <span>
                     {lang === "uk"
-                      ? `Встановити (${checkedCount})`
+                      ? `Встановити в збірку (${checkedCount})`
                       : lang === "ru"
-                      ? `Установить (${checkedCount})`
+                      ? `Установить в сборку (${checkedCount})`
                       : `Install (${checkedCount})`}
                   </span>
                 </>
