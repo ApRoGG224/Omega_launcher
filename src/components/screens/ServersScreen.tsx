@@ -9,7 +9,15 @@ import {
   Search,
   X,
   Globe,
-  Layers,
+  Users,
+  Radio,
+  ArrowUpDown,
+  Edit3,
+  Server,
+  Zap,
+  Activity,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { ipc, InstanceServerEntry } from "../../services/ipc";
 import { useLanguage } from "../../context/LanguageContext";
@@ -42,7 +50,7 @@ export interface ServerDisplayEntry {
   isQuerying?: boolean;
 }
 
-const DEFAULT_SERVERS: ServerDisplayEntry[] = [
+export const DEFAULT_SERVERS: ServerDisplayEntry[] = [
   {
     id: "hypixel",
     name: "Hypixel Network",
@@ -304,6 +312,7 @@ interface ServerCardProps {
   lang: string;
   onPlay: (server: ServerDisplayEntry) => void;
   onDelete: (server: ServerDisplayEntry) => void;
+  onEdit?: (server: ServerDisplayEntry) => void;
   onCopyIp: (ip: string, id: string) => void;
 }
 
@@ -317,12 +326,18 @@ const ServerCard = memo<ServerCardProps>(
     lang,
     onPlay,
     onDelete,
+    onEdit,
     onCopyIp,
   }) => {
+    const playerPercent =
+      server.online && server.maxPlayers > 0
+        ? Math.min(100, Math.round((server.onlinePlayers / server.maxPlayers) * 100))
+        : 0;
+
     return (
       <div
         className={`srv-card ${server.online ? "is-online" : "is-offline"}`}
-        style={{ contentVisibility: "auto", containIntrinsicSize: "auto 88px" }}
+        style={{ contentVisibility: "auto", containIntrinsicSize: "auto 96px" }}
       >
         {/* Favicon Box */}
         <div className="srv-favicon-box">
@@ -343,6 +358,18 @@ const ServerCard = memo<ServerCardProps>(
                 "S"}
             </span>
           )}
+          <span
+            className={`srv-favicon-status-dot ${server.online ? "online" : "offline"}`}
+            title={
+              server.online
+                ? lang === "uk"
+                  ? "В мережі"
+                  : "В сети"
+                : lang === "uk"
+                ? "Офлайн"
+                : "Офлайн"
+            }
+          />
         </div>
 
         {/* Info Column */}
@@ -392,7 +419,40 @@ const ServerCard = memo<ServerCardProps>(
 
           {/* MOTD */}
           <div className="srv-card-motd">
-            {renderMinecraftFormattedText(server.motd)}
+            {server.isQuerying ? (
+              <span className="srv-motd-loading">
+                {lang === "uk" ? "Опитування сервера…" : "Опрос сервера…"}
+              </span>
+            ) : (
+              renderMinecraftFormattedText(server.motd)
+            )}
+          </div>
+
+          {/* Player Capacity Bar */}
+          <div className="srv-card-subinfo">
+            {server.online ? (
+              <div className="srv-card-player-gauge">
+                <div className="srv-player-bar-track">
+                  <div
+                    className={`srv-player-bar-fill ${playerPercent > 90 ? "high" : ""}`}
+                    style={{ width: `${playerPercent}%` }}
+                  />
+                </div>
+                <span className="srv-player-bar-label">
+                  <Users size={11} />
+                  <span>
+                    {server.onlinePlayers.toLocaleString("en-US")} /{" "}
+                    {server.maxPlayers.toLocaleString("en-US")}
+                  </span>
+                </span>
+              </div>
+            ) : (
+              <span className="srv-offline-hint">
+                {lang === "uk"
+                  ? "Сервер недоступний або не відповідає"
+                  : "Сервер недоступен или не отвечает"}
+              </span>
+            )}
           </div>
         </div>
 
@@ -410,22 +470,6 @@ const ServerCard = memo<ServerCardProps>(
               ? "НЕ В МЕРЕЖІ"
               : "НЕ В СЕТИ"}
           </span>
-
-          <div className="srv-players-row">
-            {server.online ? (
-              <>
-                <span>{server.onlinePlayers.toLocaleString("en-US")}</span>
-                <span className="srv-players-slash">/</span>
-                <span className="srv-players-max">
-                  {server.maxPlayers.toLocaleString("en-US")}
-                </span>
-              </>
-            ) : (
-              <span style={{ color: "#64748b", fontSize: "11.5px" }}>
-                {lang === "uk" ? "Недоступний" : "Недоступен"}
-              </span>
-            )}
-          </div>
 
           <div className="srv-ping-row">
             <MinecraftSignalBars
@@ -489,6 +533,19 @@ const ServerCard = memo<ServerCardProps>(
             </div>
           </button>
 
+          {onEdit && (
+            <button
+              type="button"
+              className="srv-btn-edit"
+              onClick={() => onEdit(server)}
+              title={
+                lang === "uk" ? "Редагувати сервер" : "Редактировать сервер"
+              }
+            >
+              <Edit3 size={15} />
+            </button>
+          )}
+
           <button
             type="button"
             className="srv-btn-delete"
@@ -507,6 +564,462 @@ const ServerCard = memo<ServerCardProps>(
   }
 );
 ServerCard.displayName = "ServerCard";
+
+/**
+ * Direct Connection Modal Component
+ */
+interface DirectConnectModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConnect: (ip: string) => void;
+  currentInstanceName?: string;
+  lang: string;
+}
+
+const DirectConnectModal: React.FC<DirectConnectModalProps> = ({
+  isOpen,
+  onClose,
+  onConnect,
+  currentInstanceName,
+  lang,
+}) => {
+  const [ip, setIp] = useState("");
+  const [isTesting, setIsTesting] = useState(false);
+  const [pingResult, setPingResult] = useState<{
+    online: boolean;
+    pingMs: number;
+    motd: string;
+    playersOnline?: number;
+    playersMax?: number;
+    version?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIp("");
+      setPingResult(null);
+      setIsTesting(false);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleTestPing = async () => {
+    if (!ip.trim()) return;
+    setIsTesting(true);
+    let rawHost = ip.trim();
+    if (rawHost.startsWith("https://")) rawHost = rawHost.slice(8);
+    else if (rawHost.startsWith("http://")) rawHost = rawHost.slice(7);
+    if (rawHost.includes("/")) rawHost = rawHost.split("/")[0];
+
+    let host = rawHost;
+    let port = 25565;
+    if (rawHost.includes(":")) {
+      const parts = rawHost.split(":");
+      host = parts[0];
+      port = parseInt(parts[1], 10) || 25565;
+    }
+
+    try {
+      const res = await ipc.pingServer(host, port);
+      setPingResult({
+        online: res.online,
+        pingMs: res.latencyMs || 0,
+        motd: res.motd || "A Minecraft Server",
+        playersOnline: res.playersOnline,
+        playersMax: res.playersMax,
+        version: res.version || undefined,
+      });
+    } catch {
+      setPingResult({
+        online: false,
+        pingMs: 0,
+        motd: "Сервер недоступен",
+      });
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ip.trim()) return;
+    onConnect(ip.trim());
+    onClose();
+  };
+
+  return (
+    <div className="srv-modal-backdrop" onClick={onClose}>
+      <div
+        className="srv-modal-card"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="srv-modal-header">
+          <div className="srv-modal-title-wrap">
+            <h2 className="srv-modal-heading">
+              <Zap size={18} className="srv-modal-title-icon" />
+              {lang === "uk" ? "Пряме підключення" : "Прямое подключение"}
+            </h2>
+            <p className="srv-modal-subheading">
+              {lang === "uk"
+                ? `Швидкий запуск та вхід на сервер через збірку «${currentInstanceName || "Minecraft"}»`
+                : `Быстрый запуск и вход на сервер через сборку «${currentInstanceName || "Minecraft"}»`}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="srv-modal-close"
+            onClick={onClose}
+            title={lang === "uk" ? "Закрити" : "Закрыть"}
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="srv-modal-form">
+          <div className="srv-modal-field">
+            <label className="srv-modal-label">
+              {lang === "uk" ? "Адреса або IP сервера" : "Адрес или IP сервера"}
+            </label>
+            <div className="srv-modal-input-row">
+              <input
+                type="text"
+                autoFocus
+                required
+                className="srv-input"
+                placeholder="mc.hypixel.net / 192.168.1.10:25565"
+                value={ip}
+                onChange={(e) => {
+                  setIp(e.target.value);
+                  setPingResult(null);
+                }}
+              />
+              <button
+                type="button"
+                className="srv-btn-test-ping"
+                onClick={handleTestPing}
+                disabled={!ip.trim() || isTesting}
+              >
+                {isTesting ? (
+                  <RefreshCw size={14} className="spinning" />
+                ) : (
+                  <Activity size={14} />
+                )}
+                <span>{lang === "uk" ? "Пінг" : "Пинг"}</span>
+              </button>
+            </div>
+          </div>
+
+          {pingResult && (
+            <div
+              className={`srv-ping-preview-card ${
+                pingResult.online ? "online" : "offline"
+              }`}
+            >
+              <div className="srv-ping-preview-top">
+                <span className="srv-ping-status-pill">
+                  {pingResult.online ? (
+                    <>
+                      <CheckCircle2 size={13} />
+                      <span>{lang === "uk" ? "В мережі" : "В сети"}</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle size={13} />
+                      <span>{lang === "uk" ? "Немає зв'язку" : "Нет связи"}</span>
+                    </>
+                  )}
+                </span>
+                {pingResult.online && (
+                  <span className="srv-ping-val">{pingResult.pingMs} мс</span>
+                )}
+                {pingResult.online && pingResult.playersOnline !== undefined && (
+                  <span className="srv-ping-players">
+                    <Users size={12} />
+                    {pingResult.playersOnline} / {pingResult.playersMax ?? "?"}
+                  </span>
+                )}
+              </div>
+              <div className="srv-ping-preview-motd">
+                {renderMinecraftFormattedText(pingResult.motd)}
+              </div>
+            </div>
+          )}
+
+          <div className="srv-modal-actions">
+            <button
+              type="button"
+              className="srv-btn-modal-cancel"
+              onClick={onClose}
+            >
+              {lang === "uk" ? "Скасувати" : "Отмена"}
+            </button>
+            <button
+              type="submit"
+              className="srv-btn-modal-submit"
+              disabled={!ip.trim()}
+            >
+              <IconPixelPlay size={14} />
+              <span>{lang === "uk" ? "Підключитися" : "Подключиться"}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Add / Edit Server Modal Component
+ */
+interface ServerModalProps {
+  isOpen: boolean;
+  initialServer?: ServerDisplayEntry | null;
+  onClose: () => void;
+  onSave: (name: string, ip: string, originalId?: string) => void;
+  currentInstanceName?: string;
+  lang: string;
+}
+
+const ServerModal: React.FC<ServerModalProps> = ({
+  isOpen,
+  initialServer,
+  onClose,
+  onSave,
+  currentInstanceName,
+  lang,
+}) => {
+  const [name, setName] = useState("");
+  const [ip, setIp] = useState("");
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{
+    online: boolean;
+    pingMs: number;
+    motd: string;
+    playersOnline?: number;
+    playersMax?: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialServer) {
+        setName(initialServer.name);
+        setIp(initialServer.ip);
+      } else {
+        setName("");
+        setIp("");
+      }
+      setTestResult(null);
+      setIsTesting(false);
+    }
+  }, [isOpen, initialServer]);
+
+  if (!isOpen) return null;
+
+  const handleTest = async () => {
+    if (!ip.trim()) return;
+    setIsTesting(true);
+    let rawHost = ip.trim();
+    if (rawHost.startsWith("https://")) rawHost = rawHost.slice(8);
+    else if (rawHost.startsWith("http://")) rawHost = rawHost.slice(7);
+    if (rawHost.includes("/")) rawHost = rawHost.split("/")[0];
+
+    let host = rawHost;
+    let port = 25565;
+    if (rawHost.includes(":")) {
+      const parts = rawHost.split(":");
+      host = parts[0];
+      port = parseInt(parts[1], 10) || 25565;
+    }
+
+    try {
+      const res = await ipc.pingServer(host, port);
+      setTestResult({
+        online: res.online,
+        pingMs: res.latencyMs || 0,
+        motd: res.motd || "A Minecraft Server",
+        playersOnline: res.playersOnline,
+        playersMax: res.playersMax,
+      });
+      if (!name.trim() && res.motd) {
+        setName(cleanMinecraftText(res.motd).split("\n")[0].slice(0, 30) || ip);
+      }
+    } catch {
+      setTestResult({
+        online: false,
+        pingMs: 0,
+        motd: "Сервер недоступен",
+      });
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !ip.trim()) return;
+    onSave(name.trim(), ip.trim(), initialServer?.id);
+    onClose();
+  };
+
+  const isEditing = Boolean(initialServer);
+
+  return (
+    <div className="srv-modal-backdrop" onClick={onClose}>
+      <div
+        className="srv-modal-card"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="srv-modal-header">
+          <div className="srv-modal-title-wrap">
+            <h2 className="srv-modal-heading">
+              {isEditing ? <Edit3 size={18} /> : <Plus size={18} />}
+              {isEditing
+                ? lang === "uk"
+                  ? "Редагувати сервер"
+                  : "Редактировать сервер"
+                : lang === "uk"
+                ? "Додати сервер"
+                : "Добавить сервер"}
+            </h2>
+            <p className="srv-modal-subheading">
+              {lang === "uk"
+                ? `Збереження в servers.dat збірки «${currentInstanceName || "Minecraft"}»`
+                : `Сохранение в servers.dat сборки «${currentInstanceName || "Minecraft"}»`}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="srv-modal-close"
+            onClick={onClose}
+            title={lang === "uk" ? "Закрити" : "Закрыть"}
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="srv-modal-form">
+          <div className="srv-modal-field">
+            <label className="srv-modal-label">
+              {lang === "uk" ? "Назва сервера" : "Название сервера"}
+            </label>
+            <input
+              type="text"
+              autoFocus
+              required
+              className="srv-input"
+              placeholder={
+                lang === "uk"
+                  ? "Наприклад: Hypixel Network"
+                  : "Например: Hypixel Network"
+              }
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          <div className="srv-modal-field">
+            <label className="srv-modal-label">
+              {lang === "uk" ? "Адреса або IP:порт" : "Адрес или IP:порт"}
+            </label>
+            <div className="srv-modal-input-row">
+              <input
+                type="text"
+                required
+                className="srv-input"
+                placeholder="mc.hypixel.net / play.example.com:25565"
+                value={ip}
+                onChange={(e) => {
+                  setIp(e.target.value);
+                  setTestResult(null);
+                }}
+              />
+              <button
+                type="button"
+                className="srv-btn-test-ping"
+                onClick={handleTest}
+                disabled={!ip.trim() || isTesting}
+              >
+                {isTesting ? (
+                  <RefreshCw size={14} className="spinning" />
+                ) : (
+                  <Activity size={14} />
+                )}
+                <span>{lang === "uk" ? "Перевірити" : "Проверить"}</span>
+              </button>
+            </div>
+          </div>
+
+          {testResult && (
+            <div
+              className={`srv-ping-preview-card ${
+                testResult.online ? "online" : "offline"
+              }`}
+            >
+              <div className="srv-ping-preview-top">
+                <span className="srv-ping-status-pill">
+                  {testResult.online ? (
+                    <>
+                      <CheckCircle2 size={13} />
+                      <span>{lang === "uk" ? "В мережі" : "В сети"}</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle size={13} />
+                      <span>{lang === "uk" ? "Не відповідає" : "Не отвечает"}</span>
+                    </>
+                  )}
+                </span>
+                {testResult.online && (
+                  <span className="srv-ping-val">{testResult.pingMs} мс</span>
+                )}
+                {testResult.online && testResult.playersOnline !== undefined && (
+                  <span className="srv-ping-players">
+                    <Users size={12} />
+                    {testResult.playersOnline} / {testResult.playersMax ?? "?"}
+                  </span>
+                )}
+              </div>
+              <div className="srv-ping-preview-motd">
+                {renderMinecraftFormattedText(testResult.motd)}
+              </div>
+            </div>
+          )}
+
+          <div className="srv-modal-actions">
+            <button
+              type="button"
+              className="srv-btn-modal-cancel"
+              onClick={onClose}
+            >
+              {lang === "uk" ? "Скасувати" : "Отмена"}
+            </button>
+            <button
+              type="submit"
+              className="srv-btn-modal-submit"
+              disabled={!name.trim() || !ip.trim()}
+            >
+              <Check size={14} />
+              <span>
+                {isEditing
+                  ? lang === "uk"
+                    ? "Зберегти зміни"
+                    : "Сохранить изменения"
+                  : lang === "uk"
+                  ? "Додати до збірки"
+                  : "Добавить в сборку"}
+              </span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 export const ServersScreen: React.FC<ServersScreenProps> = ({
   onBack,
@@ -542,13 +1055,18 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
   }, [instances, activeInstanceId, selectedInstance]);
 
   const [servers, setServers] = useState<ServerDisplayEntry[]>([]);
-  const [filterType, setFilterType] = useState<"all" | "online" | "offline">(
-    "all"
+  const [filterType, setFilterType] = useState<
+    "all" | "online" | "offline" | "assembly"
+  >("all");
+  const [sortBy, setSortBy] = useState<"default" | "ping" | "players" | "name">(
+    "default"
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newIp, setNewIp] = useState("");
-  const [newName, setNewName] = useState("");
+  const [isServerModalOpen, setIsServerModalOpen] = useState(false);
+  const [editingServer, setEditingServer] = useState<ServerDisplayEntry | null>(
+    null
+  );
+  const [isDirectConnectModalOpen, setIsDirectConnectModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -771,51 +1289,88 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
     [onSelectInstance]
   );
 
-  const handleAddServer = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!newIp.trim() || !newName.trim()) return;
+  const handleOpenAddModal = useCallback(() => {
+    setEditingServer(null);
+    setIsServerModalOpen(true);
+  }, []);
 
-      const ipClean = newIp.trim();
-      const nameClean = newName.trim();
+  const handleOpenEditModal = useCallback((server: ServerDisplayEntry) => {
+    setEditingServer(server);
+    setIsServerModalOpen(true);
+  }, []);
 
+  const handleSaveServer = useCallback(
+    async (nameClean: string, ipClean: string, originalId?: string) => {
       const parts = ipClean.split(":");
       const host = parts[0];
       const port = parts[1] ? parseInt(parts[1], 10) || 25565 : 25565;
 
-      const added: ServerDisplayEntry = {
-        id: `srv_${activeInstanceId}_${Date.now()}`,
-        name: nameClean,
-        ip: ipClean,
-        motd: "Опрос статуса...",
-        pingMs: 0,
-        onlinePlayers: 0,
-        maxPlayers: 0,
-        favicon: nameClean.charAt(0).toUpperCase() || "S",
-        online: true,
-        isAssemblyServer: Boolean(activeInstanceId),
-        isQuerying: true,
-      };
+      if (originalId) {
+        // Edit existing server
+        setServers((prev) =>
+          prev.map((s) =>
+            s.id === originalId
+              ? {
+                  ...s,
+                  name: nameClean,
+                  ip: ipClean,
+                  isQuerying: true,
+                }
+              : s
+          )
+        );
 
-      setServers((prev) => [added, ...prev]);
-      setShowAddForm(false);
-      setNewName("");
-      setNewIp("");
+        const updatedEntry = servers.find((s) => s.id === originalId);
+        if (updatedEntry) {
+          void pingServerEntry(
+            { ...updatedEntry, name: nameClean, ip: ipClean },
+            activeReqSeqRef.current
+          );
+        }
 
-      // Save to active assembly's servers.dat
-      if (activeInstanceId) {
-        try {
-          await ipc.addInstanceServer(activeInstanceId, nameClean, ipClean);
-        } catch {}
+        // Save to active assembly's servers.dat if applicable
+        if (activeInstanceId) {
+          try {
+            await ipc.addInstanceServer(activeInstanceId, nameClean, ipClean);
+          } catch {}
+        }
+
+        void ipc
+          .dbSaveServer({ host, port, name: nameClean, favicon: null })
+          .catch(() => {});
+      } else {
+        // Add new server
+        const added: ServerDisplayEntry = {
+          id: `srv_${activeInstanceId}_${Date.now()}`,
+          name: nameClean,
+          ip: ipClean,
+          motd: "Опрос статуса...",
+          pingMs: 0,
+          onlinePlayers: 0,
+          maxPlayers: 0,
+          favicon: nameClean.charAt(0).toUpperCase() || "S",
+          online: true,
+          isAssemblyServer: Boolean(activeInstanceId),
+          isQuerying: true,
+        };
+
+        setServers((prev) => [added, ...prev]);
+
+        // Save to active assembly's servers.dat
+        if (activeInstanceId) {
+          try {
+            await ipc.addInstanceServer(activeInstanceId, nameClean, ipClean);
+          } catch {}
+        }
+
+        // Save to launcher database
+        void ipc
+          .dbSaveServer({ host, port, name: nameClean, favicon: null })
+          .catch(() => {});
+        void pingServerEntry(added, activeReqSeqRef.current);
       }
-
-      // Save to launcher database
-      void ipc
-        .dbSaveServer({ host, port, name: nameClean, favicon: null })
-        .catch(() => {});
-      void pingServerEntry(added, activeReqSeqRef.current);
     },
-    [activeInstanceId, newIp, newName, pingServerEntry]
+    [activeInstanceId, pingServerEntry, servers]
   );
 
   const handleDeleteServer = useCallback(
@@ -859,11 +1414,23 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
     }, 1500);
   }, []);
 
-  // Filter and search computation
+  const handleDirectConnectSubmit = useCallback(
+    (targetIp: string) => {
+      onDirectConnect(
+        targetIp,
+        targetIp,
+        activeInstanceId || undefined
+      );
+    },
+    [activeInstanceId, onDirectConnect]
+  );
+
+  // Filter and sort computation
   const filteredServers = useMemo(() => {
-    return servers.filter((s) => {
+    let result = servers.filter((s) => {
       if (filterType === "online" && !s.online) return false;
       if (filterType === "offline" && s.online) return false;
+      if (filterType === "assembly" && !s.isAssemblyServer) return false;
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchesName =
@@ -877,7 +1444,23 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
       }
       return true;
     });
-  }, [servers, filterType, searchQuery]);
+
+    if (sortBy === "ping") {
+      result = [...result].sort((a, b) => {
+        if (a.online && !b.online) return -1;
+        if (!a.online && b.online) return 1;
+        return a.pingMs - b.pingMs;
+      });
+    } else if (sortBy === "players") {
+      result = [...result].sort((a, b) => b.onlinePlayers - a.onlinePlayers);
+    } else if (sortBy === "name") {
+      result = [...result].sort((a, b) =>
+        cleanMinecraftText(a.name).localeCompare(cleanMinecraftText(b.name))
+      );
+    }
+
+    return result;
+  }, [servers, filterType, searchQuery, sortBy]);
 
   const onlineCount = useMemo(
     () => servers.filter((s) => s.online).length,
@@ -908,7 +1491,10 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
           <div className="srv-header-left">
             <div className="srv-title-wrap">
               <h1 className="srv-heading">
-                {lang === "uk" ? "СЕРВЕРИ" : lang === "ru" ? "СЕРВЕРЫ" : "SERVERS"}
+                <Server size={20} className="srv-heading-icon" />
+                <span>
+                  {lang === "uk" ? "СЕРВЕРИ" : lang === "ru" ? "СЕРВЕРЫ" : "SERVERS"}
+                </span>
                 <span className="srv-count-pill">{servers.length}</span>
               </h1>
               <span className="srv-subheading">
@@ -1030,18 +1616,28 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
 
             <button
               type="button"
-              className={`srv-btn-add ${showAddForm ? "active" : ""}`}
-              onClick={() => setShowAddForm((prev) => !prev)}
+              className="srv-btn-direct"
+              onClick={() => setIsDirectConnectModalOpen(true)}
+              title={
+                lang === "uk"
+                  ? "Пряме підключення до сервера по IP"
+                  : "Прямое подключение к серверу по IP"
+              }
             >
-              {showAddForm ? <X size={15} /> : <Plus size={15} />}
+              <Zap size={14} />
               <span>
-                {showAddForm
-                  ? lang === "uk"
-                    ? "Скасувати"
-                    : "Отмена"
-                  : lang === "uk"
-                  ? "Додати сервер"
-                  : "Добавить сервер"}
+                {lang === "uk" ? "Пряме підключення" : "Прямое подключение"}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="srv-btn-add"
+              onClick={handleOpenAddModal}
+            >
+              <Plus size={15} />
+              <span>
+                {lang === "uk" ? "Додати сервер" : "Добавить сервер"}
               </span>
             </button>
           </div>
@@ -1063,17 +1659,20 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                   <span className="srv-hero-tag">
                     {currentInstance.mcVersion}
                   </span>
+                  <span className="srv-hero-badge-active">
+                    {lang === "uk" ? "Активна збірка" : "Активная сборка"}
+                  </span>
                 </div>
                 <div className="srv-hero-desc">
                   <span>
-                    {lang === "uk" ? "Файл збірки:" : "Файл сборки:"}{" "}
+                    {lang === "uk" ? "Файл конфігурації:" : "Файл конфигурации:"}{" "}
                     <b className="srv-hero-dat-badge">servers.dat</b>
                   </span>
                   <span>•</span>
                   <span>
                     {lang === "uk"
-                      ? `${assemblyServersCount} серверів у конфізі`
-                      : `${assemblyServersCount} серверов в конфиге`}
+                      ? `${assemblyServersCount} серверів у збірці`
+                      : `${assemblyServersCount} серверов в сборке`}
                   </span>
                 </div>
               </div>
@@ -1082,7 +1681,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
             <div className="srv-hero-stats">
               <div className="srv-stat-box">
                 <span className="srv-stat-val">
-                  {onlineCount} / {servers.length}
+                  {onlineCount} <span className="srv-stat-slash">/</span> {servers.length}
                 </span>
                 <span className="srv-stat-lbl">
                   {lang === "uk" ? "В мережі" : "В сети"}
@@ -1100,54 +1699,6 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
           </div>
         )}
 
-        {/* Add Server Drawer */}
-        {showAddForm && (
-          <div className="srv-add-panel">
-            <div className="srv-add-header">
-              <span className="srv-add-title">
-                <Plus size={15} />
-                {lang === "uk"
-                  ? `Додати сервер до servers.dat збірки «${currentInstance?.name || "Minecraft"}»`
-                  : `Добавить сервер в servers.dat сборки «${currentInstance?.name || "Minecraft"}»`}
-              </span>
-            </div>
-            <form onSubmit={handleAddServer} className="srv-add-form">
-              <input
-                type="text"
-                required
-                placeholder={
-                  lang === "uk"
-                    ? "Назва сервера (наприклад: Hypixel Network)"
-                    : "Название сервера (например: Hypixel Network)"
-                }
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="srv-input"
-              />
-              <input
-                type="text"
-                required
-                placeholder={
-                  lang === "uk"
-                    ? "Адреса або IP:порт (наприклад: mc.hypixel.net)"
-                    : "Адрес или IP:порт (например: mc.hypixel.net)"
-                }
-                value={newIp}
-                onChange={(e) => setNewIp(e.target.value)}
-                className="srv-input"
-              />
-              <button type="submit" className="srv-btn-save">
-                {lang === "uk" ? "Зберегти в збірку" : "Сохранить в сборку"}
-              </button>
-            </form>
-            <div className="srv-add-hint">
-              {lang === "uk"
-                ? "Сервер миттєво з'явиться в меню гри Minecraft та у списку вище"
-                : "Сервер мгновенно появится в игровом меню Minecraft и в списке выше"}
-            </div>
-          </div>
-        )}
-
         {/* Filter and Search Toolbar */}
         <div className="srv-toolbar">
           <div className="srv-filter-tabs">
@@ -1159,7 +1710,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               onClick={() => setFilterType("all")}
             >
               <span>{lang === "uk" ? "Всі" : "Все"}</span>
-              <span style={{ opacity: 0.7 }}>({servers.length})</span>
+              <span className="srv-tab-count">({servers.length})</span>
             </button>
             <button
               type="button"
@@ -1170,7 +1721,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
             >
               <span className="srv-tab-dot online" />
               <span>{lang === "uk" ? "В мережі" : "В сети"}</span>
-              <span style={{ opacity: 0.7 }}>({onlineCount})</span>
+              <span className="srv-tab-count">({onlineCount})</span>
             </button>
             <button
               type="button"
@@ -1181,35 +1732,77 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
             >
               <span className="srv-tab-dot offline" />
               <span>{lang === "uk" ? "Офлайн" : "Офлайн"}</span>
-              <span style={{ opacity: 0.7 }}>({offlineCount})</span>
+              <span className="srv-tab-count">({offlineCount})</span>
+            </button>
+            <button
+              type="button"
+              className={`srv-filter-tab ${
+                filterType === "assembly" ? "active" : ""
+              }`}
+              onClick={() => setFilterType("assembly")}
+            >
+              <span>{lang === "uk" ? "Зі збірки" : "Из сборки"}</span>
+              <span className="srv-tab-count">({assemblyServersCount})</span>
             </button>
           </div>
 
-          <div className="srv-search-box">
-            <span className="srv-search-icon">
-              <Search size={14} />
-            </span>
-            <input
-              type="text"
-              placeholder={
-                lang === "uk"
-                  ? "Пошук сервера за назвою, IP або описом…"
-                  : "Поиск сервера по названию, IP или описанию…"
-              }
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="srv-search-input"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                className="srv-search-clear"
-                onClick={() => setSearchQuery("")}
-                title="Очистить"
+          <div className="srv-toolbar-right">
+            {/* Sorting control */}
+            <div className="srv-sort-selector">
+              <span className="srv-sort-icon">
+                <ArrowUpDown size={13} />
+              </span>
+              <select
+                className="srv-sort-select"
+                value={sortBy}
+                onChange={(e) =>
+                  setSortBy(
+                    e.target.value as "default" | "ping" | "players" | "name"
+                  )
+                }
               >
-                <X size={14} />
-              </button>
-            )}
+                <option value="default">
+                  {lang === "uk" ? "За замовчуванням" : "По умолчанию"}
+                </option>
+                <option value="ping">
+                  {lang === "uk" ? "За пінгом (швидкі)" : "По пингу (быстрые)"}
+                </option>
+                <option value="players">
+                  {lang === "uk" ? "За онлайном (гравці)" : "По онлайну (игроки)"}
+                </option>
+                <option value="name">
+                  {lang === "uk" ? "За назвою (А-Я)" : "По названию (А-Я)"}
+                </option>
+              </select>
+            </div>
+
+            {/* Search Input */}
+            <div className="srv-search-box">
+              <span className="srv-search-icon">
+                <Search size={14} />
+              </span>
+              <input
+                type="text"
+                placeholder={
+                  lang === "uk"
+                    ? "Пошук сервера за назвою, IP або описом…"
+                    : "Поиск сервера по названию, IP или описанию…"
+                }
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="srv-search-input"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="srv-search-clear"
+                  onClick={() => setSearchQuery("")}
+                  title="Очистить"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1244,7 +1837,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                     <button
                       type="button"
                       className="srv-btn-add"
-                      onClick={() => setShowAddForm(true)}
+                      onClick={handleOpenAddModal}
                     >
                       <Plus size={14} />
                       <span>
@@ -1268,6 +1861,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                   lang={lang}
                   onPlay={handlePlayOnServer}
                   onDelete={handleDeleteServer}
+                  onEdit={handleOpenEditModal}
                   onCopyIp={handleCopyIp}
                 />
               ))
@@ -1275,6 +1869,28 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Add / Edit Server Modal */}
+      <ServerModal
+        isOpen={isServerModalOpen}
+        initialServer={editingServer}
+        onClose={() => {
+          setIsServerModalOpen(false);
+          setEditingServer(null);
+        }}
+        onSave={handleSaveServer}
+        currentInstanceName={currentInstance?.name}
+        lang={lang}
+      />
+
+      {/* Direct Connect Modal */}
+      <DirectConnectModal
+        isOpen={isDirectConnectModalOpen}
+        onClose={() => setIsDirectConnectModalOpen(false)}
+        onConnect={handleDirectConnectSubmit}
+        currentInstanceName={currentInstance?.name}
+        lang={lang}
+      />
     </div>
   );
 };

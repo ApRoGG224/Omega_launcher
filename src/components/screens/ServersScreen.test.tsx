@@ -124,6 +124,72 @@ describe("ServersScreen Component", () => {
     expect((searchInput as HTMLInputElement).value).toBe("Hypixel");
   });
 
+  it("opens and handles Direct Connect modal", () => {
+    const handleDirectConnect = vi.fn();
+
+    render(
+      <LanguageProvider>
+        <ServersScreen
+          onDirectConnect={handleDirectConnect}
+          instances={[mockInstance]}
+          selectedInstance={mockInstance}
+        />
+      </LanguageProvider>
+    );
+
+    const directBtn = screen.getByText(/Пряме підключення|Прямое подключение/i);
+    expect(directBtn).toBeDefined();
+
+    act(() => {
+      fireEvent.click(directBtn);
+    });
+
+    const modalInput = screen.getByPlaceholderText(/192.168.1.10:25565/i);
+    expect(modalInput).toBeDefined();
+
+    act(() => {
+      fireEvent.change(modalInput, { target: { value: "mc.test.org" } });
+    });
+
+    const submitBtns = screen.getAllByText(/Підключитися|Подключиться/i);
+    act(() => {
+      fireEvent.click(submitBtns[submitBtns.length - 1]);
+    });
+
+    expect(handleDirectConnect).toHaveBeenCalledWith("mc.test.org", "mc.test.org", "inst_1");
+  });
+
+  it("opens and cancels Add Server modal", () => {
+    const handleDirectConnect = vi.fn();
+
+    render(
+      <LanguageProvider>
+        <ServersScreen
+          onDirectConnect={handleDirectConnect}
+          instances={[mockInstance]}
+          selectedInstance={mockInstance}
+        />
+      </LanguageProvider>
+    );
+
+    const addBtn = screen.getByText(/Додати сервер|Добавить сервер/i);
+    expect(addBtn).toBeDefined();
+
+    act(() => {
+      fireEvent.click(addBtn);
+    });
+
+    const nameInput = screen.getByPlaceholderText(/Hypixel Network/i);
+    expect(nameInput).toBeDefined();
+
+    const cancelBtn = screen.getByText(/Скасувати|Отмена/i);
+    act(() => {
+      fireEvent.click(cancelBtn);
+    });
+
+    expect(screen.queryByPlaceholderText(/Hypixel Network/i)).toBeNull();
+  });
+
   describe("Minecraft Formatting & Version Parser Utilities", () => {
     it("cleanMinecraftText strips formatting codes and dangling symbols", () => {
       expect(
