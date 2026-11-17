@@ -2209,8 +2209,52 @@
 }
 
 .srv-ping {
+  display: inline-flex !important;
+  align-items: center !important;
   font-size: 11px !important;
   font-weight: 600 !important;
+}
+
+.srv-signal-bars {
+  display: inline-flex !important;
+  align-items: flex-end !important;
+  gap: 1.5px !important;
+  height: 12px !important;
+  vertical-align: middle !important;
+  margin-right: 5px !important;
+  position: relative !important;
+}
+
+.srv-signal-bars .bar {
+  width: 2px !important;
+  border-radius: 1px !important;
+  background: #30363d !important;
+}
+
+.srv-signal-bars .bar-1 { height: 3px !important; }
+.srv-signal-bars .bar-2 { height: 5px !important; }
+.srv-signal-bars .bar-3 { height: 7px !important; }
+.srv-signal-bars .bar-4 { height: 9px !important; }
+.srv-signal-bars .bar-5 { height: 12px !important; }
+
+.srv-signal-bars.good .bar.on {
+  background: #3fb950 !important;
+}
+
+.srv-signal-bars.medium .bar.on {
+  background: #d29922 !important;
+}
+
+.srv-signal-bars.poor .bar.on {
+  background: #f85149 !important;
+}
+
+.srv-signal-bars.offline .srv-signal-x {
+  font-size: 10px !important;
+  color: #f85149 !important;
+  font-weight: 800 !important;
+  margin-left: 2px !important;
+  line-height: 1 !important;
 }
 
 .srv-ping-val.ping-good {

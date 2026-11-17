@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { ipc, InstanceServerEntry } from "../../services/ipc";
 import { useLanguage } from "../../context/LanguageContext";
 import type { InstanceData } from "../../types";
@@ -69,6 +69,7 @@ const DEFAULT_SERVERS: ServerDisplayEntry[] = [
   },
 ];
 
+// Hoisted constants according to react-best-practices (js-hoist-regexp)
 const MC_COLOR_MAP: Record<string, string> = {
   "0": "#000000",
   "1": "#0000aa",
@@ -88,11 +89,13 @@ const MC_COLOR_MAP: Record<string, string> = {
   f: "#f0f6fc",
 };
 
+const MC_FORMAT_SPLIT_REGEX = /(§[0-9a-fk-or])/gi;
+
 function renderMinecraftMotd(motd: string): React.ReactNode {
   if (!motd) return null;
   if (!motd.includes("§")) return motd;
 
-  const parts = motd.split(/(§[0-9a-fk-or])/gi);
+  const parts = motd.split(MC_FORMAT_SPLIT_REGEX);
   let currentColor = "#c9d1d9";
   let isBold = false;
   let isItalic = false;
@@ -130,6 +133,276 @@ function renderMinecraftMotd(motd: string): React.ReactNode {
   });
 }
 
+/**
+ * Authentic Minecraft 5-bar connection strength indicator
+ */
+const MinecraftSignalBars: React.FC<{ online: boolean; pingMs: number }> = memo(
+  ({ online, pingMs }) => {
+    if (!online) {
+      return (
+        <span className="srv-signal-bars offline" title="Офлайн / Нет ответа">
+          <i className="bar bar-1 off" />
+          <i className="bar bar-2 off" />
+          <i className="bar bar-3 off" />
+          <i className="bar bar-4 off" />
+          <i className="bar bar-5 off" />
+          <span className="srv-signal-x">✕</span>
+        </span>
+      );
+    }
+
+    const activeBars =
+      pingMs < 50 ? 5 : pingMs < 100 ? 4 : pingMs < 180 ? 3 : pingMs < 300 ? 2 : 1;
+    const barClass =
+      activeBars >= 4 ? "good" : activeBars === 3 ? "medium" : "poor";
+
+    return (
+      <span className={`srv-signal-bars ${barClass}`} title={`${pingMs} мс`}>
+        <i className={`bar bar-1 ${activeBars >= 1 ? "on" : "off"}`} />
+        <i className={`bar bar-2 ${activeBars >= 2 ? "on" : "off"}`} />
+        <i className={`bar bar-3 ${activeBars >= 3 ? "on" : "off"}`} />
+        <i className={`bar bar-4 ${activeBars >= 4 ? "on" : "off"}`} />
+        <i className={`bar bar-5 ${activeBars >= 5 ? "on" : "off"}`} />
+      </span>
+    );
+  }
+);
+MinecraftSignalBars.displayName = "MinecraftSignalBars";
+
+/**
+ * Isolated Timer Widget following react-best-practices
+ */
+const AutoRefreshTimerBadge: React.FC<{
+  countdown: number;
+  isRefreshing: boolean;
+  lang: string;
+}> = memo(({ countdown, isRefreshing, lang }) => {
+  return (
+    <div
+      className={`srv-timer-badge ${isRefreshing ? "refreshing" : ""}`}
+      title={
+        lang === "uk"
+          ? "Автоматичне оновлення кожну хвилину"
+          : "Автоматическое обновление каждую минуту"
+      }
+      role="status"
+      aria-atomic="true"
+    >
+      <span className="srv-timer-dot" />
+      <span className="srv-timer-text">
+        {isRefreshing
+          ? lang === "uk"
+            ? "Опитування…"
+            : "Опрос…"
+          : `${lang === "uk" ? "Авто" : "Авто"}: ${countdown}с`}
+      </span>
+    </div>
+  );
+});
+AutoRefreshTimerBadge.displayName = "AutoRefreshTimerBadge";
+
+/**
+ * Memoized Server Card following react-best-practices (rerender-memo)
+ */
+interface ServerCardProps {
+  server: ServerDisplayEntry;
+  isConnecting: boolean;
+  isCopied: boolean;
+  isRunning: boolean;
+  currentInstanceName?: string;
+  lang: string;
+  onPlay: (server: ServerDisplayEntry) => void;
+  onDelete: (server: ServerDisplayEntry) => void;
+  onCopyIp: (ip: string, id: string) => void;
+}
+
+const ServerCard = memo<ServerCardProps>(
+  ({
+    server,
+    isConnecting,
+    isCopied,
+    isRunning,
+    currentInstanceName,
+    lang,
+    onPlay,
+    onDelete,
+    onCopyIp,
+  }) => {
+    const isFull =
+      server.onlinePlayers >= server.maxPlayers && server.maxPlayers > 0;
+
+    return (
+      <div
+        className={`srv-card ${server.online ? "is-online" : "is-offline"}`}
+        style={{ contentVisibility: "auto", containIntrinsicSize: "auto 96px" }}
+      >
+        {/* Favicon */}
+        <div className="srv-ico">
+          {server.favicon && server.favicon.startsWith("data:image") ? (
+            <img
+              src={server.favicon}
+              alt={server.name}
+              className="srv-favicon-img"
+              loading="lazy"
+            />
+          ) : (
+            <span className="srv-ico-fallback">{server.favicon || "MC"}</span>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="srv-info">
+          <div className="srv-nm">
+            <span className="srv-title-text">{server.name}</span>
+
+            {/* Click to copy IP badge */}
+            <button
+              type="button"
+              className="srv-ip-badge"
+              onClick={() => onCopyIp(server.ip, server.id)}
+              title={
+                lang === "uk"
+                  ? "Натисніть, щоб скопіювати IP адресу"
+                  : "Нажмите, чтобы скопировать IP адрес"
+              }
+            >
+              <span className="srv-ip-text">{server.ip}</span>
+              <span className="srv-copy-tag">
+                {isCopied ? "✓ Скопировано!" : "📋"}
+              </span>
+            </button>
+
+            {/* Version badge */}
+            {server.version && (
+              <span className="srv-ver-badge">{server.version}</span>
+            )}
+
+            {/* Assembly badge if from servers.dat */}
+            {server.isAssemblyServer && (
+              <span className="srv-assembly-badge">
+                {lang === "uk" ? "Зі збірки" : "Из сборки"}
+              </span>
+            )}
+          </div>
+
+          {/* MOTD */}
+          <div className="srv-ds">{renderMinecraftMotd(server.motd)}</div>
+        </div>
+
+        {/* Status & Online */}
+        <div className="srv-st">
+          <div className="srv-status-row">
+            <span
+              className={`srv-status-pill ${
+                server.online ? "online" : "offline"
+              }`}
+            >
+              <span className="srv-status-indicator" />
+              {server.online
+                ? lang === "uk"
+                  ? "В МЕРЕЖІ"
+                  : "В СЕТИ"
+                : lang === "uk"
+                ? "НЕ В МЕРЕЖІ"
+                : "НЕ В СЕТИ"}
+            </span>
+          </div>
+
+          <div className={`srv-on-n ${isFull ? "full" : ""}`}>
+            {server.online ? (
+              <>
+                <span className="srv-players-num">
+                  {server.onlinePlayers.toLocaleString("en-US")}
+                </span>
+                <span className="srv-players-slash"> / </span>
+                <span className="srv-players-max">
+                  {server.maxPlayers.toLocaleString("en-US")}
+                </span>
+              </>
+            ) : (
+              <span className="srv-offline-text">Офлайн</span>
+            )}
+          </div>
+
+          <div className="srv-ping">
+            <MinecraftSignalBars
+              online={server.online}
+              pingMs={server.pingMs}
+            />
+            {server.online ? (
+              <span
+                className={`srv-ping-val ${
+                  server.pingMs < 60
+                    ? "ping-good"
+                    : server.pingMs < 150
+                    ? "ping-med"
+                    : "ping-bad"
+                }`}
+              >
+                {server.pingMs} мс
+              </span>
+            ) : (
+              <span className="srv-ping-dash">—</span>
+            )}
+          </div>
+        </div>
+
+        {/* Action: Play & Delete */}
+        <div className="srv-acts">
+          <button
+            type="button"
+            className={`srv-play-btn ${isConnecting ? "connecting" : ""} ${
+              isRunning ? "game-running" : ""
+            }`}
+            onClick={() => onPlay(server)}
+            title={
+              currentInstanceName
+                ? `Запустить Minecraft (${currentInstanceName}) и подключиться к ${server.name}`
+                : "Запустить Minecraft и подключиться к серверу"
+            }
+          >
+            <span className="srv-play-icon">
+              <IconPixelPlay size={15} />
+            </span>
+            <div className="srv-play-text-group">
+              <span className="srv-play-label">
+                {isConnecting
+                  ? "Запуск…"
+                  : isRunning
+                  ? lang === "uk"
+                    ? "Підключитися"
+                    : "Подключиться"
+                  : lang === "uk"
+                  ? "Грати"
+                  : "Играть"}
+              </span>
+              {currentInstanceName && (
+                <span className="srv-play-instance-sub">
+                  {currentInstanceName}
+                </span>
+              )}
+            </div>
+          </button>
+
+          <button
+            type="button"
+            className="srv-del-btn"
+            onClick={() => onDelete(server)}
+            title={
+              lang === "uk"
+                ? "Видалити сервер зі списку збірки"
+                : "Удалить сервер из списка сборки"
+            }
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    );
+  }
+);
+ServerCard.displayName = "ServerCard";
+
 export const ServersScreen: React.FC<ServersScreenProps> = ({
   onDirectConnect,
   instances = [],
@@ -146,7 +419,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
   const [isInstanceDropdownOpen, setIsInstanceDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Sync active instance if selectedInstance prop updates
+  // Sync active instance if selectedInstance prop changes
   useEffect(() => {
     if (selectedInstance && selectedInstance.id !== activeInstanceId) {
       setActiveInstanceId(selectedInstance.id);
@@ -154,11 +427,18 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
   }, [selectedInstance]);
 
   const currentInstance = useMemo(() => {
-    return instances.find((i) => i.id === activeInstanceId) || selectedInstance || instances[0] || null;
+    return (
+      instances.find((i) => i.id === activeInstanceId) ||
+      selectedInstance ||
+      instances[0] ||
+      null
+    );
   }, [instances, activeInstanceId, selectedInstance]);
 
   const [servers, setServers] = useState<ServerDisplayEntry[]>([]);
-  const [filterType, setFilterType] = useState<"all" | "online" | "offline">("all");
+  const [filterType, setFilterType] = useState<"all" | "online" | "offline">(
+    "all"
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [newIp, setNewIp] = useState("");
@@ -171,11 +451,15 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
   const [refreshCountdown, setRefreshCountdown] = useState<number>(60);
   const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isPingingRef = useRef(false);
+  const activeReqSeqRef = useRef<number>(0);
 
-  // Close dropdown on click outside
+  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setIsInstanceDropdownOpen(false);
       }
     };
@@ -183,45 +467,58 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const pingServerEntry = useCallback(async (entry: ServerDisplayEntry) => {
-    try {
-      let rawHost = entry.ip.trim();
-      if (rawHost.startsWith("https://")) rawHost = rawHost.slice(8);
-      else if (rawHost.startsWith("http://")) rawHost = rawHost.slice(7);
-      if (rawHost.includes("/")) rawHost = rawHost.split("/")[0];
+  const pingServerEntry = useCallback(
+    async (entry: ServerDisplayEntry, seqId: number) => {
+      try {
+        let rawHost = entry.ip.trim();
+        if (rawHost.startsWith("https://")) rawHost = rawHost.slice(8);
+        else if (rawHost.startsWith("http://")) rawHost = rawHost.slice(7);
+        if (rawHost.includes("/")) rawHost = rawHost.split("/")[0];
 
-      let host = rawHost;
-      let port = 25565;
-      if (rawHost.includes(":")) {
-        const parts = rawHost.split(":");
-        host = parts[0];
-        port = parseInt(parts[1], 10) || 25565;
+        let host = rawHost;
+        let port = 25565;
+        if (rawHost.includes(":")) {
+          const parts = rawHost.split(":");
+          host = parts[0];
+          port = parseInt(parts[1], 10) || 25565;
+        }
+
+        const res = await ipc.pingServer(host, port);
+        // Sequence guard: if user switched assembly, discard obsolete ping results
+        if (seqId !== activeReqSeqRef.current) return;
+
+        setServers((prev) =>
+          prev.map((s) =>
+            s.id === entry.id
+              ? {
+                  ...s,
+                  motd: res.motd ? res.motd : s.motd,
+                  pingMs: res.latencyMs || s.pingMs,
+                  onlinePlayers:
+                    res.playersOnline !== undefined
+                      ? res.playersOnline
+                      : s.onlinePlayers,
+                  maxPlayers:
+                    res.playersMax !== undefined
+                      ? res.playersMax
+                      : s.maxPlayers,
+                  online: res.online,
+                  favicon: res.favicon || s.favicon,
+                  version: res.version || s.version,
+                  isQuerying: false,
+                }
+              : s
+          )
+        );
+      } catch {
+        if (seqId !== activeReqSeqRef.current) return;
+        setServers((prev) =>
+          prev.map((s) => (s.id === entry.id ? { ...s, isQuerying: false } : s))
+        );
       }
-
-      const res = await ipc.pingServer(host, port);
-      setServers((prev) =>
-        prev.map((s) =>
-          s.id === entry.id
-            ? {
-                ...s,
-                motd: res.motd ? res.motd : s.motd,
-                pingMs: res.latencyMs || s.pingMs,
-                onlinePlayers: res.playersOnline !== undefined ? res.playersOnline : s.onlinePlayers,
-                maxPlayers: res.playersMax !== undefined ? res.playersMax : s.maxPlayers,
-                online: res.online,
-                favicon: res.favicon || s.favicon,
-                version: res.version || s.version,
-                isQuerying: false,
-              }
-            : s
-        )
-      );
-    } catch {
-      setServers((prev) =>
-        prev.map((s) => (s.id === entry.id ? { ...s, isQuerying: false } : s))
-      );
-    }
-  }, []);
+    },
+    []
+  );
 
   const refreshAllServers = useCallback(
     async (list: ServerDisplayEntry[]) => {
@@ -230,10 +527,10 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
       setIsRefreshing(true);
       setRefreshCountdown(60);
 
-      // Set isQuerying indicator
+      const curSeq = ++activeReqSeqRef.current;
       setServers((prev) => prev.map((s) => ({ ...s, isQuerying: true })));
 
-      await Promise.allSettled(list.map((s) => pingServerEntry(s)));
+      await Promise.allSettled(list.map((s) => pingServerEntry(s, curSeq)));
       setIsRefreshing(false);
       isPingingRef.current = false;
     },
@@ -244,10 +541,14 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
   const loadServersForInstance = useCallback(
     async (instId: string) => {
       let loadedList: ServerDisplayEntry[] = [];
+      const curSeq = ++activeReqSeqRef.current;
 
       try {
         if (instId) {
-          const assemblyServers: InstanceServerEntry[] = await ipc.listInstanceServers(instId);
+          const assemblyServers: InstanceServerEntry[] =
+            await ipc.listInstanceServers(instId);
+          if (curSeq !== activeReqSeqRef.current) return;
+
           if (assemblyServers && assemblyServers.length > 0) {
             loadedList = assemblyServers.map((s, idx) => ({
               id: `assembly_${instId}_${s.ip}_${idx}`,
@@ -268,6 +569,8 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
         // If instance has no servers.dat, check database
         if (loadedList.length === 0) {
           const dbRows = await ipc.dbLoadServers();
+          if (curSeq !== activeReqSeqRef.current) return;
+
           if (dbRows && dbRows.length > 0) {
             loadedList = dbRows.map((r) => ({
               id: `db_${r.host}:${r.port}`,
@@ -287,12 +590,16 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
 
         // If still empty, use defaults
         if (loadedList.length === 0) {
-          loadedList = DEFAULT_SERVERS.map((s) => ({ ...s, isQuerying: true }));
+          loadedList = DEFAULT_SERVERS.map((s) => ({
+            ...s,
+            isQuerying: true,
+          }));
         }
 
         setServers(loadedList);
         void refreshAllServers(loadedList);
       } catch {
+        if (curSeq !== activeReqSeqRef.current) return;
         setServers(DEFAULT_SERVERS);
         void refreshAllServers(DEFAULT_SERVERS);
       }
@@ -300,7 +607,6 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
     [refreshAllServers]
   );
 
-  // Initial load
   useEffect(() => {
     void loadServersForInstance(activeInstanceId);
   }, [activeInstanceId, loadServersForInstance]);
@@ -315,7 +621,6 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
     refreshTimerRef.current = setInterval(() => {
       setRefreshCountdown((prev) => {
         if (prev <= 1) {
-          // Trigger refresh
           setServers((cur) => {
             void refreshAllServers(cur);
             return cur;
@@ -333,92 +638,106 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
     };
   }, [refreshAllServers]);
 
-  const handleManualRefresh = () => {
+  const handleManualRefresh = useCallback(() => {
     void refreshAllServers(servers);
-  };
+  }, [refreshAllServers, servers]);
 
-  const handleSwitchInstance = (inst: InstanceData) => {
-    setActiveInstanceId(inst.id);
-    setIsInstanceDropdownOpen(false);
-    if (onSelectInstance) {
-      onSelectInstance(inst);
-    }
-  };
+  const handleSwitchInstance = useCallback(
+    (inst: InstanceData) => {
+      setActiveInstanceId(inst.id);
+      setIsInstanceDropdownOpen(false);
+      if (onSelectInstance) {
+        onSelectInstance(inst);
+      }
+    },
+    [onSelectInstance]
+  );
 
-  const handleAddServer = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newIp.trim() || !newName.trim()) return;
+  const handleAddServer = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!newIp.trim() || !newName.trim()) return;
 
-    const ipClean = newIp.trim();
-    const nameClean = newName.trim();
+      const ipClean = newIp.trim();
+      const nameClean = newName.trim();
 
-    const parts = ipClean.split(":");
-    const host = parts[0];
-    const port = parts[1] ? parseInt(parts[1], 10) || 25565 : 25565;
+      const parts = ipClean.split(":");
+      const host = parts[0];
+      const port = parts[1] ? parseInt(parts[1], 10) || 25565 : 25565;
 
-    const added: ServerDisplayEntry = {
-      id: `srv_${activeInstanceId}_${Date.now()}`,
-      name: nameClean,
-      ip: ipClean,
-      motd: "Опрос статуса...",
-      pingMs: 0,
-      onlinePlayers: 0,
-      maxPlayers: 0,
-      favicon: nameClean.charAt(0).toUpperCase() || "S",
-      online: true,
-      isAssemblyServer: Boolean(activeInstanceId),
-      isQuerying: true,
-    };
+      const added: ServerDisplayEntry = {
+        id: `srv_${activeInstanceId}_${Date.now()}`,
+        name: nameClean,
+        ip: ipClean,
+        motd: "Опрос статуса...",
+        pingMs: 0,
+        onlinePlayers: 0,
+        maxPlayers: 0,
+        favicon: nameClean.charAt(0).toUpperCase() || "S",
+        online: true,
+        isAssemblyServer: Boolean(activeInstanceId),
+        isQuerying: true,
+      };
 
-    setServers((prev) => [added, ...prev]);
-    setShowAddForm(false);
-    setNewName("");
-    setNewIp("");
+      setServers((prev) => [added, ...prev]);
+      setShowAddForm(false);
+      setNewName("");
+      setNewIp("");
 
-    // Save to active assembly's servers.dat
-    if (activeInstanceId) {
-      try {
-        await ipc.addInstanceServer(activeInstanceId, nameClean, ipClean);
-      } catch {}
-    }
+      // Save to active assembly's servers.dat
+      if (activeInstanceId) {
+        try {
+          await ipc.addInstanceServer(activeInstanceId, nameClean, ipClean);
+        } catch {}
+      }
 
-    // Save to database
-    void ipc.dbSaveServer({ host, port, name: nameClean, favicon: null }).catch(() => {});
-    void pingServerEntry(added);
-  };
+      // Save to launcher database
+      void ipc
+        .dbSaveServer({ host, port, name: nameClean, favicon: null })
+        .catch(() => {});
+      void pingServerEntry(added, activeReqSeqRef.current);
+    },
+    [activeInstanceId, newIp, newName, pingServerEntry]
+  );
 
-  const handleDeleteServer = async (server: ServerDisplayEntry) => {
-    if (activeInstanceId && server.isAssemblyServer) {
-      try {
-        await ipc.deleteInstanceServer(activeInstanceId, server.ip);
-      } catch {}
-    }
+  const handleDeleteServer = useCallback(
+    async (server: ServerDisplayEntry) => {
+      if (activeInstanceId && server.isAssemblyServer) {
+        try {
+          await ipc.deleteInstanceServer(activeInstanceId, server.ip);
+        } catch {}
+      }
 
-    const parts = server.ip.split(":");
-    const host = parts[0];
-    const port = parts[1] ? parseInt(parts[1], 10) || 25565 : 25565;
-    void ipc.dbDeleteServer(host, port).catch(() => {});
+      const parts = server.ip.split(":");
+      const host = parts[0];
+      const port = parts[1] ? parseInt(parts[1], 10) || 25565 : 25565;
+      void ipc.dbDeleteServer(host, port).catch(() => {});
 
-    setServers((prev) => prev.filter((s) => s.id !== server.id));
-  };
+      setServers((prev) => prev.filter((s) => s.id !== server.id));
+    },
+    [activeInstanceId]
+  );
 
-  const handlePlayOnServer = (server: ServerDisplayEntry) => {
-    setConnectingId(server.id);
-    onDirectConnect(server.name, server.ip, activeInstanceId || undefined);
-    setTimeout(() => {
-      setConnectingId(null);
-    }, 2000);
-  };
+  const handlePlayOnServer = useCallback(
+    (server: ServerDisplayEntry) => {
+      setConnectingId(server.id);
+      onDirectConnect(server.name, server.ip, activeInstanceId || undefined);
+      setTimeout(() => {
+        setConnectingId(null);
+      }, 2000);
+    },
+    [activeInstanceId, onDirectConnect]
+  );
 
-  const handleCopyIp = (ip: string, id: string) => {
+  const handleCopyIp = useCallback((ip: string, id: string) => {
     navigator.clipboard.writeText(ip);
     setCopiedId(id);
     setTimeout(() => {
       setCopiedId(null);
     }, 1500);
-  };
+  }, []);
 
-  // Filter and search
+  // Filter and search computation
   const filteredServers = useMemo(() => {
     return servers.filter((s) => {
       if (filterType === "online" && !s.online) return false;
@@ -434,8 +753,14 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
     });
   }, [servers, filterType, searchQuery]);
 
-  const onlineCount = useMemo(() => servers.filter((s) => s.online).length, [servers]);
-  const offlineCount = useMemo(() => servers.filter((s) => !s.online).length, [servers]);
+  const onlineCount = useMemo(
+    () => servers.filter((s) => s.online).length,
+    [servers]
+  );
+  const offlineCount = useMemo(
+    () => servers.filter((s) => !s.online).length,
+    [servers]
+  );
 
   return (
     <div className="screens-overlay-layer servers-screen-overlay">
@@ -452,43 +777,66 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
             {instances.length > 0 && (
               <div className="srv-instance-selector" ref={dropdownRef}>
                 <span className="srv-instance-label">
-                  {lang === "uk" ? "Складання:" : lang === "ru" ? "Сборка:" : "Instance:"}
+                  {lang === "uk"
+                    ? "Складання:"
+                    : lang === "ru"
+                    ? "Сборка:"
+                    : "Instance:"}
                 </span>
                 <button
                   type="button"
                   className="srv-instance-btn"
                   onClick={() => setIsInstanceDropdownOpen((prev) => !prev)}
-                  title={lang === "uk" ? "Оберіть збірку для перегляду та гри" : "Выберите сборку для просмотра и игры"}
+                  title={
+                    lang === "uk"
+                      ? "Оберіть збірку для перегляду та гри"
+                      : "Выберите сборку для просмотра и игры"
+                  }
                 >
                   <span className="srv-instance-icon-box">
-                    <InstanceAvatarIcon icon={currentInstance?.icon} size={20} />
+                    <InstanceAvatarIcon
+                      icon={currentInstance?.icon}
+                      size={20}
+                    />
                   </span>
                   <span className="srv-instance-name">
                     {currentInstance ? currentInstance.name : "Minecraft"}
                   </span>
                   <span className="srv-instance-tag">
-                    {currentInstance ? `${currentInstance.mcVersion} ${currentInstance.loader || ""}`.trim() : ""}
+                    {currentInstance
+                      ? `${currentInstance.mcVersion} ${
+                          currentInstance.loader || ""
+                        }`.trim()
+                      : ""}
                   </span>
-                  <span className="srv-instance-arrow">{isInstanceDropdownOpen ? "▲" : "▼"}</span>
+                  <span className="srv-instance-arrow">
+                    {isInstanceDropdownOpen ? "▲" : "▼"}
+                  </span>
                 </button>
 
                 {isInstanceDropdownOpen && (
                   <div className="srv-instance-menu">
                     <div className="srv-instance-menu-header">
-                      {lang === "uk" ? "Оберіть збірку Minecraft:" : "Выберите сборку Minecraft:"}
+                      {lang === "uk"
+                        ? "Оберіть збірку Minecraft:"
+                        : "Выберите сборку Minecraft:"}
                     </div>
                     {instances.map((inst) => (
                       <button
                         key={inst.id}
                         type="button"
-                        className={`srv-instance-option ${inst.id === activeInstanceId ? "active" : ""}`}
+                        className={`srv-instance-option ${
+                          inst.id === activeInstanceId ? "active" : ""
+                        }`}
                         onClick={() => handleSwitchInstance(inst)}
                       >
                         <span className="srv-instance-icon-box">
                           <InstanceAvatarIcon icon={inst.icon} size={18} />
                         </span>
                         <div className="srv-instance-option-info">
-                          <div className="srv-instance-option-name">{inst.name}</div>
+                          <div className="srv-instance-option-name">
+                            {inst.name}
+                          </div>
                           <div className="srv-instance-option-sub">
                             {inst.mcVersion} • {inst.loader || "Vanilla"}
                           </div>
@@ -506,31 +854,22 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
 
           {/* Action buttons on the right */}
           <div className="srv-header-right">
-            {/* Auto-refresh timer widget */}
-            <div
-              className={`srv-timer-badge ${isRefreshing ? "refreshing" : ""}`}
-              title={
-                lang === "uk"
-                  ? "Автоматичне оновлення кожну хвилину"
-                  : "Автоматическое обновление каждую минуту"
-              }
-            >
-              <span className="srv-timer-dot" />
-              <span className="srv-timer-text">
-                {isRefreshing
-                  ? lang === "uk"
-                    ? "Опитування…"
-                    : "Опрос…"
-                  : `${lang === "uk" ? "Авто" : "Авто"}: ${refreshCountdown}с`}
-              </span>
-            </div>
+            <AutoRefreshTimerBadge
+              countdown={refreshCountdown}
+              isRefreshing={isRefreshing}
+              lang={lang}
+            />
 
             <button
               type="button"
               className="srv-b srv-b-refresh"
               onClick={handleManualRefresh}
               disabled={isRefreshing}
-              title={lang === "uk" ? "Оновити пінг та онлайн" : "Обновить пинг и онлайн"}
+              title={
+                lang === "uk"
+                  ? "Оновити пінг та онлайн"
+                  : "Обновить пинг и онлайн"
+              }
             >
               {isRefreshing
                 ? lang === "uk"
@@ -564,7 +903,11 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               <input
                 type="text"
                 required
-                placeholder={lang === "uk" ? "Назва сервера (наприклад, Мій Сервер)" : "Название сервера (например, Мой Сервер)"}
+                placeholder={
+                  lang === "uk"
+                    ? "Назва сервера (наприклад, Мій Сервер)"
+                    : "Название сервера (например, Мой Сервер)"
+                }
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 className="srv-form-input"
@@ -572,7 +915,11 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               <input
                 type="text"
                 required
-                placeholder={lang === "uk" ? "Адреса або IP (наприклад, mc.hypixel.net або 127.0.0.1:25565)" : "Адрес или IP (например, mc.hypixel.net или 127.0.0.1:25565)"}
+                placeholder={
+                  lang === "uk"
+                    ? "Адреса або IP (наприклад, mc.hypixel.net або 127.0.0.1:25565)"
+                    : "Адрес или IP (например, mc.hypixel.net или 127.0.0.1:25565)"
+                }
                 value={newIp}
                 onChange={(e) => setNewIp(e.target.value)}
                 className="srv-form-input"
@@ -596,14 +943,18 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
           <div className="srv-filters">
             <button
               type="button"
-              className={`srv-filter-tab ${filterType === "all" ? "active" : ""}`}
+              className={`srv-filter-tab ${
+                filterType === "all" ? "active" : ""
+              }`}
               onClick={() => setFilterType("all")}
             >
               {lang === "uk" ? "Всі" : "Все"} ({servers.length})
             </button>
             <button
               type="button"
-              className={`srv-filter-tab srv-filter-online ${filterType === "online" ? "active" : ""}`}
+              className={`srv-filter-tab srv-filter-online ${
+                filterType === "online" ? "active" : ""
+              }`}
               onClick={() => setFilterType("online")}
             >
               <span className="srv-tab-dot online" />
@@ -611,7 +962,9 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
             </button>
             <button
               type="button"
-              className={`srv-filter-tab srv-filter-offline ${filterType === "offline" ? "active" : ""}`}
+              className={`srv-filter-tab srv-filter-offline ${
+                filterType === "offline" ? "active" : ""
+              }`}
               onClick={() => setFilterType("offline")}
             >
               <span className="srv-tab-dot offline" />
@@ -623,7 +976,11 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
             <span className="srv-search-icon">🔍</span>
             <input
               type="text"
-              placeholder={lang === "uk" ? "Пошук сервера за назвою або IP…" : "Поиск сервера по названию или IP…"}
+              placeholder={
+                lang === "uk"
+                  ? "Пошук сервера за назвою або IP…"
+                  : "Поиск сервера по названию или IP…"
+              }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="srv-search-input"
@@ -666,168 +1023,20 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                 </div>
               </div>
             ) : (
-              filteredServers.map((server) => {
-                const isFull =
-                  server.onlinePlayers >= server.maxPlayers && server.maxPlayers > 0;
-                const isCopied = copiedId === server.id;
-
-                return (
-                  <div key={server.id} className={`srv-card ${server.online ? "is-online" : "is-offline"}`}>
-                    {/* Server Favicon */}
-                    <div className="srv-ico">
-                      {server.favicon && server.favicon.startsWith("data:image") ? (
-                        <img
-                          src={server.favicon}
-                          alt={server.name}
-                          className="srv-favicon-img"
-                        />
-                      ) : (
-                        <span className="srv-ico-fallback">{server.favicon || "MC"}</span>
-                      )}
-                    </div>
-
-                    {/* Server Details */}
-                    <div className="srv-info">
-                      <div className="srv-nm">
-                        <span className="srv-title-text">{server.name}</span>
-
-                        {/* Clickable IP tag to copy */}
-                        <button
-                          type="button"
-                          className="srv-ip-badge"
-                          onClick={() => handleCopyIp(server.ip, server.id)}
-                          title="Нажмите, чтобы скопировать IP адрес"
-                        >
-                          <span className="srv-ip-text">{server.ip}</span>
-                          <span className="srv-copy-tag">
-                            {isCopied ? "✓ Скопировано!" : "📋"}
-                          </span>
-                        </button>
-
-                        {/* Version badge if detected */}
-                        {server.version && (
-                          <span className="srv-ver-badge">{server.version}</span>
-                        )}
-
-                        {/* Assembly badge if from servers.dat */}
-                        {server.isAssemblyServer && (
-                          <span className="srv-assembly-badge">
-                            {lang === "uk" ? "Зі збірки" : "Из сборки"}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* MOTD with Minecraft color codes */}
-                      <div className="srv-ds">
-                        {renderMinecraftMotd(server.motd)}
-                      </div>
-                    </div>
-
-                    {/* Server Status & Online Players */}
-                    <div className="srv-st">
-                      <div className="srv-status-row">
-                        <span className={`srv-status-pill ${server.online ? "online" : "offline"}`}>
-                          <span className="srv-status-indicator" />
-                          {server.online
-                            ? lang === "uk"
-                              ? "В МЕРЕЖІ"
-                              : "В СЕТИ"
-                            : lang === "uk"
-                            ? "НЕ В МЕРЕЖІ"
-                            : "НЕ В СЕТИ"}
-                        </span>
-                      </div>
-
-                      <div className={`srv-on-n ${isFull ? "full" : ""}`}>
-                        {server.online ? (
-                          <>
-                            <span className="srv-players-num">
-                              {server.onlinePlayers.toLocaleString("en-US")}
-                            </span>
-                            <span className="srv-players-slash"> / </span>
-                            <span className="srv-players-max">
-                              {server.maxPlayers.toLocaleString("en-US")}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="srv-offline-text">Офлайн</span>
-                        )}
-                      </div>
-
-                      <div className="srv-ping">
-                        {server.online ? (
-                          <span
-                            className={`srv-ping-val ${
-                              server.pingMs < 60
-                                ? "ping-good"
-                                : server.pingMs < 150
-                                ? "ping-med"
-                                : "ping-bad"
-                            }`}
-                          >
-                            {server.pingMs} мс
-                          </span>
-                        ) : (
-                          <span className="srv-ping-dash">—</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Action Buttons: The Most Important Launch Button! */}
-                    <div className="srv-acts">
-                      <button
-                        type="button"
-                        className={`srv-play-btn ${connectingId === server.id ? "connecting" : ""} ${
-                          isRunning ? "game-running" : ""
-                        }`}
-                        onClick={() => handlePlayOnServer(server)}
-                        title={
-                          currentInstance
-                            ? `Запустить Minecraft (${currentInstance.name}) и подключиться к ${server.name}`
-                            : "Запустить Minecraft и подключиться к серверу"
-                        }
-                      >
-                        <span className="srv-play-icon">
-                          <IconPixelPlay size={15} />
-                        </span>
-                        <div className="srv-play-text-group">
-                          <span className="srv-play-label">
-                            {connectingId === server.id
-                              ? lang === "uk"
-                                ? "Запуск…"
-                                : "Запуск…"
-                              : isRunning
-                              ? lang === "uk"
-                                ? "Підключитися"
-                                : "Подключиться"
-                              : lang === "uk"
-                              ? "Грати"
-                              : "Играть"}
-                          </span>
-                          {currentInstance && (
-                            <span className="srv-play-instance-sub">
-                              {currentInstance.name}
-                            </span>
-                          )}
-                        </div>
-                      </button>
-
-                      <button
-                        type="button"
-                        className="srv-del-btn"
-                        onClick={() => handleDeleteServer(server)}
-                        title={
-                          lang === "uk"
-                            ? "Видалити сервер зі списку збірки"
-                            : "Удалить сервер из списка сборки"
-                        }
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
+              filteredServers.map((server) => (
+                <ServerCard
+                  key={server.id}
+                  server={server}
+                  isConnecting={connectingId === server.id}
+                  isCopied={copiedId === server.id}
+                  isRunning={isRunning}
+                  currentInstanceName={currentInstance?.name}
+                  lang={lang}
+                  onPlay={handlePlayOnServer}
+                  onDelete={handleDeleteServer}
+                  onCopyIp={handleCopyIp}
+                />
+              ))
             )}
           </div>
         </div>
