@@ -96,14 +96,12 @@ describe("ServersScreen Component", () => {
     });
   });
 
-  it("calls onBack when back button is clicked", () => {
-    const handleBack = vi.fn();
+  it("renders search bar and filters servers by search query", () => {
     const handleDirectConnect = vi.fn();
 
     render(
       <LanguageProvider>
         <ServersScreen
-          onBack={handleBack}
           onDirectConnect={handleDirectConnect}
           instances={[mockInstance]}
           selectedInstance={mockInstance}
@@ -111,8 +109,13 @@ describe("ServersScreen Component", () => {
       </LanguageProvider>
     );
 
-    const backBtn = screen.getByText(/Назад|Back/i);
-    fireEvent.click(backBtn);
-    expect(handleBack).toHaveBeenCalledTimes(1);
+    const searchInput = screen.getByPlaceholderText(/Пошук|Поиск/i);
+    expect(searchInput).toBeDefined();
+
+    act(() => {
+      fireEvent.change(searchInput, { target: { value: "Hypixel" } });
+    });
+
+    expect((searchInput as HTMLInputElement).value).toBe("Hypixel");
   });
 });

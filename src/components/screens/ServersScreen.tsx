@@ -17,7 +17,6 @@ import type { InstanceData } from "../../types";
 import { InstanceAvatarIcon } from "../icons/MinecraftIcons";
 import { IconPixelPlay } from "../icons/PixelIcons";
 import "../../styles/servers.css";
-import "../../design-system/pixelPlates.css";
 
 export interface ServersScreenProps {
   onBack?: () => void;
@@ -795,17 +794,6 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
         {/* Top Header Bar */}
         <div className="srv-header-bar">
           <div className="srv-header-left">
-            {onBack && (
-              <button
-                type="button"
-                className="screen-back-btn"
-                onClick={onBack}
-                title={lang === "uk" ? "Повернутися назад" : "Вернуться назад"}
-              >
-                ← {lang === "uk" ? "Назад" : lang === "ru" ? "Назад" : "Back"}
-              </button>
-            )}
-
             <div className="srv-title-wrap">
               <h1 className="srv-heading">
                 {lang === "uk" ? "СЕРВЕРИ" : lang === "ru" ? "СЕРВЕРЫ" : "SERVERS"}

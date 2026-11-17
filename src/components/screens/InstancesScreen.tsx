@@ -14,7 +14,6 @@ import { useLanguage } from "../../context/LanguageContext";
 import { ImportModal } from "../modals/ImportModal";
 import { InstanceEditorModal } from "../modals/InstanceEditorModal";
 import "../../styles/screens.css";
-import "../../design-system/pixelPlates.css";
 
 interface InstancesScreenProps {
   onBack: () => void;
@@ -1084,7 +1083,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 type="button"
                 onClick={() => setEditingFolder(null)}
                 title="Закрыть"
-                className="btn-icon pixel-plate-dark"
+                className="btn-icon"
                 style={{
                   width: "32px",
                   height: "32px",
@@ -1171,7 +1170,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                           setFolderIconType("cube");
                           setFolderCubeVariant(preset.cubeVariant);
                         }}
-                        className="pixel-plate-dark"
+                        className="inst-folder-cube-btn"
                         style={{
                           height: "42px",
                           display: "flex",
@@ -1180,7 +1179,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                           padding: 0,
                           borderColor: isSelected ? "var(--accent)" : undefined,
                           background: isSelected ? "#16243a" : undefined,
-                          borderRadius: "0 8px 0 8px",
+                          borderRadius: "8px",
                         }}
                         title={preset.label}
                       >
@@ -1235,7 +1234,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 <div style={{ display: "flex", gap: "8px" }}>
                   <button
                     type="button"
-                    className="screen-back-btn pixel-plate-dark"
+                    className="screen-back-btn"
                     style={{ minHeight: "36px", height: "36px" }}
                     onClick={() => setEditingFolder(null)}
                   >
@@ -1243,7 +1242,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="server-connect-btn pixel-plate-play"
+                    className="btn-primary"
                     style={{ minHeight: "36px", height: "36px" }}
                   >
                     <Check size={15} style={{ marginRight: "4px" }} />
@@ -1296,7 +1295,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 type="button"
                 onClick={() => setIsCreatingFolder(false)}
                 title="Закрыть"
-                className="btn-icon pixel-plate-dark"
+                className="btn-icon"
                 style={{
                   width: "32px",
                   height: "32px",
@@ -1384,7 +1383,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                           setFolderIconType("cube");
                           setFolderCubeVariant(preset.cubeVariant);
                         }}
-                        className="pixel-plate-dark"
+                        className="inst-folder-cube-btn"
                         style={{
                           height: "42px",
                           display: "flex",
@@ -1393,7 +1392,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                           padding: 0,
                           borderColor: isSelected ? "var(--accent)" : undefined,
                           background: isSelected ? "#16243a" : undefined,
-                          borderRadius: "0 8px 0 8px",
+                          borderRadius: "8px",
                         }}
                         title={preset.label}
                       >
@@ -1407,7 +1406,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "10px" }}>
                 <button
                   type="button"
-                  className="screen-back-btn pixel-plate-dark"
+                  className="screen-back-btn"
                   style={{ minHeight: "36px", height: "36px" }}
                   onClick={() => setIsCreatingFolder(false)}
                 >
@@ -1415,7 +1414,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="server-connect-btn pixel-plate-play"
+                  className="btn-primary"
                   style={{ minHeight: "36px", height: "36px" }}
                 >
                   Создать папку

@@ -20,27 +20,22 @@
 
   --btn-bg-default: #101726;
   --btn-bc-default: #25364e;
-  --btn-kc-default: #709164;
   --btn-text-default: #e6edf7;
 
   --btn-bg-play: #4a6839;
   --btn-bc-play: #698852;
-  --btn-kc-play: #c0d6ad;
   --btn-text-play: #f4f6ee;
 
   --btn-bg-stop: #7e3230;
   --btn-bc-stop: #9e4a46;
-  --btn-kc-stop: #e2b4b1;
   --btn-text-stop: #faefee;
 
   --btn-bg-instance: #0f1d33;
   --btn-bc-instance: #204975;
-  --btn-kc-instance: #5796dc;
   --btn-text-instance: #f0f6ff;
 
   --btn-bg-amber: #2a1b10;
   --btn-bc-amber: #784415;
-  --btn-kc-amber: #e09f4a;
   --btn-text-amber: #fef3c7;
 
   --btn-bg-delete: rgba(239, 68, 68, 0.14);

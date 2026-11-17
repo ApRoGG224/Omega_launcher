@@ -38,7 +38,7 @@
   max-width: 92vw;
   background: #080c14;
   border: 1px solid var(--border-medium);
-  border-radius: 0 10px 0 10px;
+  border-radius: 10px;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -48,29 +48,12 @@
   box-sizing: border-box;
 }
 
-.omega-login-dialog::after {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  pointer-events: none;
-  border-radius: 0;
-  background-repeat: no-repeat;
-  background-image:
-    linear-gradient(var(--btn-kc-default), var(--btn-kc-default)),
-    linear-gradient(var(--btn-kc-default), var(--btn-kc-default)),
-    linear-gradient(var(--btn-kc-default), var(--btn-kc-default)),
-    linear-gradient(var(--btn-kc-default), var(--btn-kc-default));
-  background-position: left top, left top, right bottom, right bottom;
-  background-size: 16px 2px, 2px 16px, 16px 2px, 2px 16px;
-  z-index: 2;
-}
-
 .omega-login-input {
   width: 100%;
   padding: 10px 14px;
   background: #060910;
   border: 1px solid var(--border-medium);
-  border-radius: 0 4px 0 4px;
+  border-radius: 6px;
   color: var(--text-pure);
   font-size: 13px;
   font-family: var(--font-primary) !important;
@@ -79,7 +62,7 @@
 }
 
 .omega-login-input:focus {
-  border-color: var(--btn-kc-instance);
+  border-color: var(--accent-light, #3b82f6);
   background: #0b111e;
 }
 
@@ -91,10 +74,8 @@
   font-weight: 700;
   color: var(--btn-text-play);
   background-color: var(--btn-bg-play);
-  --bc: var(--btn-bc-play);
-  --kc: var(--btn-kc-play);
-  border-radius: 0 8px 0 8px;
-  border: 0;
+  border: 1px solid var(--btn-bc-play);
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -102,6 +83,12 @@
   gap: 8px;
   white-space: nowrap;
   font-family: var(--font-primary) !important;
+  transition: all 0.15s ease;
+}
+
+.omega-login-submit-btn:hover {
+  background-color: #587c44;
+  border-color: #7ea363;
 }
 
 .omega-login-cancel-btn {
@@ -111,14 +98,18 @@
   font-weight: 700;
   color: var(--btn-text-default);
   background-color: var(--btn-bg-default);
-  --bc: var(--btn-bc-default);
-  --kc: var(--btn-kc-default);
-  border-radius: 0 8px 0 8px;
-  border: 0;
+  border: 1px solid var(--btn-bc-default);
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
   font-family: var(--font-primary) !important;
+  transition: all 0.15s ease;
+}
+
+.omega-login-cancel-btn:hover {
+  background-color: #162238;
+  border-color: #38537f;
 }

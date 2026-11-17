@@ -39,7 +39,6 @@ import type {
   InstanceAvatarVariant,
 } from "./types";
 import "./styles/globals.css";
-import "./design-system/pixelPlates.css";
 import "./styles/menu-customizer.css";
 
 const FALLBACK_ACCOUNT: AccountData = {

@@ -94,13 +94,16 @@ fn motd_from_chat(val: &serde_json::Value) -> String {
 }
 
 fn connect_with_timeout(host: &str, port: u16, timeout: Duration) -> Result<TcpStream, String> {
-    let addrs: Vec<std::net::SocketAddr> = (host, port)
+    let mut addrs: Vec<std::net::SocketAddr> = (host, port)
         .to_socket_addrs()
         .map_err(|e| format!("DNS resolution error: {e}"))?
         .collect();
     if addrs.is_empty() {
         return Err("No address resolved".to_string());
     }
+
+    // Sort IPv4 first to avoid unreachable IPv6 route hangs
+    addrs.sort_by_key(|a| if a.is_ipv4() { 0 } else { 1 });
 
     let mut last_err = None;
     for addr in addrs {
@@ -129,10 +132,15 @@ fn modern_ping(
         .map_err(|e| e.to_string())?;
 
     let mut handshake = Vec::new();
+    // Handshake packet ID: 0x00
+    write_varint(&mut handshake, 0);
+    // Protocol version: 47 (compatible with MC 1.8 through 1.21+)
     write_varint(&mut handshake, 47);
     write_string_prefixed(&mut handshake, host);
     handshake.extend_from_slice(&port.to_be_bytes());
+    // Next state: 1 (Status)
     write_varint(&mut handshake, 1);
+
     let mut packet = Vec::new();
     write_varint(&mut packet, handshake.len() as i32);
     packet.extend_from_slice(&handshake);
@@ -256,7 +264,7 @@ pub async fn ping_server(host: String, port: Option<u16>) -> Result<ServerInfo, 
     let started = std::time::Instant::now();
     let host_for_ping = clean_host.clone();
     let result = tokio::task::spawn_blocking(move || {
-        match modern_ping(&host_for_ping, clean_port, Duration::from_millis(2500)) {
+        match modern_ping(&host_for_ping, clean_port, Duration::from_millis(4000)) {
             Ok((motd, name, players_online, players_max, favicon, version, latency)) => Ok((
                 motd,
                 name,
@@ -267,7 +275,7 @@ pub async fn ping_server(host: String, port: Option<u16>) -> Result<ServerInfo, 
                 latency,
             )),
             Err(_) => {
-                legacy_ping(&host_for_ping, clean_port, Duration::from_millis(2500)).map(
+                legacy_ping(&host_for_ping, clean_port, Duration::from_millis(3000)).map(
                     |(motd, name, players_online, players_max, latency)| {
                         (motd, name, players_online, players_max, None, None, latency)
                     },

@@ -3,7 +3,6 @@ import type { AccountData, OmegaAccountState } from "../../types";
 import { User, Globe } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
 import "../../styles/screens.css";
-import "../../design-system/pixelPlates.css";
 
 interface AccountsScreenProps {
   onBack: () => void;
@@ -65,7 +64,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         <div className="screen-header-left">
           <button
             type="button"
-            className="screen-back-btn pixel-plate-dark"
+            className="screen-back-btn"
             onClick={onBack}
             title={lang === "uk" ? "Повернутися назад (Esc)" : lang === "ru" ? "Вернуться назад (Esc)" : "Go back (Esc)"}
           >
@@ -97,13 +96,13 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
             return (
               <div
                 key={acc.id}
-                className={`pixel-plate-dark ${isActive ? "active" : ""}`}
+                className={`account-card ${isActive ? "active" : ""}`}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
                   padding: "14px 20px",
-                  borderColor: isActive ? "var(--btn-kc-instance)" : undefined,
+                  borderColor: isActive ? "var(--accent-light, #3b82f6)" : undefined,
                   backgroundColor: isActive ? "rgba(32, 73, 117, 0.18)" : undefined,
                 }}
               >
@@ -118,7 +117,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                       alignItems: "center",
                       justifyContent: "center",
                       color: "var(--text-pure)",
-                      borderRadius: "0 4px 0 4px",
+                      borderRadius: "6px",
                     }}
                   >
                     {acc.type === "microsoft" ? <span style={{ fontWeight: 800, fontSize: "12px" }}>MS</span> : <User size={20} />}
@@ -144,7 +143,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   ) : (
                     <button
                       type="button"
-                      className="screen-back-btn pixel-plate-dark"
+                      className="screen-back-btn"
                       style={{ padding: "6px 16px", minHeight: "32px", fontSize: "12px" }}
                       onClick={() => onSelectAccount(acc)}
                     >
@@ -168,13 +167,13 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         </div>
 
         <div
-          className="pixel-plate-dark"
+          className="account-card"
           style={{
             padding: "20px",
             display: "flex",
             flexDirection: "column",
             gap: "14px",
-            borderColor: omegaAccount.isLinked ? "var(--btn-kc-default)" : undefined,
+            borderColor: omegaAccount.isLinked ? "var(--color-success, #22c55e)" : undefined,
             backgroundColor: "#080c14",
           }}
         >
@@ -213,7 +212,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 padding: "12px 16px",
                 background: "rgba(14, 20, 32, 0.8)",
                 border: "1px solid var(--border-medium)",
-                borderRadius: "0 6px 0 6px",
+                borderRadius: "6px",
               }}
             >
               <div>
@@ -237,7 +236,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               {hasBaseAccount ? (
                 <button
                   type="button"
-                  className="server-connect-btn pixel-plate-play"
+                  className="btn-primary"
                   onClick={onOpenOmegaLogin}
                 >
                   Войти в аккаунт Omega
@@ -246,7 +245,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 <button
                   type="button"
                   disabled
-                  className="server-connect-btn pixel-plate-play disabled"
+                  className="btn-primary disabled"
                 >
                   Вход в аккаунт Omega (недоступно)
                 </button>
@@ -260,7 +259,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
           )}
         </div>
 
-        <div className="pixel-plate-dark" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div className="account-card" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
           <h4 style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-pure)" }}>
             Добавить новый базовый аккаунт
           </h4>
@@ -269,7 +268,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
             <button
               type="button"
               disabled={isLoggingInMs}
-              className="screen-back-btn pixel-plate-dark"
+              className="screen-back-btn"
               style={{ padding: "10px 18px", color: "var(--text-accent)", minHeight: "40px" }}
               onClick={async () => {
                 if (!onLoginMicrosoft) return;
@@ -289,7 +288,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
             {onLoginEly && (
               <button
                 type="button"
-                className="screen-back-btn pixel-plate-dark"
+                className="screen-back-btn"
                 style={{ padding: "10px 18px", color: "#38bdf8", minHeight: "40px" }}
                 onClick={() => onLoginEly()}
               >
@@ -316,7 +315,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               />
               <button
                 type="submit"
-                className="server-connect-btn pixel-plate-play"
+                className="btn-primary"
                 style={{ padding: "10px 20px", minHeight: "42px" }}
               >
                 {lang === "uk" ? "+ Додати профіль" : lang === "ru" ? "+ Добавить профиль" : "+ Add Profile"}

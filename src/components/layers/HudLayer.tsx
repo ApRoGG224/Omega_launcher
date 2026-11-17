@@ -31,7 +31,6 @@ import {
   type TopBarItemId,
   DEFAULT_TOPBAR_LAYOUT,
 } from "../../constants/launcherLayout";
-import "../../design-system/pixelPlates.css";
 import { rgbaString, computePanelTheme } from "../../utils/colorUtils";
 import "../../styles/layer2-hud.css";
 

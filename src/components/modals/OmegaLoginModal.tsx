@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import "../../design-system/pixelPlates.css";
 import "../../styles/layer4-modals.css";
 
 interface OmegaLoginModalProps {
@@ -46,7 +45,7 @@ export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
           </div>
           <button
             type="button"
-            className="btn-icon pixel-plate-dark"
+            className="btn-icon"
             style={{ width: "32px", height: "32px", minHeight: "32px", padding: 0, fontSize: "14px", fontWeight: 900 }}
             onClick={onClose}
             title="Закрыть"
@@ -60,7 +59,7 @@ export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
             padding: "10px 14px",
             background: "rgba(37, 99, 235, 0.1)",
             border: "1px solid rgba(96, 165, 250, 0.28)",
-            borderRadius: "0 6px 0 6px",
+            borderRadius: "6px",
             fontSize: "12px",
             color: "var(--text-secondary)",
             lineHeight: 1.4,
@@ -77,7 +76,7 @@ export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
               backgroundColor: "rgba(239, 68, 68, 0.12)",
               border: "1px solid rgba(239, 68, 68, 0.3)",
               padding: "8px 12px",
-              borderRadius: "0 6px 0 6px",
+              borderRadius: "6px",
               fontSize: "12px",
               fontWeight: 700,
             }}
