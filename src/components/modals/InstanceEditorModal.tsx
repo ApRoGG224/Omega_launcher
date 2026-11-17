@@ -1820,15 +1820,23 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
 
         {/* Footer */}
         <div className="inst-editor-footer">
-          <button type="button" className="inst-footer-btn-close" onClick={onClose}>
-            Закрыть
-          </button>
-          {activeTab === "settings" && (
-            <button type="button" className="inst-footer-btn-save" onClick={handleSaveConfig}>
-              <Check size={14} />
-              <span>Сохранить параметры</span>
+          <div className="inst-footer-info">
+            {activeTab === "mods" && <span>Всего модов: {mods.length} (Включено: {mods.filter((m) => m.enabled).length})</span>}
+            {activeTab === "resourcepacks" && <span>Всего ресурс-паков: {resourcePacks.length}</span>}
+            {activeTab === "shaders" && <span>Всего шейдеров: {shaders.length}</span>}
+            {activeTab === "worlds" && <span>Всего миров: {worlds.length}</span>}
+          </div>
+          <div className="inst-footer-actions">
+            {activeTab === "settings" && (
+              <button type="button" className="inst-footer-btn-save" onClick={handleSaveConfig}>
+                <Check size={14} />
+                <span>Сохранить параметры</span>
+              </button>
+            )}
+            <button type="button" className="inst-footer-btn-close" onClick={onClose}>
+              Закрыть
             </button>
-          )}
+          </div>
         </div>
 
         {/* Context Menu (Screenshot 1) */}

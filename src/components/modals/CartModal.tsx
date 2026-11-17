@@ -180,9 +180,6 @@ export const CartModal: React.FC<CartModalProps> = ({
         {/* Header */}
         <div className="cart-modal-header">
           <div className="cart-modal-title-wrap">
-            <div className="cart-modal-header-icon">
-              <IsometricCube size={24} variant="grass" />
-            </div>
             <div className="cart-modal-title-col">
               <h2 className="cart-modal-title">{titleText}</h2>
               {selectedInstance && (
@@ -244,7 +241,6 @@ export const CartModal: React.FC<CartModalProps> = ({
         <div className="cart-modal-list">
           {items.length === 0 ? (
             <div className="cart-empty-state">
-              <IsometricCube size={40} variant="stone" />
               <span>
                 {lang === "uk"
                   ? "Черга порожня. Натисніть «+ Встановити» на будь-якому моді, шейдері або текстурах у каталозі!"
@@ -415,16 +411,13 @@ export const CartModal: React.FC<CartModalProps> = ({
                   </span>
                 </>
               ) : (
-                <>
-                  <IsometricCube size={16} variant="grass" />
-                  <span>
-                    {lang === "uk"
-                      ? `Встановити в збірку (${checkedCount})`
-                      : lang === "ru"
-                      ? `Установить в сборку (${checkedCount})`
-                      : `Install (${checkedCount})`}
-                  </span>
-                </>
+                <span>
+                  {lang === "uk"
+                    ? `Встановити в збірку (${checkedCount})`
+                    : lang === "ru"
+                    ? `Установить в сборку (${checkedCount})`
+                    : `Install (${checkedCount})`}
+                </span>
               )}
             </button>
           </div>

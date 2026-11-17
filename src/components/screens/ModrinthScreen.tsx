@@ -715,7 +715,6 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
               onClick={() => setIsCartOpen(true)}
               title={lang === "uk" ? "Відкрити чергу встановлення" : lang === "ru" ? "Открыть очередь установки" : "Open install queue"}
             >
-              <IsometricCube size={18} variant="grass" />
               <span>{lang === "uk" ? "До встановлення" : lang === "ru" ? "К установке" : "To install"}</span>
               <span className="cat-queue-badge">{cartItems.length}</span>
             </button>
@@ -797,20 +796,6 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
           </div>
         )}
       </div>
-
-      {/* Floating Queue Badge Button when >= 1 item selected */}
-      {cartItems.length > 0 && (
-        <button
-          type="button"
-          className="catalog-floating-queue-pill"
-          onClick={() => setIsCartOpen(true)}
-          title={lang === "uk" ? "Черга встановлення" : lang === "ru" ? "Очередь установки" : "Install queue"}
-        >
-          <IsometricCube size={18} variant="grass" />
-          <span>{lang === "uk" ? "Встановити" : lang === "ru" ? "Установить" : "Install"}</span>
-          <span className="queue-pill-badge">{cartItems.length}</span>
-        </button>
-      )}
 
       {/* Cart Modal */}
       <CartModal
