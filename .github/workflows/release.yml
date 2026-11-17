@@ -2,14 +2,32 @@ name: release
 
 on:
   push:
-    tags: ["v*"]
+    tags: ["v*", "app-v*"]
+  workflow_dispatch:
 
 jobs:
   build:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - platform: 'macos-latest'
+            args: '--target aarch64-apple-darwin'
+            target: 'aarch64-apple-darwin'
+            name: 'macos-arm64'
+          - platform: 'macos-latest'
+            args: '--target x86_64-apple-darwin'
+            target: 'x86_64-apple-darwin'
+            name: 'macos-x64'
+          - platform: 'ubuntu-22.04'
+            args: ''
+            target: ''
+            name: 'linux'
+          - platform: 'windows-latest'
+            args: ''
+            target: ''
+            name: 'windows'
+
     runs-on: ${{ matrix.platform }}
     permissions:
       contents: write
@@ -17,31 +35,52 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Linux dependencies
-        if: matrix.platform == 'ubuntu-latest'
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
 
       - uses: swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
+          workspaces: |
+            .
+            src-tauri
 
       - run: npm ci
 
-      - name: Create release
+      - name: Build and Release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "Omega Launcher ${{ github.ref_name }}"
-          releaseBody: "Скачать установщик для своей платформы."
+          tagName: app-v__VERSION__
+          releaseName: "Omega Launcher v__VERSION__"
+          releaseBody: "Сборка для Linux, Windows и macOS."
           draft: true
           prerelease: false
+          args: ${{ matrix.args }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: omega-launcher-${{ matrix.name }}
+          path: |
+            target/release/bundle/deb/*.deb
+            target/release/bundle/appimage/*.AppImage
+            target/release/bundle/nsis/*.exe
+            target/release/bundle/msi/*.msi
+            target/release/bundle/dmg/*.dmg
+            target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+            target/release/bundle/macos/*.app
+            target/${{ matrix.target }}/release/bundle/macos/*.app
+          if-no-files-found: ignore
