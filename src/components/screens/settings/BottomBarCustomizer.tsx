@@ -5,7 +5,9 @@ import {
   DEFAULT_BOTTOMBAR_LAYOUT,
   DEFAULT_BOTTOMBAR_ALIGNMENT,
   BOTTOMBAR_ITEMS_META,
+  getBottomBarItemMeta,
 } from "../../../constants/launcherLayout";
+import { useLanguage } from "../../../context/LanguageContext";
 import {
   RotateCcw,
   ChevronLeft,
@@ -38,6 +40,7 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
   selectedInstance,
   onFeedback,
 }) => {
+  const { t, lang } = useLanguage();
   const [draftLayout, setDraftLayout] = useState<BottomBarItemId[]>(() => [...layout]);
   const [draftAlignment, setDraftAlignment] = useState<BottomBarAlignment>(() => alignment);
   const [selectedId, setSelectedId] = useState<BottomBarItemId | null>(null);
@@ -275,9 +278,12 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
   return (
     <div className="customizer-container customizer-rounded-theme">
       <div>
-        <h2>Настройка нижней панели (Кнопка «Играть»)</h2>
+        <h2>{t("bottombarCustomizerTitle", "Налаштування нижньої панелі (Кнопка «Грати»)")}</h2>
         <div className="customizer-sub">
-          Нажимайте на стрелки или перетаскивайте для автоматического перемещения блоков. Нажмите правой кнопкой мыши или Delete для удаления блока.
+          {t(
+            "bottombarCustomizerSub",
+            "Натискайте на стрілки або перетягуйте для автоматичного переміщення блоків. Натисніть правою кнопкою миші або Delete для видалення блоку."
+          )}
         </div>
       </div>
 
@@ -285,10 +291,10 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
         <div className="customizer-preview-header">
           <div className="customizer-preview-title">
             <Sparkles size={14} />
-            <span>Предварительный просмотр нижней карточки</span>
+            <span>{t("bottombarPreviewTitle", "Попередній перегляд нижньої картки")}</span>
           </div>
           <span className="customizer-preview-hint">
-            ПКМ или Delete — удалить блок | Клик или стрелки — автоперемещение
+            {t("bottombarPreviewHint", "ПКМ або Delete — видалити блок | Клік або стрілки — автопереміщення")}
           </span>
         </div>
 
@@ -309,7 +315,7 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
               const renderBlock = (id: BottomBarItemId, index: number) => {
                 const isSelected = selectedId === id;
                 const isDragging = draggingIdx === index;
-                const meta = BOTTOMBAR_ITEMS_META[id] || { title: id, description: "" };
+                const meta = getBottomBarItemMeta(id, lang);
 
                 return (
                   <div
@@ -340,7 +346,7 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
                         nudgeItem(index, 1);
                       }
                     }}
-                    title={`${meta.title} (Кликните для выбора, стрелки ◀/▶ для сдвига, ПКМ для удаления)`}
+                    title={`${meta.title} ${t("blockHoverHint", "(Клікніть для вибору, стрілки ◀/▶ для зсуву, ПКМ для видалення)")}`}
                   >
                     <div className="customizer-dock-item-controls">
                       <button
@@ -351,7 +357,7 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
                           e.stopPropagation();
                           nudgeItem(index, -1);
                         }}
-                        title="Сдвинуть влево"
+                        title={t("itemNudgeLeft", "Зсунути вліво")}
                       >
                         <ChevronLeft size={12} />
                       </button>
@@ -363,7 +369,7 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
                           e.stopPropagation();
                           deleteItem(id);
                         }}
-                        title="Удалить этот блок (ПКМ / Delete)"
+                        title={t("blockDeleteTooltip", "Видалити цей блок (ПКМ / Delete)")}
                       >
                         <Trash2 size={11} />
                       </button>
@@ -376,7 +382,7 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
                           e.stopPropagation();
                           nudgeItem(index, 1);
                         }}
-                        title="Сдвинуть вправо"
+                        title={t("itemNudgeRight", "Зсунути вправо")}
                       >
                         <ChevronRight size={12} />
                       </button>
@@ -424,8 +430,8 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
         {selectedId && (
           <div className="customizer-active-item-bar">
             <div className="customizer-active-label">
-              <span className="customizer-active-tag">Выбран блок:</span>
-              <span className="customizer-active-name">{BOTTOMBAR_ITEMS_META[selectedId]?.title || selectedId}</span>
+              <span className="customizer-active-tag">{t("blockSelectedLabel", "Обрано блок:")}</span>
+              <span className="customizer-active-name">{getBottomBarItemMeta(selectedId, lang).title || selectedId}</span>
             </div>
             <div className="customizer-active-actions">
               <button
@@ -436,10 +442,10 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
                   const idx = draftLayout.indexOf(selectedId);
                   if (idx > 0) nudgeItem(idx, -1);
                 }}
-                title="Сдвинуть влево"
+                title={t("itemNudgeLeft", "Зсунути вліво")}
               >
                 <ChevronLeft size={14} />
-                <span>Влево</span>
+                <span>{t("itemNudgeLeftBtn", "Вліво")}</span>
               </button>
 
               <button
@@ -450,9 +456,9 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
                   const idx = draftLayout.indexOf(selectedId);
                   if (idx !== -1 && idx < draftLayout.length - 1) nudgeItem(idx, 1);
                 }}
-                title="Сдвинуть вправо"
+                title={t("itemNudgeRight", "Зсунути вправо")}
               >
-                <span>Вправо</span>
+                <span>{t("itemNudgeRightBtn", "Вправо")}</span>
                 <ChevronRight size={14} />
               </button>
 
@@ -460,19 +466,19 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
                 type="button"
                 className="customizer-active-btn customizer-active-delete"
                 onClick={() => deleteItem(selectedId)}
-                title="Удалить этот блок (Delete / Backspace / ПКМ)"
+                title={t("blockDeleteTooltip", "Видалити цей блок (Delete / Backspace / ПКМ)")}
               >
                 <Trash2 size={13} />
-                <span>Удалить (Del / ПКМ)</span>
+                <span>{t("itemDeleteBtn", "Видалити (Del / ПКМ)")}</span>
               </button>
 
               <button
                 type="button"
                 className="customizer-active-btn customizer-active-deselect"
                 onClick={() => setSelectedId(null)}
-                title="Снять выделение"
+                title={t("itemDeselectBtn", "Зняти виділення")}
               >
-                <span>Снять выделение</span>
+                <span>{t("itemDeselectBtn", "Зняти виділення")}</span>
               </button>
             </div>
           </div>
@@ -485,24 +491,24 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
             type="button"
             className="customizer-rounded-btn customizer-save-btn"
             onClick={handleSave}
-            title="Сохранить изменения нижней панели"
+            title={t("bottombarSaveTooltip", "Зберегти зміни нижньої панелі")}
           >
             <Check size={16} />
-            <span>Сохранить изменения</span>
+            <span>{t("saveChangesBtn", "Зберегти зміни")}</span>
           </button>
 
           <button
             type="button"
             className="customizer-rounded-btn customizer-reset-btn"
             onClick={handleReset}
-            title="Сбросить порядок и вернуть все удаленные блоки"
+            title={t("bottombarResetTooltip", "Скинути порядок і повернути всі видалені блоки")}
           >
             <RotateCcw size={14} />
-            <span>Сбросить по умолчанию</span>
+            <span>{t("resetDefaultBtn", "Скинути за замовчуванням")}</span>
           </button>
 
           {hasUnsavedChanges && (
-            <span className="customizer-dirty-badge">Есть несохраненные изменения</span>
+            <span className="customizer-dirty-badge">{t("unsavedChangesBadge", "Є незбережені зміни")}</span>
           )}
         </div>
 
@@ -515,7 +521,7 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
               setDraftAlignment("center");
             }}
           >
-            По умолчанию
+            {t("presetDefault", "За замовчуванням")}
           </button>
           <button
             type="button"
@@ -525,7 +531,7 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
               setDraftAlignment("center");
             }}
           >
-            Играть слева
+            {t("presetCompact", "Компактна")}
           </button>
         </div>
       </div>
@@ -533,18 +539,18 @@ export const BottomBarCustomizer: React.FC<BottomBarCustomizerProps> = ({
       {deletedItems.length > 0 && (
         <div className="customizer-deleted-shelf">
           <div className="customizer-deleted-header">
-            <span>Удаленные блоки (нажмите для возврата в панель):</span>
+            <span>{t("deletedBlocksShelfTitle", "Видалені блоки (натисніть для повернення):")}</span>
           </div>
           <div className="customizer-deleted-items">
             {deletedItems.map((id) => {
-              const meta = BOTTOMBAR_ITEMS_META[id] || { title: id, description: "" };
+              const meta = getBottomBarItemMeta(id, lang);
               return (
                 <button
                   key={`restore-bottom-${id}`}
                   type="button"
                   className="customizer-restore-chip"
                   onClick={() => restoreItem(id)}
-                  title={`Вернуть «${meta.title}» в панель`}
+                  title={`${t("restoreBlockTooltip", "Повернути в картку")}: «${meta.title}»`}
                 >
                   <Plus size={13} />
                   <span>{meta.title}</span>

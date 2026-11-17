@@ -477,7 +477,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
       setInstallState("idle");
       setProgress(0);
       const errMsg = err instanceof Error ? err.message : String(err);
-      setError(errMsg || "Ошибка распаковки архива");
+      setError(errMsg || (lang === "uk" ? "Помилка розпакування архіву" : lang === "ru" ? "Ошибка распаковки архива" : "Archive extraction error"));
     } finally {
       if (unlistenProgress) {
         unlistenProgress();

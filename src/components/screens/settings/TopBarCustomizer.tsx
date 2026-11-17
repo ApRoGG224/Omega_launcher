@@ -3,7 +3,9 @@ import {
   type TopBarItemId,
   DEFAULT_TOPBAR_LAYOUT,
   TOPBAR_ITEMS_META,
+  getTopBarItemMeta,
 } from "../../../constants/launcherLayout";
+import { useLanguage } from "../../../context/LanguageContext";
 import {
   RotateCcw,
   ChevronLeft,
@@ -54,6 +56,7 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
   topBarCustomization,
   onOpenCustomizer,
 }) => {
+  const { t, lang } = useLanguage();
   const [draftLayout, setDraftLayout] = useState<TopBarItemId[]>(() => [...layout]);
   const [selectedId, setSelectedId] = useState<TopBarItemId | null>(null);
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
@@ -306,9 +309,12 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
     <div className="customizer-container customizer-rounded-theme">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
         <div>
-          <h2>Настройка верхней панели навигации</h2>
+          <h2>{t("topbarCustomizerTitle", "Налаштування верхньої панелі навігації")}</h2>
           <div className="customizer-sub">
-            Нажимайте на стрелки или перетаскивайте для автоматического перемещения. Нажмите правой кнопкой мыши или Delete для удаления любого элемента.
+            {t(
+              "topbarCustomizerSub",
+              "Натискайте на стрілки або перетягуйте для автоматичного переміщення. Натисніть правою кнопкою миші або Delete для видалення будь-якого елемента."
+            )}
           </div>
         </div>
 
@@ -317,10 +323,10 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
             type="button"
             className={`catalog-customizer-btn ${topBarCustomization?.enabled ? "active" : ""}`}
             onClick={onOpenCustomizer}
-            title="Настроить цвет, интенсивность и текстуру панели"
+            title={t("styleCustomizationTitle", "Налаштувати колір, інтенсивність та текстуру панелі")}
           >
             <Palette size={14} />
-            <span>Кастомизация стиля</span>
+            <span>{t("styleCustomizationBtn", "Кастомізація стилю")}</span>
             {topBarCustomization?.enabled && (
               <span style={{ fontSize: "11px", opacity: 0.85 }}>({topBarCustomization.intensity}%)</span>
             )}
@@ -332,10 +338,10 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
         <div className="customizer-preview-header">
           <div className="customizer-preview-title">
             <Sparkles size={14} />
-            <span>Предварительный просмотр верхней панели</span>
+            <span>{t("topbarPreviewTitle", "Попередній перегляд верхньої панелі")}</span>
           </div>
           <span className="customizer-preview-hint">
-            ПКМ или Delete — удалить элемент | Клик или стрелки — автоперемещение
+            {t("topbarPreviewHint", "ПКМ або Delete — видалити елемент | Клік або стрілки — автопереміщення")}
           </span>
         </div>
 
@@ -346,39 +352,39 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
             style={
               topBarCustomization?.enabled
                 ? (() => {
-                    const t = computePanelTheme(
+                    const ct = computePanelTheme(
                       topBarCustomization.color,
                       topBarCustomization.intensity,
                       topBarCustomization.patternIntensity,
                       topBarCustomization.mode
                     );
                     return {
-                      backgroundColor: t.panelBg,
-                      borderColor: t.panelBorder,
-                      ["--custom-topbar-bg" as any]: t.panelBg,
-                      ["--custom-topbar-border" as any]: t.panelBorder,
-                      ["--custom-topbar-pattern" as any]: t.panelPattern,
-                      ["--custom-topbar-pattern-size" as any]: t.panelPatternSize,
-                      ["--custom-topbar-pattern-pos" as any]: t.panelPatternPosition,
-                      ["--custom-topbar-pattern-opacity" as any]: t.panelPatternOpacity,
-                      ["--custom-topbar-btn-bg" as any]: t.itemBg,
-                      ["--custom-topbar-btn-border" as any]: t.itemBorder,
-                      ["--custom-topbar-btn-hover" as any]: t.itemHover,
-                      ["--custom-topbar-btn-active" as any]: t.itemActive,
-                      ["--custom-topbar-btn-play" as any]: t.itemPlay,
-                      ["--custom-topbar-btn-active-border" as any]: t.itemActiveBorder,
-                      ["--custom-topbar-accent" as any]: t.accentColor,
+                      backgroundColor: ct.panelBg,
+                      borderColor: ct.panelBorder,
+                      ["--custom-topbar-bg" as any]: ct.panelBg,
+                      ["--custom-topbar-border" as any]: ct.panelBorder,
+                      ["--custom-topbar-pattern" as any]: ct.panelPattern,
+                      ["--custom-topbar-pattern-size" as any]: ct.panelPatternSize,
+                      ["--custom-topbar-pattern-pos" as any]: ct.panelPatternPosition,
+                      ["--custom-topbar-pattern-opacity" as any]: ct.panelPatternOpacity,
+                      ["--custom-topbar-btn-bg" as any]: ct.itemBg,
+                      ["--custom-topbar-btn-border" as any]: ct.itemBorder,
+                      ["--custom-topbar-btn-hover" as any]: ct.itemHover,
+                      ["--custom-topbar-btn-active" as any]: ct.itemActive,
+                      ["--custom-topbar-btn-play" as any]: ct.itemPlay,
+                      ["--custom-topbar-btn-active-border" as any]: ct.itemActiveBorder,
+                      ["--custom-topbar-accent" as any]: ct.accentColor,
                     };
                   })()
                 : undefined
             }
-            aria-label="Интерактивная панель"
+            aria-label="Interactive Navigation Bar"
           >
             {draftLayout.map((id, index) => {
               const isSelected = selectedId === id;
               const isDragging = draggingIdx === index;
               const isDivider = id.startsWith("divider_");
-              const meta = TOPBAR_ITEMS_META[id] || { title: id, description: "" };
+              const meta = getTopBarItemMeta(id, lang);
 
               return (
                 <div
@@ -407,7 +413,7 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
                       nudgeItem(index, 1);
                     }
                   }}
-                  title={`${meta.title} (Кликните для выбора, стрелки ◀/▶ для сдвига, ПКМ для удаления)`}
+                  title={`${meta.title} ${t("itemHoverHint", "(Клікніть для вибору, стрілки ◀/▶ для зсуву, ПКМ для видалення)")}`}
                 >
                   <div className="customizer-dock-item-controls">
                     <button
@@ -418,7 +424,7 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
                         e.stopPropagation();
                         nudgeItem(index, -1);
                       }}
-                      title="Сдвинуть влево"
+                      title={t("itemNudgeLeft", "Зсунути вліво")}
                     >
                       <ChevronLeft size={12} />
                     </button>
@@ -430,7 +436,7 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
                         e.stopPropagation();
                         deleteItem(id);
                       }}
-                      title="Удалить этот элемент (ПКМ / Delete)"
+                      title={t("itemDeleteTooltip", "Видалити цей елемент (ПКМ / Delete)")}
                     >
                       <Trash2 size={11} />
                     </button>
@@ -443,7 +449,7 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
                         e.stopPropagation();
                         nudgeItem(index, 1);
                       }}
-                      title="Сдвинуть вправо"
+                      title={t("itemNudgeRight", "Зсунути вправо")}
                     >
                       <ChevronRight size={12} />
                     </button>
@@ -461,8 +467,8 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
         {selectedId && (
           <div className="customizer-active-item-bar">
             <div className="customizer-active-label">
-              <span className="customizer-active-tag">Выбран элемент:</span>
-              <span className="customizer-active-name">{TOPBAR_ITEMS_META[selectedId]?.title || selectedId}</span>
+              <span className="customizer-active-tag">{t("itemSelectedLabel", "Обрано елемент:")}</span>
+              <span className="customizer-active-name">{getTopBarItemMeta(selectedId, lang).title || selectedId}</span>
             </div>
             <div className="customizer-active-actions">
               <button
@@ -473,10 +479,10 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
                   const idx = draftLayout.indexOf(selectedId);
                   if (idx > 0) nudgeItem(idx, -1);
                 }}
-                title="Сдвинуть влево"
+                title={t("itemNudgeLeft", "Зсунути вліво")}
               >
                 <ChevronLeft size={14} />
-                <span>Влево</span>
+                <span>{t("itemNudgeLeftBtn", "Вліво")}</span>
               </button>
 
               <button
@@ -487,9 +493,9 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
                   const idx = draftLayout.indexOf(selectedId);
                   if (idx !== -1 && idx < draftLayout.length - 1) nudgeItem(idx, 1);
                 }}
-                title="Сдвинуть вправо"
+                title={t("itemNudgeRight", "Зсунути вправо")}
               >
-                <span>Вправо</span>
+                <span>{t("itemNudgeRightBtn", "Вправо")}</span>
                 <ChevronRight size={14} />
               </button>
 
@@ -497,19 +503,19 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
                 type="button"
                 className="customizer-active-btn customizer-active-delete"
                 onClick={() => deleteItem(selectedId)}
-                title="Удалить этот элемент (Delete / Backspace / ПКМ)"
+                title={t("itemDeleteTooltip", "Видалити цей елемент (Delete / Backspace / ПКМ)")}
               >
                 <Trash2 size={13} />
-                <span>Удалить (Del / ПКМ)</span>
+                <span>{t("itemDeleteBtn", "Видалити (Del / ПКМ)")}</span>
               </button>
 
               <button
                 type="button"
                 className="customizer-active-btn customizer-active-deselect"
                 onClick={() => setSelectedId(null)}
-                title="Снять выделение"
+                title={t("itemDeselectBtn", "Зняти виділення")}
               >
-                <span>Снять выделение</span>
+                <span>{t("itemDeselectBtn", "Зняти виділення")}</span>
               </button>
             </div>
           </div>
@@ -522,24 +528,24 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
             type="button"
             className="customizer-rounded-btn customizer-save-btn"
             onClick={handleSave}
-            title="Сохранить изменения верхней панели"
+            title={t("topbarSaveTooltip", "Зберегти зміни верхньої панелі")}
           >
             <Check size={16} />
-            <span>Сохранить изменения</span>
+            <span>{t("saveChangesBtn", "Зберегти зміни")}</span>
           </button>
 
           <button
             type="button"
             className="customizer-rounded-btn customizer-reset-btn"
             onClick={handleReset}
-            title="Сбросить порядок и вернуть все удаленные элементы"
+            title={t("topbarResetTooltip", "Скинути порядок і повернути всі видалені елементи")}
           >
             <RotateCcw size={14} />
-            <span>Сбросить по умолчанию</span>
+            <span>{t("resetDefaultBtn", "Скинути за замовчуванням")}</span>
           </button>
 
           {hasUnsavedChanges && (
-            <span className="customizer-dirty-badge">Есть несохраненные изменения</span>
+            <span className="customizer-dirty-badge">{t("unsavedChangesBadge", "Є незбережені зміни")}</span>
           )}
         </div>
 
@@ -551,7 +557,7 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
               setDraftLayout([...DEFAULT_TOPBAR_LAYOUT]);
             }}
           >
-            По умолчанию
+            {t("presetDefault", "За замовчуванням")}
           </button>
           <button
             type="button"
@@ -561,7 +567,7 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
               setDraftLayout(["play", "profile", "divider_profile", ...filtered]);
             }}
           >
-            Играть первой
+            {t("presetPlayFirst", "Грати першою")}
           </button>
           <button
             type="button"
@@ -570,7 +576,7 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
               setDraftLayout(draftLayout.filter((id) => !id.startsWith("divider_")));
             }}
           >
-            Без разделителей
+            {t("presetNoDividers", "Без роздільників")}
           </button>
         </div>
       </div>
@@ -578,18 +584,18 @@ export const TopBarCustomizer: React.FC<TopBarCustomizerProps> = ({
       {deletedItems.length > 0 && (
         <div className="customizer-deleted-shelf">
           <div className="customizer-deleted-header">
-            <span>Удаленные элементы (нажмите для возврата в панель):</span>
+            <span>{t("deletedItemsShelfTitle", "Видалені елементи (натисніть для повернення в панель):")}</span>
           </div>
           <div className="customizer-deleted-items">
             {deletedItems.map((id) => {
-              const meta = TOPBAR_ITEMS_META[id] || { title: id, description: "" };
+              const meta = getTopBarItemMeta(id, lang);
               return (
                 <button
                   key={`restore-${id}`}
                   type="button"
                   className="customizer-restore-chip"
                   onClick={() => restoreItem(id)}
-                  title={`Вернуть «${meta.title}» в панель`}
+                  title={`${t("restoreItemTooltip", "Повернути в панель")}: «${meta.title}»`}
                 >
                   <Plus size={13} />
                   <span>{meta.title}</span>

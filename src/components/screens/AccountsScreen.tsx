@@ -20,6 +20,13 @@ interface AccountsScreenProps {
 
 const MINECRAFT_NICK_REGEX = /^[a-zA-Z0-9_]{3,16}$/;
 
+
+const tr = (lang: string, uk: string, ru: string, en: string): string => {
+  if (lang === "uk") return uk;
+  if (lang === "en") return en;
+  return ru;
+};
+
 export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   onBack,
   activeAccount,
@@ -184,21 +191,21 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               </div>
               <div>
                 <h4 style={{ fontSize: "15px", fontWeight: 800, color: "var(--text-pure)" }}>
-                  Сетевой аккаунт Omega (Совместная игра с друзьями)
+                  {tr(lang, "Мережевий акаунт Omega (Спільна гра з друзями)", "Сетевой аккаунт Omega (Совместная игра с друзьями)", "Omega Network Account (Play with Friends)")}
                 </h4>
                 <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>
-                  Связывает базовый профиль ({activeAccount?.name ?? "Гость"}) с облаком Omega для поиска друзей, лобби и совместной игры
+                  {tr(lang, "Зв'язує базовий профіль", "Связывает базовый профиль", "Links base profile")} ({activeAccount?.name ?? tr(lang, "Гість", "Гость", "Guest")}) {tr(lang, "із хмарою Omega для пошуку друзів, лобі та спільної гри", "с облаком Omega для поиска друзей, лобби и совместной игры", "with Omega cloud for finding friends, lobbies and playing together")}
                 </p>
               </div>
             </div>
 
             {omegaAccount.isLinked ? (
               <span style={{ color: "var(--color-success)", fontWeight: 800, fontSize: "12px" }}>
-                Подключен (@{omegaAccount.omegaUsername})
+                {tr(lang, "Підключено", "Подключен", "Connected")} (@{omegaAccount.omegaUsername})
               </span>
             ) : (
               <span style={{ color: "var(--text-muted)", fontWeight: 700, fontSize: "11px" }}>
-                Не привязан
+                {tr(lang, "Не прив'язано", "Не привязан", "Not Linked")}
               </span>
             )}
           </div>
@@ -217,10 +224,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
             >
               <div>
                 <span style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-pure)" }}>
-                  Аккаунт Omega: @{omegaAccount.omegaUsername}
+                  {tr(lang, "Акаунт Omega:", "Аккаунт Omega:", "Omega Account:")} @{omegaAccount.omegaUsername}
                 </span>
                 <span style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginTop: "2px" }}>
-                  Привязан к игровому профилю: <strong>{activeAccount?.name ?? "Гость"}</strong>
+                  {tr(lang, "Прив'язано до ігрового профілю:", "Привязан к игровому профилю:", "Linked to gaming profile:")} <strong>{activeAccount?.name ?? tr(lang, "Гість", "Гость", "Guest")}</strong>
                 </span>
               </div>
               <button
@@ -228,7 +235,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 className="btn-delete"
                 onClick={onUnlinkOmega}
               >
-                Отвязать аккаунт
+                {tr(lang, "Відв'язати акаунт", "Отвязать аккаунт", "Unlink Account")}
               </button>
             </div>
           ) : (
@@ -239,7 +246,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   className="btn-primary"
                   onClick={onOpenOmegaLogin}
                 >
-                  Войти в аккаунт Omega
+                  {tr(lang, "Увійти в акаунт Omega", "Войти в аккаунт Omega", "Sign in to Omega Account")}
                 </button>
               ) : (
                 <button
@@ -247,13 +254,13 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   disabled
                   className="btn-primary disabled"
                 >
-                  Вход в аккаунт Omega (недоступно)
+                  {tr(lang, "Вхід в акаунт Omega (недоступно)", "Вход в аккаунт Omega (недоступно)", "Sign in to Omega (unavailable)")}
                 </button>
               )}
               <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                 {hasBaseAccount
-                  ? `Готово к подключению. Будет связан с текущим профилем: ${activeAccount?.name ?? "Гость"}`
-                  : "Сначала войдите в аккаунт Microsoft или Офлайн профиль"}
+                  ? `${tr(lang, "Готово до підключення. Буде пов'язано з поточним профілем:", "Готово к подключению. Будет связан с текущим профилем:", "Ready to connect. Will be linked to current profile:")} ${activeAccount?.name ?? tr(lang, "Гість", "Гость", "Guest")}`
+                  : tr(lang, "Спочатку увійдіть в акаунт Microsoft або Офлайн профіль", "Сначала войдите в аккаунт Microsoft или Офлайн профиль", "First sign in to a Microsoft account or Offline profile")}
               </span>
             </div>
           )}
@@ -261,7 +268,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
 
         <div className="account-card" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
           <h4 style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-pure)" }}>
-            Добавить новый базовый аккаунт
+            {tr(lang, "Додати новий базовий акаунт", "Добавить новый базовый аккаунт", "Add New Base Account")}
           </h4>
 
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>

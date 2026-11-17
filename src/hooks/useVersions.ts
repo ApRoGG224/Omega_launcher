@@ -15,27 +15,29 @@ export function getVersionTag(
   id: string,
   type: string,
   latestRelease?: string,
-  latestSnapshot?: string
+  latestSnapshot?: string,
+  lang: string = "ru"
 ): string {
-  if (latestRelease && id === latestRelease) return "ПОСЛЕДНИЙ РЕЛИЗ";
-  if (latestSnapshot && id === latestSnapshot) return "НОВЫЙ СНАПШОТ";
-  if (id === "1.21.4") return "СВЕЖИЙ РЕЛИЗ";
-  if (id === "1.20.1") return "СТАБИЛЬНАЯ";
-  if (id === "1.19.4") return "РЕЛИЗ";
+  const tr = (uk: string, ru: string, en: string) => (lang === "uk" ? uk : lang === "en" ? en : ru);
+  if (latestRelease && id === latestRelease) return tr("ОСТАННІЙ РЕЛІЗ", "ПОСЛЕДНИЙ РЕЛИЗ", "LATEST RELEASE");
+  if (latestSnapshot && id === latestSnapshot) return tr("НОВИЙ СНАПШОТ", "НОВЫЙ СНАПШОТ", "NEW SNAPSHOT");
+  if (id === "1.21.4") return tr("СВІЖИЙ РЕЛІЗ", "СВЕЖИЙ РЕЛИЗ", "FRESH RELEASE");
+  if (id === "1.20.1") return tr("СТАБІЛЬНА", "СТАБИЛЬНАЯ", "STABLE");
+  if (id === "1.19.4") return tr("РЕЛІЗ", "РЕЛИЗ", "RELEASE");
   if (id === "1.18.2") return "CAVES & CLIFFS";
-  if (id === "1.16.5") return "NETHER КЛАССИКА";
+  if (id === "1.16.5") return tr("NETHER КЛАСИКА", "NETHER КЛАССИКА", "NETHER CLASSIC");
   if (id === "1.12.2") return "FORGE LEGACY";
-  if (id === "1.8.9") return "PVP КЛАССИКА";
-  if (id === "1.8") return "PVP РЕЛИЗ";
-  if (id === "1.7.10") return "КЛАССИКА МОДОВ";
+  if (id === "1.8.9") return tr("PVP КЛАСИКА", "PVP КЛАССИКА", "PVP CLASSIC");
+  if (id === "1.8") return tr("PVP РЕЛІЗ", "PVP РЕЛИЗ", "PVP RELEASE");
+  if (id === "1.7.10") return tr("КЛАСИКА МОДІВ", "КЛАССИКА МОДОВ", "MODS CLASSIC");
   if (id === "1.5.2") return "GOLDEN AGE";
-  if (id === "1.2.5") return "РЕТРО 1.2";
+  if (id === "1.2.5") return tr("РЕТРО 1.2", "РЕТРО 1.2", "RETRO 1.2");
   if (id === "1.0") return "RELEASE 1.0";
-  if (type === "release") return "РЕЛИЗ";
-  if (type === "snapshot") return "СНАПШОТ";
+  if (type === "release") return tr("РЕЛІЗ", "РЕЛИЗ", "RELEASE");
+  if (type === "snapshot") return tr("СНАПШОТ", "СНАПШОТ", "SNAPSHOT");
   if (type === "old_beta") return "BETA";
   if (type === "old_alpha") return "ALPHA";
-  return "ВЕРСИЯ";
+  return tr("ВЕРСІЯ", "ВЕРСИЯ", "VERSION");
 }
 
 export const POPULAR_VERSION_IDS = [
@@ -118,7 +120,7 @@ export interface VersionsApi {
   toggleVersionFilter: (key: keyof VersionFilterState, checked: boolean) => void;
 }
 
-export function useVersions(): VersionsApi {
+export function useVersions(lang: string = "ru"): VersionsApi {
   const [allVersionsRaw, setAllVersionsRaw] = useState<MojangVersionItem[]>([]);
   const [latestRelease, setLatestRelease] = useState<string>("26.3");
   const [latestSnapshot, setLatestSnapshot] = useState<string>("26.4-snapshot-8");
@@ -156,12 +158,12 @@ export function useVersions(): VersionsApi {
     }
     return allVersionsRaw.map((v) => ({
       version: v.id,
-      tag: getVersionTag(v.id, v.type, latestRelease, latestSnapshot),
+      tag: getVersionTag(v.id, v.type, latestRelease, latestSnapshot, lang),
       type: v.type,
       isSnapshot: v.type === "snapshot",
       releaseTime: v.releaseTime,
     }));
-  }, [allVersionsRaw, latestRelease, latestSnapshot]);
+  }, [allVersionsRaw, latestRelease, latestSnapshot, lang]);
 
   const releasesCount = useMemo(() => {
     return allVersions.filter((v) => !v.isSnapshot && v.type === "release").length;
@@ -188,14 +190,14 @@ export function useVersions(): VersionsApi {
       } else {
         result.push({
           version: id,
-          tag: getVersionTag(id, id.includes("snapshot") ? "snapshot" : "release", latestRelease, latestSnapshot),
+          tag: getVersionTag(id, id.includes("snapshot") ? "snapshot" : "release", latestRelease, latestSnapshot, lang),
           type: id.includes("snapshot") ? "snapshot" : "release",
           isSnapshot: id.includes("snapshot"),
         });
       }
     }
     return result;
-  }, [allVersions, latestRelease, latestSnapshot]);
+  }, [allVersions, latestRelease, latestSnapshot, lang]);
 
   const currentVersionsList = useMemo(() => {
     if (allVersionsRaw.length === 0) return FALLBACK_RELEASES;

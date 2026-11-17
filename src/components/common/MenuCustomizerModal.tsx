@@ -21,6 +21,7 @@ import {
   sampleZenColor,
   findZenCoordsForColor,
 } from "../../utils/colorUtils";
+import { useLanguage } from "../../context/LanguageContext";
 import "../../styles/menu-customizer.css";
 
 interface MenuCustomizerModalProps {
@@ -99,6 +100,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
   onChange,
   onResetZone,
 }) => {
+  const { t, lang } = useLanguage();
   const [activeZone, setActiveZone] = useState<CustomizerZoneId>(() => {
     return initialZone === "catalog" ? "topbar" : initialZone;
   });
@@ -718,16 +720,16 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
 
   const zoneTitles: Record<CustomizerZoneId, { title: string; desc: string }> = {
     topbar: {
-      title: "Верхняя панель",
-      desc: "Настройка цвета и текстуры самой верхней панели",
+      title: t("subtabTopbar", "Верхня панель"),
+      desc: t("topbarCustomizerSub", "Налаштування кольору та текстури верхньої панелі"),
     },
     background: {
-      title: "Задний фон",
-      desc: "Тонировка и микро-текстура игрового фона",
+      title: t("subtabBackground", "Задній фон"),
+      desc: t("bgCustomizerSub", "Тонування та мікро-текстура фону"),
     },
     catalog: {
-      title: "Каталог",
-      desc: "Цвет и текстура заднего фона каталога",
+      title: t("dockCatalog", "Каталог"),
+      desc: t("modsSubtitle", "Колір та текстура фону каталогу"),
     },
   };
 
@@ -757,17 +759,17 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
               type="button"
               className={`customizer-toggle-btn ${currentConfig.enabled ? "on" : ""}`}
               onClick={() => commitConfigChange({ enabled: !currentConfig.enabled })}
-              title={currentConfig.enabled ? "Отключить кастомизацию" : "Включить кастомизацию"}
+              title={currentConfig.enabled ? t("disableCustomization", "Вимкнути кастомізацію") : t("enableCustomization", "Увімкнути кастомізацію")}
             >
               <div className="customizer-toggle-indicator" />
-              <span>{currentConfig.enabled ? "Вкл" : "Выкл"}</span>
+              <span>{currentConfig.enabled ? t("statusActive", "Увімк") : t("statusDisabled", "Вимк")}</span>
             </button>
 
             <button
               type="button"
               className="customizer-close-btn"
               onClick={onClose}
-              title="Закрыть"
+              title={t("cancel", "Закрити")}
             >
               <X size={15} />
             </button>
@@ -780,7 +782,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
             className={`customizer-zone-pill-btn ${activeZone === "topbar" ? "active" : ""}`}
             onClick={() => setActiveZone("topbar")}
           >
-            <span>Панель</span>
+            <span>{t("subtabTopbar", "Панель")}</span>
             {state.topbar.enabled && <div className="customizer-status-dot active" />}
           </button>
           <button
@@ -788,7 +790,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
             className={`customizer-zone-pill-btn ${activeZone === "background" ? "active" : ""}`}
             onClick={() => setActiveZone("background")}
           >
-            <span>Фон</span>
+            <span>{t("subtabBackground", "Фон")}</span>
             {state.background.enabled && <div className="customizer-status-dot active" />}
           </button>
         </div>
@@ -798,7 +800,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
             type="button"
             className={`customizer-mode-btn ${localMode === "dynamic" ? "active" : ""}`}
             onClick={() => handleSetMode("dynamic")}
-            title="Динамический / Акцентный режим"
+            title={t("modeDynamic", "Динамічний / Акцентний режим")}
           >
             <Sparkles size={16} />
           </button>
@@ -806,7 +808,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
             type="button"
             className={`customizer-mode-btn ${localMode === "light" ? "active" : ""}`}
             onClick={() => handleSetMode("light")}
-            title="Светлый / Насыщенный режим"
+            title={t("modeLight", "Світлий / Насичений режим")}
           >
             <Sun size={17} />
           </button>
@@ -814,7 +816,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
             type="button"
             className={`customizer-mode-btn ${localMode === "dark" ? "active" : ""}`}
             onClick={() => handleSetMode("dark")}
-            title="Тёмный / Глубокий тактический режим"
+            title={t("modeDark", "Темний / Глибокий тактичний режим")}
           >
             <Moon size={16} />
           </button>
@@ -843,7 +845,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
               backgroundColor: color0,
             }}
             onPointerDown={(e) => handleStartDragBall(0, e)}
-            title="Основной цвет темы (перетаскивайте по кругу)"
+            title={t("primaryColorBall", "Основний колір теми (перетягуйте по колу)")}
           />
 
           {numDots >= 2 && (
@@ -856,7 +858,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
                 backgroundColor: color1,
               }}
               onPointerDown={(e) => handleStartDragBall(1, e)}
-              title="Дополнительный цвет гармонии"
+              title={t("secondaryColorBall", "Додатковий колір гармонії")}
             />
           )}
 
@@ -870,7 +872,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
                 backgroundColor: color2,
               }}
               onPointerDown={(e) => handleStartDragBall(2, e)}
-              title="Третий акцентный цвет гармонии"
+              title={t("tertiaryColorBall", "Третій акцентний колір гармонії")}
             />
           )}
 
@@ -883,7 +885,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
                 e.stopPropagation();
                 handleAddDot();
               }}
-              title={numDots >= 3 ? "Максимум 3 шарика" : "Добавить цвет (+)"}
+              title={numDots >= 3 ? t("maxDots", "Максимум 3 кульки") : t("addColor", "Додати колір (+)")}
             >
               +
             </button>
@@ -895,7 +897,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
                 e.stopPropagation();
                 handleRemoveDot();
               }}
-              title={numDots <= 1 ? "Минимум 1 шарик" : "Удалить цвет (—)"}
+              title={numDots <= 1 ? t("minDots", "Мінімум 1 кулька") : t("removeColor", "Видалити колір (—)")}
             >
               —
             </button>
@@ -907,17 +909,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
                 e.stopPropagation();
                 handleToggleAlgo();
               }}
-              title={`Сменить гармонию (сейчас: ${
-                harmonyType === "analogous"
-                  ? "Аналогичная"
-                  : harmonyType === "triadic"
-                  ? "Триада"
-                  : harmonyType === "splitComplementary"
-                  ? "Раздельная"
-                  : harmonyType === "complementary"
-                  ? "Комплементарная"
-                  : "Акцентная"
-              })`}
+              title={t("changeHarmony", "Змінити гармонію")}
             >
               ∴
             </button>
@@ -949,16 +941,16 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
                 }}
               />
               {activeZone === "topbar"
-                ? "Фон панельки:"
+                ? t("panelBgLabel", "Фон панелі:")
                 : activeZone === "background"
-                ? "Фон атмосферы:"
-                : "Фон каталога:"}{" "}
+                ? t("atmosphereBgLabel", "Фон атмосфери:")
+                : t("catalogBgLabel", "Фон каталогу:")}{" "}
               <b ref={previewHexRef}>{panelTheme.panelBg}</b>
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700 }}>
-              <span ref={previewIntensityRef}>Интенсивность: {localIntensity}%</span>
+              <span ref={previewIntensityRef}>{t("intensityLabel", "Інтенсивність:")} {localIntensity}%</span>
               <span style={{ opacity: 0.35 }}>·</span>
-              <span ref={previewTextureRef}>Текстура: {localPatternIntensity}%</span>
+              <span ref={previewTextureRef}>{t("textureLabel", "Текстура:")} {localPatternIntensity}%</span>
             </span>
           </div>
         </div>
@@ -973,7 +965,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
                 COLOR_PALETTE_PAGES.length;
               setPalettePageIndex(prev);
             }}
-            title="Предыдущая палитра"
+            title={t("prevPalette", "Попередня палітра")}
           >
             <ChevronLeft size={16} />
           </button>
@@ -1002,7 +994,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
                       activeSwatchIndex: idx,
                     });
                   }}
-                  title={`Выбрать цвет: ${hex}`}
+                  title={`${t("selectColor", "Обрати колір")}: ${hex}`}
                 />
               );
             })}
@@ -1015,7 +1007,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
               const next = (palettePageIndex + 1) % COLOR_PALETTE_PAGES.length;
               setPalettePageIndex(next);
             }}
-            title="Следующая палитра"
+            title={t("nextPalette", "Наступна палітра")}
           >
             <ChevronRight size={16} />
           </button>
@@ -1024,7 +1016,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
         <div className="customizer-controls-row">
           <div className="wavy-slider-container">
             <div className="wavy-slider-label-row">
-              <span>Интенсивность цвета</span>
+              <span>{t("colorIntensity", "Інтенсивність кольору")}</span>
               <b ref={sliderValLabelRef}>{localIntensity}%</b>
             </div>
 
@@ -1073,7 +1065,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
               ref={knobRef}
               className="rotary-knob-wrap"
               onPointerDown={handleStartKnob}
-              title="Поверните для настройки зернистости / микро-текстуры"
+              title={t("rotateKnobHint", "Поверніть для налаштування зернистості / мікро-текстури")}
             >
               <svg ref={knobTicksSvgRef} className="rotary-ticks-svg" viewBox="0 0 58 58">
                 {ticks.map((t) => (
@@ -1099,7 +1091,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
             </div>
 
             <div ref={knobValLabelRef} className="rotary-label-val">
-              Текстура {localPatternIntensity}%
+              {t("textureGrain", "Текстура")} {localPatternIntensity}%
             </div>
           </div>
         </div>
@@ -1131,17 +1123,17 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
                 commitConfigChange(def);
               }
             }}
-            title="Восстановить настройки по умолчанию для этого раздела"
+            title={t("resetZoneTooltip", "Відновити налаштування за замовчуванням для цього розділу")}
           >
             <RotateCcw size={12} />
-            <span>Сброс</span>
+            <span>{t("resetZoneBtn", "Скидання")}</span>
           </button>
 
           <div className="customizer-status-pill">
             <div
               className={`customizer-status-dot ${currentConfig.enabled ? "active" : ""}`}
             />
-            <span>{currentConfig.enabled ? "Активно" : "Отключено"}</span>
+            <span>{currentConfig.enabled ? t("statusActive", "Активно") : t("statusDisabled", "Вимкнено")}</span>
           </div>
         </div>
       </div>

@@ -22,6 +22,7 @@ import {
   User,
   Plus,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { SkinHeadAvatar } from "../common/SkinHeadAvatar";
 import { InstanceAvatarIcon } from "../icons/MinecraftIcons";
@@ -44,6 +45,7 @@ interface HudLayerProps {
   onUnlinkOmega?: () => void;
   onLoginMicrosoft?: () => Promise<void> | void;
   onCreateOfflineAccount?: (name: string) => void;
+  onDeleteAccount?: (id: string) => void;
   soundMuted: boolean;
   activeScreen: string;
   skinUrl?: string;
@@ -70,6 +72,7 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
   onUnlinkOmega,
   onLoginMicrosoft,
   onCreateOfflineAccount,
+  onDeleteAccount,
   soundMuted,
   activeScreen,
   skinUrl = "/skins/dream.png",
@@ -131,15 +134,24 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
               : skinUrl);
 
           return (
-            <button
+            <div
               key={acc.id}
-              type="button"
               className={`acc ${isSelected ? "sel" : ""}`}
               onClick={(e) => {
                 e.stopPropagation();
                 onSelectAccount?.(acc);
                 setIsDropdownOpen(false);
                 setIsAddingOffline(false);
+              }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.stopPropagation();
+                  onSelectAccount?.(acc);
+                  setIsDropdownOpen(false);
+                  setIsAddingOffline(false);
+                }
               }}
             >
               <span className="ava">
@@ -168,7 +180,43 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
                   <path d="M5 12.5l4.5 4.5L19 7.5" />
                 </svg>
               )}
-            </button>
+              {accounts.length > 1 && onDeleteAccount && (
+                <button
+                  type="button"
+                  className="hud-acc-del-btn"
+                  title={
+                    lang === "uk"
+                      ? `Видалити акаунт ${acc.name}`
+                      : lang === "ru"
+                      ? `Удалить аккаунт ${acc.name}`
+                      : `Delete account ${acc.name}`
+                  }
+                  aria-label={
+                    lang === "uk"
+                      ? `Видалити акаунт ${acc.name}`
+                      : lang === "ru"
+                      ? `Удалить аккаунт ${acc.name}`
+                      : `Delete account ${acc.name}`
+                  }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (
+                      confirm(
+                        lang === "uk"
+                          ? `Видалити акаунт "${acc.name}"?`
+                          : lang === "ru"
+                          ? `Удалить аккаунт "${acc.name}"?`
+                          : `Delete account "${acc.name}"?`
+                      )
+                    ) {
+                      onDeleteAccount(acc.id);
+                    }
+                  }}
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
+            </div>
           );
         })}
       </div>
@@ -498,7 +546,7 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
       <header className="hud-topbar">
         <nav
           className={`hud-top-dock ${topBarCustomization?.enabled ? "custom-theme-active" : ""}`}
-          aria-label="Панель навигации"
+          aria-label={lang === "uk" ? "Панель навігації" : lang === "ru" ? "Панель навигации" : "Navigation bar"}
           style={
             topBarCustomization?.enabled
               ? (() => {
@@ -541,7 +589,7 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
             rel="noopener noreferrer"
             className="hud-github-btn"
             title="GitHub — Omega Launcher"
-            aria-label="GitHub репозиторий проекта Omega Launcher"
+            aria-label={lang === "uk" ? "GitHub репозиторій проєкту Omega Launcher" : lang === "ru" ? "GitHub репозиторий проекта Omega Launcher" : "GitHub repository of Omega Launcher"}
           >
             <IconGitHub size={22} />
             <div className="hud-dock-tooltip">GitHub</div>
@@ -556,7 +604,11 @@ export const HudLayer: React.FC<HudLayerProps> = React.memo(({
               type="button"
               className={`hud-flank-btn ${soundMuted ? "muted" : ""}`}
               onClick={onToggleSound}
-              title={soundMuted ? "Включить системные звуки" : "Отключить системные звуки"}
+              title={
+                soundMuted
+                  ? (lang === "uk" ? "Увімкнути системні звуки" : lang === "ru" ? "Включить системные звуки" : "Unmute system sounds")
+                  : (lang === "uk" ? "Вимкнути системні звуки" : lang === "ru" ? "Отключить системные звуки" : "Mute system sounds")
+              }
             >
               <IconVolume size={16} muted={soundMuted} />
             </button>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 import "../../styles/layer4-modals.css";
 
 interface OmegaLoginModalProps {
@@ -8,12 +9,19 @@ interface OmegaLoginModalProps {
   baseAccountName: string;
 }
 
+const tr = (lang: string, uk: string, ru: string, en: string): string => {
+  if (lang === "uk") return uk;
+  if (lang === "en") return en;
+  return ru;
+};
+
 export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
   isOpen,
   onClose,
   onLogin,
   baseAccountName,
 }) => {
+  const { lang } = useLanguage();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +31,7 @@ export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!login.trim()) {
-      setError("Пожалуйста, введите логин или email аккаунта Omega");
+      setError(tr(lang, "Будь ласка, введіть логін або email акаунта Omega", "Пожалуйста, введите логин или email аккаунта Omega", "Please enter Omega account login or email"));
       return;
     }
     setError(null);
@@ -40,7 +48,7 @@ export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <h2 style={{ fontSize: "16px", fontWeight: 900, color: "#ffffff", letterSpacing: "0.2px" }}>
-              Вход в аккаунт Omega
+              {tr(lang, "Вхід в акаунт Omega", "Вход в аккаунт Omega", "Sign in to Omega Account")}
             </h2>
           </div>
           <button
@@ -48,7 +56,7 @@ export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
             className="btn-icon"
             style={{ width: "32px", height: "32px", minHeight: "32px", padding: 0, fontSize: "14px", fontWeight: 900 }}
             onClick={onClose}
-            title="Закрыть"
+            title={tr(lang, "Закрити", "Закрыть", "Close")}
           >
             ✕
           </button>
@@ -65,8 +73,10 @@ export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
             lineHeight: 1.4,
           }}
         >
-          Аккаунт Omega необходим для <strong>совместной игры с друзьями</strong> через P2P/облако Omega.
-          Будет привязан к активному профилю: <span style={{ color: "var(--text-accent)", fontWeight: 800 }}>{baseAccountName}</span>.
+          {tr(lang, "Акаунт Omega необхідний для", "Аккаунт Omega необходим для", "Omega account is required for")}{" "}
+          <strong>{tr(lang, "спільної гри з друзями", "совместной игры с друзьями", "playing together with friends")}</strong>{" "}
+          {tr(lang, "через P2P/хмару Omega. Буде прив'язаний до активного профілю:", "через P2P/облако Omega. Будет привязан к активному профилю:", "via Omega P2P/cloud. Will be linked to active profile:")}{" "}
+          <span style={{ color: "var(--text-accent)", fontWeight: 800 }}>{baseAccountName}</span>.
         </div>
 
         {error && (
@@ -88,7 +98,7 @@ export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <label style={{ fontSize: "12px", fontWeight: 700, color: "#94a3b8" }}>
-              Логин или Email Omega:
+              {tr(lang, "Логін або Email Omega:", "Логин или Email Omega:", "Omega Login or Email:")}
             </label>
             <input
               type="text"
@@ -102,7 +112,7 @@ export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
 
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <label style={{ fontSize: "12px", fontWeight: 700, color: "#94a3b8" }}>
-              Пароль:
+              {tr(lang, "Пароль:", "Пароль:", "Password:")}
             </label>
             <input
               type="password"
@@ -118,14 +128,14 @@ export const OmegaLoginModal: React.FC<OmegaLoginModalProps> = ({
               type="submit"
               className="omega-login-submit-btn"
             >
-              Войти в аккаунт Omega
+              {tr(lang, "Увійти в акаунт Omega", "Войти в аккаунт Omega", "Sign in to Omega")}
             </button>
             <button
               type="button"
               className="omega-login-cancel-btn"
               onClick={onClose}
             >
-              Отмена
+              {tr(lang, "Скасувати", "Отмена", "Cancel")}
             </button>
           </div>
         </form>

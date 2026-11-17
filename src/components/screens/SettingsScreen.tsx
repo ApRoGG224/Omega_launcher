@@ -751,14 +751,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         <main className="set-card set-main">
           <div className={`set-pn ${activeTab === "paths" ? "on" : ""}`}>
             <div>
-              <h1>Пути к файлам и каталогам игры</h1>
+              <h1>{t("pathsTitle", "Шляхи до файлів та каталогів гри")}</h1>
               <div className="set-sub">
-                Настройка директории для версий, сохранений, ресурспаков и скриншотов
+                {t("pathsSub", "Налаштування директорії для версій, збережень, ресурспаків та скріншотів")}
               </div>
             </div>
 
             <div>
-              <div className="set-lab">Рабочая директория Minecraft (.minecraft):</div>
+              <div className="set-lab">{t("gameDirLabel", "Робоча директорія Minecraft (.minecraft):")}</div>
               <div className="set-line">
                 <input
                   type="text"
@@ -771,20 +771,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   className="set-b"
                   onClick={handleBrowseGameDir}
                 >
-                  Обзор…
+                  {t("browseBtn", "Огляд…")}
                 </button>
                 <button
                   type="button"
                   className="set-b"
                   onClick={handleOpenGameDir}
                 >
-                  В проводнике
+                  {t("inExplorerBtn", "У провіднику")}
                 </button>
               </div>
             </div>
 
             <div>
-              <div className="set-lab">Исполняемый файл Java Runtime:</div>
+              <div className="set-lab">{t("javaPathLabel", "Виконуваний файл Java Runtime:")}</div>
               <div className="set-line">
                 <input
                   type="text"
@@ -797,20 +797,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   className="set-b go"
                   onClick={handleAutoDetectJava}
                 >
-                  Автодетект Java
+                  {t("autoDetectJavaBtn", "Автодетект Java")}
                 </button>
                 <button
                   type="button"
                   className="set-b"
                   onClick={handleBrowseJava}
                 >
-                  Обзор…
+                  {t("browseBtn", "Огляд…")}
                 </button>
               </div>
             </div>
 
             <div>
-              <div className="set-lab">Каталог снимков экрана (Screenshots):</div>
+              <div className="set-lab">{t("screenshotsDirLabel", "Каталог знімків екрана (Screenshots):")}</div>
               <div className="set-line">
                 <input
                   type="text"
@@ -823,7 +823,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   className="set-b"
                   onClick={handleOpenScreenshots}
                 >
-                  Открыть
+                  {t("openBtn", "Відкрити")}
                 </button>
               </div>
             </div>
@@ -1318,30 +1318,30 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
           <div className={`set-pn ${activeTab === "network" ? "on" : ""}`}>
             <div>
-              <h1>Сетевые настройки и авторизация</h1>
+              <h1>{t("networkTitle", "Мережеві налаштування та авторизація")}</h1>
               <div className="set-sub">
-                Шлюзы подгрузки скинов, статус в сети и подключение к серверам
+                {t("networkSub", "Шлюзи завантаження скінів, статус у мережі та підключення до серверів")}
               </div>
             </div>
 
             <div>
-              <div className="set-lab">Режим аккаунта по умолчанию:</div>
+              <div className="set-lab">{t("defaultAccountMode", "Режим акаунту за замовчуванням:")}</div>
               <div className="set-seg c3">
                 <button
                   type="button"
                   className={accountGateway === "offline" ? "on" : ""}
                   onClick={() => setAccountGateway("offline")}
                 >
-                  Офлайн профиль
-                  <small>0 мс пинг</small>
+                  {t("offlineProfile", "Офлайн профіль")}
+                  <small>0 ms</small>
                 </button>
                 <button
                   type="button"
                   className={accountGateway === "ely" ? "on" : ""}
                   onClick={() => setAccountGateway("ely")}
                 >
-                  Шлюз Ely.by
-                  <small>Скины и плащи</small>
+                  {t("elyGateway", "Шлюз Ely.by")}
+                  <small>{t("skinsAndCapes", "Скіни та плащі")}</small>
                 </button>
                 <button
                   type="button"
@@ -1349,16 +1349,19 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   onClick={() => setAccountGateway("microsoft")}
                 >
                   Microsoft OAuth2
-                  <small>Лицензия</small>
+                  <small>{t("licenseAccountDesc", "Ліцензія")}</small>
                 </button>
               </div>
             </div>
 
             <div className="set-row">
               <div>
-                <b>Показывать друзьям активность в игре</b>
+                <b>{t("showActivityToFriends", "Показувати друзям активність у грі")}</b>
                 <small>
-                  Отображает в списке друзей, в какой версии и на каком сервере вы сейчас находитесь
+                  {t(
+                    "showActivityToFriendsDesc",
+                    "Відображає у списку друзів, у якій версії та на якому сервері ви зараз перебуваєте"
+                  )}
                 </small>
               </div>
               <button
@@ -1369,14 +1372,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </div>
 
             <div>
-              <div className="set-lab">Тип подключения к серверам:</div>
+              <div className="set-lab">{t("serverConnectionType", "Тип підключення до серверів:")}</div>
               <div className="set-seg c3">
                 <button
                   type="button"
                   className={proxyType === "direct" ? "on" : ""}
                   onClick={() => setProxyType("direct")}
                 >
-                  Прямое (без прокси)
+                  {t("directNoProxy", "Пряме (без проксі)")}
                 </button>
                 <button
                   type="button"
@@ -1443,11 +1446,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </div>
 
             <div>
-              <div className="set-lab">Отображение типов версий игры:</div>
+              <div className="set-lab">{t("versionTypesVisibility", "Відображення типів версій гри:")}</div>
               <div className="set-grid2">
                 <div className="set-row">
                   <div>
-                    <b>Официальные релизы</b>
+                    <b>{t("officialReleases", "Офіційні релізи")}</b>
                     <small>1.21.4, 1.20.1, 1.16.5</small>
                   </div>
                   <button
@@ -1461,8 +1464,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
                 <div className="set-row">
                   <div>
-                    <b>Снапшоты разработчиков</b>
-                    <small>Тестовые билды Mojang</small>
+                    <b>{t("devSnapshots", "Снапшоти розробників")}</b>
+                    <small>{t("mojangTestBuilds", "Тестові білди Mojang")}</small>
                   </div>
                   <button
                     type="button"
@@ -1475,8 +1478,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
                 <div className="set-row">
                   <div>
-                    <b>Старые Beta версии</b>
-                    <small>Исторические версии b1.7.3</small>
+                    <b>{t("historicalBetas", "Старі Beta версії")}</b>
+                    <small>{t("historicalBetasDesc", "Історичні версії b1.7.3")}</small>
                   </div>
                   <button
                     type="button"
@@ -1489,8 +1492,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
                 <div className="set-row">
                   <div>
-                    <b>Старые Alpha версии</b>
-                    <small>Ранние версии a1.2.6</small>
+                    <b>{t("historicalAlphas", "Старі Alpha версії")}</b>
+                    <small>{t("historicalAlphasDesc", "Ранні версії a1.2.6")}</small>
                   </div>
                   <button
                     type="button"
@@ -1506,17 +1509,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
           <div className={`set-pn ${activeTab === "launch" ? "on" : ""}`}>
             <div>
-              <h1>Поведение при запуске Minecraft</h1>
+              <h1>{t("launchBehaviorTitle", "Поведінка під час запуску Minecraft")}</h1>
               <div className="set-sub">
-                Управление окном игры, поведением лаунчера и визуальными эффектами
+                {t("launchBehaviorSub", "Керування вікном гри, поведінкою лаунчера та візуальними ефектами")}
               </div>
             </div>
 
             <div className="set-row">
               <div>
-                <b>Закрывать лаунчер при старте игры</b>
+                <b>{t("closeOnLaunchLabel", "Закривати лаунчер при старті гри")}</b>
                 <small>
-                  Экономит оперативную память ПК, автоматически закрывая процесс лаунчера
+                  {t(
+                    "closeOnLaunchDesc",
+                    "Економить оперативну пам'ять ПК, автоматично закриваючи процес лаунчера"
+                  )}
                 </small>
               </div>
               <button
@@ -1528,8 +1534,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
             <div className="set-row">
               <div>
-                <b>Полноэкранный режим по умолчанию</b>
-                <small>Разворачивает окно Minecraft во весь экран сразу после загрузки</small>
+                <b>{t("fullscreenLabel", "Повноекранний режим за замовчуванням")}</b>
+                <small>{t("fullscreenDesc", "Розгортає вікно Minecraft на весь екран одразу після завантаження")}</small>
               </div>
               <button
                 type="button"
@@ -1539,7 +1545,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </div>
 
             <div>
-              <div className="set-lab">Разрешение окна Minecraft:</div>
+              <div className="set-lab">{t("windowResolutionLabel", "Роздільна здатність вікна Minecraft:")}</div>
               <div className="set-seg c4 ctr">
                 {["1280x720", "1920x1080", "1024x768", "default"].map((res) => (
                   <button
@@ -1548,7 +1554,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                     className={resolution === res ? "on" : ""}
                     onClick={() => setResolution(res)}
                   >
-                    {res === "default" ? "По умолчанию" : res}
+                    {res === "default" ? t("presetDefault", "За замовчуванням") : res}
                   </button>
                 ))}
               </div>
@@ -1556,8 +1562,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
             <div className="set-row">
               <div>
-                <b>Фон лаунчера</b>
-                <small>Текущий фон: {activeBg.title} ({bgIndex + 1} из {MINECRAFT_BACKGROUNDS.length})</small>
+                <b>{t("launcherBackgroundLabel", "Фон лаунчера")}</b>
+                <small>
+                  {t("currentBgLabel", "Поточний фон:")} {activeBg.title} ({bgIndex + 1} {t("ofWord", "з")} {MINECRAFT_BACKGROUNDS.length})
+                </small>
               </div>
               <button
                 type="button"
@@ -1567,7 +1575,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   setAppearanceSubTab("background");
                 }}
               >
-                Настроить фон…
+                {t("configureBackgroundBtn", "Налаштувати фон…")}
               </button>
             </div>
           </div>
@@ -1579,21 +1587,21 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 className={`set-appearance-tab-btn ${appearanceSubTab === "topbar" ? "active on" : ""}`}
                 onClick={() => setAppearanceSubTab("topbar")}
               >
-                Верхняя панель
+                {t("subtabTopbar", "Верхня панель")}
               </button>
               <button
                 type="button"
                 className={`set-appearance-tab-btn ${appearanceSubTab === "bottombar" ? "active on" : ""}`}
                 onClick={() => setAppearanceSubTab("bottombar")}
               >
-                Нижняя панель (Кнопка «Играть»)
+                {t("subtabBottombar", "Нижня панель (Кнопка «Грати»)")}
               </button>
               <button
                 type="button"
                 className={`set-appearance-tab-btn ${appearanceSubTab === "background" ? "active on" : ""}`}
                 onClick={() => setAppearanceSubTab("background")}
               >
-                Задний фон
+                {t("subtabBackground", "Задній фон")}
               </button>
             </div>
 

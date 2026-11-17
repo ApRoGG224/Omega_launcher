@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { ZoneCustomizationConfig } from "../../../types/menuCustomization";
 import { rgbaString, computePanelTheme } from "../../../utils/colorUtils";
+import { useLanguage } from "../../../context/LanguageContext";
 
 interface BackgroundCustomizerProps {
   bgIndex: number;
@@ -36,6 +37,7 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
   backgroundCustomization,
   onOpenCustomizer,
 }) => {
+  const { t } = useLanguage();
   const [bgFilter, setBgFilter] = useState<"all" | "shader" | "official" | "user">("all");
 
   const activeBg = MINECRAFT_BACKGROUNDS[bgIndex] || MINECRAFT_BACKGROUNDS[0];
@@ -56,9 +58,9 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
     <div className="customizer-container set-bg-customizer-root customizer-rounded-theme">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
         <div>
-          <h2>Оформление и фон лаунчера</h2>
+          <h2>{t("bgCustomizerTitle", "Оформлення та фон лаунчера")}</h2>
           <div className="customizer-sub">
-            Управление фоновыми обоями Minecraft, авто-ротацией и оформлением.
+            {t("bgCustomizerSub", "Керування фоновими шпалерами Minecraft, авто-ротацією та оформленням.")}
           </div>
         </div>
 
@@ -67,10 +69,10 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
             type="button"
             className={`catalog-customizer-btn ${backgroundCustomization?.enabled ? "active" : ""}`}
             onClick={onOpenCustomizer}
-            title="Настроить тонировку, интенсивность и текстуру фона"
+            title={t("bgCustomizationTitle", "Налаштувати тонування, інтенсивність та текстуру фону")}
           >
             <Palette size={14} />
-            <span>Кастомизация тонировки</span>
+            <span>{t("bgCustomizationBtn", "Кастомізація тонування")}</span>
             {backgroundCustomization?.enabled && (
               <span style={{ fontSize: "11px", opacity: 0.85 }}>({backgroundCustomization.intensity}%)</span>
             )}
@@ -80,8 +82,8 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
 
       <div>
         <div className="set-lab">
-          <span>Текущий фон:</span>
-          <b>{activeBg.title} ({bgIndex + 1} из {MINECRAFT_BACKGROUNDS.length})</b>
+          <span>{t("currentBgLabel", "Поточний фон:")}</span>
+          <b>{activeBg.title} ({bgIndex + 1} {t("ofWord", "з")} {MINECRAFT_BACKGROUNDS.length})</b>
         </div>
 
         <div className="set-bg-preview-card" style={{ position: "relative", overflow: "hidden" }}>
@@ -148,10 +150,10 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
             onClick={() => {
               onPrevBg();
             }}
-            title="Переключить на предыдущий фон"
+            title={t("prevBg", "Попередній фон")}
           >
             <ChevronLeft size={16} />
-            <span>Предыдущий</span>
+            <span>{t("prevBg", "Попередній")}</span>
           </button>
 
           <div className="set-bg-counter-box">
@@ -166,9 +168,9 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
             onClick={() => {
               onNextBg();
             }}
-            title="Переключить на следующий фон"
+            title={t("nextBg", "Наступний фон")}
           >
-            <span>Следующий</span>
+            <span>{t("nextBg", "Наступний")}</span>
             <ChevronRight size={16} />
           </button>
 
@@ -178,18 +180,18 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
             onClick={() => {
               onToggleBgAutoPlay();
             }}
-            title={isBgAutoPlay ? "Отключить авто-смену фонов" : "Включить авто-смену фонов каждые 28 сек"}
+            title={isBgAutoPlay ? t("pauseAutoPlay", "Зупинити авто-ротацію") : t("enableAutoPlay", "Увімкнути авто-ротацію")}
           >
             {isBgAutoPlay ? <Pause size={14} /> : <Play size={14} />}
-            <span>{isBgAutoPlay ? "Авто-смена: Вкл (28с)" : "Авто-смена: Выкл"}</span>
+            <span>{isBgAutoPlay ? t("bgAutoPlayEnabled", "Авто-ротація: Увімк (30с)") : t("bgAutoPlayDisabled", "Авто-ротація: Вимк")}</span>
           </button>
         </div>
       </div>
 
       <div>
         <div className="set-lab">
-          <span>Коллекция фонов Minecraft:</span>
-          <small className="set-lab-hint">Кликните по карточке для выбора</small>
+          <span>{t("backgroundCustomizerCollection", "Колекція фонів Minecraft:")}</span>
+          <small className="set-lab-hint">{t("clickCardToSelect", "Клікніть по картці для вибору")}</small>
         </div>
 
         <div className="set-bg-filters">
@@ -198,7 +200,7 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
             className={`set-bg-filter-chip ${bgFilter === "all" ? "on" : ""}`}
             onClick={() => setBgFilter("all")}
           >
-            <span>Все</span>
+            <span>{t("bgCatAll", "Всі")}</span>
             <span className="set-bg-filter-count">{MINECRAFT_BACKGROUNDS.length}</span>
           </button>
           <button
@@ -206,7 +208,7 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
             className={`set-bg-filter-chip ${bgFilter === "shader" ? "on" : ""}`}
             onClick={() => setBgFilter("shader")}
           >
-            <span>Шейдеры</span>
+            <span>{t("bgCatShaders", "Шейдери")}</span>
             <span className="set-bg-filter-count">{shaderCount}</span>
           </button>
           <button
@@ -214,7 +216,7 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
             className={`set-bg-filter-chip ${bgFilter === "official" ? "on" : ""}`}
             onClick={() => setBgFilter("official")}
           >
-            <span>Официальные</span>
+            <span>{t("bgCatOfficial", "Офіційні")}</span>
             <span className="set-bg-filter-count">{officialCount}</span>
           </button>
           <button
@@ -222,7 +224,7 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
             className={`set-bg-filter-chip ${bgFilter === "user" ? "on" : ""}`}
             onClick={() => setBgFilter("user")}
           >
-            <span>Скриншоты</span>
+            <span>{t("bgCatUser", "Користувацькі")}</span>
             <span className="set-bg-filter-count">{userCount}</span>
           </button>
         </div>
@@ -244,15 +246,15 @@ export const BackgroundCustomizer: React.FC<BackgroundCustomizerProps> = ({
                   {isSelected && (
                     <div className="set-bg-selected-badge">
                       <Check size={12} strokeWidth={3} />
-                      <span>Активен</span>
+                      <span>{t("statusActive", "Активний")}</span>
                     </div>
                   )}
                   <span className="set-bg-card-cat">
                     {bg.category === "shader"
-                      ? "Шейдеры"
+                      ? t("bgCatShaders", "Шейдери")
                       : bg.category === "official"
-                      ? "Официальный"
-                      : "Скриншот"}
+                      ? t("bgCatOfficial", "Офіційний")
+                      : t("bgCatUser", "Скріншот")}
                   </span>
                 </div>
                 <div className="set-bg-card-info">

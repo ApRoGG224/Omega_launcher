@@ -148,16 +148,24 @@ type TabId = (typeof TB)[number]["id"];
 
 const STORAGE_RECENT_SKINS_KEY = "omega:recent_skins";
 
-function formatRelativeTime(timestamp: number): string {
+function formatRelativeTime(timestamp: number, lang: string = "ru"): string {
   const diff = Date.now() - timestamp;
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "Только что";
-  if (minutes < 60) return `${minutes} мин. назад`;
+  const tr = (uk: string, ru: string, en: string) => (lang === "uk" ? uk : lang === "en" ? en : ru);
+  if (minutes < 1) return tr("Щойно", "Только что", "Just now");
+  if (minutes < 60) return `${minutes} ${tr("хв. тому", "мин. назад", "min ago")}`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} ч. назад`;
+  if (hours < 24) return `${hours} ${tr("год. тому", "ч. назад", "hours ago")}`;
   const days = Math.floor(hours / 24);
-  return `${days} дн. назад`;
+  return `${days} ${tr("дн. тому", "дн. назад", "days ago")}`;
 }
+
+
+const tr = (lang: string, uk: string, ru: string, en: string): string => {
+  if (lang === "uk") return uk;
+  if (lang === "en") return en;
+  return ru;
+};
 
 const InsideSkinCard = React.memo<{
   skin: MinecraftInsideSkinItem;
@@ -184,14 +192,14 @@ const InsideSkinCard = React.memo<{
         />
       </div>
       <div className="nm" title={skin.nickname}>{skin.nickname}</div>
-      <div className="ms">Скин по нику</div>
+      <div className="ms">{skin.nickname}</div>
       <button
         type="button"
         className={`b ${isEquipped ? "on" : ""}`}
         disabled={isApplying}
         onClick={() => onEquip(skin)}
       >
-        {isEquipped ? "✓ Надет" : isApplying ? "..." : "Примерить в 3D"}
+        {isEquipped ? "✓" : isApplying ? "..." : "3D"}
       </button>
     </div>
   );
@@ -666,7 +674,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                 <div className="n">
                   <input
                     id="nick"
-                    placeholder="Скин по никнейму…"
+                    placeholder={tr(lang, "Скін за нікнеймом…", "Скин по никнейму…", "Skin by nickname…")}
                     value={nick}
                     onChange={(e) => setNick(e.target.value)}
                   />
@@ -677,7 +685,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                   id="nb"
                   disabled={!nick.trim() || isApplying === nick.trim()}
                 >
-                  {isApplying === nick.trim() ? "..." : "Примерить"}
+                  {isApplying === nick.trim() ? "..." : tr(lang, "Приміряти", "Примерить", "Try on")}
                 </button>
               </form>
             )}
@@ -689,9 +697,9 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                   className="b"
                   disabled={isLoadingCapes}
                   onClick={fetchMicrosoftCapes}
-                  title="Обновить список плащей из Microsoft"
+                  title={tr(lang, "Оновити список плащів із Microsoft", "Обновить список плащей из Microsoft", "Refresh Microsoft capes list")}
                 >
-                  {isLoadingCapes ? "..." : "↻ Обновить"}
+                  {isLoadingCapes ? "..." : `↻ ${tr(lang, "Оновити", "Обновить", "Refresh")}`}
                 </button>
                 <button
                   type="button"
@@ -699,7 +707,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                   id="rm"
                   onClick={handleUnequipCape}
                 >
-                  Снять плащ
+                  {tr(lang, "Зняти плащ", "Снять плащ", "Unequip Cape")}
                 </button>
               </div>
             )}
@@ -714,7 +722,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                   showToast("Питомец отозван");
                 }}
               >
-                Отозвать питомца
+                {tr(lang, "Відкликати вихованця", "Отозвать питомца", "Recall Pet")}
               </button>
             )}
           </div>
@@ -726,29 +734,29 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
               {isLoadingInside ? (
                 <div className="store-loading-state">
                   <IsometricCube size={48} variant="emerald" />
-                  <div>Загрузка каталога скинов по никам...</div>
+                  <div>{tr(lang, "Завантаження каталогу скінів за ніками...", "Загрузка каталога скинов по никам...", "Loading skin catalog by nicknames...")}</div>
                 </div>
               ) : insideError ? (
                 <div className="store-error-state">
-                  <p>Не удалось подключиться к базе скинов: {insideError}</p>
+                  <p>{tr(lang, "Не вдалося підключитися до бази скінів:", "Не удалось подключиться к базе скинов:", "Failed to connect to skin database:")} {insideError}</p>
                   <button
                     type="button"
                     className="store-retry-btn"
                     onClick={fetchInitialSkins}
                   >
-                    Повторить попытку
+                    {tr(lang, "Повторити спробу", "Повторить попытку", "Retry")}
                   </button>
                 </div>
               ) : insideSkins.length === 0 ? (
                 <div className="store-error-state">
-                  <p>Скинов не найдено по запросу «{debouncedSearch}»</p>
+                  <p>{tr(lang, "Скінів не знайдено за запитом", "Скинов не найдено по запросу", "No skins found for query")} «{debouncedSearch}»</p>
                   {debouncedSearch && (
                     <button
                       type="button"
                       className="store-retry-btn"
                       onClick={() => setSearch("")}
                     >
-                      Сбросить поиск
+                      {tr(lang, "Скинути пошук", "Сбросить поиск", "Reset search")}
                     </button>
                   )}
                 </div>
@@ -787,7 +795,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                       <div className="spin-cube">
                         <IsometricCube size={24} variant="emerald" />
                       </div>
-                      <span>Загрузка ещё скинов...</span>
+                      <span>{tr(lang, "Завантаження ще скінів...", "Загрузка ещё скинов...", "Loading more skins...")}</span>
                     </div>
                   )}
                 </>
@@ -818,12 +826,11 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                     </div>
 
                     <h2 className="store-offline-title">
-                      Не зарегистрирован аккаунт Microsoft
+                      {tr(lang, "Не зареєстровано акаунт Microsoft", "Не зарегистрирован аккаунт Microsoft", "Microsoft Account Not Registered")}
                     </h2>
 
                     <p className="store-offline-desc">
-                      Официальные плащи Minecraft привязаны к вашей учётной записи Microsoft.
-                      Войдите в лицензионный аккаунт, чтобы просматривать свои плащи и примерять их в 3D.
+                      {tr(lang, "Офіційні плащі Minecraft прив'язані до вашого облікового запису Microsoft. Увійдіть у ліцензійний акаунт, щоб переглядати свої плащі та приміряти їх у 3D.", "Официальные плащи Minecraft привязаны к вашей учётной записи Microsoft. Войдите в лицензионный аккаунт, чтобы просматривать свои плащи и примерять их в 3D.", "Official Minecraft capes are tied to your Microsoft account. Log into a licensed account to view your capes and try them on in 3D.")}
                     </p>
 
                     <button
@@ -835,7 +842,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                       {isLoggingInMs ? (
                         <>
                           <IsometricCube size={20} variant="emerald" />
-                          <span>Ожидание авторизации...</span>
+                          <span>{tr(lang, "Очікування авторизації...", "Ожидание авторизации...", "Waiting for authorization...")}</span>
                         </>
                       ) : (
                         <>
@@ -848,7 +855,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                           >
                             <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z" />
                           </svg>
-                          <span>Войти в аккаунт Microsoft</span>
+                          <span>{tr(lang, "Увійти в акаунт Microsoft", "Войти в аккаунт Microsoft", "Log into Microsoft Account")}</span>
                         </>
                       )}
                     </button>
@@ -857,28 +864,27 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
               ) : isLoadingCapes ? (
                 <div className="store-loading-state">
                   <IsometricCube size={48} variant="emerald" />
-                  <div>Загрузка ваших плащей из Microsoft ({account.name})...</div>
+                  <div>{tr(lang, "Завантаження ваших плащів із Microsoft", "Загрузка ваших плащей из Microsoft", "Loading your Microsoft capes")} ({account.name})...</div>
                 </div>
               ) : capesError ? (
                 <div className="store-error-state">
-                  <p>Не удалось получить плащи: {capesError}</p>
+                  <p>{tr(lang, "Не вдалося отримати плащі:", "Не удалось получить плащи:", "Failed to fetch capes:")} {capesError}</p>
                   <button
                     type="button"
                     className="store-retry-btn"
                     onClick={fetchMicrosoftCapes}
                   >
-                    Повторить попытку
+                    {tr(lang, "Повторити спробу", "Повторить попытку", "Retry")}
                   </button>
                 </div>
               ) : msCapes.length === 0 ? (
                 <div className="store-offline-center-wrap">
                   <div className="store-offline-center-card">
                     <h2 className="store-offline-title">
-                      У вас пока нет официальных плащей
+                      {tr(lang, "У вас поки немає офіційних плащів", "У вас пока нет официальных плащей", "You don't have any official capes yet")}
                     </h2>
                     <p className="store-offline-desc">
-                      На аккаунте <strong>{account.name}</strong> пока не найдены плащи Mojang.
-                      Официальные плащи выдаются за миграцию (Migrator), 15-летие Minecraft, голосование за мобов, Twitch/TikTok дропы или посещение Minecon.
+                      {tr(lang, "На акаунті", "На аккаунте", "On account")} <strong>{account.name}</strong> {tr(lang, "поки не знайдено плащів Mojang. Офіційні плащі видаються за міграцію (Migrator), 15-річчя Minecraft, голосування за мобів, Twitch/TikTok дропи або відвідування Minecon.", "пока не найдены плащи Mojang. Официальные плащи выдаются за миграцию (Migrator), 15-летие Minecraft, голосование за мобов, Twitch/TikTok дропы или посещение Minecon.", "no Mojang capes found yet. Official capes are granted for migration (Migrator), 15th anniversary of Minecraft, mob votes, Twitch/TikTok drops, or Minecon attendance.")}
                     </p>
                     <button
                       type="button"
@@ -886,7 +892,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                       onClick={fetchMicrosoftCapes}
                       style={{ padding: "8px 24px" }}
                     >
-                      ↻ Обновить список
+                      ↻ {tr(lang, "Оновити список", "Обновить список", "Refresh list")}
                     </button>
                   </div>
                 </div>
@@ -936,10 +942,10 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                           onClick={() => handleEquipCape(c)}
                         >
                           {isEquipped
-                            ? "✓ Надет"
+                            ? tr(lang, "✓ Надягнуто", "✓ Надет", "✓ Equipped")
                             : isEquipping
-                            ? "Установка..."
-                            : "Надеть плащ"}
+                            ? tr(lang, "Встановлення...", "Установка...", "Equipping...")
+                            : tr(lang, "Надягнути плащ", "Надеть плащ", "Equip Cape")}
                         </button>
                       </div>
                     );
@@ -980,7 +986,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                         showToast(`Питомец ${x[0]} выбран!`);
                       }}
                     >
-                      {isEquipped ? "✓ Выбран (Активен)" : "+ Призвать питомца"}
+                      {isEquipped ? tr(lang, "✓ Обрано (Активний)", "✓ Выбран (Активен)", "✓ Selected (Active)") : tr(lang, "+ Призвати вихованця", "+ Призвать питомца", "+ Summon Pet")}
                     </button>
                   </div>
                 );
@@ -997,7 +1003,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                     className="store-cosmetics-unequip-btn"
                     onClick={handleUnequipCosmetics}
                   >
-                    Снять аксессуары
+                    {tr(lang, "Зняти аксесуари", "Снять аксессуары", "Remove Accessories")}
                   </button>
                 </div>
 
@@ -1029,7 +1035,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                             }
                           }}
                         >
-                          {isEquipped ? "✓ Надет на игрока" : "Примерить аксессуар"}
+                          {isEquipped ? tr(lang, "✓ Надягнуто", "✓ Надет на игрока", "✓ Equipped") : tr(lang, "Приміряти", "Примерить аксессуар", "Try on")}
                         </button>
                       </div>
                     );
@@ -1039,28 +1045,28 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
 
               <div className="store-wardrobe-showcase">
                 <div className="store-wardrobe-header">
-                  <div className="store-wardrobe-title">Примерочная 3D</div>
+                  <div className="store-wardrobe-title">{tr(lang, "Примірочна 3D", "Примерочная 3D", "3D Wardrobe")}</div>
                   <div className="store-wardrobe-angle-tabs">
                     <button
                       type="button"
                       className={`store-wardrobe-tab ${wardrobeFocus === "head" ? "active" : ""}`}
                       onClick={() => setWardrobeFocus("head")}
                     >
-                      Голова
+                      {tr(lang, "Голова", "Голова", "Head")}
                     </button>
                     <button
                       type="button"
                       className={`store-wardrobe-tab ${wardrobeFocus === "full" ? "active" : ""}`}
                       onClick={() => setWardrobeFocus("full")}
                     >
-                      Во весь рост
+                      {tr(lang, "На повний зріст", "Во весь рост", "Full Body")}
                     </button>
                     <button
                       type="button"
                       className={`store-wardrobe-tab ${wardrobeFocus === "back" ? "active" : ""}`}
                       onClick={() => setWardrobeFocus("back")}
                     >
-                      Спина
+                      {tr(lang, "Спина", "Спина", "Back")}
                     </button>
                   </div>
                 </div>
@@ -1088,7 +1094,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                   marginBottom: "12px",
                 }}
               >
-                <div className="cap">История надеваний (Недавние скины)</div>
+                <div className="cap">{tr(lang, "Історія надягань (Нещодавні скіни)", "История надеваний (Недавние скины)", "Equipped History (Recent Skins)")}</div>
                 {recentList.length > 0 && (
                   <button
                     type="button"
@@ -1096,13 +1102,13 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                     onClick={handleClearRecent}
                     style={{ height: "30px", fontSize: "11.5px", padding: "0 10px" }}
                   >
-                    Очистить историю
+                    {tr(lang, "Очистити історію", "Очистить историю", "Clear History")}
                   </button>
                 )}
               </div>
 
               {recentList.length === 0 ? (
-                <div className="empty">История пуста. Выберите любой скин из каталога!</div>
+                <div className="empty">{tr(lang, "Історія порожня. Оберіть будь-який скін із каталогу!", "История пуста. Выберите любой скин из каталога!", "History is empty. Select any skin from the catalog!")}</div>
               ) : (
                 <div className="grid" style={{ gap: "10px" }}>
                   {recentList.map((item) => {
@@ -1141,7 +1147,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                         </div>
                         <div>
                           <div className="nm">{item.name}</div>
-                          <div className="ms">Использовался: {formatRelativeTime(item.timestamp)}</div>
+                          <div className="ms">{tr(lang, "Використовувався:", "Использовался:", "Used:")} {formatRelativeTime(item.timestamp, lang)}</div>
                         </div>
                         <button
                           type="button"
@@ -1153,7 +1159,7 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                             showToast(`Скин ${item.name} надет!`);
                           }}
                         >
-                          {isEquipped ? "✓ Надет" : "Надеть снова"}
+                          {isEquipped ? tr(lang, "✓ Надягнуто", "✓ Надет", "✓ Equipped") : tr(lang, "Надягнути знову", "Надеть снова", "Equip Again")}
                         </button>
                       </div>
                     );

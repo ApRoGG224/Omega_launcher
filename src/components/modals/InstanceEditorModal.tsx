@@ -57,6 +57,13 @@ type EditorTab =
 
 type SettingsSubTab = "general" | "java" | "native" | "commands" | "env";
 
+
+const tr = (lang: string, uk: string, ru: string, en: string): string => {
+  if (lang === "uk") return uk;
+  if (lang === "en") return en;
+  return ru;
+};
+
 export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
   isOpen,
   onClose,
@@ -256,28 +263,28 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
         )
       );
     } catch (e) {
-      alert(`Ошибка переключения мода: ${e}`);
+      alert(`${tr(lang, "Помилка перемикання мода: ", "Ошибка переключения мода: ", "Error toggling mod: ")}${e}`);
     }
   };
 
   const handleDeleteMod = async (mod: InstanceModItem) => {
-    if (!confirm(`Удалить мод "${mod.name}"?`)) return;
+    if (!confirm(`${tr(lang, "Видалити мод", "Удалить мод", "Delete mod")} "${mod.name}"?`)) return;
     try {
       await ipc.deleteInstanceMod(instance.id, mod.filename);
       setMods((prev) => prev.filter((m) => m.filename !== mod.filename));
     } catch (e) {
-      alert(`Ошибка удаления мода: ${e}`);
+      alert(`${tr(lang, "Помилка видалення мода: ", "Ошибка удаления мода: ", "Error deleting mod: ")}${e}`);
     }
   };
 
   const handleAddModFile = async () => {
-    const path = prompt("Введите абсолютный путь к .jar или .zip файлу мода:");
+    const path = prompt(tr(lang, "Введіть абсолютний шлях до .jar або .zip файлу мода:", "Введите абсолютный путь к .jar или .zip файлу мода:", "Enter absolute path to mod .jar or .zip file:"));
     if (!path || !path.trim()) return;
     try {
       await ipc.addInstanceModFile(instance.id, path.trim());
       await loadMods();
     } catch (e) {
-      alert(`Ошибка добавления файла: ${e}`);
+      alert(`${tr(lang, "Помилка додавання файлу: ", "Ошибка добавления файла: ", "Error adding file: ")}${e}`);
     }
   };
 
@@ -293,17 +300,17 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
         )
       );
     } catch (e) {
-      alert(`Ошибка: ${e}`);
+      alert(`${tr(lang, "Помилка: ", "Ошибка: ", "Error: ")}${e}`);
     }
   };
 
   const handleDeletePack = async (pack: InstancePackItem) => {
-    if (!confirm(`Удалить ресурс-пак "${pack.name}"?`)) return;
+    if (!confirm(`${tr(lang, "Видалити ресурс-пак", "Удалить ресурс-пак", "Delete resource pack")} "${pack.name}"?`)) return;
     try {
       await ipc.deleteInstanceResourcepack(instance.id, pack.filename);
       setResourcePacks((prev) => prev.filter((p) => p.filename !== pack.filename));
     } catch (e) {
-      alert(`Ошибка: ${e}`);
+      alert(`${tr(lang, "Помилка: ", "Ошибка: ", "Error: ")}${e}`);
     }
   };
 
@@ -319,17 +326,17 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
         )
       );
     } catch (e) {
-      alert(`Ошибка: ${e}`);
+      alert(`${tr(lang, "Помилка: ", "Ошибка: ", "Error: ")}${e}`);
     }
   };
 
   const handleDeleteShader = async (shader: InstancePackItem) => {
-    if (!confirm(`Удалить шейдер "${shader.name}"?`)) return;
+    if (!confirm(`${tr(lang, "Видалити шейдер", "Удалить шейдер", "Delete shader")} "${shader.name}"?`)) return;
     try {
       await ipc.deleteInstanceShaderpack(instance.id, shader.filename);
       setShaders((prev) => prev.filter((s) => s.filename !== shader.filename));
     } catch (e) {
-      alert(`Ошибка: ${e}`);
+      alert(`${tr(lang, "Помилка: ", "Ошибка: ", "Error: ")}${e}`);
     }
   };
 
@@ -339,7 +346,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
     try {
       await ipc.saveInstanceNotes(instance.id, notes);
     } catch (e) {
-      alert(`Ошибка сохранения заметок: ${e}`);
+      alert(`${tr(lang, "Помилка збереження нотаток: ", "Ошибка сохранения заметок: ", "Error saving notes: ")}${e}`);
     } finally {
       setIsSavingNotes(false);
     }
@@ -349,9 +356,9 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
   const handleSaveConfig = async () => {
     try {
       await ipc.saveInstanceConfig(instance.id, config);
-      alert("Настройки сборки успешно сохранены!");
+      alert(tr(lang, "Налаштування збірки успішно збережено!", "Настройки сборки успешно сохранены!", "Assembly settings saved successfully!"));
     } catch (e) {
-      alert(`Ошибка сохранения настроек: ${e}`);
+      alert(`${tr(lang, "Помилка збереження налаштувань: ", "Ошибка сохранения настроек: ", "Error saving settings: ")}${e}`);
     }
   };
 
@@ -362,10 +369,10 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
       if (java) {
         setConfig((prev) => ({ ...prev, javaPath: java }));
       } else {
-        alert("Системная Java не найдена");
+        alert(tr(lang, "Системну Java не знайдено", "Системная Java не найдена", "System Java not found"));
       }
     } catch (e) {
-      alert(`Ошибка поиска Java: ${e}`);
+      alert(`${tr(lang, "Помилка пошуку Java: ", "Ошибка поиска Java: ", "Error detecting Java: ")}${e}`);
     }
   };
 
@@ -423,11 +430,11 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 </span>
               </h2>
               <div className="inst-editor-sub">
-                ID: {instance.id} | Редактирование модов, миров, параметров и журналов
+                ID: {instance.id} | {tr(lang, "Редагування модів, світів, параметрів та журналів", "Редактирование модов, миров, параметров и журналов", "Edit mods, worlds, settings, and logs")}
               </div>
             </div>
           </div>
-          <button type="button" className="inst-editor-close-btn" onClick={onClose} title="Закрыть">
+          <button type="button" className="inst-editor-close-btn" onClick={onClose} title={tr(lang, "Закрити", "Закрыть", "Close")}>
             ✕
           </button>
         </div>
@@ -442,7 +449,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
               onClick={() => setActiveTab("version")}
             >
               <Layers />
-              <span>Версия</span>
+              <span>{tr(lang, "Версія", "Версия", "Version")}</span>
             </button>
 
             <button
@@ -451,7 +458,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
               onClick={() => setActiveTab("mods")}
             >
               <Package />
-              <span>Моды</span>
+              <span>{tr(lang, "Моди", "Моды", "Mods")}</span>
               <span className="inst-editor-tab-count">{mods.length}</span>
             </button>
 
@@ -461,7 +468,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
               onClick={() => setActiveTab("resourcepacks")}
             >
               <Compass />
-              <span>Ресурс-паки</span>
+              <span>{tr(lang, "Ресурс-паки", "Ресурс-паки", "Resource Packs")}</span>
               <span className="inst-editor-tab-count">{resourcePacks.length}</span>
             </button>
 
@@ -471,7 +478,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
               onClick={() => setActiveTab("shaders")}
             >
               <Sun />
-              <span>Шейдеры</span>
+              <span>{tr(lang, "Шейдери", "Шейдеры", "Shaders")}</span>
               <span className="inst-editor-tab-count">{shaders.length}</span>
             </button>
 
@@ -481,7 +488,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
               onClick={() => setActiveTab("worlds")}
             >
               <Globe />
-              <span>Миры</span>
+              <span>{tr(lang, "Світи", "Миры", "Worlds")}</span>
               <span className="inst-editor-tab-count">{worlds.length}</span>
             </button>
 
@@ -491,7 +498,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
               onClick={() => setActiveTab("servers")}
             >
               <Server />
-              <span>Серверы</span>
+              <span>{tr(lang, "Сервери", "Серверы", "Servers")}</span>
             </button>
 
             <button
@@ -500,7 +507,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
               onClick={() => setActiveTab("screenshots")}
             >
               <Camera />
-              <span>Снимки экрана</span>
+              <span>{tr(lang, "Знімки екрана", "Снимки экрана", "Screenshots")}</span>
               <span className="inst-editor-tab-count">{screenshots.length}</span>
             </button>
 
@@ -510,7 +517,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
               onClick={() => setActiveTab("notes")}
             >
               <FileText />
-              <span>Заметки</span>
+              <span>{tr(lang, "Нотатки", "Заметки", "Notes")}</span>
             </button>
 
             <button
@@ -519,7 +526,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
               onClick={() => setActiveTab("logs")}
             >
               <Terminal />
-              <span>Журналы</span>
+              <span>{tr(lang, "Журнали", "Журналы", "Logs")}</span>
             </button>
 
             <button
@@ -528,7 +535,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
               onClick={() => setActiveTab("settings")}
             >
               <Sliders />
-              <span>Параметры</span>
+              <span>{tr(lang, "Параметри", "Параметры", "Settings")}</span>
             </button>
           </div>
 
@@ -540,7 +547,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 <div className="inst-content-toolbar">
                   <div className="inst-toolbar-left">
                     <span style={{ fontWeight: 700, fontSize: "14px", color: "#f3f4f6" }}>
-                      Компоненты сборки
+                      {tr(lang, "Компоненти збірки", "Компоненты сборки", "Assembly Components")}
                     </span>
                   </div>
                   <div className="inst-toolbar-right">
@@ -550,7 +557,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                       onClick={() => void ipc.openInstanceSubfolder(instance.id, "")}
                     >
                       <FolderOpen size={14} />
-                      <span>Папка сборки</span>
+                      <span>{tr(lang, "Папка збірки", "Папка сборки", "Assembly Folder")}</span>
                     </button>
                   </div>
                 </div>
@@ -559,10 +566,10 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                   <table className="inst-table">
                     <thead>
                       <tr>
-                        <th>Компонент</th>
-                        <th>Версия</th>
-                        <th>Тип</th>
-                        <th>Статус</th>
+                        <th>{tr(lang, "Компонент", "Компонент", "Component")}</th>
+                        <th>{tr(lang, "Версія", "Версия", "Version")}</th>
+                        <th>{tr(lang, "Тип", "Тип", "Type")}</th>
+                        <th>{tr(lang, "Статус", "Статус", "Status")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -572,9 +579,9 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                           <b>Minecraft</b>
                         </td>
                         <td>{instance.mcVersion}</td>
-                        <td>Официальный релиз</td>
+                        <td>{tr(lang, "Офіційний реліз", "Официальный релиз", "Official Release")}</td>
                         <td>
-                          <span style={{ color: "#4ade80", fontWeight: 700 }}>Установлен</span>
+                          <span style={{ color: "#4ade80", fontWeight: 700 }}>{tr(lang, "Встановлено", "Установлен", "Installed")}</span>
                         </td>
                       </tr>
                       {instance.loader !== "Vanilla" && (
@@ -584,9 +591,9 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                             <b>{instance.loader} Loader</b>
                           </td>
                           <td>0.16.9 (Active)</td>
-                          <td>Загрузчик модов</td>
+                          <td>{tr(lang, "Завантажувач модів", "Загрузчик модов", "Mod Loader")}</td>
                           <td>
-                            <span style={{ color: "#4ade80", fontWeight: 700 }}>Установлен</span>
+                            <span style={{ color: "#4ade80", fontWeight: 700 }}>{tr(lang, "Встановлено", "Установлен", "Installed")}</span>
                           </td>
                         </tr>
                       )}
@@ -596,9 +603,9 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                           <b>Intermediary Mappings</b>
                         </td>
                         <td>{instance.mcVersion}</td>
-                        <td>Таблицы маппингов</td>
+                        <td>{tr(lang, "Таблиці мапінгів", "Таблицы маппингов", "Mapping Tables")}</td>
                         <td>
-                          <span style={{ color: "#4ade80", fontWeight: 700 }}>Установлен</span>
+                          <span style={{ color: "#4ade80", fontWeight: 700 }}>{tr(lang, "Встановлено", "Установлен", "Installed")}</span>
                         </td>
                       </tr>
                       <tr>
@@ -607,9 +614,9 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                           <b>LWJGL 3</b>
                         </td>
                         <td>3.3.3</td>
-                        <td>Системная библиотека</td>
+                        <td>{tr(lang, "Системна бібліотека", "Системная библиотека", "System Library")}</td>
                         <td>
-                          <span style={{ color: "#4ade80", fontWeight: 700 }}>Установлен</span>
+                          <span style={{ color: "#4ade80", fontWeight: 700 }}>{tr(lang, "Встановлено", "Установлен", "Installed")}</span>
                         </td>
                       </tr>
                     </tbody>
@@ -626,7 +633,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                     <input
                       type="text"
                       className="inst-search-input"
-                      placeholder="Поиск мода..."
+                      placeholder={tr(lang, "Пошук мода...", "Поиск мода...", "Search mod...")}
                       value={modsSearch}
                       onChange={(e) => setModsSearch(e.target.value)}
                     />
@@ -634,10 +641,10 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                       type="button"
                       className="inst-tool-btn primary"
                       onClick={handleAddModFile}
-                      title="Добавить .jar файл"
+                      title={tr(lang, "Додати .jar файл", "Добавить .jar файл", "Add .jar file")}
                     >
                       <Plus size={14} />
-                      <span>Добавить файл</span>
+                      <span>{tr(lang, "Додати файл", "Добавить файл", "Add File")}</span>
                     </button>
                     {onOpenCatalog && (
                       <button
@@ -649,7 +656,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                         }}
                       >
                         <Download size={14} />
-                        <span>Скачивание модов</span>
+                        <span>{tr(lang, "Завантаження модів", "Скачивание модов", "Download Mods")}</span>
                       </button>
                     )}
                   </div>
@@ -658,25 +665,25 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                       type="button"
                       className="inst-tool-btn"
                       onClick={() => void ipc.openInstanceSubfolder(instance.id, "mods")}
-                      title="Открыть папку mods"
+                      title={tr(lang, "Відкрити папку mods", "Открыть папку mods", "Open mods folder")}
                     >
                       <Folder size={14} />
-                      <span>Папка mods</span>
+                      <span>{tr(lang, "Папка mods", "Папка mods", "Mods Folder")}</span>
                     </button>
                     <button
                       type="button"
                       className="inst-tool-btn"
                       onClick={() => void ipc.openInstanceSubfolder(instance.id, "config")}
-                      title="Открыть папку config"
+                      title={tr(lang, "Відкрити папку config", "Открыть папку config", "Open config folder")}
                     >
                       <Settings size={14} />
-                      <span>Конфигурации</span>
+                      <span>{tr(lang, "Конфігурації", "Конфигурации", "Configurations")}</span>
                     </button>
                     <button
                       type="button"
                       className="inst-tool-btn"
                       onClick={loadMods}
-                      title="Обновить список"
+                      title={tr(lang, "Оновити список", "Обновить список", "Refresh list")}
                     >
                       <RefreshCw size={14} />
                     </button>
@@ -687,18 +694,18 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                   <table className="inst-table">
                     <thead>
                       <tr>
-                        <th style={{ width: 40 }}>Вкл</th>
-                        <th>Название мода</th>
-                        <th>Версия</th>
-                        <th>Размер</th>
-                        <th style={{ width: 70 }}>Действия</th>
+                        <th style={{ width: 40 }}>{tr(lang, "Увімк", "Вкл", "On")}</th>
+                        <th>{tr(lang, "Назва мода", "Название мода", "Mod Name")}</th>
+                        <th>{tr(lang, "Версія", "Версия", "Version")}</th>
+                        <th>{tr(lang, "Розмір", "Размер", "Size")}</th>
+                        <th style={{ width: 70 }}>{tr(lang, "Дії", "Действия", "Actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredMods.length === 0 ? (
                         <tr>
                           <td colSpan={5} style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
-                            Моды не найдены в папке mods. Добавьте .jar файлы или установите их из каталога!
+                            {tr(lang, "Моди не знайдено в папці mods. Додайте .jar файли або встановіть їх з каталогу!", "Моды не найдены в папке mods. Добавьте .jar файлы или установите их из каталога!", "No mods found in mods folder. Add .jar files or install from catalog!")}
                           </td>
                         </tr>
                       ) : (
@@ -730,7 +737,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               <div style={{ fontSize: "11px", color: "#64748b" }}>{mod.filename}</div>
                             </td>
                             <td>{mod.version || "1.0.0"}</td>
-                            <td>{(mod.fileSize / (1024 * 1024)).toFixed(2)} МБ</td>
+                            <td>{(mod.fileSize / (1024 * 1024)).toFixed(2)} {tr(lang, "МБ", "МБ", "MB")}</td>
                             <td>
                               <div style={{ display: "flex", gap: "6px" }}>
                                 {mod.modUrl && (
@@ -738,7 +745,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                                     type="button"
                                     className="inst-editor-close-btn"
                                     onClick={() => void ipc.openUrl(mod.modUrl!)}
-                                    title="Открыть страницу мода"
+                                    title={tr(lang, "Відкрити сторінку мода", "Открыть страницу мода", "Open mod page")}
                                     style={{ width: 24, height: 24 }}
                                   >
                                     <ExternalLink size={12} />
@@ -748,7 +755,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                                   type="button"
                                   className="inst-editor-close-btn"
                                   onClick={() => handleDeleteMod(mod)}
-                                  title="Удалить мод"
+                                  title={tr(lang, "Видалити мод", "Удалить мод", "Delete mod")}
                                   style={{ width: 24, height: 24, color: "#f87171" }}
                                 >
                                   <Trash2 size={12} />
@@ -772,7 +779,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                     <input
                       type="text"
                       className="inst-search-input"
-                      placeholder="Поиск ресурс-пака..."
+                      placeholder={tr(lang, "Пошук ресурс-пака...", "Поиск ресурс-пака...", "Search resource pack...")}
                       value={packsSearch}
                       onChange={(e) => setPacksSearch(e.target.value)}
                     />
@@ -782,7 +789,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                       onClick={() => void ipc.openInstanceSubfolder(instance.id, "resourcepacks")}
                     >
                       <Folder size={14} />
-                      <span>Папка текстур</span>
+                      <span>{tr(lang, "Папка текстур", "Папка текстур", "Textures Folder")}</span>
                     </button>
                   </div>
                   <div className="inst-toolbar-right">
@@ -796,18 +803,18 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                   <table className="inst-table">
                     <thead>
                       <tr>
-                        <th style={{ width: 40 }}>Вкл</th>
-                        <th>Название ресурс-пака</th>
-                        <th>Файл</th>
-                        <th>Размер</th>
-                        <th style={{ width: 50 }}>Удалить</th>
+                        <th style={{ width: 40 }}>{tr(lang, "Увімк", "Вкл", "On")}</th>
+                        <th>{tr(lang, "Назва ресурс-пака", "Название ресурс-пака", "Resource Pack Name")}</th>
+                        <th>{tr(lang, "Файл", "Файл", "File")}</th>
+                        <th>{tr(lang, "Розмір", "Размер", "Size")}</th>
+                        <th style={{ width: 50 }}>{tr(lang, "Видалити", "Удалить", "Delete")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredPacks.length === 0 ? (
                         <tr>
                           <td colSpan={5} style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
-                            Ресурс-паки не найдены.
+                            {tr(lang, "Ресурс-паки не знайдено.", "Ресурс-паки не найдены.", "No resource packs found.")}
                           </td>
                         </tr>
                       ) : (
@@ -825,7 +832,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               <b>{pack.name}</b>
                             </td>
                             <td style={{ fontSize: "11px", color: "#8b919c" }}>{pack.filename}</td>
-                            <td>{(pack.fileSize / (1024 * 1024)).toFixed(2)} МБ</td>
+                            <td>{(pack.fileSize / (1024 * 1024)).toFixed(2)} {tr(lang, "МБ", "МБ", "MB")}</td>
                             <td>
                               <button
                                 type="button"
@@ -853,7 +860,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                     <input
                       type="text"
                       className="inst-search-input"
-                      placeholder="Поиск шейдера..."
+                      placeholder={tr(lang, "Пошук шейдера...", "Поиск шейдера...", "Search shader...")}
                       value={shadersSearch}
                       onChange={(e) => setShadersSearch(e.target.value)}
                     />
@@ -863,7 +870,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                       onClick={() => void ipc.openInstanceSubfolder(instance.id, "shaderpacks")}
                     >
                       <Folder size={14} />
-                      <span>Папка шейдеров</span>
+                      <span>{tr(lang, "Папка шейдерів", "Папка шейдеров", "Shaders Folder")}</span>
                     </button>
                   </div>
                   <div className="inst-toolbar-right">
@@ -877,18 +884,18 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                   <table className="inst-table">
                     <thead>
                       <tr>
-                        <th style={{ width: 40 }}>Вкл</th>
-                        <th>Название шейдера</th>
-                        <th>Файл</th>
-                        <th>Размер</th>
-                        <th style={{ width: 50 }}>Удалить</th>
+                        <th style={{ width: 40 }}>{tr(lang, "Увімк", "Вкл", "On")}</th>
+                        <th>{tr(lang, "Назва шейдера", "Название шейдера", "Shader Name")}</th>
+                        <th>{tr(lang, "Файл", "Файл", "File")}</th>
+                        <th>{tr(lang, "Розмір", "Размер", "Size")}</th>
+                        <th style={{ width: 50 }}>{tr(lang, "Видалити", "Удалить", "Delete")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredShaders.length === 0 ? (
                         <tr>
                           <td colSpan={5} style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
-                            Шейдеры не найдены в shaderpacks.
+                            {tr(lang, "Шейдери не знайдено в shaderpacks.", "Шейдеры не найдены в shaderpacks.", "No shaders found in shaderpacks.")}
                           </td>
                         </tr>
                       ) : (
@@ -906,7 +913,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               <b>{shader.name}</b>
                             </td>
                             <td style={{ fontSize: "11px", color: "#8b919c" }}>{shader.filename}</td>
-                            <td>{(shader.fileSize / (1024 * 1024)).toFixed(2)} МБ</td>
+                            <td>{(shader.fileSize / (1024 * 1024)).toFixed(2)} {tr(lang, "МБ", "МБ", "MB")}</td>
                             <td>
                               <button
                                 type="button"
@@ -932,7 +939,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 <div className="inst-content-toolbar">
                   <div className="inst-toolbar-left">
                     <span style={{ fontWeight: 700, fontSize: "14px", color: "#f3f4f6" }}>
-                      Миры одиночной игры ({worlds.length})
+                      {tr(lang, "Світи одиночної гри", "Миры одиночной игры", "Singleplayer Worlds")} ({worlds.length})
                     </span>
                   </div>
                   <div className="inst-toolbar-right">
@@ -942,7 +949,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                       onClick={() => void ipc.openInstanceSubfolder(instance.id, "saves")}
                     >
                       <FolderOpen size={14} />
-                      <span>Папка saves</span>
+                      <span>{tr(lang, "Папка saves", "Папка saves", "Saves Folder")}</span>
                     </button>
                     <button type="button" className="inst-tool-btn" onClick={loadWorlds}>
                       <RefreshCw size={14} />
@@ -953,7 +960,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 <div style={{ flex: 1, overflowY: "auto" }}>
                   {worlds.length === 0 ? (
                     <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
-                      В этой сборке пока нет сохранённых миров.
+                      {tr(lang, "У цій збірці поки немає збережених світів.", "В этой сборке пока нет сохранённых миров.", "No saved worlds in this assembly yet.")}
                     </div>
                   ) : (
                     <div className="inst-worlds-grid">
@@ -970,9 +977,9 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                             <div className="inst-world-title" title={w.displayName}>
                               {w.displayName}
                             </div>
-                            <div className="inst-world-meta">Папка: {w.folderName}</div>
+                            <div className="inst-world-meta">{tr(lang, "Папка:", "Папка:", "Folder:")} {w.folderName}</div>
                             <div className="inst-world-meta">
-                              {(w.sizeBytes / (1024 * 1024)).toFixed(1)} МБ
+                              {(w.sizeBytes / (1024 * 1024)).toFixed(1)} {tr(lang, "МБ", "МБ", "MB")}
                             </div>
                           </div>
                         </div>
@@ -989,7 +996,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 <div className="inst-content-toolbar">
                   <div className="inst-toolbar-left">
                     <span style={{ fontWeight: 700, fontSize: "14px", color: "#f3f4f6" }}>
-                      Серверы сетевой игры
+                      {tr(lang, "Сервери мережевої гри", "Серверы сетевой игры", "Multiplayer Servers")}
                     </span>
                   </div>
                   <div className="inst-toolbar-right">
@@ -999,14 +1006,14 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                       onClick={() => void ipc.openInstanceSubfolder(instance.id, "")}
                     >
                       <Folder size={14} />
-                      <span>Директория игры</span>
+                      <span>{tr(lang, "Директорія гри", "Директория игры", "Game Directory")}</span>
                     </button>
                   </div>
                 </div>
 
                 <div style={{ padding: "20px", background: "#090e17", borderRadius: "6px", color: "#94a3b8" }}>
-                  Серверы автоматически синхронизируются из файла <code>servers.dat</code> при запуске игры.
-                  Вы также можете подключаться к любому серверу напрямую из раздела «Серверы» лаунчера.
+                  {tr(lang, "Сервери автоматично синхронізуються з файлу servers.dat при запуску гри.", "Серверы автоматически синхронизируются из файла servers.dat при запуске игры.", "Servers are automatically synchronized from servers.dat on game launch.")}
+                  {tr(lang, "Ви також можете підключатися до будь-якого сервера напряму з розділу «Сервери» лаунчера.", "Вы также можете подключаться к любому серверу напрямую из раздела «Серверы» лаунчера.", "You can also connect to any server directly from the «Servers» screen of the launcher.")}
                 </div>
               </div>
             )}
@@ -1017,7 +1024,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 <div className="inst-content-toolbar">
                   <div className="inst-toolbar-left">
                     <span style={{ fontWeight: 700, fontSize: "14px", color: "#f3f4f6" }}>
-                      Скриншоты ({screenshots.length})
+                      {tr(lang, "Скріншоти", "Скриншоты", "Screenshots")} ({screenshots.length})
                     </span>
                   </div>
                   <div className="inst-toolbar-right">
@@ -1027,7 +1034,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                       onClick={() => void ipc.openInstanceSubfolder(instance.id, "screenshots")}
                     >
                       <FolderOpen size={14} />
-                      <span>Папка screenshots</span>
+                      <span>{tr(lang, "Папка screenshots", "Папка screenshots", "Screenshots Folder")}</span>
                     </button>
                     <button type="button" className="inst-tool-btn" onClick={loadScreenshots}>
                       <RefreshCw size={14} />
@@ -1038,7 +1045,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 <div style={{ flex: 1, overflowY: "auto" }}>
                   {screenshots.length === 0 ? (
                     <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
-                      Скриншотов пока нет. Нажмите F2 во время игры для создания скриншота!
+                      {tr(lang, "Скріншотів поки немає. Натисніть F2 під час гри для створення скріншоту!", "Скриншотов пока нет. Нажмите F2 во время игры для создания скриншота!", "No screenshots yet. Press F2 during the game to take a screenshot!")}
                     </div>
                   ) : (
                     <div className="inst-screenshots-grid">
@@ -1068,7 +1075,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 <div className="inst-content-toolbar">
                   <div className="inst-toolbar-left">
                     <span style={{ fontWeight: 700, fontSize: "14px", color: "#f3f4f6" }}>
-                      Заметки к сборке
+                      {tr(lang, "Нотатки до збірки", "Заметки к сборке", "Assembly Notes")}
                     </span>
                   </div>
                   <div className="inst-toolbar-right">
@@ -1079,13 +1086,13 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                       disabled={isSavingNotes}
                     >
                       <Check size={14} />
-                      <span>{isSavingNotes ? "Сохранение..." : "Сохранить заметку"}</span>
+                      <span>{isSavingNotes ? tr(lang, "Збереження...", "Сохранение...", "Saving...") : tr(lang, "Зберегти нотатку", "Сохранить заметку", "Save note")}</span>
                     </button>
                   </div>
                 </div>
                 <textarea
                   className="inst-notes-textarea"
-                  placeholder="Напишите здесь любые заметки, крафты, цели или координаты для этой сборки..."
+                  placeholder={tr(lang, "Напишіть тут будь-які нотатки, крафти, цілі або координати для цієї збірки...", "Напишите здесь любые заметки, крафты, цели или координаты для этой сборки...", "Write any notes, recipes, goals, or coordinates for this assembly here...")}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
@@ -1115,7 +1122,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                     <input
                       type="text"
                       className="inst-search-input"
-                      placeholder="Фильтр строк лога..."
+                      placeholder={tr(lang, "Фільтр рядків логу...", "Фильтр строк лога...", "Filter log lines...")}
                       value={logSearch}
                       onChange={(e) => setLogSearch(e.target.value)}
                     />
@@ -1126,12 +1133,12 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                       className="inst-tool-btn"
                       onClick={() => {
                         navigator.clipboard.writeText(logContent);
-                        alert("Лог скопирован в буфер обмена!");
+                        alert(tr(lang, "Лог скопійовано в буфер обміну!", "Лог скопирован в буфер обмена!", "Log copied to clipboard!"));
                       }}
-                      title="Копировать"
+                      title={tr(lang, "Копіювати", "Копировать", "Copy")}
                     >
                       <Copy size={14} />
-                      <span>Копировать</span>
+                      <span>{tr(lang, "Копіювати", "Копировать", "Copy")}</span>
                     </button>
                     <button
                       type="button"
@@ -1139,14 +1146,14 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                       onClick={() => void ipc.openInstanceSubfolder(instance.id, "logs")}
                     >
                       <Folder size={14} />
-                      <span>Папка логов</span>
+                      <span>{tr(lang, "Папка логів", "Папка логов", "Logs Folder")}</span>
                     </button>
                     <button type="button" className="inst-tool-btn" onClick={loadLogs}>
                       <RefreshCw size={14} />
                     </button>
                   </div>
                 </div>
-                <pre className="inst-log-viewer">{filteredLogLines || "Лог пуст."}</pre>
+                <pre className="inst-log-viewer">{filteredLogLines || tr(lang, "Лог порожній.", "Лог пуст.", "Log is empty.")}</pre>
               </div>
             )}
 
@@ -1160,7 +1167,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                     className={`inst-param-tab ${activeSettingsSubTab === "general" ? "active" : ""}`}
                     onClick={() => setActiveSettingsSubTab("general")}
                   >
-                    Общие
+                    {tr(lang, "Загальні", "Общие", "General")}
                   </button>
                   <button
                     type="button"
@@ -1174,21 +1181,21 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                     className={`inst-param-tab ${activeSettingsSubTab === "native" ? "active" : ""}`}
                     onClick={() => setActiveSettingsSubTab("native")}
                   >
-                    Настройки
+                    {tr(lang, "Налаштування", "Настройки", "Settings")}
                   </button>
                   <button
                     type="button"
                     className={`inst-param-tab ${activeSettingsSubTab === "commands" ? "active" : ""}`}
                     onClick={() => setActiveSettingsSubTab("commands")}
                   >
-                    Пользовательские команды
+                    {tr(lang, "Користувацькі команди", "Пользовательские команды", "Custom Commands")}
                   </button>
                   <button
                     type="button"
                     className={`inst-param-tab ${activeSettingsSubTab === "env" ? "active" : ""}`}
                     onClick={() => setActiveSettingsSubTab("env")}
                   >
-                    Переменные окружения
+                    {tr(lang, "Змінні оточення", "Переменные окружения", "Environment Variables")}
                   </button>
                 </div>
 
@@ -1198,7 +1205,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                     <div className="inst-params-panel">
                       {/* Window Settings (Screenshot 2) */}
                       <div className="inst-settings-group">
-                        <div className="inst-settings-title">Окно игры</div>
+                        <div className="inst-settings-title">{tr(lang, "Вікно гри", "Окно игры", "Game Window")}</div>
                         <label className="inst-checkbox-row">
                           <input
                             type="checkbox"
@@ -1207,10 +1214,10 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               setConfig((prev) => ({ ...prev, fullscreen: e.target.checked }))
                             }
                           />
-                          <span>Запускать Minecraft в полноэкранном режиме</span>
+                          <span>{tr(lang, "Запускати Minecraft у повноекранному режимі", "Запускать Minecraft в полноэкранном режиме", "Launch Minecraft in fullscreen mode")}</span>
                         </label>
                         <div className="inst-input-row">
-                          <label>Размер окна:</label>
+                          <label>{tr(lang, "Розмір вікна:", "Размер окна:", "Window size:")}</label>
                           <div className="inst-stepper">
                             <input
                               type="number"
@@ -1280,7 +1287,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               +
                             </button>
                           </div>
-                          <span>пиксели</span>
+                          <span>{tr(lang, "пікселі", "пиксели", "pixels")}</span>
                         </div>
                         <label className="inst-checkbox-row">
                           <input
@@ -1293,7 +1300,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               }))
                             }
                           />
-                          <span>Когда открывается окно игры, спрятать лаунчер</span>
+                          <span>{tr(lang, "Коли відкривається вікно гри, сховати лаунчер", "Когда открывается окно игры, спрятать лаунчер", "Hide launcher when game window opens")}</span>
                         </label>
                         <label className="inst-checkbox-row">
                           <input
@@ -1306,13 +1313,13 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               }))
                             }
                           />
-                          <span>Завершать работу лаунчера при закрытии окна игры</span>
+                          <span>{tr(lang, "Завершувати роботу лаунчера при закритті вікна гри", "Завершать работу лаунчера при закрытии окна игры", "Close launcher when game window exits")}</span>
                         </label>
                       </div>
 
                       {/* Console Settings (Screenshot 2) */}
                       <div className="inst-settings-group">
-                        <div className="inst-settings-title">Окно консоли</div>
+                        <div className="inst-settings-title">{tr(lang, "Вікно консолі", "Окно консоли", "Console Window")}</div>
                         <label className="inst-checkbox-row">
                           <input
                             type="checkbox"
@@ -1324,7 +1331,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               }))
                             }
                           />
-                          <span>Отображать окно консоли при запуске игры</span>
+                          <span>{tr(lang, "Відображати вікно консолі при запуску гри", "Отображать окно консоли при запуске игры", "Show console window on game launch")}</span>
                         </label>
                         <label className="inst-checkbox-row">
                           <input
@@ -1337,7 +1344,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               }))
                             }
                           />
-                          <span>Отображать окно консоли при возникновении сбоя игры</span>
+                          <span>{tr(lang, "Відображати вікно консолі при виникненні збою гри", "Отображать окно консоли при возникновении сбоя игры", "Show console window on game crash")}</span>
                         </label>
                         <label className="inst-checkbox-row">
                           <input
@@ -1350,13 +1357,13 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               }))
                             }
                           />
-                          <span>Скрывать окно консоли при завершении игры</span>
+                          <span>{tr(lang, "Ховати вікно консолі при завершенні гри", "Скрывать окно консоли при завершении игры", "Hide console window when game exits")}</span>
                         </label>
                       </div>
 
                       {/* Playtime (Screenshot 3) */}
                       <div className="inst-settings-group">
-                        <div className="inst-settings-title">Время игры</div>
+                        <div className="inst-settings-title">{tr(lang, "Час гри", "Время игры", "Playtime")}</div>
                         <label className="inst-checkbox-row">
                           <input
                             type="checkbox"
@@ -1381,13 +1388,13 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
 
                       {/* Auto-connect (Screenshot 3) */}
                       <div className="inst-settings-group">
-                        <div className="inst-settings-title">Активировать автоподключение</div>
+                        <div className="inst-settings-title">{tr(lang, "Активувати автопідключення", "Активировать автоподключение", "Enable Auto-Connect")}</div>
                         <div className="inst-input-row">
-                          <label>Адрес сервера:</label>
+                          <label>{tr(lang, "Адреса сервера:", "Адрес сервера:", "Server address:")}</label>
                           <input
                             type="text"
                             className="inst-text-input"
-                            placeholder="Например: mc.hypixel.net"
+                            placeholder={tr(lang, "Наприклад: mc.hypixel.net", "Например: mc.hypixel.net", "e.g. mc.hypixel.net")}
                             value={config.autoconnectServer || ""}
                             onChange={(e) =>
                               setConfig((prev) => ({
@@ -1405,20 +1412,20 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                   {activeSettingsSubTab === "java" && (
                     <div className="inst-params-panel">
                       <div className="inst-settings-group">
-                        <div className="inst-settings-title">Установка Java</div>
+                        <div className="inst-settings-title">{tr(lang, "Встановлення Java", "Установка Java", "Java Installation")}</div>
                         <div className="inst-input-row">
-                          <label>Исполняемый файл Java:</label>
+                          <label>{tr(lang, "Виконуваний файл Java:", "Исполняемый файл Java:", "Java Executable:")}</label>
                           <input
                             type="text"
                             className="inst-text-input"
-                            placeholder="Оставьте пустым для автоопределения или укажите путь к java"
+                            placeholder={tr(lang, "Залиште порожнім для автовизначення або вкажіть шлях до java", "Оставьте пустым для автоопределения или укажите путь к java", "Leave empty for auto-detection or specify path to java")}
                             value={config.javaPath || ""}
                             onChange={(e) =>
                               setConfig((prev) => ({ ...prev, javaPath: e.target.value }))
                             }
                           />
                           <button type="button" className="inst-tool-btn" onClick={handleFindJava}>
-                            Найти
+                            {tr(lang, "Знайти", "Найти", "Find")}
                           </button>
                         </div>
                         <label className="inst-checkbox-row">
@@ -1432,14 +1439,14 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               }))
                             }
                           />
-                          <span>Пропустить проверку совместимости Java</span>
+                          <span>{tr(lang, "Пропустити перевірку сумісності Java", "Пропустить проверку совместимости Java", "Skip Java compatibility check")}</span>
                         </label>
                       </div>
 
                       <div className="inst-settings-group">
-                        <div className="inst-settings-title">Память</div>
+                        <div className="inst-settings-title">{tr(lang, "Пам'ять", "Память", "Memory")}</div>
                         <div className="inst-input-row">
-                          <label>Минимальное использование памяти (-Xms):</label>
+                          <label>{tr(lang, "Мінімальне використання пам'яті (-Xms):", "Минимальное использование памяти (-Xms):", "Minimum memory allocation (-Xms):")}</label>
                           <div className="inst-stepper">
                             <input
                               type="number"
@@ -1478,7 +1485,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                         </div>
 
                         <div className="inst-input-row">
-                          <label>Максимальное использование памяти (-Xmx):</label>
+                          <label>{tr(lang, "Максимальне використання пам'яті (-Xmx):", "Максимальное использование памяти (-Xmx):", "Maximum memory allocation (-Xmx):")}</label>
                           <div className="inst-stepper">
                             <input
                               type="number"
@@ -1517,7 +1524,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                         </div>
 
                         <div className="inst-input-row">
-                          <label>Размер PermGen (-XX:PermSize):</label>
+                          <label>{tr(lang, "Розмір PermGen (-XX:PermSize):", "Размер PermGen (-XX:PermSize):", "PermGen size (-XX:PermSize):")}</label>
                           <div className="inst-stepper">
                             <input
                               type="number"
@@ -1557,7 +1564,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                       </div>
 
                       <div className="inst-settings-group">
-                        <div className="inst-settings-title">Аргументы Java</div>
+                        <div className="inst-settings-title">{tr(lang, "Аргументи Java", "Аргументы Java", "Java Arguments")}</div>
                         <input
                           type="text"
                           className="inst-text-input"
@@ -1575,9 +1582,9 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                   {activeSettingsSubTab === "native" && (
                     <div className="inst-params-panel">
                       <div className="inst-settings-group">
-                        <div className="inst-settings-title">Нативные библиотеки</div>
+                        <div className="inst-settings-title">{tr(lang, "Нативні бібліотеки", "Нативные библиотеки", "Native Libraries")}</div>
                         <div className="inst-input-row">
-                          <label>Путь к библиотеке GLFW:</label>
+                          <label>{tr(lang, "Шлях до бібліотеки GLFW:", "Путь к библиотеке GLFW:", "Path to GLFW library:")}</label>
                           <input
                             type="text"
                             className="inst-text-input"
@@ -1591,7 +1598,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                           />
                         </div>
                         <div className="inst-input-row">
-                          <label>Путь к библиотеке OpenAL:</label>
+                          <label>{tr(lang, "Шлях до бібліотеки OpenAL:", "Путь к библиотеке OpenAL:", "Path to OpenAL library:")}</label>
                           <input
                             type="text"
                             className="inst-text-input"
@@ -1607,7 +1614,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                       </div>
 
                       <div className="inst-settings-group">
-                        <div className="inst-settings-title">Производительность</div>
+                        <div className="inst-settings-title">{tr(lang, "Продуктивність", "Производительность", "Performance")}</div>
                         <label className="inst-checkbox-row">
                           <input
                             type="checkbox"
@@ -1619,7 +1626,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               }))
                             }
                           />
-                          <span>Включить GameMode от Feral (gamemoderun)</span>
+                          <span>{tr(lang, "Увімкнути GameMode від Feral (gamemoderun)", "Включить GameMode от Feral (gamemoderun)", "Enable Feral GameMode (gamemoderun)")}</span>
                         </label>
                         <label className="inst-checkbox-row">
                           <input
@@ -1632,7 +1639,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               }))
                             }
                           />
-                          <span>Включить MangoHud</span>
+                          <span>{tr(lang, "Увімкнути MangoHud", "Включить MangoHud", "Enable MangoHud")}</span>
                         </label>
                         <label className="inst-checkbox-row">
                           <input
@@ -1645,7 +1652,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               }))
                             }
                           />
-                          <span>Использовать дискретную видеокарту (DRI_PRIME=1)</span>
+                          <span>{tr(lang, "Використовувати дискретну відеокарту (DRI_PRIME=1)", "Использовать дискретную видеокарту (DRI_PRIME=1)", "Use discrete GPU (DRI_PRIME=1)")}</span>
                         </label>
                         <label className="inst-checkbox-row">
                           <input
@@ -1655,7 +1662,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               setConfig((prev) => ({ ...prev, useZink: e.target.checked }))
                             }
                           />
-                          <span>Использовать Zink (OpenGL over Vulkan)</span>
+                          <span>{tr(lang, "Використовувати Zink (OpenGL over Vulkan)", "Использовать Zink (OpenGL over Vulkan)", "Use Zink (OpenGL over Vulkan)")}</span>
                         </label>
                       </div>
                     </div>
@@ -1665,9 +1672,9 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                   {activeSettingsSubTab === "commands" && (
                     <div className="inst-params-panel">
                       <div className="inst-settings-group">
-                        <div className="inst-settings-title">Пользовательские команды</div>
+                        <div className="inst-settings-title">{tr(lang, "Користувацькі команди", "Пользовательские команды", "Custom Commands")}</div>
                         <div className="inst-input-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: "4px" }}>
-                          <label>Предстартовая команда:</label>
+                          <label>{tr(lang, "Передстартова команда:", "Предстартовая команда:", "Pre-launch command:")}</label>
                           <input
                             type="text"
                             className="inst-text-input"
@@ -1682,7 +1689,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                           />
                         </div>
                         <div className="inst-input-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: "4px" }}>
-                          <label>Команда обёртки:</label>
+                          <label>{tr(lang, "Команда обгортки:", "Команда обёртки:", "Wrapper command:")}</label>
                           <input
                             type="text"
                             className="inst-text-input"
@@ -1697,7 +1704,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                           />
                         </div>
                         <div className="inst-input-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: "4px" }}>
-                          <label>Завершающая команда:</label>
+                          <label>{tr(lang, "Завершальна команда:", "Завершающая команда:", "Post-exit command:")}</label>
                           <input
                             type="text"
                             className="inst-text-input"
@@ -1713,12 +1720,12 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                         </div>
 
                         <div style={{ marginTop: "10px", fontSize: "11.5px", color: "#8b919c", lineHeight: 1.6 }}>
-                          Переменные среды, доступные в командах:
-                          <div>• <code>$INST_NAME</code> - имя экземпляра</div>
-                          <div>• <code>$INST_ID</code> - ID экземпляра</div>
-                          <div>• <code>$INST_DIR</code> - полный путь к экземпляру</div>
-                          <div>• <code>$INST_MC_DIR</code> - путь к папке minecraft</div>
-                          <div>• <code>$INST_JAVA</code> - путь к исполняемому файлу Java</div>
+                          {tr(lang, "Змінні середовища, доступні в командах:", "Переменные среды, доступные в командах:", "Environment variables available in commands:")}
+                          <div>• <code>$INST_NAME</code> - {tr(lang, "ім'я екземпляра", "имя экземпляра", "instance name")}</div>
+                          <div>• <code>$INST_ID</code> - {tr(lang, "ID екземпляра", "ID экземпляра", "instance ID")}</div>
+                          <div>• <code>$INST_DIR</code> - {tr(lang, "повний шлях до екземпляра", "полный путь к экземпляру", "full path to instance")}</div>
+                          <div>• <code>$INST_MC_DIR</code> - {tr(lang, "шлях до папки minecraft", "путь к папке minecraft", "path to minecraft folder")}</div>
+                          <div>• <code>$INST_JAVA</code> - {tr(lang, "шлях до виконуваного файлу Java", "путь к исполняемому файлу Java", "path to Java executable")}</div>
                         </div>
                       </div>
                     </div>
@@ -1739,30 +1746,30 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               }))
                             }
                           />
-                          <span>Переопределять глобальные параметры</span>
+                          <span>{tr(lang, "Перевизначати глобальні параметри", "Переопределять глобальные параметры", "Override global settings")}</span>
                         </label>
                         <div style={{ display: "flex", gap: "8px" }}>
                           <button
                             type="button"
                             className="inst-tool-btn"
                             onClick={() => {
-                              const name = prompt("Имя переменной окружения:");
+                              const name = prompt(tr(lang, "Ім'я змінної оточення:", "Имя переменной окружения:", "Environment variable name:"));
                               if (!name) return;
-                              const val = prompt("Значение:") || "";
+                              const val = prompt(tr(lang, "Значення:", "Значение:", "Value:")) || "";
                               setConfig((prev) => ({
                                 ...prev,
                                 envVars: { ...(prev.envVars || {}), [name]: val },
                               }));
                             }}
                           >
-                            Добавить
+                            {tr(lang, "Додати", "Добавить", "Add")}
                           </button>
                           <button
                             type="button"
                             className="inst-tool-btn"
                             onClick={() => setConfig((prev) => ({ ...prev, envVars: {} }))}
                           >
-                            Очистить
+                            {tr(lang, "Очистити", "Очистить", "Clear")}
                           </button>
                         </div>
 
@@ -1770,8 +1777,8 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                           <table className="inst-table">
                             <thead>
                               <tr>
-                                <th>Имя</th>
-                                <th>Значение</th>
+                                <th>{tr(lang, "Ім'я", "Имя", "Name")}</th>
+                                <th>{tr(lang, "Значення", "Значение", "Value")}</th>
                                 <th style={{ width: 40 }}></th>
                               </tr>
                             </thead>
@@ -1779,7 +1786,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                               {Object.entries(config.envVars || {}).length === 0 ? (
                                 <tr>
                                   <td colSpan={3} style={{ textAlign: "center", color: "#64748b" }}>
-                                    Нет пользовательских переменных окружения.
+                                    {tr(lang, "Немає користувацьких змінних оточення.", "Нет пользовательских переменных окружения.", "No custom environment variables.")}
                                   </td>
                                 </tr>
                               ) : (
@@ -1821,20 +1828,20 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
         {/* Footer */}
         <div className="inst-editor-footer">
           <div className="inst-footer-info">
-            {activeTab === "mods" && <span>Всего модов: {mods.length} (Включено: {mods.filter((m) => m.enabled).length})</span>}
-            {activeTab === "resourcepacks" && <span>Всего ресурс-паков: {resourcePacks.length}</span>}
-            {activeTab === "shaders" && <span>Всего шейдеров: {shaders.length}</span>}
-            {activeTab === "worlds" && <span>Всего миров: {worlds.length}</span>}
+            {activeTab === "mods" && <span>{tr(lang, "Всього модів:", "Всего модов:", "Total mods:")} {mods.length} ({tr(lang, "Увімкнено:", "Включено:", "Enabled:")} {mods.filter((m) => m.enabled).length})</span>}
+            {activeTab === "resourcepacks" && <span>{tr(lang, "Всього ресурс-паків:", "Всего ресурс-паков:", "Total resource packs:")} {resourcePacks.length}</span>}
+            {activeTab === "shaders" && <span>{tr(lang, "Всього шейдерів:", "Всего шейдеров:", "Total shaders:")} {shaders.length}</span>}
+            {activeTab === "worlds" && <span>{tr(lang, "Всього світів:", "Всего миров:", "Total worlds:")} {worlds.length}</span>}
           </div>
           <div className="inst-footer-actions">
             {activeTab === "settings" && (
               <button type="button" className="inst-footer-btn-save" onClick={handleSaveConfig}>
                 <Check size={14} />
-                <span>Сохранить параметры</span>
+                <span>{tr(lang, "Зберегти параметри", "Сохранить параметры", "Save Settings")}</span>
               </button>
             )}
             <button type="button" className="inst-footer-btn-close" onClick={onClose}>
-              Закрыть
+              {tr(lang, "Закрити", "Закрыть", "Close")}
             </button>
           </div>
         </div>
@@ -1858,17 +1865,17 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                   onOpenCatalog();
                 }}
               >
-                <span>Скачивание модов</span>
+                <span>{tr(lang, "Завантаження модів", "Скачивание модов", "Download Mods")}</span>
               </div>
             )}
             <div
               className="inst-ctx-item"
               onClick={() => {
                 setContextMenu(null);
-                alert(`Проверка обновлений для ${contextMenu.item.name}... Все моды актуальны!`);
+                alert(`${tr(lang, "Перевірка оновлень для", "Проверка обновлений для", "Checking updates for")} ${contextMenu.item.name}... ${tr(lang, "Всі моди актуальні!", "Все моды актуальны!", "All mods are up to date!")}`);
               }}
             >
-              <span>Проверить обновления</span>
+              <span>{tr(lang, "Перевірити оновлення", "Проверить обновления", "Check for updates")}</span>
             </div>
             <div
               className="inst-ctx-item"
@@ -1880,7 +1887,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 }
               }}
             >
-              <span>Изменить версию</span>
+              <span>{tr(lang, "Змінити версію", "Изменить версию", "Change Version")}</span>
             </div>
             <div
               className="inst-ctx-item"
@@ -1889,7 +1896,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 handleAddModFile();
               }}
             >
-              <span>Добавить файл</span>
+              <span>{tr(lang, "Додати файл", "Добавить файл", "Add File")}</span>
             </div>
             <div className="inst-ctx-separator" />
             <div
@@ -1900,7 +1907,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 handleDeleteMod(item);
               }}
             >
-              <span>Удалить</span>
+              <span>{tr(lang, "Видалити", "Удалить", "Delete")}</span>
             </div>
             {!contextMenu.item.enabled ? (
               <div
@@ -1911,7 +1918,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                   handleToggleMod(item);
                 }}
               >
-                <span style={{ color: "#4ade80" }}>Включить</span>
+                <span style={{ color: "#4ade80" }}>{tr(lang, "Увімкнути", "Включить", "Enable")}</span>
               </div>
             ) : (
               <div
@@ -1922,7 +1929,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                   handleToggleMod(item);
                 }}
               >
-                <span style={{ color: "#f87171" }}>Отключить</span>
+                <span style={{ color: "#f87171" }}>{tr(lang, "Вимкнути", "Отключить", "Disable")}</span>
               </div>
             )}
             <div className="inst-ctx-separator" />
@@ -1935,7 +1942,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                   void ipc.openUrl(url);
                 }}
               >
-                <span>Открыть домашнюю страницу</span>
+                <span>{tr(lang, "Відкрити домашню сторінку", "Открыть домашнюю страницу", "Open home page")}</span>
               </div>
             )}
             <div
@@ -1944,10 +1951,10 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 setContextMenu(null);
                 const list = mods.map((m) => `${m.name} (${m.filename})`).join("\n");
                 navigator.clipboard.writeText(list);
-                alert("Список модов скопирован в буфер обмена!");
+                alert(tr(lang, "Список модів скопійовано в буфер обміну!", "Список модов скопирован в буфер обмена!", "Mod list copied to clipboard!"));
               }}
             >
-              <span>Экспортировать список</span>
+              <span>{tr(lang, "Експортувати список", "Экспортировать список", "Export list")}</span>
             </div>
             <div
               className="inst-ctx-item"
@@ -1956,7 +1963,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 void ipc.openInstanceSubfolder(instance.id, "mods");
               }}
             >
-              <span>Открыть папку</span>
+              <span>{tr(lang, "Відкрити папку", "Открыть папку", "Open Folder")}</span>
             </div>
             <div
               className="inst-ctx-item"
@@ -1965,7 +1972,7 @@ export const InstanceEditorModal: React.FC<InstanceEditorModalProps> = ({
                 void ipc.openInstanceSubfolder(instance.id, "config");
               }}
             >
-              <span>Открыть конфигурации</span>
+              <span>{tr(lang, "Відкрити конфігурації", "Открыть конфигурации", "Open configs")}</span>
             </div>
           </div>
         )}

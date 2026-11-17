@@ -681,7 +681,13 @@ export const App: React.FC = () => {
       return updated;
     });
     showToast(
-      `Оформление "${zone === "topbar" ? "Верхней панели" : zone === "background" ? "Заднего фона" : "Каталога"}" сброшено`
+      `${t("resetDefaultBtn", "Скидання")}: "${
+        zone === "topbar"
+          ? t("subtabTopbar", "Верхня панель")
+          : zone === "background"
+          ? t("subtabBackground", "Задній фон")
+          : t("dockCatalog", "Каталог")
+      }"`
     );
   };
 
@@ -691,7 +697,7 @@ export const App: React.FC = () => {
     try {
       localStorage.setItem("omega_topbar_layout", JSON.stringify(sanitized));
     } catch {}
-    showToast("Порядок верхней панели сохранен!");
+    showToast(t("toastTopbarSaved", "Порядок верхньої панелі збережено!"));
   };
 
   const handleResetTopBarLayout = () => {
@@ -699,7 +705,7 @@ export const App: React.FC = () => {
     try {
       localStorage.setItem("omega_topbar_layout", JSON.stringify(DEFAULT_TOPBAR_LAYOUT));
     } catch {}
-    showToast("Верхняя панель сброшена по умолчанию");
+    showToast(t("toastTopbarReset", "Верхню панель скинуто за замовчуванням"));
   };
 
   const handleSaveBottomBarLayout = (newLayout: BottomBarItemId[], alignment?: BottomBarAlignment) => {
@@ -714,7 +720,7 @@ export const App: React.FC = () => {
         localStorage.setItem("omega_bottombar_alignment", JSON.stringify(alignment));
       } catch {}
     }
-    showToast("Настройки нижней панели сохранены!");
+    showToast(t("toastBottombarSaved", "Налаштування нижньої панелі збережено!"));
   };
 
   const handleResetBottomBarLayout = () => {
@@ -724,7 +730,7 @@ export const App: React.FC = () => {
       localStorage.setItem("omega_bottombar_layout", JSON.stringify(DEFAULT_BOTTOMBAR_LAYOUT));
       localStorage.setItem("omega_bottombar_alignment", JSON.stringify(DEFAULT_BOTTOMBAR_ALIGNMENT));
     } catch {}
-    showToast("Нижняя панель сброшена по умолчанию");
+    showToast(t("toastBottombarReset", "Нижню панель скинуто за замовчуванням"));
   };
 
   const handleChangeButtonShapePreset = (preset: ButtonShapePreset) => {
@@ -732,7 +738,7 @@ export const App: React.FC = () => {
     try {
       localStorage.setItem("omega_btn_shape_preset", JSON.stringify(preset));
     } catch {}
-    showToast(`Форма кнопок изменена: ${preset}`);
+    showToast(`${t("toastButtonShapeChanged", "Форму кнопок змінено: ")}${preset}`);
   };
 
   const handleTogglePlay = useCallback(async () => {
@@ -828,7 +834,7 @@ export const App: React.FC = () => {
   const handleToggleSound = () => {
     setSoundMuted((prev) => {
       const next = !prev;
-      showToast(next ? "Системные звуки отключены" : "Системные звуки включены");
+      showToast(next ? t("toastSoundsMuted", "Системні звуки вимкнено") : t("toastSoundsUnmuted", "Системні звуки увімкнено"));
       return next;
     });
   };
@@ -836,12 +842,12 @@ export const App: React.FC = () => {
   const handleEquipSkin = (url: string, model: "default" | "slim") => {
     setActiveSkinUrl(url);
     setSkinModel(model);
-    showToast("Скин успешно надет на 3D модель!");
+    showToast(t("toastSkinEquipped", "Скін успішно надягнуто на 3D модель!"));
   };
 
   const handleEquipCape = (url: string | null) => {
     setActiveCapeUrl(url);
-    showToast(url ? "Плащ успешно экипирован!" : "Плащ снят");
+    showToast(url ? t("toastCapeEquipped", "Плащ успішно екіпіровано!") : t("toastCapeUnequipped", "Плащ знято"));
   };
 
   const handleRefreshSelectedInstanceMods = useCallback(async () => {
@@ -922,7 +928,7 @@ export const App: React.FC = () => {
       }
       return next;
     });
-    showToast("Версия удалена");
+    showToast(t("toastInstanceDeleted", "Версію видалено"));
   }, [selectedInstanceId]);
 
   const handleDeleteAccount = (id: string) => {
@@ -933,7 +939,7 @@ export const App: React.FC = () => {
       }
       return next;
     });
-    showToast("Профиль удален");
+    showToast(t("toastProfileDeleted", "Профіль видалено"));
   };
 
   const handleDirectConnect = useCallback(
@@ -943,7 +949,7 @@ export const App: React.FC = () => {
         selectedInstance ||
         instances[0];
       if (!inst) {
-        showToast("Нет доступной сборки для запуска");
+        showToast(t("toastNoInstanceToLaunch", "Немає доступної збірки для запуску"));
         return;
       }
       if (inst.id !== selectedInstanceId) {
@@ -1086,7 +1092,7 @@ export const App: React.FC = () => {
 
   const handleUnlinkOmega = () => {
     setOmegaAccount({ isLinked: false });
-    showToast("Аккаунт Omega отключен.");
+    showToast(t("toastOmegaDisconnected", "Акаунт Omega відключено."));
   };
 
   return (
@@ -1116,6 +1122,7 @@ export const App: React.FC = () => {
         onSelectAccount={handleSelectAccount}
         onOpenOmegaLogin={handleOpenOmegaLogin}
         onUnlinkOmega={handleUnlinkOmega}
+        onDeleteAccount={handleDeleteAccount}
         soundMuted={soundMuted}
         activeScreen={activeScreen}
         skinUrl={activeSkinUrl}

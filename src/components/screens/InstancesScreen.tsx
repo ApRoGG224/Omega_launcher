@@ -106,6 +106,78 @@ const LOADER_OPTIONS: Array<{ id: InstanceData["loader"]; label: string; colorCl
   { id: "Quilt", label: "Quilt", colorClass: "c5" },
 ];
 
+
+const tr = (lang: string, uk: string, ru: string, en: string): string => {
+  if (lang === "uk") return uk;
+  if (lang === "en") return en;
+  return ru;
+};
+
+const getAvatarPresetName = (id: string, lang: string): { label: string; fullName: string } => {
+  switch (id) {
+    case "diamond_sword":
+      return {
+        label: tr(lang, "Меч", "Меч", "Sword"),
+        fullName: tr(lang, "Діамантовий меч", "Алмазный меч", "Diamond Sword"),
+      };
+    case "diamond_pickaxe":
+      return {
+        label: tr(lang, "Кирка", "Кирка", "Pickaxe"),
+        fullName: tr(lang, "Діамантова кирка", "Алмазная кирка", "Diamond Pickaxe"),
+      };
+    case "obsidian":
+      return {
+        label: tr(lang, "Обсидіан", "Обсидиан", "Obsidian"),
+        fullName: tr(lang, "Обсидіан", "Обсидиан", "Obsidian"),
+      };
+    case "end_crystal":
+      return {
+        label: tr(lang, "Кристал", "Кристалл", "Crystal"),
+        fullName: tr(lang, "Кристал Енда", "Кристалл Энда", "End Crystal"),
+      };
+    case "totem_of_undying":
+      return {
+        label: tr(lang, "Тотем", "Тотем", "Totem"),
+        fullName: tr(lang, "Тотем безсмертя", "Тотем бессмертия", "Totem of Undying"),
+      };
+    case "golden_apple":
+      return {
+        label: tr(lang, "Яблуко", "Яблоко", "Apple"),
+        fullName: tr(lang, "Золоте яблуко", "Золотое яблоко", "Golden Apple"),
+      };
+    case "ender_pearl":
+      return {
+        label: tr(lang, "Перлина", "Жемчуг", "Pearl"),
+        fullName: tr(lang, "Перлина Енда", "Жемчуг Энда", "Ender Pearl"),
+      };
+    case "tnt":
+      return {
+        label: tr(lang, "ТНТ", "ТНТ", "TNT"),
+        fullName: tr(lang, "Динаміт (TNT)", "Динамит (TNT)", "TNT"),
+      };
+    case "netherite_sword":
+      return {
+        label: tr(lang, "Незерит", "Незерит", "Netherite"),
+        fullName: tr(lang, "Незеритовий меч", "Незеритовый меч", "Netherite Sword"),
+      };
+    default:
+      return { label: id, fullName: id };
+  }
+};
+
+const getPresetFolderIconLabel = (id: string, lang: string): string => {
+  switch (id) {
+    case "rust": return "Rust (Beta)";
+    case "grass": return tr(lang, "Трава", "Трава", "Grass");
+    case "stone": return tr(lang, "Камінь", "Камень", "Stone");
+    case "diamond": return tr(lang, "Діамант", "Алмаз", "Diamond");
+    case "obsidian": return tr(lang, "Обсидіан", "Обсидиан", "Obsidian");
+    case "tnt": return tr(lang, "ТНТ", "ТНТ", "TNT");
+    default: return id;
+  }
+};
+
+
 export const InstancesScreen: React.FC<InstancesScreenProps> = ({
   onBack,
   instances,
@@ -200,7 +272,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
     snapshotsCount,
     betaAlphaCount,
     latestRelease,
-  } = useVersions();
+  } = useVersions(lang);
 
   const handleCustomAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -493,7 +565,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
             <div className="sb-hero-info">
               <div className="sb-hero-title">
                 <h1>{currentInstance.name}</h1>
-                <span className="sb-st">ГОТОВА К ИГРЕ</span>
+                <span className="sb-st">{tr(lang, "ГОТОВА ДО ГРИ", "ГОТОВА К ИГРЕ", "READY TO PLAY")}</span>
               </div>
 
               <div className="sb-meta">
@@ -501,22 +573,22 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                   {currentInstance.loader?.toUpperCase() || "FABRIC"}
                 </span>
                 <span className="sb-tag">{currentInstance.mcVersion}</span>
-                <span>{currentInstance.modCount} модов</span>
-                <span>{currentInstance.playTimeMinutes} мин в игре</span>
+                <span>{currentInstance.modCount} {tr(lang, "модів", "модов", "mods")}</span>
+                <span>{currentInstance.playTimeMinutes} {tr(lang, "хв у грі", "мин в игре", "min played")}</span>
                 {onUpdateInstance && (
                   <span className="sb-folder-select-wrap">
-                    <span className="sb-folder-label">Папка:</span>
+                    <span className="sb-folder-label">{tr(lang, "Папка:", "Папка:", "Folder:")}</span>
                     <div className="sb-folder-dropdown-container">
                       <button
                         type="button"
                         className={`sb-folder-btn ${isFolderMenuOpen ? "open" : ""}`}
                         onClick={() => setIsFolderMenuOpen((prev) => !prev)}
-                        title="Выбрать папку"
+                        title={tr(lang, "Обрати папку", "Выбрать папку", "Select folder")}
                       >
                         <span className="sb-folder-name">
                           {currentInstance.folderId
-                            ? folders.find((f) => f.id === currentInstance.folderId)?.name || "Без папки"
-                            : "Без папки"}
+                            ? folders.find((f) => f.id === currentInstance.folderId)?.name || tr(lang, "Без папки", "Без папки", "No folder")
+                            : tr(lang, "Без папки", "Без папки", "No folder")}
                         </span>
                         <ChevronDown size={12} className="sb-folder-chevron" />
                       </button>
@@ -539,7 +611,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                                 setIsFolderMenuOpen(false);
                               }}
                             >
-                              <span>Без папки</span>
+                              <span>{tr(lang, "Без папки", "Без папки", "No folder")}</span>
                               {(!currentInstance.folderId || currentInstance.folderId === "all") && (
                                 <Check size={13} className="sb-folder-check" />
                               )}
@@ -768,11 +840,11 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                     <InstanceAvatarIcon icon={newIcon} size={24} />
                   )}
                 </div>
-                <h1 className="nc-title">Новая версия</h1>
+                <h1 className="nc-title">{tr(lang, "Нова версія", "Новая версия", "New Version")}</h1>
                 <button
                   type="button"
                   className="nc-close"
-                  aria-label="Закрыть"
+                  aria-label={tr(lang, "Закрити", "Закрыть", "Close")}
                   onClick={() => setIsCreating(false)}
                 >
                   ×
@@ -781,22 +853,22 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
 
               <div className="nc-body">
                 <div className="nc-lab">
-                  <span>Название</span>
+                  <span>{tr(lang, "Назва", "Название", "Name")}</span>
                 </div>
                 <input
                   type="text"
                   className="nc-input"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Моя версия 1.21"
+                  placeholder={tr(lang, "Моя версія 1.21", "Моя версия 1.21", "My Version 1.21")}
                 />
 
                 <div className="nc-lab">
-                  <span>Аватарка версии</span>
+                  <span>{tr(lang, "Аватарка версії", "Аватарка версии", "Version Avatar")}</span>
                   <b>
                     {newIcon === "custom"
-                      ? "Своя картинка"
-                      : AVATAR_PRESETS.find((p) => p.id === newIcon)?.fullName || "Алмазный меч"}
+                      ? tr(lang, "Власне зображення", "Своя картинка", "Custom Image")
+                      : getAvatarPresetName(newIcon, lang).fullName}
                   </b>
                 </div>
                 <div className="nc-grid nc-g5">
@@ -808,7 +880,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                       onClick={() => setNewIcon(preset.id)}
                     >
                       <InstanceAvatarIcon icon={preset.id} size={22} />
-                      <span>{preset.label}</span>
+                      <span>{getAvatarPresetName(preset.id, lang).label}</span>
                     </button>
                   ))}
                   <button
@@ -823,11 +895,11 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                     }}
                   >
                     {customAvatarUrl ? (
-                      <img src={customAvatarUrl} alt="Своя" />
+                      <img src={customAvatarUrl} alt={tr(lang, "Своя", "Своя", "Custom")} />
                     ) : (
                       <Plus size={22} />
                     )}
-                    <span>Своя</span>
+                    <span>{tr(lang, "Своя", "Своя", "Custom")}</span>
                   </button>
                 </div>
                 <input
@@ -839,7 +911,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 />
 
                 <div className="nc-lab">
-                  <span>Загрузчик</span>
+                  <span>{tr(lang, "Завантажувач", "Загрузчик", "Loader")}</span>
                   <b>{LOADER_OPTIONS.find((l) => l.id === newLoader)?.label || newLoader}</b>
                 </div>
                 <div className="nc-grid nc-g3">
@@ -856,17 +928,17 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 </div>
 
                 <div className="nc-lab" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span>Версия игры</span>
+                  <span>{tr(lang, "Версія гри", "Версия игры", "Game Version")}</span>
                   <b>{newLoader === "Rust" ? "26.3" : newVersion}</b>
                   <span className="nc-versions-count">
                     {filteredVersions.length}{" "}
                     {versionCategory === "snapshots"
-                      ? "снапшотов"
+                      ? tr(lang, "снапшотів", "снапшотов", "snapshots")
                       : versionCategory === "popular"
-                      ? "популярных"
+                      ? tr(lang, "популярних", "популярных", "popular")
                       : versionCategory === "legacy"
-                      ? "старых версий"
-                      : "релизов"}
+                      ? tr(lang, "старих версій", "старых версий", "legacy versions")
+                      : tr(lang, "релізів", "релизов", "releases")}
                   </span>
                 </div>
 
@@ -877,21 +949,21 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                       className={`nc-vtab ${versionCategory === "popular" ? "active" : ""}`}
                       onClick={() => setVersionCategory("popular")}
                     >
-                      ⭐ Популярные (1.8, 1.7.10...)
+                      ⭐ {tr(lang, "Популярні (1.8, 1.7.10...)", "Популярные (1.8, 1.7.10...)", "Popular (1.8, 1.7.10...)")}
                     </button>
                     <button
                       type="button"
                       className={`nc-vtab ${versionCategory === "releases" ? "active" : ""}`}
                       onClick={() => setVersionCategory("releases")}
                     >
-                      Все релизы ({releasesCount})
+                      {tr(lang, "Всі релізи", "Все релизы", "All Releases")} ({releasesCount})
                     </button>
                     <button
                       type="button"
                       className={`nc-vtab ${versionCategory === "snapshots" ? "active" : ""}`}
                       onClick={() => setVersionCategory("snapshots")}
                     >
-                      Снапшоты ({snapshotsCount})
+                      {tr(lang, "Снапшоти", "Снапшоты", "Snapshots")} ({snapshotsCount})
                     </button>
                     <button
                       type="button"
@@ -906,7 +978,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 <input
                   type="text"
                   className="nc-input"
-                  placeholder="Поиск версии (например: 1.8, 1.7.10, 1.20, snapshot, 25w...)"
+                  placeholder={tr(lang, "Пошук версії (наприклад: 1.8, 1.7.10, 1.20, snapshot, 25w...)", "Поиск версии (например: 1.8, 1.7.10, 1.20, snapshot, 25w...)", "Search version (e.g. 1.8, 1.7.10, 1.20, snapshot, 25w...)")}
                   value={versionSearchQuery}
                   onChange={(e) => setVersionSearchQuery(e.target.value)}
                 />
@@ -921,15 +993,15 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                       <small className="nc-tag-badge tag-rust">RUST CLIENT</small>
                     </button>
                   ) : filteredVersions.length === 0 ? (
-                    <div className="nc-none">Ничего не найдено</div>
+                    <div className="nc-none">{tr(lang, "Нічого не знайдено", "Ничего не найдено", "Nothing found")}</div>
                   ) : (
                     <>
                       {visibleVersions.map((v) => {
-                        const isLatest = v.tag.includes("ПОСЛЕДНИЙ");
-                        const isNewSnap = v.tag.includes("НОВЫЙ");
+                        const isLatest = v.tag.includes("ПОСЛЕДНИЙ") || v.tag.includes("ОСТАННІЙ") || v.tag.includes("LATEST");
+                        const isNewSnap = v.tag.includes("НОВЫЙ") || v.tag.includes("НОВИЙ") || v.tag.includes("NEW");
                         const isPvp = v.tag.includes("PVP");
-                        const isMods = v.tag.includes("МОДОВ");
-                        const isClassic = v.tag.includes("КЛАССИКА") || v.tag.includes("LEGACY");
+                        const isMods = v.tag.includes("МОДОВ") || v.tag.includes("МОДІВ") || v.tag.includes("MODS");
+                        const isClassic = v.tag.includes("КЛАССИКА") || v.tag.includes("КЛАСИКА") || v.tag.includes("CLASSIC") || v.tag.includes("LEGACY");
                         return (
                           <button
                             key={v.version}
@@ -958,7 +1030,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                           className="nc-load-more-btn"
                           onClick={() => setVersionDisplayLimit((prev) => prev + 60)}
                         >
-                          Показать ещё ({filteredVersions.length - versionDisplayLimit} осталось)...
+                          {tr(lang, "Показати ще", "Показать ещё", "Show more")} ({filteredVersions.length - versionDisplayLimit} {tr(lang, "залишилось", "осталось", "remaining")})...
                         </button>
                       )}
                     </>
@@ -966,10 +1038,10 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                 </div>
 
                 <div className="nc-lab">
-                  <span>Папка</span>
+                  <span>{tr(lang, "Папка", "Папка", "Folder")}</span>
                   <b>
                     {newInstanceFolder === "all"
-                      ? "Все версии"
+                      ? tr(lang, "Всі версії", "Все версии", "All versions")
                       : folders.find((f) => f.id === newInstanceFolder)?.name || newInstanceFolder}
                   </b>
                 </div>
@@ -979,7 +1051,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                     className={`nc-opt ${newInstanceFolder === "all" ? "on" : ""}`}
                     onClick={() => setNewInstanceFolder("all")}
                   >
-                    Все версии
+                    {tr(lang, "Всі версії", "Все версии", "All versions")}
                   </button>
                   {folders.map((f) => {
                     if (f.id === "all") return null;
@@ -1005,13 +1077,13 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                   className="nc-btn nc-btn-cancel"
                   onClick={() => setIsCreating(false)}
                 >
-                  Отмена
+                  {tr(lang, "Скасувати", "Отмена", "Cancel")}
                 </button>
                 <button
                   type="submit"
                   className="nc-btn nc-btn-submit"
                 >
-                  + Создать
+                  {tr(lang, "+ Створити", "+ Создать", "+ Create")}
                 </button>
               </div>
             </form>
@@ -1058,13 +1130,13 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <Settings2 size={20} color="var(--accent-bright)" />
                 <h3 style={{ fontSize: "17px", fontWeight: 800, color: "var(--text-pure)" }}>
-                  Настройки папки
+                  {tr(lang, "Налаштування папки", "Настройки папки", "Folder Settings")}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingFolder(null)}
-                title="Закрыть"
+                title={tr(lang, "Закрити", "Закрыть", "Close")}
                 className="btn-icon"
                 style={{
                   width: "32px",
@@ -1081,7 +1153,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
             <form onSubmit={handleSaveFolderEdit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
                 <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
-                  Имя папки
+                  {tr(lang, "Ім'я папки", "Имя папки", "Folder Name")}
                 </label>
                 <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                   <div
@@ -1096,7 +1168,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                       justifyContent: "center",
                       flexShrink: 0,
                     }}
-                    title="Текущая иконка папки"
+                    title={tr(lang, "Поточна іконка папки", "Текущая иконка папки", "Current folder icon")}
                   >
                     {folderIconType === "cube" ? (
                       <IsometricCube size={26} variant={folderCubeVariant} />
@@ -1129,14 +1201,14 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                       fontWeight: 600,
                       fontFamily: "var(--font-primary)",
                     }}
-                    placeholder="Например: PvP Версии"
+                    placeholder={tr(lang, "Наприклад: PvP Версії", "Например: PvP Версии", "e.g. PvP Versions")}
                   />
                 </div>
               </div>
 
               <div>
                 <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
-                  Картинка / Иконка папки
+                  {tr(lang, "Зображення / Іконка папки", "Картинка / Иконка папки", "Image / Folder Icon")}
                 </label>
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px", marginBottom: "10px" }}>
@@ -1163,7 +1235,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                           background: isSelected ? "#16243a" : undefined,
                           borderRadius: "8px",
                         }}
-                        title={preset.label}
+                        title={getPresetFolderIconLabel(preset.id, lang)}
                       >
                         <IsometricCube size={20} variant={preset.cubeVariant} />
                       </button>
@@ -1173,7 +1245,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
 
                 <div>
                   <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>
-                    Или ссылка на собственную картинку (URL):
+                    {tr(lang, "Або посилання на власне зображення (URL):", "Или ссылка на собственную картинку (URL):", "Or link to custom image (URL):")}
                   </span>
                   <input
                     type="url"
@@ -1204,13 +1276,13 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                   className="btn-delete"
                   style={{ minHeight: "36px", height: "36px", padding: "0 14px" }}
                   onClick={() => {
-                    if (confirm(`Удалить папку "${editingFolder.name}"? Все версии из неё останутся в общем списке.`)) {
+                    if (confirm(`${tr(lang, "Видалити папку", "Удалить папку", "Delete folder")} "${editingFolder.name}"? ${tr(lang, "Всі версії з неї залишаться в загальному списку.", "Все версии из неё останутся в общем списке.", "All versions from it will remain in the general list.")}`)) {
                       handleDeleteFolder(editingFolder.id);
                     }
                   }}
                 >
                   <Trash2 size={14} style={{ marginRight: "6px" }} />
-                  Удалить папку
+                  {tr(lang, "Видалити папку", "Удалить папку", "Delete Folder")}
                 </button>
 
                 <div style={{ display: "flex", gap: "8px" }}>
@@ -1220,7 +1292,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                     style={{ minHeight: "36px", height: "36px" }}
                     onClick={() => setEditingFolder(null)}
                   >
-                    Отмена
+                    {tr(lang, "Скасувати", "Отмена", "Cancel")}
                   </button>
                   <button
                     type="submit"
@@ -1228,7 +1300,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                     style={{ minHeight: "36px", height: "36px" }}
                   >
                     <Check size={15} style={{ marginRight: "4px" }} />
-                    Сохранить
+                    {tr(lang, "Зберегти", "Сохранить", "Save")}
                   </button>
                 </div>
               </div>
@@ -1270,13 +1342,13 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <FolderPlus size={20} color="var(--accent-bright)" />
                 <h3 style={{ fontSize: "17px", fontWeight: 800, color: "var(--text-pure)" }}>
-                  Новая папка версий
+                  {tr(lang, "Нова папка версій", "Новая папка версий", "New Version Folder")}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsCreatingFolder(false)}
-                title="Закрыть"
+                title={tr(lang, "Закрити", "Закрыть", "Close")}
                 className="btn-icon"
                 style={{
                   width: "32px",
@@ -1293,7 +1365,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
             <form onSubmit={handleCreateFolderSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
                 <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
-                  Имя папки
+                  {tr(lang, "Ім'я папки", "Имя папки", "Folder Name")}
                 </label>
                 <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                   <div
@@ -1308,7 +1380,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                       justifyContent: "center",
                       flexShrink: 0,
                     }}
-                    title="Выбранная иконка папки"
+                    title={tr(lang, "Обрана іконка папки", "Выбранная иконка папки", "Selected folder icon")}
                   >
                     {folderIconType === "cube" ? (
                       <IsometricCube size={26} variant={folderCubeVariant} />
@@ -1342,14 +1414,14 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                       fontWeight: 600,
                       fontFamily: "var(--font-primary)",
                     }}
-                    placeholder="Например: Мои хардкор миры"
+                    placeholder={tr(lang, "Наприклад: Мої хардкор світи", "Например: Мои хардкор миры", "e.g. My Hardcore Worlds")}
                   />
                 </div>
               </div>
 
               <div>
                 <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
-                  Выберите картинку или куб
+                  {tr(lang, "Оберіть зображення або куб", "Выберите картинку или куб", "Select image or cube")}
                 </label>
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px", marginBottom: "10px" }}>
@@ -1376,7 +1448,7 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                           background: isSelected ? "#16243a" : undefined,
                           borderRadius: "8px",
                         }}
-                        title={preset.label}
+                        title={getPresetFolderIconLabel(preset.id, lang)}
                       >
                         <IsometricCube size={20} variant={preset.cubeVariant} />
                       </button>
@@ -1392,14 +1464,14 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                   style={{ minHeight: "36px", height: "36px" }}
                   onClick={() => setIsCreatingFolder(false)}
                 >
-                  Отмена
+                  {tr(lang, "Скасувати", "Отмена", "Cancel")}
                 </button>
                 <button
                   type="submit"
                   className="btn-primary"
                   style={{ minHeight: "36px", height: "36px" }}
                 >
-                  Создать папку
+                  {tr(lang, "Створити папку", "Создать папку", "Create Folder")}
                 </button>
               </div>
             </form>

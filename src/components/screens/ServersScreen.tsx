@@ -325,9 +325,7 @@ const AutoRefreshTimerBadge: React.FC<{
     <div
       className={`srv-timer-badge ${isRefreshing ? "refreshing" : ""}`}
       title={
-        lang === "uk"
-          ? "Автоматичне оновлення щохвилини"
-          : "Автоматическое обновление каждую минуту"
+        tr(lang, "Автоматичне оновлення щохвилини", "Автоматическое обновление каждую минуту", "Automatic update every minute")
       }
       role="status"
       aria-atomic="true"
@@ -335,10 +333,8 @@ const AutoRefreshTimerBadge: React.FC<{
       <span className="srv-timer-dot" />
       <span>
         {isRefreshing
-          ? lang === "uk"
-            ? "Опитування…"
-            : "Опрос…"
-          : `${lang === "uk" ? "Авто" : "Авто"}: ${countdown}с`}
+          ? tr(lang, "Опитування…", "Опрос…", "Pinging…")
+          : `${tr(lang, "Авто", "Авто", "Auto")}: ${countdown}с`}
       </span>
     </div>
   );
@@ -360,6 +356,13 @@ interface ServerCardProps {
   onEdit?: (server: ServerDisplayEntry) => void;
   onCopyIp: (ip: string, id: string) => void;
 }
+
+
+const tr = (lang: string, uk: string, ru: string, en: string): string => {
+  if (lang === "uk") return uk;
+  if (lang === "en") return en;
+  return ru;
+};
 
 const ServerCard = memo<ServerCardProps>(
   ({
@@ -407,12 +410,8 @@ const ServerCard = memo<ServerCardProps>(
             className={`srv-favicon-status-dot ${server.online ? "online" : "offline"}`}
             title={
               server.online
-                ? lang === "uk"
-                  ? "В мережі"
-                  : "В сети"
-                : lang === "uk"
-                ? "Офлайн"
-                : "Офлайн"
+                ? tr(lang, "В мережі", "В сети", "Online")
+                : tr(lang, "Офлайн", "Офлайн", "Offline")
             }
           />
         </div>
@@ -433,9 +432,7 @@ const ServerCard = memo<ServerCardProps>(
               className={`srv-ip-chip ${isCopied ? "copied" : ""}`}
               onClick={() => onCopyIp(server.ip, server.id)}
               title={
-                lang === "uk"
-                  ? "Натисніть, щоб скопіювати IP адресу"
-                  : "Нажмите, чтобы скопировать IP адрес"
+                tr(lang, "Натисніть, щоб скопіювати IP адресу", "Нажмите, чтобы скопировать IP адрес", "Click to copy IP address")
               }
             >
               <span>{cleanMinecraftText(server.ip)}</span>
@@ -457,7 +454,7 @@ const ServerCard = memo<ServerCardProps>(
             {/* Assembly tag if from servers.dat */}
             {server.isAssemblyServer && (
               <span className="srv-assembly-chip">
-                {lang === "uk" ? "Зі збірки" : "Из сборки"}
+                {tr(lang, "Зі збірки", "Из сборки", "From Assembly")}
               </span>
             )}
           </div>
@@ -466,7 +463,7 @@ const ServerCard = memo<ServerCardProps>(
           <div className="srv-card-motd">
             {server.isQuerying ? (
               <span className="srv-motd-loading">
-                {lang === "uk" ? "Опитування сервера…" : "Опрос сервера…"}
+                {tr(lang, "Опитування сервера…", "Опрос сервера…", "Pinging server…")}
               </span>
             ) : (
               renderMinecraftFormattedText(server.motd)
@@ -493,9 +490,7 @@ const ServerCard = memo<ServerCardProps>(
               </div>
             ) : (
               <span className="srv-offline-hint">
-                {lang === "uk"
-                  ? "Сервер недоступний або не відповідає"
-                  : "Сервер недоступен или не отвечает"}
+                {tr(lang, "Сервер недоступний або не відповідає", "Сервер недоступен или не отвечает", "Server unreachable or not responding")}
               </span>
             )}
           </div>
@@ -508,12 +503,8 @@ const ServerCard = memo<ServerCardProps>(
           >
             <span className="srv-status-bullet" />
             {server.online
-              ? lang === "uk"
-                ? "В МЕРЕЖІ"
-                : "В СЕТИ"
-              : lang === "uk"
-              ? "НЕ В МЕРЕЖІ"
-              : "НЕ В СЕТИ"}
+              ? tr(lang, "В МЕРЕЖІ", "В СЕТИ", "ONLINE")
+              : tr(lang, "НЕ В МЕРЕЖІ", "НЕ В СЕТИ", "OFFLINE")}
           </span>
 
           <div className="srv-ping-row">
@@ -547,12 +538,13 @@ const ServerCard = memo<ServerCardProps>(
             onClick={() => onPlay(server)}
             title={
               currentInstanceName
-                ? lang === "uk"
-                  ? `Запустити Minecraft (${currentInstanceName}) і підключитися до ${cleanMinecraftText(server.name)}`
-                  : `Запустить Minecraft (${currentInstanceName}) и подключиться к ${cleanMinecraftText(server.name)}`
-                : lang === "uk"
-                ? "Запустити Minecraft і підключитися до сервера"
-                : "Запустить Minecraft и подключиться к серверу"
+                ? tr(
+                    lang,
+                    `Запустити Minecraft (${currentInstanceName}) і підключитися до ${cleanMinecraftText(server.name)}`,
+                    `Запустить Minecraft (${currentInstanceName}) и подключиться к ${cleanMinecraftText(server.name)}`,
+                    `Launch Minecraft (${currentInstanceName}) and connect to ${cleanMinecraftText(server.name)}`
+                  )
+                : tr(lang, "Запустити Minecraft і підключитися до сервера", "Запустить Minecraft и подключиться к серверу", "Launch Minecraft and connect to server")
             }
           >
             <span className="srv-btn-play-icon">
@@ -563,12 +555,8 @@ const ServerCard = memo<ServerCardProps>(
                 {isConnecting
                   ? "Запуск…"
                   : isRunning
-                  ? lang === "uk"
-                    ? "Підключитися"
-                    : "Подключиться"
-                  : lang === "uk"
-                  ? "Грати"
-                  : "Играть"}
+                  ? tr(lang, "Підключитися", "Подключиться", "Connect")
+                  : tr(lang, "Грати", "Играть", "Play")}
               </span>
               {currentInstanceName && (
                 <span className="srv-btn-play-sub" title={currentInstanceName}>
@@ -584,7 +572,7 @@ const ServerCard = memo<ServerCardProps>(
               className="srv-btn-edit"
               onClick={() => onEdit(server)}
               title={
-                lang === "uk" ? "Редагувати сервер" : "Редактировать сервер"
+                tr(lang, "Редагувати сервер", "Редактировать сервер", "Edit Server")
               }
             >
               <Edit3 size={15} />
@@ -596,9 +584,7 @@ const ServerCard = memo<ServerCardProps>(
             className="srv-btn-delete"
             onClick={() => onDelete(server)}
             title={
-              lang === "uk"
-                ? "Видалити сервер зі списку збірки"
-                : "Удалить сервер из списка сборки"
+              tr(lang, "Видалити сервер зі списку збірки", "Удалить сервер из списка сборки", "Delete server from assembly list")
             }
           >
             <Trash2 size={15} />
@@ -695,19 +681,22 @@ const DirectConnectModal: React.FC<DirectConnectModalProps> = ({
           <div className="srv-modal-title-wrap">
             <h2 className="srv-modal-heading">
               <Zap size={18} className="srv-modal-title-icon" />
-              {lang === "uk" ? "Пряме підключення" : "Прямое подключение"}
+              {tr(lang, "Пряме підключення", "Прямое подключение", "Direct Connect")}
             </h2>
             <p className="srv-modal-subheading">
-              {lang === "uk"
-                ? `Швидкий запуск та вхід на сервер через збірку «${currentInstanceName || "Minecraft"}»`
-                : `Быстрый запуск и вход на сервер через сборку «${currentInstanceName || "Minecraft"}»`}
+              {tr(
+                lang,
+                `Швидкий запуск та вхід на сервер через збірку «${currentInstanceName || "Minecraft"}»`,
+                `Быстрый запуск и вход на сервер через сборку «${currentInstanceName || "Minecraft"}»`,
+                `Quick launch and join server via assembly «${currentInstanceName || "Minecraft"}»`
+              )}
             </p>
           </div>
           <button
             type="button"
             className="srv-modal-close"
             onClick={onClose}
-            title={lang === "uk" ? "Закрити" : "Закрыть"}
+            title={tr(lang, "Закрити", "Закрыть", "Close")}
           >
             <X size={18} />
           </button>
@@ -716,7 +705,7 @@ const DirectConnectModal: React.FC<DirectConnectModalProps> = ({
         <form onSubmit={handleSubmit} className="srv-modal-form">
           <div className="srv-modal-field">
             <label className="srv-modal-label">
-              {lang === "uk" ? "Адреса або IP сервера" : "Адрес или IP сервера"}
+              {tr(lang, "Адреса або IP сервера", "Адрес или IP сервера", "Server Address or IP")}
             </label>
             <div className="srv-modal-input-row">
               <input
@@ -742,7 +731,7 @@ const DirectConnectModal: React.FC<DirectConnectModalProps> = ({
                 ) : (
                   <Activity size={14} />
                 )}
-                <span>{lang === "uk" ? "Пінг" : "Пинг"}</span>
+                <span>{tr(lang, "Пінг", "Пинг", "Ping")}</span>
               </button>
             </div>
           </div>
@@ -758,12 +747,12 @@ const DirectConnectModal: React.FC<DirectConnectModalProps> = ({
                   {pingResult.online ? (
                     <>
                       <CheckCircle2 size={13} />
-                      <span>{lang === "uk" ? "В мережі" : "В сети"}</span>
+                      <span>{tr(lang, "В мережі", "В сети", "Online")}</span>
                     </>
                   ) : (
                     <>
                       <AlertCircle size={13} />
-                      <span>{lang === "uk" ? "Немає зв'язку" : "Нет связи"}</span>
+                      <span>{tr(lang, "Немає зв'язку", "Нет связи", "No connection")}</span>
                     </>
                   )}
                 </span>
@@ -789,7 +778,7 @@ const DirectConnectModal: React.FC<DirectConnectModalProps> = ({
               className="srv-btn-modal-cancel"
               onClick={onClose}
             >
-              {lang === "uk" ? "Скасувати" : "Отмена"}
+              {tr(lang, "Скасувати", "Отмена", "Cancel")}
             </button>
             <button
               type="submit"
@@ -797,7 +786,7 @@ const DirectConnectModal: React.FC<DirectConnectModalProps> = ({
               disabled={!ip.trim()}
             >
               <IconPixelPlay size={14} />
-              <span>{lang === "uk" ? "Підключитися" : "Подключиться"}</span>
+              <span>{tr(lang, "Підключитися", "Подключиться", "Connect")}</span>
             </button>
           </div>
         </form>
@@ -905,24 +894,23 @@ const ServerModal: React.FC<ServerModalProps> = ({
             <h2 className="srv-modal-heading">
               {isEditing ? <Edit3 size={18} /> : <Plus size={18} />}
               {isEditing
-                ? lang === "uk"
-                  ? "Редагувати сервер"
-                  : "Редактировать сервер"
-                : lang === "uk"
-                ? "Додати сервер"
-                : "Добавить сервер"}
+                ? tr(lang, "Редагувати сервер", "Редактировать сервер", "Edit Server")
+                : tr(lang, "Додати сервер", "Добавить сервер", "Add Server")}
             </h2>
             <p className="srv-modal-subheading">
-              {lang === "uk"
-                ? `Збереження в servers.dat збірки «${currentInstanceName || "Minecraft"}»`
-                : `Сохранение в servers.dat сборки «${currentInstanceName || "Minecraft"}»`}
+              {tr(
+                lang,
+                `Збереження в servers.dat збірки «${currentInstanceName || "Minecraft"}»`,
+                `Сохранение в servers.dat сборки «${currentInstanceName || "Minecraft"}»`,
+                `Saving to servers.dat of assembly «${currentInstanceName || "Minecraft"}»`
+              )}
             </p>
           </div>
           <button
             type="button"
             className="srv-modal-close"
             onClick={onClose}
-            title={lang === "uk" ? "Закрити" : "Закрыть"}
+            title={tr(lang, "Закрити", "Закрыть", "Close")}
           >
             <X size={18} />
           </button>
@@ -931,7 +919,7 @@ const ServerModal: React.FC<ServerModalProps> = ({
         <form onSubmit={handleSubmit} className="srv-modal-form">
           <div className="srv-modal-field">
             <label className="srv-modal-label">
-              {lang === "uk" ? "Назва сервера" : "Название сервера"}
+              {tr(lang, "Назва сервера", "Название сервера", "Server Name")}
             </label>
             <input
               type="text"
@@ -939,9 +927,7 @@ const ServerModal: React.FC<ServerModalProps> = ({
               required
               className="srv-input"
               placeholder={
-                lang === "uk"
-                  ? "Наприклад: Hypixel Network"
-                  : "Например: Hypixel Network"
+                tr(lang, "Наприклад: Hypixel Network", "Например: Hypixel Network", "e.g. Hypixel Network")
               }
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -950,7 +936,7 @@ const ServerModal: React.FC<ServerModalProps> = ({
 
           <div className="srv-modal-field">
             <label className="srv-modal-label">
-              {lang === "uk" ? "Адреса або IP:порт" : "Адрес или IP:порт"}
+              {tr(lang, "Адреса або IP:порт", "Адрес или IP:порт", "Address or IP:port")}
             </label>
             <div className="srv-modal-input-row">
               <input
@@ -975,7 +961,7 @@ const ServerModal: React.FC<ServerModalProps> = ({
                 ) : (
                   <Activity size={14} />
                 )}
-                <span>{lang === "uk" ? "Перевірити" : "Проверить"}</span>
+                <span>{tr(lang, "Перевірити", "Проверить", "Test")}</span>
               </button>
             </div>
           </div>
@@ -991,12 +977,12 @@ const ServerModal: React.FC<ServerModalProps> = ({
                   {testResult.online ? (
                     <>
                       <CheckCircle2 size={13} />
-                      <span>{lang === "uk" ? "В мережі" : "В сети"}</span>
+                      <span>{tr(lang, "В мережі", "В сети", "Online")}</span>
                     </>
                   ) : (
                     <>
                       <AlertCircle size={13} />
-                      <span>{lang === "uk" ? "Не відповідає" : "Не отвечает"}</span>
+                      <span>{tr(lang, "Не відповідає", "Не отвечает", "Not responding")}</span>
                     </>
                   )}
                 </span>
@@ -1022,7 +1008,7 @@ const ServerModal: React.FC<ServerModalProps> = ({
               className="srv-btn-modal-cancel"
               onClick={onClose}
             >
-              {lang === "uk" ? "Скасувати" : "Отмена"}
+              {tr(lang, "Скасувати", "Отмена", "Cancel")}
             </button>
             <button
               type="submit"
@@ -1032,12 +1018,8 @@ const ServerModal: React.FC<ServerModalProps> = ({
               <Check size={14} />
               <span>
                 {isEditing
-                  ? lang === "uk"
-                    ? "Зберегти зміни"
-                    : "Сохранить изменения"
-                  : lang === "uk"
-                  ? "Додати до збірки"
-                  : "Добавить в сборку"}
+                  ? tr(lang, "Зберегти зміни", "Сохранить изменения", "Save Changes")
+                  : tr(lang, "Додати до збірки", "Добавить в сборку", "Add to Assembly")}
               </span>
             </button>
           </div>
@@ -1527,9 +1509,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                   className="srv-instance-trigger-btn"
                   onClick={() => setIsInstanceDropdownOpen((prev) => !prev)}
                   title={
-                    lang === "uk"
-                      ? "Оберіть збірку для перегляду та гри"
-                      : "Выберите сборку для просмотра и игры"
+                    tr(lang, "Оберіть збірку для перегляду та гри", "Выберите сборку для просмотра и игры", "Select an assembly to view and play")
                   }
                 >
                   <span className="srv-instance-icon-box">
@@ -1560,9 +1540,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                 {isInstanceDropdownOpen && (
                   <div className="srv-instance-dropdown-menu">
                     <div className="srv-dropdown-header">
-                      {lang === "uk"
-                        ? "Оберіть збірку Minecraft:"
-                        : "Выберите сборку Minecraft:"}
+                      {tr(lang, "Оберіть збірку Minecraft:", "Выберите сборку Minecraft:", "Select Minecraft Assembly:")}
                     </div>
                     {instances.map((inst) => (
                       <button
@@ -1609,9 +1587,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               onClick={handleManualRefresh}
               disabled={isRefreshing}
               title={
-                lang === "uk"
-                  ? "Оновити пінг та статус серверів"
-                  : "Обновить пинг и статус серверов"
+                tr(lang, "Оновити пінг та статус серверів", "Обновить пинг и статус серверов", "Refresh ping and server status")
               }
             >
               <RefreshCw
@@ -1620,12 +1596,8 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               />
               <span>
                 {isRefreshing
-                  ? lang === "uk"
-                    ? "Опитування…"
-                    : "Опрос…"
-                  : lang === "uk"
-                  ? "Оновити"
-                  : "Обновить"}
+                  ? tr(lang, "Опитування…", "Опрос…", "Pinging…")
+                  : tr(lang, "Оновити", "Обновить", "Refresh")}
               </span>
             </button>
 
@@ -1634,14 +1606,12 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               className="srv-btn-direct"
               onClick={() => setIsDirectConnectModalOpen(true)}
               title={
-                lang === "uk"
-                  ? "Пряме підключення до сервера по IP"
-                  : "Прямое подключение к серверу по IP"
+                tr(lang, "Пряме підключення до сервера по IP", "Прямое подключение к серверу по IP", "Direct connection to server by IP")
               }
             >
               <Zap size={14} />
               <span>
-                {lang === "uk" ? "Пряме підключення" : "Прямое подключение"}
+                {tr(lang, "Пряме підключення", "Прямое подключение", "Direct Connect")}
               </span>
             </button>
 
@@ -1652,7 +1622,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
             >
               <Plus size={15} />
               <span>
-                {lang === "uk" ? "Додати сервер" : "Добавить сервер"}
+                {tr(lang, "Додати сервер", "Добавить сервер", "Add Server")}
               </span>
             </button>
           </div>
@@ -1675,19 +1645,22 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                     {currentInstance.mcVersion}
                   </span>
                   <span className="srv-hero-badge-active">
-                    {lang === "uk" ? "Активна збірка" : "Активная сборка"}
+                    {tr(lang, "Активна збірка", "Активная сборка", "Active Assembly")}
                   </span>
                 </div>
                 <div className="srv-hero-desc">
                   <span>
-                    {lang === "uk" ? "Файл конфігурації:" : "Файл конфигурации:"}{" "}
+                    {tr(lang, "Файл конфігурації:", "Файл конфигурации:", "Config File:")}{" "}
                     <b className="srv-hero-dat-badge">servers.dat</b>
                   </span>
                   <span>•</span>
                   <span>
-                    {lang === "uk"
-                      ? `${assemblyServersCount} серверів у збірці`
-                      : `${assemblyServersCount} серверов в сборке`}
+                    {tr(
+                      lang,
+                      `${assemblyServersCount} серверів у збірці`,
+                      `${assemblyServersCount} серверов в сборке`,
+                      `${assemblyServersCount} servers in assembly`
+                    )}
                   </span>
                 </div>
               </div>
@@ -1699,7 +1672,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                   {onlineCount} <span className="srv-stat-slash">/</span> {servers.length}
                 </span>
                 <span className="srv-stat-lbl">
-                  {lang === "uk" ? "В мережі" : "В сети"}
+                  {tr(lang, "В мережі", "В сети", "Online")}
                 </span>
               </div>
               <div className="srv-stat-box">
@@ -1707,7 +1680,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                   {totalPlayersOnline.toLocaleString("en-US")}
                 </span>
                 <span className="srv-stat-lbl">
-                  {lang === "uk" ? "Гравців онлайн" : "Игроков онлайн"}
+                  {tr(lang, "Гравців онлайн", "Игроков онлайн", "Players Online")}
                 </span>
               </div>
             </div>
@@ -1724,7 +1697,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               }`}
               onClick={() => setFilterType("all")}
             >
-              <span>{lang === "uk" ? "Всі" : "Все"}</span>
+              <span>{tr(lang, "Всі", "Все", "All")}</span>
               <span className="srv-tab-count">({servers.length})</span>
             </button>
             <button
@@ -1735,7 +1708,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               onClick={() => setFilterType("online")}
             >
               <span className="srv-tab-dot online" />
-              <span>{lang === "uk" ? "В мережі" : "В сети"}</span>
+              <span>{tr(lang, "В мережі", "В сети", "Online")}</span>
               <span className="srv-tab-count">({onlineCount})</span>
             </button>
             <button
@@ -1746,7 +1719,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               onClick={() => setFilterType("offline")}
             >
               <span className="srv-tab-dot offline" />
-              <span>{lang === "uk" ? "Офлайн" : "Офлайн"}</span>
+              <span>{tr(lang, "Офлайн", "Офлайн", "Offline")}</span>
               <span className="srv-tab-count">({offlineCount})</span>
             </button>
             <button
@@ -1756,7 +1729,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               }`}
               onClick={() => setFilterType("assembly")}
             >
-              <span>{lang === "uk" ? "Зі збірки" : "Из сборки"}</span>
+              <span>{tr(lang, "Зі збірки", "Из сборки", "From Assembly")}</span>
               <span className="srv-tab-count">({assemblyServersCount})</span>
             </button>
           </div>
@@ -1768,25 +1741,17 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                 type="button"
                 className="srv-sort-trigger-btn"
                 onClick={() => setIsSortDropdownOpen((prev) => !prev)}
-                title={lang === "uk" ? "Сортування списку серверів" : "Сортировка списка серверов"}
+                title={tr(lang, "Сортування списку серверів", "Сортировка списка серверов", "Sort servers list")}
               >
                 <ArrowUpDown size={13} className="srv-sort-icon" />
                 <span>
                   {sortBy === "ping"
-                    ? lang === "uk"
-                      ? "За пінгом"
-                      : "По пингу"
+                    ? tr(lang, "За пінгом", "По пингу", "By Ping")
                     : sortBy === "players"
-                    ? lang === "uk"
-                      ? "За онлайном"
-                      : "По онлайну"
+                    ? tr(lang, "За онлайном", "По онлайну", "By Online")
                     : sortBy === "name"
-                    ? lang === "uk"
-                      ? "За назвою"
-                      : "По названию"
-                    : lang === "uk"
-                    ? "Порядок: за замовчуванням"
-                    : "Порядок: по умолчанию"}
+                    ? tr(lang, "За назвою", "По названию", "By Name")
+                    : tr(lang, "Порядок: за замовчуванням", "Порядок: по умолчанию", "Order: default")}
                 </span>
                 <ChevronDown size={13} className={`srv-sort-chevron ${isSortDropdownOpen ? "open" : ""}`} />
               </button>
@@ -1801,7 +1766,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                       setIsSortDropdownOpen(false);
                     }}
                   >
-                    <span>{lang === "uk" ? "За замовчуванням" : "По умолчанию"}</span>
+                    <span>{tr(lang, "За замовчуванням", "По умолчанию", "Default")}</span>
                     {sortBy === "default" && <Check size={13} />}
                   </button>
                   <button
@@ -1812,7 +1777,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                       setIsSortDropdownOpen(false);
                     }}
                   >
-                    <span>{lang === "uk" ? "За пінгом (швидкі)" : "По пингу (быстрые)"}</span>
+                    <span>{tr(lang, "За пінгом (швидкі)", "По пингу (быстрые)", "By Ping (Fastest)")}</span>
                     {sortBy === "ping" && <Check size={13} />}
                   </button>
                   <button
@@ -1823,7 +1788,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                       setIsSortDropdownOpen(false);
                     }}
                   >
-                    <span>{lang === "uk" ? "За онлайном (гравці)" : "По онлайну (игроки)"}</span>
+                    <span>{tr(lang, "За онлайном (гравці)", "По онлайну (игроки)", "By Online (Players)")}</span>
                     {sortBy === "players" && <Check size={13} />}
                   </button>
                   <button
@@ -1834,7 +1799,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                       setIsSortDropdownOpen(false);
                     }}
                   >
-                    <span>{lang === "uk" ? "За назвою (А-Я)" : "По названию (А-Я)"}</span>
+                    <span>{tr(lang, "За назвою (А-Я)", "По названию (А-Я)", "By Name (A-Z)")}</span>
                     {sortBy === "name" && <Check size={13} />}
                   </button>
                 </div>
@@ -1849,9 +1814,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               <input
                 type="text"
                 placeholder={
-                  lang === "uk"
-                    ? "Пошук сервера за назвою або IP…"
-                    : "Поиск сервера по названию или IP…"
+                  tr(lang, "Пошук сервера за назвою або IP…", "Поиск сервера по названию или IP…", "Search server by name or IP…")
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -1862,7 +1825,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                   type="button"
                   className="srv-search-clear"
                   onClick={() => setSearchQuery("")}
-                  title="Очистить"
+                  title={tr(lang, "Очистити", "Очистить", "Clear")}
                 >
                   <X size={14} />
                 </button>
@@ -1881,21 +1844,13 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                 </div>
                 <div className="srv-empty-title">
                   {searchQuery
-                    ? lang === "uk"
-                      ? "Серверів за запитом не знайдено"
-                      : "Серверов по запросу не найдено"
-                    : lang === "uk"
-                    ? "У цій збірці поки немає серверів"
-                    : "В этой сборке пока нет серверов"}
+                    ? tr(lang, "Серверів за запитом не знайдено", "Серверов по запросу не найдено", "No servers found for query")
+                    : tr(lang, "У цій збірці поки немає серверів", "В этой сборке пока нет серверов", "No servers in this assembly yet")}
                 </div>
                 <div className="srv-empty-desc">
                   {searchQuery
-                    ? lang === "uk"
-                      ? "Спробуйте змінити пошуковий запит або скинути фільтри"
-                      : "Попробуйте изменить поисковый запрос или сбросить фильтры"
-                    : lang === "uk"
-                    ? "Додайте новий сервер вище, і він автоматично з'явиться в меню мультиплеєра Minecraft!"
-                    : "Добавьте новый сервер выше, и он автоматически появится в меню мультиплеера Minecraft!"}
+                    ? tr(lang, "Спробуйте змінити пошуковий запит або скинути фільтри", "Попробуйте изменить поисковый запрос или сбросить фильтры", "Try modifying search query or reset filters")
+                    : tr(lang, "Додайте новий сервер вище, і він автоматично з'явиться в меню мультиплеєра Minecraft!", "Добавьте новый сервер выше, и он автоматически появится в меню мультиплеера Minecraft!", "Add a new server above and it will automatically appear in Minecraft multiplayer menu!")}
                 </div>
                 {!searchQuery && (
                   <div className="srv-empty-action">
@@ -1906,9 +1861,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                     >
                       <Plus size={14} />
                       <span>
-                        {lang === "uk"
-                          ? "Додати перший сервер"
-                          : "Добавить первый сервер"}
+                        {tr(lang, "Додати перший сервер", "Добавить первый сервер", "Add First Server")}
                       </span>
                     </button>
                   </div>

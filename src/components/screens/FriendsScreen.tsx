@@ -79,11 +79,22 @@ const FOUND_USERS = [
   { n: "Zed_Builder" },
 ];
 
-const ST: Record<"live" | "menu" | "dnd" | "off", string> = {
-  live: "Играет",
-  menu: "В сети",
-  dnd: "Уведомления выключены",
-  off: "Не в сети",
+
+
+
+const tr = (lang: string, uk: string, ru: string, en: string): string => {
+  if (lang === "uk") return uk;
+  if (lang === "en") return en;
+  return ru;
+};
+
+const getFriendStatusLabel = (status: "live" | "menu" | "dnd" | "off", lang: string): string => {
+  switch (status) {
+    case "live": return tr(lang, "Грає", "Играет", "In Game");
+    case "menu": return tr(lang, "У мережі", "В сети", "Online");
+    case "dnd": return tr(lang, "Сповіщення вимкнено", "Уведомления выключены", "Do Not Disturb");
+    case "off": return tr(lang, "Не в мережі", "Не в сети", "Offline");
+  }
 };
 
 export const FriendsScreen: React.FC<FriendsScreenProps> = ({
@@ -299,7 +310,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
     <div className="av">
       {name.charAt(0).toUpperCase()}
       {status && (
-        <i className={`bd ${status}`} title={ST[status]}>
+        <i className={`bd ${status}`} title={getFriendStatusLabel(status, lang)}>
           {renderStatusIcon(status)}
         </i>
       )}
@@ -323,11 +334,11 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
             type="button"
             className="b sm"
             onClick={onBack}
-            title="Назад (Esc)"
+            title={tr(lang, "Назад (Esc)", "Назад (Esc)", "Back (Esc)")}
           >
-            ← Назад
+            ← {tr(lang, "Назад", "Назад", "Back")}
           </button>
-          <h1>Друзья и совместная игра</h1>
+          <h1>{tr(lang, "Друзі та спільна гра", "Друзья и совместная игра", "Friends & Multiplayer")}</h1>
           <div className="dock" id="tabs" role="tablist">
             <button
               type="button"
@@ -410,7 +421,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
           {tab === "friends" && (
             friends.length === 0 ? (
               <div className="card empty">
-                Пока никого нет. Найдите друга по коду во вкладке «Поиск».
+                {tr(lang, "Поки нікого немає. Знайдіть друга за кодом у вкладці «Пошук».", "Пока никого нет. Найдите друга по коду во вкладке «Поиск».", "No friends yet. Find a friend by code in the «Search» tab.")}
               </div>
             ) : (
               friends.map((f) => (
@@ -421,7 +432,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                     <span>
                       {f.s === "live" ? (
                         <>
-                          В игре{" "}
+                          {tr(lang, "У грі", "В игре", "In game")}{" "}
                           <span
                             className="tag"
                             style={{
@@ -468,9 +479,9 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                       type="button"
                       className="b sm"
                       onClick={() => setActiveChatFriend(null)}
-                      title="К списку диалогов"
+                      title={tr(lang, "До списку діалогів", "К списку диалогов", "Back to chat list")}
                     >
-                      ← Чаты
+                      ← {tr(lang, "Чати", "Чаты", "Chats")}
                     </button>
                     {renderAvatar(
                       activeChatFriend,
@@ -481,7 +492,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                         {activeChatFriend}
                       </b>
                       <span style={{ color: "var(--mut)", fontSize: "11.5px" }}>
-                        {ST[friends.find((x) => x.n === activeChatFriend)?.s || "off"]}
+                        {getFriendStatusLabel(friends.find((x) => x.n === activeChatFriend)?.s || "off", lang)}
                       </span>
                     </div>
                   </div>
@@ -498,7 +509,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                             onJoinFriend(friend.n, friend.h!);
                           }}
                         >
-                          {joiningFriend === friend.n ? "Подключаемся…" : "Присоединиться"}
+                          {joiningFriend === friend.n ? tr(lang, "Підключаємося…", "Подключаемся…", "Connecting…") : tr(lang, "Приєднатися", "Присоединиться", "Join")}
                         </button>
                       );
                     }
@@ -523,13 +534,13 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                   <form onSubmit={handleSendMessage} className="chat-input-bar">
                     <input
                       type="text"
-                      placeholder="Напишите сообщение..."
+                      placeholder={tr(lang, "Напишіть повідомлення...", "Напишите сообщение...", "Type a message...")}
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       autoFocus
                     />
                     <button type="submit" className="b go">
-                      Отправить
+                      {tr(lang, "Надіслати", "Отправить", "Send")}
                     </button>
                   </form>
                 </div>
@@ -556,7 +567,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                             marginLeft: "8px",
                           }}
                         >
-                          {ST[s]}
+                          {getFriendStatusLabel(s, lang)}
                         </small>
                       </b>
                       <span>{c.m}</span>
@@ -572,7 +583,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
 
           {tab === "reqs" && (
             reqs.length === 0 ? (
-              <div className="card empty">Новых заявок нет.</div>
+              <div className="card empty">{tr(lang, "Нових запитів немає.", "Новых заявок нет.", "No new requests.")}</div>
             ) : (
               reqs.map((r, i) => (
                 <div key={r.n} className="card item">
@@ -587,14 +598,14 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                       className="b go"
                       onClick={() => handleAcceptReq(i)}
                     >
-                      Принять
+                      {tr(lang, "Прийняти", "Принять", "Accept")}
                     </button>
                     <button
                       type="button"
                       className="b del"
                       onClick={() => handleDeclineReq(i)}
                     >
-                      Отклонить
+                      {tr(lang, "Відхилити", "Отклонить", "Decline")}
                     </button>
                   </div>
                 </div>
@@ -606,10 +617,10 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
             <>
               <input
                 id="q"
-                placeholder="Ник или код друга"
+                placeholder={tr(lang, "Нік або код друга", "Ник или код друга", "Nickname or friend code")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Поиск игроков"
+                aria-label={tr(lang, "Пошук гравців", "Поиск игроков", "Search players")}
                 autoFocus
               />
               {filteredFound.length > 0 || showCustomAdd ? (
@@ -631,7 +642,7 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                               setAddedUsers((prev) => ({ ...prev, [x.n]: true }));
                             }}
                           >
-                            {isSent ? "Заявка отправлена" : "Добавить"}
+                            {isSent ? tr(lang, "Запит надіслано", "Заявка отправлена", "Request sent") : tr(lang, "Додати", "Добавить", "Add")}
                           </button>
                         </div>
                       </div>
@@ -656,8 +667,8 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
                           }}
                         >
                           {addedUsers[searchQuery.trim()]
-                            ? "Заявка отправлена"
-                            : "Добавить"}
+                            ? tr(lang, "Запит надіслано", "Заявка отправлена", "Request sent")
+                            : tr(lang, "Додати", "Добавить", "Add")}
                         </button>
                       </div>
                     </div>
@@ -666,8 +677,8 @@ export const FriendsScreen: React.FC<FriendsScreenProps> = ({
               ) : (
                 <div className="card empty">
                   {searchQuery
-                    ? "Никого не нашли. Проверьте ник или код."
-                    : "Введите ник или код друга."}
+                    ? tr(lang, "Нікого не знайшли. Перевірте нік або код.", "Никого не нашли. Проверьте ник или код.", "Nothing found. Check nickname or code.")
+                    : tr(lang, "Введіть нік або код друга.", "Введите ник или код друга.", "Enter nickname or friend code.")}
                 </div>
               )}
             </>
