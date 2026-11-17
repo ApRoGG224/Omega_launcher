@@ -518,22 +518,30 @@ export const Stage3DLayer: React.FC<Stage3DLayerProps> = React.memo(({
 
   useEffect(() => {
     let canceled = false;
-    if (viewerRef.current) {
-      viewerRef.current.loadSkin(skinUrl, { model: model || "default" })?.then(() => {
-        if (canceled) return;
-        if (viewerRef.current) {
-          const isSlim = viewerRef.current.playerObject.skin.modelType === "slim" || model === "slim";
-          const limbs = buildArticulatedLimbs(viewerRef.current.playerObject, isSlim);
-          limbsRef.current = limbs;
-          if (controllerRef.current) {
-            controllerRef.current.limbs = limbs;
+    if (viewerRef.current && skinUrl) {
+      try {
+        viewerRef.current.loadSkin(skinUrl, { model: model || "default" })?.then(() => {
+          if (canceled) return;
+          if (viewerRef.current) {
+            try {
+              const isSlim = viewerRef.current.playerObject.skin.modelType === "slim" || model === "slim";
+              const limbs = buildArticulatedLimbs(viewerRef.current.playerObject, isSlim);
+              limbsRef.current = limbs;
+              if (controllerRef.current) {
+                controllerRef.current.limbs = limbs;
+              }
+            } catch (limbErr) {
+              console.warn("Failed to rebuild articulated limbs:", limbErr);
+            }
           }
-        }
-      }).catch?.((err: any) => {
-        if (!canceled) {
-          console.warn("Failed to load skin:", err);
-        }
-      });
+        }).catch?.((err: any) => {
+          if (!canceled) {
+            console.warn("Failed to load skin in Stage3DLayer:", err);
+          }
+        });
+      } catch (syncErr) {
+        console.warn("Synchronous error calling loadSkin in Stage3DLayer:", syncErr);
+      }
     }
     return () => {
       canceled = true;

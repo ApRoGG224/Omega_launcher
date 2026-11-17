@@ -44,17 +44,23 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
     const initialW = container.clientWidth || 400;
     const initialH = container.clientHeight || 440;
 
-    const viewer = new SkinViewer({
-      canvas,
-      width: initialW,
-      height: initialH,
-      skin: skinUrl,
-      model: model,
-      cape: capeUrl || undefined,
-      pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
-      enableControls: false,
-    });
-    viewerRef.current = viewer;
+    let viewer: SkinViewer | null = null;
+    try {
+      viewer = new SkinViewer({
+        canvas,
+        width: initialW,
+        height: initialH,
+        skin: skinUrl,
+        model: model,
+        cape: capeUrl || undefined,
+        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        enableControls: false,
+      });
+      viewerRef.current = viewer;
+    } catch (err) {
+      console.warn("Failed to instantiate Wardrobe SkinViewer:", err);
+      return;
+    }
 
     viewer.playerObject.rotation.y = 0.22;
     viewer.playerObject.skin.rightArm.rotation.x = 0.04;
@@ -125,9 +131,13 @@ export const Wardrobe3DViewer: React.FC<Wardrobe3DViewerProps> = ({
 
   useEffect(() => {
     if (viewerRef.current && skinUrl) {
-      viewerRef.current.loadSkin(skinUrl, { model: model })?.catch?.((err) => {
-        console.warn("Failed to load wardrobe skin:", err);
-      });
+      try {
+        viewerRef.current.loadSkin(skinUrl, { model: model || "default" })?.catch?.((err) => {
+          console.warn("Failed to load wardrobe skin:", err);
+        });
+      } catch (err) {
+        console.warn("Synchronous error calling loadSkin in Wardrobe3DViewer:", err);
+      }
     }
   }, [skinUrl, model]);
 

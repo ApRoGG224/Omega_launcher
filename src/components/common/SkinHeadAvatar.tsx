@@ -28,21 +28,31 @@ export const SkinHeadAvatar: React.FC<SkinHeadAvatarProps> = ({
 
     let isMounted = true;
     const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = skinUrl;
+    if (skinUrl && !skinUrl.startsWith("data:")) {
+      img.crossOrigin = "anonymous";
+    }
+    img.src = skinUrl || "/skins/steve.png";
 
     const render = () => {
-      ctx.clearRect(0, 0, size, size);
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(img, 8, 8, 8, 8, 0, 0, size, size);
-      ctx.drawImage(img, 40, 8, 8, 8, 0, 0, size, size);
+      if (!isMounted) return;
+      try {
+        ctx.clearRect(0, 0, size, size);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, 8, 8, 8, 8, 0, 0, size, size);
+        ctx.drawImage(img, 40, 8, 8, 8, 0, 0, size, size);
+      } catch (err) {
+        // Fallback default avatar on canvas draw error
+        ctx.fillStyle = "#85583b";
+        ctx.fillRect(0, 0, size, size);
+        ctx.fillStyle = "#3e2413";
+        ctx.fillRect(0, 0, size, size * 0.35);
+      }
     };
 
     if (img.complete && img.naturalWidth !== 0) {
       render();
     } else {
       img.onload = () => {
-        if (!isMounted) return;
         render();
       };
       img.onerror = () => {

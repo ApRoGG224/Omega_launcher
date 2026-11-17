@@ -150,6 +150,9 @@ type TabId = (typeof TB)[number]["id"];
 const STORAGE_RECENT_SKINS_KEY = "omega:recent_skins";
 
 function formatRelativeTime(timestamp: number, lang: string = "ru"): string {
+  if (!timestamp || typeof timestamp !== "number" || isNaN(timestamp)) {
+    return lang === "uk" ? "Щойно" : lang === "en" ? "Just now" : "Только что";
+  }
   const diff = Date.now() - timestamp;
   const minutes = Math.floor(diff / 60000);
   const tr = (uk: string, ru: string, en: string) => (lang === "uk" ? uk : lang === "en" ? en : ru);
@@ -264,7 +267,12 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
       const raw = localStorage.getItem(STORAGE_RECENT_SKINS_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const valid = parsed.filter(
+            (item: any) => item && typeof item === "object" && typeof item.name === "string" && typeof item.url === "string"
+          );
+          if (valid.length > 0) return valid;
+        }
       }
     } catch {
     }
@@ -427,8 +435,9 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
     renderUrl?: string,
     model: "default" | "slim" = "default"
   ) => {
+    if (!name || !url) return;
     setRecentList((prev) => {
-      const filtered = prev.filter((item) => item.name.toLowerCase() !== name.toLowerCase());
+      const filtered = prev.filter((item) => (item.name || "").toLowerCase() !== name.toLowerCase());
       const updated: RecentSkinItem[] = [
         { name, url, renderUrl, timestamp: Date.now(), model },
         ...filtered,
@@ -452,8 +461,9 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
 
   const handleRemoveRecentSkin = (name: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!name) return;
     setRecentList((prev) => {
-      const updated = prev.filter((item) => item.name.toLowerCase() !== name.toLowerCase());
+      const updated = prev.filter((item) => (item.name || "").toLowerCase() !== name.toLowerCase());
       try {
         localStorage.setItem(STORAGE_RECENT_SKINS_KEY, JSON.stringify(updated));
       } catch {}
@@ -848,8 +858,8 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                   >
                     {insideSkins.map((skin) => {
                       const isEquipped =
-                        activeSkin.toLowerCase() === skin.nickname.toLowerCase() ||
-                        currentSkinUrl === skin.skinUrl;
+                        Boolean(skin.nickname && (activeSkin || "").toLowerCase() === skin.nickname.toLowerCase()) ||
+                        Boolean(currentSkinUrl && skin.skinUrl && currentSkinUrl === skin.skinUrl);
                       const isApplyingThis = isApplying === skin.nickname;
 
                       return (
@@ -1194,8 +1204,8 @@ export const StoreScreen: React.FC<StoreScreenProps> = ({
                 <div className="grid" style={{ gap: "10px" }}>
                   {recentList.map((item) => {
                     const isEquipped =
-                      activeSkin.toLowerCase() === item.name.toLowerCase() ||
-                      currentSkinUrl === item.url;
+                      Boolean(item.name && (activeSkin || "").toLowerCase() === item.name.toLowerCase()) ||
+                      Boolean(currentSkinUrl && item.url && currentSkinUrl === item.url);
                     return (
                       <div key={`${item.name}-${item.timestamp}`} className="rw">
                         <div className="ico" style={{ overflow: "hidden" }}>
