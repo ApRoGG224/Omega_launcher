@@ -149,6 +149,19 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
   const sliderActivePathRef = useRef<SVGPathElement>(null);
   const sliderValLabelRef = useRef<HTMLElement>(null);
 
+  const intensityPrefix = t("intensityLabel", "Інтенсивність:");
+  const texturePrefix = t("textureLabel", "Текстура:");
+  const textureGrainPrefix = t("textureGrain", "Текстура");
+
+  const intensityPrefixRef = useRef(intensityPrefix);
+  intensityPrefixRef.current = intensityPrefix;
+
+  const texturePrefixRef = useRef(texturePrefix);
+  texturePrefixRef.current = texturePrefix;
+
+  const textureGrainPrefixRef = useRef(textureGrainPrefix);
+  textureGrainPrefixRef.current = textureGrainPrefix;
+
   const knobRef = useRef<HTMLDivElement>(null);
   const knobDialRef = useRef<HTMLDivElement>(null);
   const knobTicksSvgRef = useRef<SVGSVGElement>(null);
@@ -227,10 +240,10 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
     dragPatternIntensityRef.current = cfg.patternIntensity ?? 30;
 
     if (previewIntensityRef.current) {
-      previewIntensityRef.current.textContent = `Интенсивность: ${cfg.intensity ?? 60}%`;
+      previewIntensityRef.current.textContent = `${intensityPrefixRef.current} ${cfg.intensity ?? 60}%`;
     }
     if (previewTextureRef.current) {
-      previewTextureRef.current.textContent = `Текстура: ${cfg.patternIntensity ?? 30}%`;
+      previewTextureRef.current.textContent = `${texturePrefixRef.current} ${cfg.patternIntensity ?? 30}%`;
     }
   }, [activeZone, isOpen]);
 
@@ -471,7 +484,7 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
       sliderValLabelRef.current.textContent = `${clampedPct}%`;
     }
     if (previewIntensityRef.current) {
-      previewIntensityRef.current.textContent = `Интенсивность: ${clampedPct}%`;
+      previewIntensityRef.current.textContent = `${intensityPrefixRef.current} ${clampedPct}%`;
     }
 
     const curTheme = computePanelTheme(
@@ -569,10 +582,10 @@ export const MenuCustomizerModal: React.FC<MenuCustomizerModalProps> = React.mem
       knobDialRef.current.style.transform = `rotate(${degrees}deg)`;
     }
     if (knobValLabelRef.current) {
-      knobValLabelRef.current.textContent = `Текстура ${pct}%`;
+      knobValLabelRef.current.textContent = `${textureGrainPrefixRef.current} ${pct}%`;
     }
     if (previewTextureRef.current) {
-      previewTextureRef.current.textContent = `Текстура: ${pct}%`;
+      previewTextureRef.current.textContent = `${texturePrefixRef.current} ${pct}%`;
     }
 
     if (knobTicksSvgRef.current) {
