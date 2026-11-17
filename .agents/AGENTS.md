@@ -126,6 +126,21 @@ Omega Launcher is a highly optimized, lightweight Minecraft launcher focused on 
 - **Dock Instance Selector Hover Box & Custom Tooltip (`DockLayer.tsx`, `layer3-dock.css`):**
   - Replaced native delayed OS tooltip with interactive gray hover highlight box (`background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15)`) around the active instance in the bottom launch dock, giving immediate visual click feedback.
   - Added custom floating obsidian tooltip (`.dock-tooltip`) with triangular pointer arrow saying "Сменить версию", appearing smoothly with zero delay on hover and active scale press feedback.
+- **Comprehensive Instance Editor & Management System (`InstanceEditorModal.tsx`, `instances_edit.rs`, `instance-editor.css`, `launch.rs`):**
+  - Added "Изменить" ("Змінити") button adjacent to "Папка" ("Тека") on both instance cards and the hero action banner in `InstancesScreen`.
+  - Prism Launcher / MultiMC-inspired dark obsidian modal with 10 categorized navigation tabs:
+    1. **Версия (Version & Components):** Real-time status indicators (green active dots) for core components: LWJGL 3, Minecraft, Intermediary Mappings, Fabric/Forge/NeoForge Loader, with quick actions to change version, reload, or open folder.
+    2. **Моды (Mods):** Full tabular listing with enable/disable checkbox (toggling `.jar` <-> `.jar.disabled`), filename, clean mod name, version, file size, and right-click context menu.
+    3. **Наборы текстур (Resource Packs):** Enable/disable, add ZIP, delete, and open directory.
+    4. **Шейдеры (Shader Packs):** Enable/disable shaderpacks, add ZIP, delete, and open directory.
+    5. **Миры (Worlds):** Reads `level.dat` and embedded `icon.png` data URLs, displaying world names, size, last played timestamp, and one-click deletion.
+    6. **Серверы (Servers):** Quick view of server list and direct connection addresses.
+    7. **Снимки экрана (Screenshots):** Responsive gallery grid with base64 thumbnail previews, capture dates, file sizes, delete action, and click-to-enlarge modal with full resolution preview.
+    8. **Заметки (Notes):** Fast integrated notepad persisting notes directly to `instances/<id>/notes.txt`.
+    9. **Журналы (Logs & Crash Reports):** Log selector with `latest.log` and crash reports, live viewer with 1MB tail support, copy-to-clipboard, and open logs directory.
+    10. **Параметры (Settings):** Subdivided into 5 sub-tabs (Общие, Java, Настройки, Пользовательские команды, Переменные окружения) configuring resolution, fullscreen, console trigger on crash, playtime tracking, account override, auto-connect, custom Java runtime path, min/max RAM (`-Xms`, `-Xmx`), PermGen (`-XX:PermSize`), system GLFW/OpenAL libraries, Feral GameMode (`gamemoderun`), MangoHud, discrete GPU offload (`DRI_PRIME=1`, `__NV_PRIME_RENDER_OFFLOAD=1`), Zink (`MESA_LOADER_DRIVER_OVERRIDE=zink`), pre-launch and post-exit shell hooks, and custom environment variables.
+  - **Right-Click Context Menu on Mods:** Complete contextual actions including "Скачивание модов" (redirects directly to ModrinthScreen), "Проверить обновления" (invokes backend Modrinth API update checks), "Изменить версию", "Добавить файл" (with native file picker and fallback input), "Удалить", "Включить / Отключить", "Открыть домашнюю страницу", "Экспортировать список" (exports text file of installed mods), "Открыть папку" (`mods/`), and "Открыть конфигурации" (`config/`).
+  - **Native Launch Integration (`launch.rs`):** `launch_minecraft` reads `instances/<id>/instance_config.json` and seamlessly injects custom memory limits, custom Java path, resolution, fullscreen, discrete GPU, Zink, GameMode, MangoHud, environment variables, and pre/post shell commands without affecting other instances.
 
 _Note for Agent: This section must be continuously expanded, refined, and rewritten as the project evolves. Features expand gradually, so always clarify with the user what to implement next._
 

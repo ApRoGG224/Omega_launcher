@@ -180,6 +180,7 @@ export const ScreensLayer: React.FC<ScreensLayerProps> = React.memo(({
           onDeleteInstance={onDeleteInstance}
           onUpdateInstance={onUpdateInstance}
           onLaunchInstance={onLaunchInstance}
+          onOpenCatalog={() => onNavigate("modrinth")}
         />
       )}
 

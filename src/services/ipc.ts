@@ -288,6 +288,98 @@ export const ipc = {
     return invoke<InstalledInstanceContent>("list_installed_instance_items", { instanceId });
   },
 
+  async listInstanceMods(instanceId: string): Promise<InstanceModItem[]> {
+    return invoke<InstanceModItem[]>("list_instance_mods", { instanceId });
+  },
+
+  async toggleInstanceMod(instanceId: string, filename: string, enable: boolean): Promise<string> {
+    return invoke<string>("toggle_instance_mod", { instanceId, filename, enable });
+  },
+
+  async deleteInstanceMod(instanceId: string, filename: string): Promise<void> {
+    await invoke("delete_instance_mod", { instanceId, filename });
+  },
+
+  async addInstanceModFile(instanceId: string, sourcePath: string): Promise<string> {
+    return invoke<string>("add_instance_mod_file", { instanceId, sourcePath });
+  },
+
+  async listInstanceResourcepacks(instanceId: string): Promise<InstancePackItem[]> {
+    return invoke<InstancePackItem[]>("list_instance_resourcepacks", { instanceId });
+  },
+
+  async toggleInstanceResourcepack(instanceId: string, filename: string, enable: boolean): Promise<string> {
+    return invoke<string>("toggle_instance_resourcepack", { instanceId, filename, enable });
+  },
+
+  async deleteInstanceResourcepack(instanceId: string, filename: string): Promise<void> {
+    await invoke("delete_instance_resourcepack", { instanceId, filename });
+  },
+
+  async addInstanceResourcepackFile(instanceId: string, sourcePath: string): Promise<string> {
+    return invoke<string>("add_instance_resourcepack_file", { instanceId, sourcePath });
+  },
+
+  async listInstanceShaderpacks(instanceId: string): Promise<InstancePackItem[]> {
+    return invoke<InstancePackItem[]>("list_instance_shaderpacks", { instanceId });
+  },
+
+  async toggleInstanceShaderpack(instanceId: string, filename: string, enable: boolean): Promise<string> {
+    return invoke<string>("toggle_instance_shaderpack", { instanceId, filename, enable });
+  },
+
+  async deleteInstanceShaderpack(instanceId: string, filename: string): Promise<void> {
+    await invoke("delete_instance_shaderpack", { instanceId, filename });
+  },
+
+  async addInstanceShaderpackFile(instanceId: string, sourcePath: string): Promise<string> {
+    return invoke<string>("add_instance_shaderpack_file", { instanceId, sourcePath });
+  },
+
+  async listInstanceWorldsDetail(instanceId: string): Promise<InstanceWorldItem[]> {
+    return invoke<InstanceWorldItem[]>("list_instance_worlds_detail", { instanceId });
+  },
+
+  async deleteInstanceWorld(instanceId: string, folderName: string): Promise<void> {
+    await invoke("delete_instance_world", { instanceId, folderName });
+  },
+
+  async listInstanceScreenshots(instanceId: string): Promise<InstanceScreenshotItem[]> {
+    return invoke<InstanceScreenshotItem[]>("list_instance_screenshots", { instanceId });
+  },
+
+  async deleteInstanceScreenshot(instanceId: string, filename: string): Promise<void> {
+    await invoke("delete_instance_screenshot", { instanceId, filename });
+  },
+
+  async getInstanceNotes(instanceId: string): Promise<string> {
+    return invoke<string>("get_instance_notes", { instanceId });
+  },
+
+  async saveInstanceNotes(instanceId: string, notes: string): Promise<void> {
+    await invoke("save_instance_notes", { instanceId, notes });
+  },
+
+  async listInstanceLogFiles(instanceId: string): Promise<string[]> {
+    return invoke<string[]>("list_instance_log_files", { instanceId });
+  },
+
+  async getInstanceLogContent(instanceId: string, fileRelPath: string): Promise<string> {
+    return invoke<string>("get_instance_log_content", { instanceId, fileRelPath });
+  },
+
+  async getInstanceConfig(instanceId: string): Promise<InstanceConfigData> {
+    return invoke<InstanceConfigData>("get_instance_config", { instanceId });
+  },
+
+  async saveInstanceConfig(instanceId: string, config: InstanceConfigData): Promise<void> {
+    await invoke("save_instance_config", { instanceId, config });
+  },
+
+  async openInstanceSubfolder(instanceId: string, subfolder: string): Promise<void> {
+    await invoke("open_instance_subfolder", { instanceId, subfolder });
+  },
+
   async listWorlds(instanceId: string): Promise<string[]> {
     return invoke<string[]>("list_worlds", { instanceId });
   },
@@ -426,4 +518,79 @@ export interface InstalledInstanceContent {
   mod_files: string[];
   shader_files: string[];
   resourcepack_files: string[];
+}
+
+export interface InstanceModItem {
+  filename: string;
+  name: string;
+  version?: string | null;
+  enabled: boolean;
+  fileSize: number;
+  modId?: string | null;
+  modUrl?: string | null;
+}
+
+export interface InstancePackItem {
+  filename: string;
+  name: string;
+  enabled: boolean;
+  fileSize: number;
+}
+
+export interface InstanceWorldItem {
+  folderName: string;
+  displayName: string;
+  lastPlayed?: number | null;
+  sizeBytes: number;
+  iconBase64?: string | null;
+}
+
+export interface InstanceScreenshotItem {
+  filename: string;
+  dateModified: number;
+  sizeBytes: number;
+  dataUrl?: string | null;
+}
+
+export interface InstanceConfigData {
+  fullscreen?: boolean;
+  windowWidth?: number;
+  windowHeight?: number;
+  hideLauncherOnStart?: boolean;
+  closeLauncherOnExit?: boolean;
+
+  showConsoleOnStart?: boolean;
+  showConsoleOnCrash?: boolean;
+  hideConsoleOnExit?: boolean;
+
+  showPlaytime?: boolean;
+  recordPlaytime?: boolean;
+
+  overrideAccount?: string;
+  autoconnectServer?: string;
+  autoconnectWorld?: string;
+
+  overrideLoaders?: string[];
+
+  javaPath?: string;
+  skipJavaCompatibility?: boolean;
+  minMemoryMb?: number;
+  maxMemoryMb?: number;
+  permGenMb?: number;
+  warnMemory?: boolean;
+  customJvmArgs?: string;
+
+  systemGlfwPath?: string;
+  systemOpenalPath?: string;
+  enableGamemode?: boolean;
+  enableMangohud?: boolean;
+  useDiscreteGpu?: boolean;
+  useZink?: boolean;
+
+  preLaunchCommand?: string;
+  wrapperCommand?: string;
+  postExitCommand?: string;
+
+  overrideEnvVars?: boolean;
+  envVars?: Record<string, string>;
 }

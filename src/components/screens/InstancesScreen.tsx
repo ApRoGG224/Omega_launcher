@@ -12,6 +12,7 @@ import { ipc } from "../../services/ipc";
 import { useVersions, FALLBACK_UI_VERSIONS } from "../../hooks/useVersions";
 import { useLanguage } from "../../context/LanguageContext";
 import { ImportModal } from "../modals/ImportModal";
+import { InstanceEditorModal } from "../modals/InstanceEditorModal";
 import "../../styles/screens.css";
 import "../../design-system/pixelPlates.css";
 
@@ -24,6 +25,7 @@ interface InstancesScreenProps {
   onDeleteInstance?: (id: string) => void;
   onUpdateInstance?: (instance: InstanceData) => void;
   onLaunchInstance: (instance: InstanceData) => void;
+  onOpenCatalog?: () => void;
 }
 
 const DEFAULT_FOLDERS: InstanceFolder[] = [
@@ -114,8 +116,10 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
   onDeleteInstance,
   onUpdateInstance,
   onLaunchInstance,
+  onOpenCatalog,
 }) => {
   const { t, lang } = useLanguage();
+  const [editingInstance, setEditingInstance] = useState<InstanceData | null>(null);
 
   const getDisplayFolderName = (folder: InstanceFolder) => {
     if (folder.id === "all") return t("foldersAll", "Всі версії");
@@ -576,9 +580,18 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
               <button
                 type="button"
                 className="sb-btn"
-                onClick={() => alert(`Открытие папки версии ${currentInstance.name}`)}
+                title={lang === "uk" ? "Відкрити директорію версії у файловому менеджері" : lang === "ru" ? "Открыть директорию версии в файловом менеджере" : "Open version directory"}
+                onClick={() => void ipc.openFolder(currentInstance.id)}
               >
-                Папка
+                {lang === "uk" ? "Тека" : lang === "ru" ? "Папка" : "Folder"}
+              </button>
+              <button
+                type="button"
+                className="sb-btn sb-btn-edit"
+                title={lang === "uk" ? "Змінити збірку (моди, ресурспаки, шейдери, параметри)" : lang === "ru" ? "Изменить сборку (моды, ресурспаки, шейдеры, параметры)" : "Edit instance (mods, packs, settings)"}
+                onClick={() => setEditingInstance(currentInstance)}
+              >
+                {lang === "uk" ? "Змінити" : lang === "ru" ? "Изменить" : "Edit"}
               </button>
               <button
                 type="button"
@@ -713,6 +726,15 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                         onClick={() => void ipc.openFolder(inst.id)}
                       >
                         {lang === "uk" ? "Тека" : lang === "ru" ? "Папка" : "Folder"}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="sb-btn sb-btn-edit"
+                        title={lang === "uk" ? "Змінити збірку (моди, ресурспаки, шейдери, параметри)" : lang === "ru" ? "Изменить сборку (моды, ресурспаки, шейдеры, параметры)" : "Edit instance (mods, packs, settings)"}
+                        onClick={() => setEditingInstance(inst)}
+                      >
+                        {lang === "uk" ? "Змінити" : lang === "ru" ? "Изменить" : "Edit"}
                       </button>
 
                       <button
@@ -1404,6 +1426,27 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
           </div>,
           document.body
         )}
+
+      {editingInstance && (
+        <InstanceEditorModal
+          isOpen={!!editingInstance}
+          onClose={() => setEditingInstance(null)}
+          instance={editingInstance}
+          onOpenCatalog={() => {
+            setEditingInstance(null);
+            onSelectInstance(editingInstance);
+            if (onOpenCatalog) {
+              onOpenCatalog();
+            }
+          }}
+          onUpdateInstance={(updated) => {
+            if (onUpdateInstance) {
+              onUpdateInstance(updated);
+            }
+            setEditingInstance(updated);
+          }}
+        />
+      )}
     </div>
   );
 };

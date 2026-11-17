@@ -16,6 +16,7 @@ mod network;
 mod skins;
 mod util;
 mod validate;
+pub mod instances_edit;
 
 const LAUNCHER_WINDOW_STATE_FILE: &str = "launcher-window-state.json";
 
@@ -127,7 +128,7 @@ fn read_nbt_string(data: &[u8], pos: &mut usize) -> Option<String> {
     Some(s)
 }
 
-fn find_level_name(level_dat_path: &std::path::Path) -> Option<String> {
+pub(crate) fn find_level_name(level_dat_path: &std::path::Path) -> Option<String> {
     let file = std::fs::File::open(level_dat_path).ok()?;
     let mut decoder = GzDecoder::new(file);
     let mut bytes = Vec::new();
@@ -520,6 +521,29 @@ pub fn run() {
             count_installed_mods,
             list_installed_mod_files,
             list_installed_instance_items,
+            instances_edit::list_instance_mods,
+            instances_edit::toggle_instance_mod,
+            instances_edit::delete_instance_mod,
+            instances_edit::add_instance_mod_file,
+            instances_edit::list_instance_resourcepacks,
+            instances_edit::toggle_instance_resourcepack,
+            instances_edit::delete_instance_resourcepack,
+            instances_edit::add_instance_resourcepack_file,
+            instances_edit::list_instance_shaderpacks,
+            instances_edit::toggle_instance_shaderpack,
+            instances_edit::delete_instance_shaderpack,
+            instances_edit::add_instance_shaderpack_file,
+            instances_edit::list_instance_worlds_detail,
+            instances_edit::delete_instance_world,
+            instances_edit::list_instance_screenshots,
+            instances_edit::delete_instance_screenshot,
+            instances_edit::get_instance_notes,
+            instances_edit::save_instance_notes,
+            instances_edit::list_instance_log_files,
+            instances_edit::get_instance_log_content,
+            instances_edit::get_instance_config,
+            instances_edit::save_instance_config,
+            instances_edit::open_instance_subfolder,
             list_worlds,
             open_path,
             open_url,

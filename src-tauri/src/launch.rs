@@ -507,7 +507,25 @@ pub async fn launch_minecraft(
         emit_line(&app, &format!("[launcher/INFO] Using cached Microsoft Auth for {username}"));
     }
 
-    let java_path = crate::java::ensure_java(&app, &vanilla_version, &data_dir)?;
+    // Read instance_config.json if present
+    let inst_cfg_path = data_dir.join("instances").join(&instance_id).join("instance_config.json");
+    let inst_cfg: Option<crate::instances_edit::InstanceConfigData> = if inst_cfg_path.exists() {
+        std::fs::read_to_string(&inst_cfg_path).ok().and_then(|s| serde_json::from_str(&s).ok())
+    } else {
+        None
+    };
+
+    let java_path = if let Some(ref custom_java) = inst_cfg.as_ref().and_then(|c| c.java_path.as_ref()) {
+        let trimmed = custom_java.trim();
+        if !trimmed.is_empty() && std::path::Path::new(trimmed).exists() {
+            emit_line(&app, &format!("[launcher/INFO] Using instance-configured Java: {trimmed}"));
+            trimmed.to_string()
+        } else {
+            crate::java::ensure_java(&app, &vanilla_version, &data_dir)?
+        }
+    } else {
+        crate::java::ensure_java(&app, &vanilla_version, &data_dir)?
+    };
 
     let mut loader_type = if version.contains('-') {
         version.split('-').nth(1).unwrap_or("").to_lowercase()
@@ -757,8 +775,15 @@ pub async fn launch_minecraft(
             .replace("${version_type}", "release")
     };
 
-    let ram_g = if ram == 0 { 4 } else { ram };
-    let use_gamemode = enable_gamemode.unwrap_or(false);
+    let ram_g = if let Some(mb) = inst_cfg.as_ref().and_then(|c| c.max_memory_mb) {
+        if mb > 0 {
+            (mb as f64 / 1024.0).ceil() as u32
+        } else if ram == 0 { 4 } else { ram }
+    } else if ram == 0 { 4 } else { ram };
+
+    let use_gamemode = enable_gamemode.unwrap_or_else(|| {
+        inst_cfg.as_ref().and_then(|c| c.enable_gamemode).unwrap_or(false)
+    });
     let gamemoderun_path = std::path::Path::new("/usr/bin/gamemoderun");
 
     let mut command = if use_gamemode && gamemoderun_path.exists() {
@@ -770,13 +795,61 @@ pub async fn launch_minecraft(
         std::process::Command::new(&java_path)
     };
 
+    let min_mem_arg = if let Some(min_mb) = inst_cfg.as_ref().and_then(|c| c.min_memory_mb) {
+        if min_mb > 0 {
+            format!("-Xms{min_mb}M")
+        } else {
+            "-Xms1G".to_string()
+        }
+    } else {
+        "-Xms1G".to_string()
+    };
+
     command
         .current_dir(&game_dir)
         .arg(format!("-Xmx{ram_g}G"))
-        .arg("-Xms1G")
+        .arg(&min_mem_arg)
         .arg(format!("-Djava.library.path={}", config.natives_dir.to_string_lossy()))
         .arg("-Dminecraft.launcher.brand=Omega Launcher")
         .arg("-Dminecraft.launcher.version=1.0.0");
+
+    if let Some(perm) = inst_cfg.as_ref().and_then(|c| c.perm_gen_mb) {
+        if perm > 0 {
+            command.arg(format!("-XX:PermSize={perm}M"));
+        }
+    }
+
+    if let Some(true) = inst_cfg.as_ref().and_then(|c| c.use_discrete_gpu) {
+        emit_line(&app, "[launcher/INFO] Discrete GPU offload enabled");
+        command.env("DRI_PRIME", "1");
+        command.env("__NV_PRIME_RENDER_OFFLOAD", "1");
+        command.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia");
+    }
+
+    if let Some(true) = inst_cfg.as_ref().and_then(|c| c.use_zink) {
+        emit_line(&app, "[launcher/INFO] Zink (OpenGL over Vulkan) enabled");
+        command.env("MESA_LOADER_DRIVER_OVERRIDE", "zink");
+    }
+
+    if let Some(true) = inst_cfg.as_ref().and_then(|c| c.enable_mangohud) {
+        emit_line(&app, "[launcher/INFO] MangoHud overlay enabled");
+        command.env("MANGOHUD", "1");
+    }
+
+    if let Some(ref envs) = inst_cfg.as_ref().and_then(|c| c.env_vars.as_ref()) {
+        for (k, v) in envs.iter() {
+            command.env(k, v);
+        }
+    }
+
+    // Pre-launch command
+    if let Some(ref pre_cmd) = inst_cfg.as_ref().and_then(|c| c.pre_launch_command.as_ref()) {
+        let trimmed = pre_cmd.trim();
+        if !trimmed.is_empty() {
+            emit_line(&app, &format!("[launcher/INFO] Executing pre-launch command: {trimmed}"));
+            let _ = std::process::Command::new("sh").args(["-c", trimmed]).current_dir(&game_dir).status();
+        }
+    }
 
     command.arg("--enable-native-access=ALL-UNNAMED");
     if crate::java::required_java_version(&vanilla_version) >= 24 {
@@ -803,6 +876,19 @@ pub async fn launch_minecraft(
         }
     }
 
+    if let Some(ref inst_args) = inst_cfg.as_ref().and_then(|c| c.custom_jvm_args.as_ref()) {
+        let trimmed_inst = inst_args.trim();
+        if !trimmed_inst.is_empty() {
+            emit_line(&app, &format!("[launcher/INFO] Using instance JVM arguments: {}", trimmed_inst));
+            for arg in trimmed_inst.split_whitespace() {
+                let trimmed = arg.trim();
+                if !trimmed.is_empty() {
+                    command.arg(trimmed);
+                }
+            }
+        }
+    }
+
     let resolved_jvm: Vec<String> = config.jvm_args.iter().map(|a| arg_replace(a, &config)).collect();
     command
         .args(&resolved_jvm)
@@ -817,14 +903,33 @@ pub async fn launch_minecraft(
         resolved_game.push(parts[0].to_string());
         resolved_game.push("--port".to_string());
         resolved_game.push(parts.get(1).map(|p| p.to_string()).unwrap_or_else(|| "25565".to_string()));
+    } else if let Some(ref auto_srv) = inst_cfg.as_ref().and_then(|c| c.autoconnect_server.as_ref()) {
+        if !auto_srv.trim().is_empty() {
+            let parts: Vec<&str> = auto_srv.trim().split(':').collect();
+            resolved_game.push("--server".to_string());
+            resolved_game.push(parts[0].to_string());
+            resolved_game.push("--port".to_string());
+            resolved_game.push(parts.get(1).map(|p| p.to_string()).unwrap_or_else(|| "25565".to_string()));
+        }
     }
 
-    if let Some(true) = fullscreen {
+    let effective_fullscreen = fullscreen.or_else(|| inst_cfg.as_ref().and_then(|c| c.fullscreen));
+    if let Some(true) = effective_fullscreen {
         emit_line(&app, "[launcher/INFO] Fullscreen mode enabled for launch");
         resolved_game.push("--fullscreen".to_string());
     }
 
-    if let Some(res) = &resolution {
+    let effective_res = resolution.or_else(|| {
+        inst_cfg.as_ref().and_then(|c| {
+            if let (Some(w), Some(h)) = (c.window_width, c.window_height) {
+                Some(format!("{w}x{h}"))
+            } else {
+                None
+            }
+        })
+    });
+
+    if let Some(res) = &effective_res {
         let trimmed_res = res.trim();
         if trimmed_res.contains('x') && trimmed_res != "default" {
             let mut parts = trimmed_res.split('x');
@@ -869,6 +974,7 @@ pub async fn launch_minecraft(
     let app2 = app.clone();
     let app3 = app.clone();
     let pid_file_exit = pid_file.clone();
+    let post_exit_cmd = inst_cfg.as_ref().and_then(|c| c.post_exit_command.clone());
 
     let stdout_handle = std::thread::spawn(move || {
         let reader = BufReader::new(stdout);
@@ -895,6 +1001,13 @@ pub async fn launch_minecraft(
         let _ = stderr_handle.join();
         let wait_res = child.wait();
         let _ = std::fs::remove_file(&pid_file_exit);
+
+        if let Some(ref post_cmd) = post_exit_cmd {
+            let trimmed = post_cmd.trim();
+            if !trimmed.is_empty() {
+                let _ = std::process::Command::new("sh").args(["-c", trimmed]).status();
+            }
+        }
         match wait_res {
             Ok(status) => {
                 if let Some(code) = status.code() {
