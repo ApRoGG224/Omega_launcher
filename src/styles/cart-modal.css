@@ -1,46 +1,91 @@
 /* ==========================================================================
-   Omega Launcher - Installation Queue Modal & Header Widget Styles
-   Strict Obsidian Launcher Palette & Design System
+   Omega Launcher - Installation Queue Modal & Floating Queue Button
+   Strict Obsidian Launcher Palette & Design System (Zero Neon)
    ========================================================================== */
 
-/* Trigger Button inside .tools row of Catalog */
-.catalog-screen-overlay .cat-queue-trigger-btn {
-  height: 40px;
-  padding: 0 16px;
-  background: #1a1d24;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #e6e8ec;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 10px;
-  cursor: pointer;
+/* Floating Action Queue Button at Bottom-Right of Catalog */
+.catalog-screen-overlay .catalog-floating-queue-btn {
+  position: absolute;
+  bottom: 24px;
+  right: 32px;
+  z-index: 120;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  transition: 0.15s ease;
-  white-space: nowrap;
+  gap: 10px;
+  height: 44px;
+  padding: 0 18px 0 16px;
+  background: #0d1117;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #e6e8ec;
   font-family: var(--font-primary), 'Exo 2', sans-serif !important;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+  user-select: none;
+  animation: catalog-queue-pop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.catalog-screen-overlay .cat-queue-trigger-btn:hover {
-  background: #22262e;
-  border-color: rgba(255, 255, 255, 0.22);
+@keyframes catalog-queue-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.catalog-screen-overlay .catalog-floating-queue-btn:hover {
+  background: #161b24;
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-2px);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.9), 0 4px 12px rgba(0, 0, 0, 0.6);
   color: #ffffff;
 }
 
-.catalog-screen-overlay .cat-queue-badge {
+.catalog-screen-overlay .catalog-floating-queue-btn:active {
+  transform: translateY(0);
+}
+
+.catalog-screen-overlay .catalog-floating-queue-btn .queue-btn-icon {
+  color: #8b919c;
+  transition: color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.catalog-screen-overlay .catalog-floating-queue-btn:hover .queue-btn-icon {
+  color: #ffffff;
+}
+
+.catalog-screen-overlay .catalog-floating-queue-btn .queue-btn-label {
+  letter-spacing: 0.01em;
+}
+
+.catalog-screen-overlay .catalog-floating-queue-btn .queue-btn-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  background: #12151b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  background: #1a1d24;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
   color: #e6e8ec;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
-  border-radius: 5px;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.catalog-screen-overlay .catalog-floating-queue-btn:hover .queue-btn-badge {
+  background: #e6e8ec;
+  color: #0d1117;
+  border-color: #ffffff;
 }
 
 /* Modal Backdrop */

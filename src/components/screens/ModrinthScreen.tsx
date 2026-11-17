@@ -707,18 +707,6 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
             <option value="n">{t("sortRelevance", "За релевантністю")}</option>
             <option value="new">{t("sortRecentlyUpdated", "Нещодавно оновлені")}</option>
           </select>
-
-          {cartItems.length > 0 && (
-            <button
-              type="button"
-              className="cat-queue-trigger-btn"
-              onClick={() => setIsCartOpen(true)}
-              title={lang === "uk" ? "Відкрити чергу встановлення" : lang === "ru" ? "Открыть очередь установки" : "Open install queue"}
-            >
-              <span>{lang === "uk" ? "До встановлення" : lang === "ru" ? "К установке" : "To install"}</span>
-              <span className="cat-queue-badge">{cartItems.length}</span>
-            </button>
-          )}
         </div>
 
         <div className="grid" id="grid">
@@ -796,6 +784,46 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
           </div>
         )}
       </div>
+
+      {/* Floating Queue Button when >= 1 item in queue */}
+      {cartItems.length > 0 && (
+        <button
+          type="button"
+          className="catalog-floating-queue-btn"
+          onClick={() => setIsCartOpen(true)}
+          title={
+            lang === "uk"
+              ? "Відкрити чергу встановлення"
+              : lang === "ru"
+              ? "Открыть очередь установки"
+              : "Open install queue"
+          }
+        >
+          <svg
+            className="queue-btn-icon"
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          <span className="queue-btn-label">
+            {lang === "uk"
+              ? "До встановлення"
+              : lang === "ru"
+              ? "К установке"
+              : "To install"}
+          </span>
+          <span className="queue-btn-badge">{cartItems.length}</span>
+        </button>
+      )}
 
       {/* Cart Modal */}
       <CartModal
