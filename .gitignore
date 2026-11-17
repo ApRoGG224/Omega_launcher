@@ -6,6 +6,7 @@ dist-ssr/
 .env.*
 !.env.example
 .DS_Store
+target/
 src-tauri/target/
 minecraft_data/
 src-tauri/node_pid.txt

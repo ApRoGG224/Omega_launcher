@@ -1,0 +1,113 @@
+import { NotchedCard, NotchedButton } from "components.slint";
+
+export component PlayDock inherits Rectangle {
+    in-out property <string> instance-name: "1.20.1 Fabric";
+    in-out property <string> version-tag: "1.20.1";
+    in-out property <string> status-text: "Готово к запуску";
+    in-out property <bool> is-running: false;
+    in-out property <image> instance-icon: @image-url("../assets/icons/diamond_sword.png");
+
+    callback play-clicked();
+    callback version-clicked();
+
+    height: 74px;
+    background: transparent;
+
+    NotchedCard {
+        width: 100%;
+        height: 100%;
+        card-background: #090c14;
+        card-border-color: #1e293b;
+        card-border-width: 2px;
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            spacing: 16px;
+            alignment: space-between;
+
+            // Left: Instance & Version selector
+            selector_box := Rectangle {
+                width: 320px;
+                height: 52px;
+                y: (parent.height - self.height) / 2;
+
+                TouchArea {
+                    clicked => { root.version-clicked(); }
+                }
+
+                HorizontalLayout {
+                    spacing: 14px;
+                    alignment: start;
+
+                    // 16x16 pixel-art icon box
+                    Rectangle {
+                        width: 44px;
+                        height: 44px;
+                        background: #111626;
+                        border-width: 1px;
+                        border-color: #1e293b;
+                        border-radius: 4px;
+
+                        Image {
+                            source: root.instance-icon;
+                            width: 28px;
+                            height: 28px;
+                            image-fit: contain;
+                            image-rendering: pixelated;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        spacing: 2px;
+
+                        Text {
+                            text: root.instance-name;
+                            color: #ffffff;
+                            font-size: 15px;
+                            font-weight: 700;
+                        }
+
+                        HorizontalLayout {
+                            spacing: 8px;
+                            alignment: start;
+
+                            Text {
+                                text: root.status-text;
+                                color: root.is-running ? #ef4444 : #10b981;
+                                font-size: 12px;
+                                font-weight: 500;
+                            }
+
+                            Text {
+                                text: "• " + root.version-tag;
+                                color: #64748b;
+                                font-size: 11px;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Right: Play / Stop Button
+            VerticalLayout {
+                alignment: center;
+                
+                NotchedButton {
+                    width: 180px;
+                    height: 48px;
+                    text: root.is-running ? "ОСТАНОВИТЬ" : "ИГРАТЬ";
+                    btn-bg: root.is-running ? #ef4444 : #9f75ff;
+                    btn-hover-bg: root.is-running ? #f87171 : #b494ff;
+                    btn-active-bg: root.is-running ? #dc2626 : #8c5ff8;
+                    btn-text-color: root.is-running ? #ffffff : #000000;
+                    btn-border-color: #07080e;
+                    font-size: 16px;
+                    
+                    clicked => { root.play-clicked(); }
+                }
+            }
+        }
+    }
+}

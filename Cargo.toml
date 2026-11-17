@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "crates/omega-core",
+    "crates/omega-slint",
+    "src-tauri",
+]
+resolver = "2"

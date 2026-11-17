@@ -1,0 +1,506 @@
+import { ScrollView } from "std-widgets.slint";
+import { NotchedCard, NotchedButton } from "components.slint";
+import { TopBar } from "topbar.slint";
+import { PlayDock } from "dock.slint";
+
+export struct InstanceModel {
+    id: string,
+    name: string,
+    mc-version: string,
+    loader: string,
+    play-time: string,
+}
+
+export struct ModrinthModel {
+    id: string,
+    title: string,
+    author: string,
+    description: string,
+    downloads: string,
+}
+
+export component MainWindow inherits Window {
+    title: "Omega Launcher (Native Slint)";
+    min-width: 1040px;
+    min-height: 680px;
+    preferred-width: 1120px;
+    preferred-height: 720px;
+    background: #07080e;
+
+    in-out property <string> player-name: "Steve";
+    in-out property <string> active-screen: "home";
+    in-out property <string> active-instance-name: "1.20.1 Fabric";
+    in-out property <string> active-version: "1.20.1";
+    in-out property <string> active-status: "Готово к запуску";
+    in-out property <bool> is-game-running: false;
+    in-out property <string> log-content: "[launcher/INFO] Omega Launcher Native Slint Core initialized.\n[launcher/INFO] SQLite database loaded from omega.db.\n[launcher/INFO] Found system Java 21.";
+    in-out property <int> ram-mb: 4096;
+    in-out property <[InstanceModel]> instances: [
+        { id: "inst-1", name: "1.20.1 Fabric", mc-version: "1.20.1", loader: "Fabric", play-time: "24 ч." },
+        { id: "inst-2", name: "1.21.4 Vanilla", mc-version: "1.21.4", loader: "Vanilla", play-time: "8 ч." },
+        { id: "inst-3", name: "1.16.5 Forge", mc-version: "1.16.5", loader: "Forge", play-time: "42 ч." },
+        { id: "inst-4", name: "1.8.9 PvP Legacy", mc-version: "1.8.9", loader: "Vanilla", play-time: "115 ч." }
+    ];
+    in-out property <[ModrinthModel]> catalog-mods: [
+        { id: "sodium", title: "Sodium", author: "jellysquid3", description: "Современный движок рендеринга, кардинально повышающий FPS.", downloads: "28.4M" },
+        { id: "iris", title: "Iris Shaders", author: "coderbot", description: "Шейдеры нового поколения с полной совместимостью с Sodium.", downloads: "19.2M" },
+        { id: "lithium", title: "Lithium", author: "jellysquid3", description: "Оптимизация серверного тикрейта, физики мобов и генерации чанков.", downloads: "16.8M" },
+        { id: "fabric-api", title: "Fabric API", author: "modmuss50", description: "Базовая библиотека хуков и совместимости для модов Fabric.", downloads: "45.1M" }
+    ];
+
+    callback play-clicked();
+    callback select-instance(string, string);
+    callback change-ram(int);
+    callback refresh-instances();
+
+    // Atmosphere Background (Landscape + Obsidian Gradient)
+    Image {
+        width: 100%;
+        height: 100%;
+        source: @image-url("../assets/backgrounds/landscape_shader_mountains.png");
+        image-fit: cover;
+        opacity: 0.22;
+    }
+
+    // Main Layout
+    VerticalLayout {
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-top: 14px;
+        padding-bottom: 16px;
+        spacing: 14px;
+
+        // Top Navigation Bar
+        TopBar {
+            username: root.player-name;
+            active-tab: root.active-screen;
+            memory-badge: root.is-game-running ? "12 MB" : "32 MB";
+            tab-selected(tab) => {
+                root.active-screen = tab;
+            }
+        }
+
+        // Center Viewport Content
+        Rectangle {
+            vertical-stretch: 1;
+
+            // Screen: HOME
+            if root.active-screen == "home": HorizontalLayout {
+                spacing: 18px;
+
+                // Left Action Cards
+                VerticalLayout {
+                    width: 280px;
+                    spacing: 14px;
+                    alignment: start;
+
+                    // Store Card
+                    NotchedCard {
+                        height: 110px;
+                        card-background: #090c14;
+                        card-border-color: #1e293b;
+                        card-border-width: 2px;
+
+                        TouchArea {
+                            clicked => { root.active-screen = "catalog"; }
+                        }
+
+                        VerticalLayout {
+                            padding: 16px;
+                            spacing: 6px;
+                            alignment: center;
+
+                            Text {
+                                text: "Магазин Omega";
+                                color: #10b981;
+                                font-size: 16px;
+                                font-weight: 700;
+                            }
+                            Text {
+                                text: "Скины, плащи и аксессуары персонажа";
+                                color: #94a3b8;
+                                font-size: 12px;
+                            }
+                        }
+                    }
+
+                    // Friends Card
+                    NotchedCard {
+                        height: 110px;
+                        card-background: #090c14;
+                        card-border-color: #1e293b;
+                        card-border-width: 2px;
+
+                        VerticalLayout {
+                            padding: 16px;
+                            spacing: 6px;
+                            alignment: center;
+
+                            Text {
+                                text: "Играть с друзьями";
+                                color: #9f75ff;
+                                font-size: 16px;
+                                font-weight: 700;
+                            }
+                            Text {
+                                text: "Серверы, локальная сеть и лобби";
+                                color: #94a3b8;
+                                font-size: 12px;
+                            }
+                        }
+                    }
+                }
+
+                // Center 3D Stage / Hero Card
+                NotchedCard {
+                    horizontal-stretch: 1;
+                    card-background: #090c14;
+                    card-border-color: #1e293b;
+                    card-border-width: 2px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        spacing: 12px;
+
+                        Image {
+                            width: 120px;
+                            height: 120px;
+                            source: @image-url("../assets/skins/steve.png");
+                            image-fit: contain;
+                            image-rendering: pixelated;
+                        }
+
+                        Text {
+                            text: "Нативный 3D Скин-модуль (wgpu)";
+                            color: #ffffff;
+                            font-size: 18px;
+                            font-weight: 700;
+                            horizontal-alignment: center;
+                        }
+
+                        Text {
+                            text: "Vulkan / DirectX 12 рендеринг без браузера и WebGL";
+                            color: #64748b;
+                            font-size: 13px;
+                            horizontal-alignment: center;
+                        }
+                    }
+                }
+            }
+
+            // Screen: CATALOG / MODRINTH
+            if root.active-screen == "catalog": NotchedCard {
+                card-background: #090c14;
+                card-border-color: #1e293b;
+                card-border-width: 2px;
+
+                VerticalLayout {
+                    padding: 18px;
+                    spacing: 12px;
+
+                    HorizontalLayout {
+                        alignment: space-between;
+                        Text {
+                            text: "Каталог Modrinth (Моды, Шейдеры, Текстуры)";
+                            color: #ffffff;
+                            font-size: 16px;
+                            font-weight: 700;
+                        }
+                        Text {
+                            text: "Источник: Modrinth API v2 (Прямая загрузка)";
+                            color: #10b981;
+                            font-size: 12px;
+                        }
+                    }
+
+                    for mod in root.catalog-mods: Rectangle {
+                        height: 72px;
+                        background: #0c0f1b;
+                        border-width: 1px;
+                        border-color: #1e293b;
+                        border-radius: 6px;
+
+                        HorizontalLayout {
+                            padding-left: 16px;
+                            padding-right: 16px;
+                            alignment: space-between;
+
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 4px;
+
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    Text {
+                                        text: mod.title;
+                                        color: #ffffff;
+                                        font-size: 15px;
+                                        font-weight: 700;
+                                    }
+                                    Text {
+                                        text: "от " + mod.author;
+                                        color: #64748b;
+                                        font-size: 12px;
+                                        vertical-alignment: center;
+                                    }
+                                }
+                                Text {
+                                    text: mod.description;
+                                    color: #94a3b8;
+                                    font-size: 12px;
+                                }
+                            }
+
+                            HorizontalLayout {
+                                spacing: 14px;
+                                alignment: end;
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    Text {
+                                        text: "⬇ " + mod.downloads;
+                                        color: #10b981;
+                                        font-size: 12px;
+                                        font-weight: 600;
+                                    }
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    NotchedButton {
+                                        width: 110px;
+                                        height: 34px;
+                                        text: "Установить";
+                                        btn-bg: #1d5dc7;
+                                        btn-hover-bg: #2563eb;
+                                        btn-text-color: #ffffff;
+                                        font-size: 12px;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Screen: INSTANCES
+            if root.active-screen == "instances": NotchedCard {
+                card-background: #090c14;
+                card-border-color: #1e293b;
+                card-border-width: 2px;
+
+                VerticalLayout {
+                    padding: 18px;
+                    spacing: 12px;
+
+                    Text {
+                        text: "Установленные сборки и версии Minecraft";
+                        color: #ffffff;
+                        font-size: 16px;
+                        font-weight: 700;
+                    }
+
+                    for inst in root.instances: Rectangle {
+                        height: 64px;
+                        background: inst.name == root.active-instance-name ? #111626 : #0c0f1b;
+                        border-width: 1px;
+                        border-color: inst.name == root.active-instance-name ? #1d5dc7 : #1e293b;
+                        border-radius: 6px;
+
+                        TouchArea {
+                            clicked => {
+                                root.select-instance(inst.name, inst.mc-version);
+                            }
+                        }
+
+                        HorizontalLayout {
+                            padding-left: 16px;
+                            padding-right: 16px;
+                            alignment: space-between;
+
+                            HorizontalLayout {
+                                spacing: 14px;
+                                alignment: start;
+
+                                Image {
+                                    source: @image-url("../assets/icons/diamond_sword.png");
+                                    width: 32px;
+                                    height: 32px;
+                                    image-fit: contain;
+                                    image-rendering: pixelated;
+                                    y: (parent.height - self.height) / 2;
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    spacing: 2px;
+
+                                    Text {
+                                        text: inst.name;
+                                        color: #ffffff;
+                                        font-size: 15px;
+                                        font-weight: 700;
+                                    }
+                                    Text {
+                                        text: "Версия: " + inst.mc-version + " • Загрузчик: " + inst.loader;
+                                        color: #94a3b8;
+                                        font-size: 12px;
+                                    }
+                                }
+                            }
+
+                            VerticalLayout {
+                                alignment: center;
+                                Text {
+                                    text: "Сыграно: " + inst.play-time;
+                                    color: #10b981;
+                                    font-size: 13px;
+                                    font-weight: 600;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Screen: CONSOLE
+            if root.active-screen == "console": NotchedCard {
+                card-background: #090c14;
+                card-border-color: #1e293b;
+                card-border-width: 2px;
+
+                VerticalLayout {
+                    padding: 16px;
+                    spacing: 8px;
+
+                    HorizontalLayout {
+                        alignment: space-between;
+                        Text {
+                            text: "Консоль логов игры";
+                            color: #ffffff;
+                            font-size: 15px;
+                            font-weight: 700;
+                        }
+                        Text {
+                            text: "Прямой поток процесса stdout/stderr";
+                            color: #10b981;
+                            font-size: 12px;
+                        }
+                    }
+
+                    Rectangle {
+                        background: #05060a;
+                        border-width: 1px;
+                        border-color: #1e293b;
+                        border-radius: 4px;
+
+                        ScrollView {
+                            Text {
+                                text: root.log-content;
+                                color: #10b981;
+                                font-size: 12px;
+                                font-family: "JetBrains Mono, monospace";
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Screen: SETTINGS
+            if root.active-screen == "settings": NotchedCard {
+                card-background: #090c14;
+                card-border-color: #1e293b;
+                card-border-width: 2px;
+
+                VerticalLayout {
+                    padding: 24px;
+                    spacing: 16px;
+                    alignment: start;
+
+                    Text {
+                        text: "Настройки лаунчера и JVM";
+                        color: #ffffff;
+                        font-size: 18px;
+                        font-weight: 700;
+                    }
+
+                    HorizontalLayout {
+                        spacing: 20px;
+                        Text {
+                            text: "Выделение оперативной памяти (ОЗУ):";
+                            color: #94a3b8;
+                            font-size: 14px;
+                            vertical-alignment: center;
+                        }
+                        Text {
+                            text: (root.ram-mb / 1024) + " ГБ (" + root.ram-mb + " МБ)";
+                            color: #10b981;
+                            font-size: 14px;
+                            font-weight: 700;
+                            vertical-alignment: center;
+                        }
+                    }
+
+                    HorizontalLayout {
+                        spacing: 12px;
+                        NotchedButton {
+                            width: 100px;
+                            height: 38px;
+                            text: "2 ГБ";
+                            btn-bg: root.ram-mb == 2048 ? #10b981 : #111626;
+                            btn-text-color: root.ram-mb == 2048 ? #000000 : #ffffff;
+                            clicked => { root.change-ram(2048); }
+                        }
+                        NotchedButton {
+                            width: 100px;
+                            height: 38px;
+                            text: "4 ГБ";
+                            btn-bg: root.ram-mb == 4096 ? #10b981 : #111626;
+                            btn-text-color: root.ram-mb == 4096 ? #000000 : #ffffff;
+                            clicked => { root.change-ram(4096); }
+                        }
+                        NotchedButton {
+                            width: 100px;
+                            height: 38px;
+                            text: "6 ГБ";
+                            btn-bg: root.ram-mb == 6144 ? #10b981 : #111626;
+                            btn-text-color: root.ram-mb == 6144 ? #000000 : #ffffff;
+                            clicked => { root.change-ram(6144); }
+                        }
+                        NotchedButton {
+                            width: 100px;
+                            height: 38px;
+                            text: "8 ГБ";
+                            btn-bg: root.ram-mb == 8192 ? #10b981 : #111626;
+                            btn-text-color: root.ram-mb == 8192 ? #000000 : #ffffff;
+                            clicked => { root.change-ram(8192); }
+                        }
+                    }
+
+                    Rectangle { height: 12px; }
+
+                    Text {
+                        text: "Сборщик мусора JVM: G1GC (высокая плавность кадров)";
+                        color: #64748b;
+                        font-size: 13px;
+                    }
+                }
+            }
+        }
+
+        // Bottom Launch Dock (DockLayer)
+        PlayDock {
+            instance-name: root.active-instance-name;
+            version-tag: root.active-version;
+            status-text: root.active-status;
+            is-running: root.is-game-running;
+            
+            play-clicked => {
+                root.play-clicked();
+            }
+            version-clicked => {
+                root.active-screen = "instances";
+            }
+        }
+    }
+}

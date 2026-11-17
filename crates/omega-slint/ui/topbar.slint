@@ -1,0 +1,241 @@
+import { NotchedCard } from "components.slint";
+
+export component TopBar inherits Rectangle {
+    in-out property <string> username: "Player";
+    in-out property <string> active-tab: "home";
+    in-out property <string> memory-badge: "32 MB";
+    
+    callback tab-selected(string);
+    callback profile-clicked();
+
+    height: 56px;
+    background: transparent;
+
+    NotchedCard {
+        width: 100%;
+        height: 100%;
+        card-background: #090c14;
+        card-border-color: #1e293b;
+        card-border-width: 2px;
+
+        HorizontalLayout {
+            padding-left: 16px;
+            padding-right: 16px;
+            alignment: space-between;
+
+            // Left: Player Profile Pill
+            HorizontalLayout {
+                spacing: 12px;
+                alignment: start;
+
+                profile_pill := Rectangle {
+                    width: 150px;
+                    height: 38px;
+                    y: (parent.height - self.height) / 2;
+                    background: #111626;
+                    border-width: 1px;
+                    border-color: #1e293b;
+                    border-radius: 6px;
+
+                    TouchArea {
+                        clicked => { root.profile-clicked(); }
+                    }
+
+                    HorizontalLayout {
+                        padding-left: 10px;
+                        padding-right: 10px;
+                        spacing: 8px;
+                        alignment: center;
+
+                        Rectangle {
+                            width: 10px;
+                            height: 10px;
+                            background: #10b981;
+                            border-radius: 5px;
+                        }
+
+                        Text {
+                            text: root.username;
+                            color: #ffffff;
+                            font-size: 14px;
+                            font-weight: 700;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+
+                // RAM Badge
+                Rectangle {
+                    width: 76px;
+                    height: 28px;
+                    y: (parent.height - self.height) / 2;
+                    background: #07080e;
+                    border-width: 1px;
+                    border-color: #10b981;
+                    border-radius: 4px;
+
+                    Text {
+                        text: "⚡ " + root.memory-badge;
+                        color: #10b981;
+                        font-size: 11px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+
+            // Center: Screen Tabs
+            HorizontalLayout {
+                spacing: 8px;
+                alignment: center;
+
+                // Home
+                Rectangle {
+                    width: 90px;
+                    height: 36px;
+                    y: (parent.height - self.height) / 2;
+                    background: root.active-tab == "home" ? #1d5dc7 : transparent;
+                    border-radius: 4px;
+
+                    TouchArea {
+                        clicked => { root.tab-selected("home"); }
+                    }
+
+                    Text {
+                        text: "Главная";
+                        color: root.active-tab == "home" ? #ffffff : #94a3b8;
+                        font-size: 13px;
+                        font-weight: 600;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+
+                // Modrinth / Catalog
+                Rectangle {
+                    width: 90px;
+                    height: 36px;
+                    y: (parent.height - self.height) / 2;
+                    background: root.active-tab == "catalog" ? #1d5dc7 : transparent;
+                    border-radius: 4px;
+
+                    TouchArea {
+                        clicked => { root.tab-selected("catalog"); }
+                    }
+
+                    Text {
+                        text: "Каталог";
+                        color: root.active-tab == "catalog" ? #ffffff : #94a3b8;
+                        font-size: 13px;
+                        font-weight: 600;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+
+                // Instances
+                Rectangle {
+                    width: 90px;
+                    height: 36px;
+                    y: (parent.height - self.height) / 2;
+                    background: root.active-tab == "instances" ? #1d5dc7 : transparent;
+                    border-radius: 4px;
+
+                    TouchArea {
+                        clicked => { root.tab-selected("instances"); }
+                    }
+
+                    Text {
+                        text: "Сборки";
+                        color: root.active-tab == "instances" ? #ffffff : #94a3b8;
+                        font-size: 13px;
+                        font-weight: 600;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+
+                // Console
+                Rectangle {
+                    width: 90px;
+                    height: 36px;
+                    y: (parent.height - self.height) / 2;
+                    background: root.active-tab == "console" ? #1d5dc7 : transparent;
+                    border-radius: 4px;
+
+                    TouchArea {
+                        clicked => { root.tab-selected("console"); }
+                    }
+
+                    Text {
+                        text: "Консоль";
+                        color: root.active-tab == "console" ? #ffffff : #94a3b8;
+                        font-size: 13px;
+                        font-weight: 600;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+
+                // Settings
+                Rectangle {
+                    width: 96px;
+                    height: 36px;
+                    y: (parent.height - self.height) / 2;
+                    background: root.active-tab == "settings" ? #1d5dc7 : transparent;
+                    border-radius: 4px;
+
+                    TouchArea {
+                        clicked => { root.tab-selected("settings"); }
+                    }
+
+                    Text {
+                        text: "Настройки";
+                        color: root.active-tab == "settings" ? #ffffff : #94a3b8;
+                        font-size: 13px;
+                        font-weight: 600;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+
+            // Right: Friends & Status
+            HorizontalLayout {
+                spacing: 8px;
+                alignment: end;
+
+                Rectangle {
+                    width: 110px;
+                    height: 36px;
+                    y: (parent.height - self.height) / 2;
+                    background: #111626;
+                    border-width: 1px;
+                    border-color: #1e293b;
+                    border-radius: 6px;
+
+                    HorizontalLayout {
+                        spacing: 6px;
+                        alignment: center;
+
+                        Rectangle {
+                            width: 8px;
+                            height: 8px;
+                            background: #10b981;
+                            border-radius: 4px;
+                        }
+
+                        Text {
+                            text: "Онлайн: 1";
+                            color: #94a3b8;
+                            font-size: 12px;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
