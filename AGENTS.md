@@ -97,8 +97,7 @@
     - Inputs: `#090c11` with `11px` radius and `1px solid rgba(255, 255, 255, 0.08)`.
     - Hover Surface: `#121721` with border `rgba(255, 255, 255, 0.22)`.
     - Strictly **NO NEON**: no glowing seams, radioactive text-shadows, or bright neon badges.
-  - **Servers Screen Settings Architecture Twin**:
-    - The Servers screen (`ServersScreen.tsx`, `servers.css`) strictly mirrors the 2-column layout architecture of the Settings screen (`.set-wrap`, `.set-side`, `.set-nav`, `.set-prof`, `.set-main`).
-    - Left column (`.set-side`): upper card `.set-nav` contains server filter tabs ("Все", "В сети", "Офлайн") and quick actions ("Добавить сервер", "Обновить" с таймером). Lower card `.set-prof` contains the active assembly dropdown switcher and key metrics (`servers.dat`, онлайн, игроки, версия, загрузчик).
-    - Right column (`.set-main`): header with `<h1>` and `.set-sub`, search bar with `.set-input` + `.set-b.go`, embedded add server drawer, and scrollable matte obsidian server cards (`#0a0d12`, 14px radius, 52px favicon, discrete ping indicators, 40px action buttons).
+  - **Servers Screen Visual Styling Standard**:
+    - Layout preserves the ergonomic single-column structure (`.srv-container`) with top header bar (no back button), active assembly hero banner, filter tabs & search toolbar, and scrollable server cards list.
+    - Colors, plates, inputs, icons, and buttons strictly inherit Settings screen tokens: `#07090d` canvas, `#0d1117` cards (14-18px radius, `rgba(255, 255, 255, 0.08)` border), `#090c11` inputs/chips, `#1a1d24` 40px base buttons with 11px radius, `#e6e8ec` primary action buttons, and pure matte dark obsidian theme with zero neon.
 
