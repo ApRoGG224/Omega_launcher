@@ -12,6 +12,7 @@ import { useLanguage } from "../../context/LanguageContext";
 import type { InstanceData } from "../../types";
 import { ipc, type InstalledInstanceContent } from "../../services/ipc";
 import { CartModal, type CartItem } from "../modals/CartModal";
+import { ChevronDown, Check } from "lucide-react";
 import "../../styles/screens.css";
 import "../../styles/cart-modal.css";
 
@@ -284,6 +285,29 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedLoader, setSelectedLoader] = useState<CatalogLoader>("");
   const [sortMode, setSortMode] = useState<CatalogSort>("p");
+  const [isLoaderDropdownOpen, setIsLoaderDropdownOpen] = useState(false);
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const loaderDropdownRef = useRef<HTMLDivElement>(null);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        loaderDropdownRef.current &&
+        !loaderDropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsLoaderDropdownOpen(false);
+      }
+      if (
+        sortDropdownRef.current &&
+        !sortDropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsSortDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -685,28 +709,92 @@ export const ModrinthScreen: React.FC<ModrinthScreenProps> = ({
           </div>
 
           {["modpacks", "mods"].includes(activeTab) && (
-            <select
-              id="ld"
-              value={selectedLoader}
-              onChange={(e) => setSelectedLoader(e.target.value as CatalogLoader)}
-            >
-              <option value="">{t("loaderAny", "Завантажувач: Будь-який")}</option>
-              <option value="Fabric">Fabric</option>
-              <option value="Forge">Forge</option>
-              <option value="NeoForge">NeoForge</option>
-              <option value="Quilt">Quilt</option>
-            </select>
+            <div className="cat-custom-dropdown" ref={loaderDropdownRef}>
+              <button
+                type="button"
+                className="cat-dropdown-trigger"
+                onClick={() => {
+                  setIsLoaderDropdownOpen((prev) => !prev);
+                  setIsSortDropdownOpen(false);
+                }}
+              >
+                <span>
+                  {selectedLoader
+                    ? `${lang === "uk" ? "Завантажувач:" : lang === "ru" ? "Загрузчик:" : "Loader:"} ${selectedLoader}`
+                    : t("loaderAny", "Завантажувач: Будь-який")}
+                </span>
+                <ChevronDown size={13} className={`cat-dropdown-chevron ${isLoaderDropdownOpen ? "open" : ""}`} />
+              </button>
+
+              {isLoaderDropdownOpen && (
+                <div className="cat-dropdown-menu">
+                  {[
+                    { value: "", label: t("loaderAny", "Завантажувач: Будь-який") },
+                    { value: "Fabric", label: "Fabric" },
+                    { value: "Forge", label: "Forge" },
+                    { value: "NeoForge", label: "NeoForge" },
+                    { value: "Quilt", label: "Quilt" },
+                  ].map((item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      className={`cat-dropdown-item ${selectedLoader === item.value ? "active" : ""}`}
+                      onClick={() => {
+                        setSelectedLoader(item.value as CatalogLoader);
+                        setIsLoaderDropdownOpen(false);
+                      }}
+                    >
+                      <span>{item.label}</span>
+                      {selectedLoader === item.value && <Check size={13} />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
-          <select
-            id="so"
-            value={sortMode}
-            onChange={(e) => setSortMode(e.target.value as CatalogSort)}
-          >
-            <option value="p">{t("sortPopularity", "За популярністю")}</option>
-            <option value="n">{t("sortRelevance", "За релевантністю")}</option>
-            <option value="new">{t("sortRecentlyUpdated", "Нещодавно оновлені")}</option>
-          </select>
+          <div className="cat-custom-dropdown" ref={sortDropdownRef}>
+            <button
+              type="button"
+              className="cat-dropdown-trigger"
+              onClick={() => {
+                setIsSortDropdownOpen((prev) => !prev);
+                setIsLoaderDropdownOpen(false);
+              }}
+            >
+              <span>
+                {sortMode === "n"
+                  ? t("sortRelevance", "За релевантністю")
+                  : sortMode === "new"
+                  ? t("sortRecentlyUpdated", "Нещодавно оновлені")
+                  : t("sortPopularity", "За популярністю")}
+              </span>
+              <ChevronDown size={13} className={`cat-dropdown-chevron ${isSortDropdownOpen ? "open" : ""}`} />
+            </button>
+
+            {isSortDropdownOpen && (
+              <div className="cat-dropdown-menu">
+                {[
+                  { value: "p", label: t("sortPopularity", "За популярністю") },
+                  { value: "n", label: t("sortRelevance", "За релевантністю") },
+                  { value: "new", label: t("sortRecentlyUpdated", "Нещодавно оновлені") },
+                ].map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    className={`cat-dropdown-item ${sortMode === item.value ? "active" : ""}`}
+                    onClick={() => {
+                      setSortMode(item.value as CatalogSort);
+                      setIsSortDropdownOpen(false);
+                    }}
+                  >
+                    <span>{item.label}</span>
+                    {sortMode === item.value && <Check size={13} />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="grid" id="grid">

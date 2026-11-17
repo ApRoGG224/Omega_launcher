@@ -727,24 +727,6 @@ export const InstancesScreen: React.FC<InstancesScreenProps> = ({
                         {lang === "uk" ? "Тека" : lang === "ru" ? "Папка" : "Folder"}
                       </button>
 
-                      <button
-                        type="button"
-                        className="sb-btn sb-btn-edit"
-                        title={lang === "uk" ? "Змінити збірку (моди, ресурспаки, шейдери, параметри)" : lang === "ru" ? "Изменить сборку (моды, ресурспаки, шейдеры, параметры)" : "Edit instance (mods, packs, settings)"}
-                        onClick={() => setEditingInstance(inst)}
-                      >
-                        {lang === "uk" ? "Змінити" : lang === "ru" ? "Изменить" : "Edit"}
-                      </button>
-
-                      <button
-                        type="button"
-                        className="sb-btn"
-                        title={lang === "uk" ? "Створити ярлик версії на робочому столі" : lang === "ru" ? "Создать ярлык версии на рабочем столе" : "Create shortcut on desktop"}
-                        onClick={() => void ipc.createShortcut(inst.id)}
-                      >
-                        {lang === "uk" ? "Ярлик" : lang === "ru" ? "Ярлык" : "Shortcut"}
-                      </button>
-
                       {instances.length > 1 && onDeleteInstance && (
                         <button
                           type="button"

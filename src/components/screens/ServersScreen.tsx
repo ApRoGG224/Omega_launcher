@@ -1037,6 +1037,8 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
 
   const [isInstanceDropdownOpen, setIsInstanceDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
 
   // Sync active instance if selectedInstance prop changes
   useEffect(() => {
@@ -1085,6 +1087,12 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
         !dropdownRef.current.contains(e.target as Node)
       ) {
         setIsInstanceDropdownOpen(false);
+      }
+      if (
+        sortDropdownRef.current &&
+        !sortDropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsSortDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -1489,21 +1497,6 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
         {/* Top Header Bar */}
         <div className="srv-header-bar">
           <div className="srv-header-left">
-            <div className="srv-title-wrap">
-              <h1 className="srv-heading">
-                <Server size={20} className="srv-heading-icon" />
-                <span>
-                  {lang === "uk" ? "СЕРВЕРИ" : lang === "ru" ? "СЕРВЕРЫ" : "SERVERS"}
-                </span>
-                <span className="srv-count-pill">{servers.length}</span>
-              </h1>
-              <span className="srv-subheading">
-                {lang === "uk"
-                  ? "Моніторинг мережі та список серверів у збірці"
-                  : "Мониторинг сети и список серверов в сборке"}
-              </span>
-            </div>
-
             {/* Assembly Selector Dropdown */}
             {instances.length > 0 && (
               <div className="srv-instance-selector" ref={dropdownRef}>
@@ -1747,33 +1740,83 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
           </div>
 
           <div className="srv-toolbar-right">
-            {/* Sorting control */}
-            <div className="srv-sort-selector">
-              <span className="srv-sort-icon">
-                <ArrowUpDown size={13} />
-              </span>
-              <select
-                className="srv-sort-select"
-                value={sortBy}
-                onChange={(e) =>
-                  setSortBy(
-                    e.target.value as "default" | "ping" | "players" | "name"
-                  )
-                }
+            {/* Custom Sort Dropdown */}
+            <div className="srv-sort-dropdown-wrap" ref={sortDropdownRef}>
+              <button
+                type="button"
+                className="srv-sort-trigger-btn"
+                onClick={() => setIsSortDropdownOpen((prev) => !prev)}
+                title={lang === "uk" ? "Сортування списку серверів" : "Сортировка списка серверов"}
               >
-                <option value="default">
-                  {lang === "uk" ? "За замовчуванням" : "По умолчанию"}
-                </option>
-                <option value="ping">
-                  {lang === "uk" ? "За пінгом (швидкі)" : "По пингу (быстрые)"}
-                </option>
-                <option value="players">
-                  {lang === "uk" ? "За онлайном (гравці)" : "По онлайну (игроки)"}
-                </option>
-                <option value="name">
-                  {lang === "uk" ? "За назвою (А-Я)" : "По названию (А-Я)"}
-                </option>
-              </select>
+                <ArrowUpDown size={13} className="srv-sort-icon" />
+                <span>
+                  {sortBy === "ping"
+                    ? lang === "uk"
+                      ? "За пінгом"
+                      : "По пингу"
+                    : sortBy === "players"
+                    ? lang === "uk"
+                      ? "За онлайном"
+                      : "По онлайну"
+                    : sortBy === "name"
+                    ? lang === "uk"
+                      ? "За назвою"
+                      : "По названию"
+                    : lang === "uk"
+                    ? "Порядок: за замовчуванням"
+                    : "Порядок: по умолчанию"}
+                </span>
+                <ChevronDown size={13} className={`srv-sort-chevron ${isSortDropdownOpen ? "open" : ""}`} />
+              </button>
+
+              {isSortDropdownOpen && (
+                <div className="srv-sort-menu">
+                  <button
+                    type="button"
+                    className={`srv-sort-option ${sortBy === "default" ? "active" : ""}`}
+                    onClick={() => {
+                      setSortBy("default");
+                      setIsSortDropdownOpen(false);
+                    }}
+                  >
+                    <span>{lang === "uk" ? "За замовчуванням" : "По умолчанию"}</span>
+                    {sortBy === "default" && <Check size={13} />}
+                  </button>
+                  <button
+                    type="button"
+                    className={`srv-sort-option ${sortBy === "ping" ? "active" : ""}`}
+                    onClick={() => {
+                      setSortBy("ping");
+                      setIsSortDropdownOpen(false);
+                    }}
+                  >
+                    <span>{lang === "uk" ? "За пінгом (швидкі)" : "По пингу (быстрые)"}</span>
+                    {sortBy === "ping" && <Check size={13} />}
+                  </button>
+                  <button
+                    type="button"
+                    className={`srv-sort-option ${sortBy === "players" ? "active" : ""}`}
+                    onClick={() => {
+                      setSortBy("players");
+                      setIsSortDropdownOpen(false);
+                    }}
+                  >
+                    <span>{lang === "uk" ? "За онлайном (гравці)" : "По онлайну (игроки)"}</span>
+                    {sortBy === "players" && <Check size={13} />}
+                  </button>
+                  <button
+                    type="button"
+                    className={`srv-sort-option ${sortBy === "name" ? "active" : ""}`}
+                    onClick={() => {
+                      setSortBy("name");
+                      setIsSortDropdownOpen(false);
+                    }}
+                  >
+                    <span>{lang === "uk" ? "За назвою (А-Я)" : "По названию (А-Я)"}</span>
+                    {sortBy === "name" && <Check size={13} />}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Search Input */}
@@ -1785,8 +1828,8 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                 type="text"
                 placeholder={
                   lang === "uk"
-                    ? "Пошук сервера за назвою, IP або описом…"
-                    : "Поиск сервера по названию, IP или описанию…"
+                    ? "Пошук сервера за назвою або IP…"
+                    : "Поиск сервера по названию или IP…"
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
