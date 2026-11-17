@@ -816,7 +816,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 260px;
+  max-width: 320px;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
 }
 
 /* IP Chip with Click-to-Copy */
@@ -868,6 +871,12 @@
   background: #131b2a;
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #cbd5e1;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .srv-assembly-chip {

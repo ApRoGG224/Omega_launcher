@@ -72,15 +72,60 @@ fn write_string_prefixed(out: &mut Vec<u8>, s: &str) {
     out.extend_from_slice(bytes);
 }
 
+fn chat_color_to_code(color: &str) -> String {
+    let lower = color.to_lowercase();
+    match lower.as_str() {
+        "black" => "§0".to_string(),
+        "dark_blue" => "§1".to_string(),
+        "dark_green" => "§2".to_string(),
+        "dark_aqua" => "§3".to_string(),
+        "dark_red" => "§4".to_string(),
+        "dark_purple" => "§5".to_string(),
+        "gold" => "§6".to_string(),
+        "gray" => "§7".to_string(),
+        "dark_gray" => "§8".to_string(),
+        "blue" => "§9".to_string(),
+        "green" => "§a".to_string(),
+        "aqua" => "§b".to_string(),
+        "red" => "§c".to_string(),
+        "light_purple" => "§d".to_string(),
+        "yellow" => "§e".to_string(),
+        "white" => "§f".to_string(),
+        other if other.starts_with('#') && other.len() == 7 => {
+            let mut spigot = String::from("§x");
+            for ch in other[1..].chars() {
+                spigot.push('§');
+                spigot.push(ch);
+            }
+            spigot
+        }
+        _ => String::new(),
+    }
+}
+
 fn motd_from_chat(val: &serde_json::Value) -> String {
     match val {
         serde_json::Value::String(s) => s.clone(),
         serde_json::Value::Object(map) => {
-            let mut text = map
-                .get("text")
-                .and_then(|t| t.as_str())
-                .unwrap_or("")
-                .to_string();
+            let mut text = String::new();
+            if let Some(color) = map.get("color").and_then(|c| c.as_str()) {
+                text.push_str(&chat_color_to_code(color));
+            }
+            if map.get("bold").and_then(|b| b.as_bool()).unwrap_or(false) {
+                text.push_str("§l");
+            }
+            if map.get("italic").and_then(|b| b.as_bool()).unwrap_or(false) {
+                text.push_str("§o");
+            }
+            if map.get("underlined").and_then(|b| b.as_bool()).unwrap_or(false) {
+                text.push_str("§n");
+            }
+            if map.get("strikethrough").and_then(|b| b.as_bool()).unwrap_or(false) {
+                text.push_str("§m");
+            }
+            if let Some(t) = map.get("text").and_then(|t| t.as_str()) {
+                text.push_str(t);
+            }
             if let Some(extra) = map.get("extra").and_then(|e| e.as_array()) {
                 for part in extra {
                     text.push_str(&motd_from_chat(part));

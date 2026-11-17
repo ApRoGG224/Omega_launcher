@@ -82,74 +82,147 @@ const DEFAULT_SERVERS: ServerDisplayEntry[] = [
 ];
 
 // Hoisted constants according to react-best-practices (js-hoist-regexp)
-const MC_COLOR_MAP: Record<string, string> = {
-  "0": "#000000",
-  "1": "#0000aa",
-  "2": "#2ea043",
-  "3": "#00aaaa",
-  "4": "#cf222e",
-  "5": "#8250df",
-  "6": "#d29922",
-  "7": "#8b949e",
-  "8": "#57606a",
-  "9": "#58a6ff",
-  a: "#3fb950",
-  b: "#39c5bb",
-  c: "#f85149",
-  d: "#d2a8ff",
-  e: "#e3b341",
-  f: "#f0f6fc",
+export const MC_COLOR_MAP: Record<string, string> = {
+  "0": "#1e293b", // Black (softened for dark mode readability)
+  "1": "#2563eb", // Dark Blue
+  "2": "#22c55e", // Dark Green
+  "3": "#0ea5e9", // Dark Aqua
+  "4": "#ef4444", // Dark Red
+  "5": "#a855f7", // Dark Purple
+  "6": "#f59e0b", // Gold
+  "7": "#94a3b8", // Gray
+  "8": "#64748b", // Dark Gray
+  "9": "#60a5fa", // Blue
+  a: "#4ade80", // Green
+  b: "#38bdf8", // Aqua
+  c: "#f87171", // Red
+  d: "#e879f9", // Light Purple
+  e: "#fde047", // Yellow
+  f: "#ffffff", // White
 };
 
-const MC_FORMAT_SPLIT_REGEX = /(§[0-9a-fk-or])/gi;
+// Strips all Minecraft formatting codes (§0-§f, §k-§r, §x§r§r§g§g§b§b)
+const MC_STRIP_REGEX = /§(?:[0-9a-fk-orA-FK-OR]|x(?:§[0-9a-fA-F]){6})/g;
 
-function renderMinecraftMotd(motd: string): React.ReactNode {
-  if (!motd) return null;
-  if (!motd.includes("§")) return motd;
+export function cleanMinecraftText(text?: string | null): string {
+  if (!text) return "";
+  return text.replace(MC_STRIP_REGEX, "").replace(/§/g, "").trim();
+}
 
-  const parts = motd.split(MC_FORMAT_SPLIT_REGEX);
-  let currentColor = "#c9d1d9";
+// Regex to extract version numbers/ranges: e.g. "1.12-1.21", "1.20.4", "1.8.x - 1.21.x", "v1.19"
+const VERSION_RANGE_REGEX =
+  /\bv?(\d+\.\d+(?:\.\d+)?(?:\.x)?(?:\s*(?:-|–|до|\.\.)\s*v?\d+\.\d+(?:\.\d+)?(?:\.x)?)?)\b/i;
+
+export function cleanServerVersion(rawVersion?: string | null): string {
+  if (!rawVersion) return "";
+  const cleaned = cleanMinecraftText(rawVersion);
+  if (!cleaned) return "";
+
+  // If already concise and doesn't contain multiline marketing text
+  if (cleaned.length <= 20 && !cleaned.includes("\n")) {
+    return cleaned;
+  }
+
+  // Look for version pattern inside advertisement text
+  const match = cleaned.match(VERSION_RANGE_REGEX);
+  if (match && match[1]) {
+    return match[1].replace(/\s+/g, "");
+  }
+
+  // Fallback: truncate to at most 18 characters
+  return cleaned.slice(0, 18).trim() + "…";
+}
+
+// Matches §x§r§r§g§g§b§b OR §[0-9a-fk-or] OR \n
+const MC_TOKEN_REGEX = /(§x(?:§[0-9a-fA-F]){6}|§[0-9a-fk-orA-FK-OR]|\n)/g;
+
+export function renderMinecraftFormattedText(text?: string | null): React.ReactNode {
+  if (!text) return null;
+  if (!text.includes("§") && !text.includes("\n")) {
+    return text;
+  }
+
+  const parts = text.split(MC_TOKEN_REGEX);
+  let currentColor = "#cbd5e1";
   let isBold = false;
   let isItalic = false;
   let isUnderline = false;
+  let isStrike = false;
 
-  return parts.map((part, index) => {
+  const nodes: React.ReactNode[] = [];
+  let keyIndex = 0;
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (!part) continue;
+
+    if (part === "\n") {
+      nodes.push(<br key={`br-${keyIndex++}`} />);
+      continue;
+    }
+
     if (part.startsWith("§")) {
+      // Hex code check: §x§r§r§g§g§b§b
+      if (part.toLowerCase().startsWith("§x") && part.length === 14) {
+        currentColor = "#" + part.replace(/§[xX]/, "").replace(/§/g, "");
+        continue;
+      }
+
       const code = part.charAt(1).toLowerCase();
-      if (MC_COLOR_MAP[code]) {
+      if (MC_COLOR_MAP[code] !== undefined) {
         currentColor = MC_COLOR_MAP[code];
+        // In Minecraft specification, setting a color resets text formatting styles
         isBold = false;
         isItalic = false;
         isUnderline = false;
+        isStrike = false;
       } else if (code === "l") {
         isBold = true;
       } else if (code === "o") {
         isItalic = true;
       } else if (code === "n") {
         isUnderline = true;
+      } else if (code === "m") {
+        isStrike = true;
       } else if (code === "r") {
-        currentColor = "#c9d1d9";
+        currentColor = "#cbd5e1";
         isBold = false;
         isItalic = false;
         isUnderline = false;
+        isStrike = false;
       }
-      return null;
+      continue;
     }
-    return (
+
+    const textDecoration =
+      isUnderline && isStrike
+        ? "underline line-through"
+        : isUnderline
+        ? "underline"
+        : isStrike
+        ? "line-through"
+        : "none";
+
+    nodes.push(
       <span
-        key={index}
+        key={`mc-${keyIndex++}`}
         style={{
           color: currentColor,
-          fontWeight: isBold ? 800 : 400,
+          fontWeight: isBold ? 700 : 400,
           fontStyle: isItalic ? "italic" : "normal",
-          textDecoration: isUnderline ? "underline" : "none",
+          textDecoration,
         }}
       >
         {part}
       </span>
     );
-  });
+  }
+
+  return nodes.length > 0 ? nodes : null;
 }
+
+// Backwards-compatible alias for existing callers/tests
+export const renderMinecraftMotd = renderMinecraftFormattedText;
 
 /**
  * Authentic Minecraft 5-bar connection strength indicator
@@ -256,20 +329,30 @@ const ServerCard = memo<ServerCardProps>(
           {server.favicon && server.favicon.startsWith("data:image") ? (
             <img
               src={server.favicon}
-              alt={server.name}
+              alt={cleanMinecraftText(server.name)}
               className="srv-favicon-img"
               loading="lazy"
             />
           ) : (
-            <span className="srv-favicon-fallback">{server.favicon || "MC"}</span>
+            <span className="srv-favicon-fallback">
+              {server.favicon ||
+                cleanMinecraftText(server.name || server.ip)
+                  .trim()
+                  .charAt(0)
+                  .toUpperCase() ||
+                "S"}
+            </span>
           )}
         </div>
 
         {/* Info Column */}
         <div className="srv-card-main">
           <div className="srv-card-title-row">
-            <span className="srv-card-title" title={server.name}>
-              {server.name}
+            <span
+              className="srv-card-title"
+              title={cleanMinecraftText(server.name)}
+            >
+              {renderMinecraftFormattedText(server.name)}
             </span>
 
             {/* Click to copy IP chip */}
@@ -283,7 +366,7 @@ const ServerCard = memo<ServerCardProps>(
                   : "Нажмите, чтобы скопировать IP адрес"
               }
             >
-              <span>{server.ip}</span>
+              <span>{cleanMinecraftText(server.ip)}</span>
               <span className="srv-ip-copy-tag">
                 {isCopied ? <Check size={12} /> : <Copy size={12} />}
               </span>
@@ -291,7 +374,12 @@ const ServerCard = memo<ServerCardProps>(
 
             {/* Version tag */}
             {server.version && (
-              <span className="srv-ver-chip">{server.version}</span>
+              <span
+                className="srv-ver-chip"
+                title={cleanMinecraftText(server.version)}
+              >
+                {cleanServerVersion(server.version)}
+              </span>
             )}
 
             {/* Assembly tag if from servers.dat */}
@@ -304,7 +392,7 @@ const ServerCard = memo<ServerCardProps>(
 
           {/* MOTD */}
           <div className="srv-card-motd">
-            {renderMinecraftMotd(server.motd)}
+            {renderMinecraftFormattedText(server.motd)}
           </div>
         </div>
 
@@ -370,7 +458,11 @@ const ServerCard = memo<ServerCardProps>(
             onClick={() => onPlay(server)}
             title={
               currentInstanceName
-                ? `Запустить Minecraft (${currentInstanceName}) и подключиться к ${server.name}`
+                ? lang === "uk"
+                  ? `Запустити Minecraft (${currentInstanceName}) і підключитися до ${cleanMinecraftText(server.name)}`
+                  : `Запустить Minecraft (${currentInstanceName}) и подключиться к ${cleanMinecraftText(server.name)}`
+                : lang === "uk"
+                ? "Запустити Minecraft і підключитися до сервера"
                 : "Запустить Minecraft и подключиться к серверу"
             }
           >
@@ -518,7 +610,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
                       : s.maxPlayers,
                   online: res.online,
                   favicon: res.favicon || s.favicon,
-                  version: res.version || s.version,
+                  version: res.version ? cleanServerVersion(res.version) : s.version,
                   isQuerying: false,
                 }
               : s
@@ -572,7 +664,13 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               pingMs: 0,
               onlinePlayers: 0,
               maxPlayers: 0,
-              favicon: s.icon || s.name.charAt(0).toUpperCase() || "S",
+              favicon:
+                s.icon ||
+                cleanMinecraftText(s.name || s.ip)
+                  .trim()
+                  .charAt(0)
+                  .toUpperCase() ||
+                "S",
               online: false,
               isAssemblyServer: true,
               isQuerying: true,
@@ -594,7 +692,13 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
               pingMs: 0,
               onlinePlayers: 0,
               maxPlayers: 0,
-              favicon: r.favicon || (r.name.charAt(0).toUpperCase() || "S"),
+              favicon:
+                r.favicon ||
+                cleanMinecraftText(r.name || r.host)
+                  .trim()
+                  .charAt(0)
+                  .toUpperCase() ||
+                "S",
               online: false,
               isAssemblyServer: false,
               isQuerying: true,
@@ -735,7 +839,11 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
   const handlePlayOnServer = useCallback(
     (server: ServerDisplayEntry) => {
       setConnectingId(server.id);
-      onDirectConnect(server.name, server.ip, activeInstanceId || undefined);
+      onDirectConnect(
+        cleanMinecraftText(server.name),
+        server.ip,
+        activeInstanceId || undefined
+      );
       setTimeout(() => {
         setConnectingId(null);
       }, 2000);
@@ -758,9 +866,13 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
       if (filterType === "offline" && s.online) return false;
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
-        const matchesName = s.name.toLowerCase().includes(query);
+        const matchesName =
+          cleanMinecraftText(s.name).toLowerCase().includes(query) ||
+          s.name.toLowerCase().includes(query);
         const matchesIp = s.ip.toLowerCase().includes(query);
-        const matchesMotd = s.motd.toLowerCase().includes(query);
+        const matchesMotd =
+          cleanMinecraftText(s.motd).toLowerCase().includes(query) ||
+          s.motd.toLowerCase().includes(query);
         if (!matchesName && !matchesIp && !matchesMotd) return false;
       }
       return true;
