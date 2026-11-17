@@ -160,6 +160,34 @@ When working on tasks for this repository, the agent MUST follow this strict seq
 
 - **Proactive Memory Updates:** The agent MUST automatically and constantly update this `AGENTS.md` file to reflect new project decisions, architecture, and current state.
 - **Proactive Skill Creation:** The agent MUST automatically create, rewrite, and update skills in the `.agents/skills/` directory as it learns from its own usage and solves problems, without waiting for explicit user commands.
+- **Unified Design System & Base Button Standard (Settings Archetype):**
+  - **Single Source of Truth**: All launcher buttons, input fields, cards, and navigation controls across all screens must strictly inherit the base styling of the Settings screen (`SettingsScreen.tsx` / `.set-b`, `.set-nav button`, `.set-seg button`, `.set-card`, `.set-input`).
+  - **Base Button Specs (`.btn-base`, `.btn-default`, `.screen-back-btn`, `.sb-btn`, `.set-b`)**:
+    - Height: `40px` (or min-height `40px`).
+    - Border radius: `11px` (`--btn-radius`).
+    - Background: `#1a1d24` (`--btn-bg-default`).
+    - Border: `1px solid rgba(255, 255, 255, 0.08)` (`--btn-bc-default`).
+    - Text color: `#e6e8ec` (`--btn-text-default`), font-weight `600`, font-size `13px`.
+    - Hover state: Background `#22262e` (`--btn-bg-hover`), border `1px solid rgba(255, 255, 255, 0.22)` (`--btn-bc-hover`), text `#ffffff`.
+    - Active state: `transform: translateY(1px)`.
+  - **Primary Action Buttons (`.btn-primary`, `.btn-go`, `.set-b.go`, `.srv-btn-save`)**:
+    - Background: `#e6e8ec` (`--btn-bg-primary`).
+    - Border: `1px solid #ffffff` (`--btn-bc-primary`).
+    - Text color: `#0d1117` (`--btn-text-primary`), font-weight `700`.
+    - Hover state: Background `#ffffff`, text `#0d1117`.
+  - **Delete/Danger Buttons (`.btn-delete`, `.srv-btn-delete`)**:
+    - Border radius: `11px`.
+    - Background: `rgba(239, 68, 68, 0.12)`.
+    - Border: `1px solid rgba(248, 113, 113, 0.25)`.
+    - Text color: `#f87171`.
+    - Hover state: Background `rgba(239, 68, 68, 0.22)`, border `#ef4444`, text `#ffffff`.
+  - **Color Palette & Dark Obsidian Theme**:
+    - Global Canvas: `#090c11` (`--bg-canvas`).
+    - Surface / Cards: `#0d1117` (`--bg-surface`, `--bg-plate`) with `14px` - `18px` border-radius and `1px solid rgba(255, 255, 255, 0.08)`.
+    - Inner Rows / Containers: `#0a0d12` (`--bg-row`) with `14px` border-radius.
+    - Inputs: `#090c11` with `11px` radius and `1px solid rgba(255, 255, 255, 0.08)`.
+    - Hover Surface: `#121721` with border `rgba(255, 255, 255, 0.22)`.
+    - Strictly **NO NEON**: no glowing seams, radioactive text-shadows, or bright neon badges.
 
 ## Mentorship Mode
 

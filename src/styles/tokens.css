@@ -1,49 +1,74 @@
 :root {
+  /* Settings-inspired dark obsidian & graphite design system */
   --bg-deep: #06080d;
-  --bg-canvas: #090d16;
-  --bg-surface: #0e1422;
-  --bg-surface-hover: #131b2c;
-  --bg-plate: #141f33;
-  --bg-plate-hover: #1a2840;
-  --bg-plate-active: #20314f;
+  --bg-canvas: #090c11;
+  --bg-surface: #0d1117;
+  --bg-surface-hover: #121721;
+  --bg-plate: #0d1117;
+  --bg-plate-hover: #161b24;
+  --bg-plate-active: #1a1d24;
+  --bg-row: #0a0d12;
 
-  --border-dim: #152033;
-  --border-subtle: #1c2b44;
-  --border-medium: #273b5c;
-  --border-bright: #38537f;
+  --border-dim: rgba(255, 255, 255, 0.04);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.12);
+  --border-bright: rgba(255, 255, 255, 0.22);
 
-  --text-pure: #f8fafc;
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
+  --text-pure: #ffffff;
+  --text-primary: #e6e8ec;
+  --text-secondary: #8b919c;
   --text-muted: #64748b;
-  --text-accent: #93c5fd;
+  --text-accent: #e6e8ec;
 
-  --btn-bg-default: #101726;
-  --btn-bc-default: #25364e;
-  --btn-text-default: #e6edf7;
+  /* Universal Base Button (Settings .set-b style) */
+  --btn-radius: 11px;
+  --btn-height: 40px;
+  --btn-bg-default: #1a1d24;
+  --btn-bc-default: rgba(255, 255, 255, 0.08);
+  --btn-text-default: #e6e8ec;
+  --btn-bg-hover: #22262e;
+  --btn-bc-hover: rgba(255, 255, 255, 0.22);
+  --btn-text-hover: #ffffff;
 
+  /* Universal Primary Action Button (Settings .set-b.go style) */
+  --btn-bg-primary: #e6e8ec;
+  --btn-bc-primary: #ffffff;
+  --btn-text-primary: #0d1117;
+  --btn-bg-primary-hover: #ffffff;
+  --btn-bc-primary-hover: #ffffff;
+  --btn-text-primary-hover: #0d1117;
+
+  /* Play Button */
   --btn-bg-play: #4a6839;
   --btn-bc-play: #698852;
   --btn-text-play: #f4f6ee;
 
+  /* Stop Button */
   --btn-bg-stop: #7e3230;
   --btn-bc-stop: #9e4a46;
   --btn-text-stop: #faefee;
 
-  --btn-bg-instance: #0f1d33;
-  --btn-bc-instance: #204975;
-  --btn-text-instance: #f0f6ff;
+  /* Instance Item */
+  --btn-bg-instance: #1a1d24;
+  --btn-bc-instance: rgba(255, 255, 255, 0.08);
+  --btn-text-instance: #e6e8ec;
 
   --btn-bg-amber: #2a1b10;
   --btn-bc-amber: #784415;
   --btn-text-amber: #fef3c7;
 
-  --btn-bg-delete: rgba(239, 68, 68, 0.14);
-  --btn-bg-delete-hover: rgba(239, 68, 68, 0.28);
-  --btn-border-delete: rgba(248, 113, 113, 0.35);
+  /* Delete / Danger Button */
+  --btn-bg-delete: rgba(239, 68, 68, 0.12);
+  --btn-bg-delete-hover: rgba(239, 68, 68, 0.24);
+  --btn-border-delete: rgba(248, 113, 113, 0.25);
   --btn-border-delete-hover: #ef4444;
   --btn-text-delete: #f87171;
-  --btn-text-delete-hover: #faefee;
+  --btn-text-delete-hover: #ffffff;
+
+  /* Card & Input System */
+  --card-radius: 18px;
+  --card-radius-sm: 14px;
+  --input-radius: 11px;
 
   --focus-ring: #5796dc;
 

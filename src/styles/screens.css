@@ -49,60 +49,102 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 16px;
-  min-height: 36px;
-  background: #0f1624;
-  border: 1px solid var(--border-medium, #25364e);
-  border-radius: 8px;
+  padding: 0 16px;
+  height: 40px;
+  background: #1a1d24;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 11px;
   font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary, #e2e8f0);
+  font-weight: 600;
+  color: #e6e8ec;
   cursor: pointer;
   user-select: none;
   line-height: 1;
   white-space: nowrap;
   transition: all 0.15s ease;
+  font-family: var(--font-primary), Inter, system-ui, sans-serif !important;
 }
 
 .screen-back-btn:hover {
-  background: #162238;
-  border-color: var(--border-bright, #3b82f6);
-  color: var(--text-pure, #ffffff);
+  background: #22262e;
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
 }
 
 .screen-back-btn:active {
-  transform: translateY(1.5px);
+  transform: translateY(1px);
 }
 
-.btn-primary {
+/* Base Buttons (Settings .set-b style) */
+.btn-base,
+.btn-default,
+.btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 18px;
-  min-height: 38px;
-  background-color: var(--btn-bg-play, #4a6839);
-  border: 1px solid var(--btn-bc-play, #698852);
-  border-radius: 6px;
-  color: var(--btn-text-play, #f4f6ee);
+  padding: 0 16px;
+  height: 40px;
+  background: #1a1d24;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 11px;
+  color: #e6e8ec;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
-  font-family: var(--font-primary) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+  font-family: var(--font-primary), Inter, system-ui, sans-serif !important;
 }
 
-.btn-primary:hover {
-  background-color: #587c44;
-  border-color: #7ea363;
-  filter: brightness(1.08);
+.btn-base:hover,
+.btn-default:hover,
+.btn-secondary:hover {
+  background: #22262e;
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
 }
 
-.btn-primary:active {
-  transform: translateY(1.5px);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+.btn-base:active,
+.btn-default:active,
+.btn-secondary:active {
+  transform: translateY(1px);
+}
+
+/* Primary Action Button (Settings .set-b.go style) */
+.btn-primary,
+.btn-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 18px;
+  height: 40px;
+  background-color: #e6e8ec !important;
+  border: 1px solid #ffffff !important;
+  border-radius: 11px !important;
+  color: #0d1117 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  user-select: none !important;
+  font-family: var(--font-primary), Inter, system-ui, sans-serif !important;
+  box-shadow: none !important;
+}
+
+.btn-primary:hover,
+.btn-go:hover {
+  background-color: #ffffff !important;
+  color: #0d1117 !important;
+  border-color: #ffffff !important;
+  filter: none !important;
+}
+
+.btn-primary:active,
+.btn-go:active {
+  transform: translateY(1px) !important;
 }
 
 .btn-primary:disabled,
@@ -115,29 +157,30 @@
 
 .btn-delete,
 .screen-delete-btn {
-  padding: 5px 12px;
-  min-height: 28px;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--btn-text-delete, #f87171);
-  background-color: var(--btn-bg-delete, rgba(239, 68, 68, 0.14));
-  border: 1px solid var(--btn-border-delete, rgba(248, 113, 113, 0.35));
-  border-radius: 6px;
+  padding: 0 14px;
+  height: 36px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f87171;
+  background-color: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 11px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   white-space: nowrap;
   transition: all 0.15s ease;
-  font-family: var(--font-primary) !important;
+  font-family: var(--font-primary), Inter, system-ui, sans-serif !important;
   box-shadow: none;
 }
 
 .btn-delete:hover,
 .screen-delete-btn:hover {
-  background-color: var(--btn-bg-delete-hover, rgba(239, 68, 68, 0.28));
-  border-color: var(--btn-border-delete-hover, #ef4444);
-  color: var(--btn-text-delete-hover, #faefee);
+  background-color: rgba(239, 68, 68, 0.24);
+  border-color: #ef4444;
+  color: #ffffff;
 }
 
 .btn-delete:active,
@@ -146,26 +189,26 @@
 }
 
 .btn-icon {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: #0f1624;
-  border: 1px solid var(--border-medium, #25364e);
-  border-radius: 6px;
-  color: var(--text-secondary, #94a3b8);
+  background: #1a1d24;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 11px;
+  color: #8b919c;
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: var(--font-primary) !important;
 }
 
 .btn-icon:hover {
-  background: #162238;
-  border-color: #3b82f6;
+  background: #22262e;
+  border-color: rgba(255, 255, 255, 0.22);
   color: #ffffff;
 }
 
@@ -174,28 +217,35 @@
 }
 
 .account-card {
-  background: #080c14;
-  border: 1px solid var(--border-medium, #25364e);
-  border-radius: 8px;
+  background: #0d1117;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
+.account-card:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background-color: #121721;
+}
+
 .account-card.active {
-  border-color: #3b82f6;
-  background-color: rgba(37, 99, 235, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  background-color: #1a1d24;
 }
 
 .inst-folder-cube-btn {
-  background: #080d17;
-  border: 1px solid #2c3b57;
-  border-radius: 8px;
+  background: #1a1d24;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 11px;
   cursor: pointer;
   transition: all 0.15s ease;
+  color: #e6e8ec;
 }
 
 .inst-folder-cube-btn:hover {
-  border-color: #3b82f6;
-  background: #101a2b;
+  border-color: rgba(255, 255, 255, 0.22);
+  background: #22262e;
+  color: #ffffff;
 }
 
 .screen-title-wrap {

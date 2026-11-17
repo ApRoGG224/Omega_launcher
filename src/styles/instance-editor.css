@@ -730,14 +730,14 @@
 
 /* Buttons in footer matching .sb-btn and .sb-btn-go */
 .inst-footer-btn-close {
-  height: 38px;
+  height: 40px;
   padding: 0 20px;
   background: #1a1d24;
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #e6e8ec;
   font-size: 13px;
   font-weight: 600;
-  border-radius: 10px;
+  border-radius: 11px;
   cursor: pointer;
   transition: 0.15s ease;
   font-family: var(--font-primary), 'Exo 2', sans-serif !important;
@@ -750,14 +750,14 @@
 }
 
 .inst-footer-btn-save {
-  height: 38px;
+  height: 40px;
   padding: 0 22px;
   background: #e6e8ec;
   border: 1px solid #ffffff;
   color: #0d1117;
   font-size: 13px;
   font-weight: 700;
-  border-radius: 10px;
+  border-radius: 11px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
