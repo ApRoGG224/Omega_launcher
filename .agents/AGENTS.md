@@ -188,6 +188,10 @@ When working on tasks for this repository, the agent MUST follow this strict seq
     - Inputs: `#090c11` with `11px` radius and `1px solid rgba(255, 255, 255, 0.08)`.
     - Hover Surface: `#121721` with border `rgba(255, 255, 255, 0.22)`.
     - Strictly **NO NEON**: no glowing seams, radioactive text-shadows, or bright neon badges.
+  - **Servers Screen Settings Architecture Twin**:
+    - The Servers screen (`ServersScreen.tsx`, `servers.css`) strictly mirrors the 2-column layout architecture of the Settings screen (`.set-wrap`, `.set-side`, `.set-nav`, `.set-prof`, `.set-main`).
+    - Left column (`.set-side`): upper card `.set-nav` contains server filter tabs ("Все", "В сети", "Офлайн") and quick actions ("Добавить сервер", "Обновить" с таймером). Lower card `.set-prof` contains the active assembly dropdown switcher and key metrics (`servers.dat`, онлайн, игроки, версия, загрузчик).
+    - Right column (`.set-main`): header with `<h1>` and `.set-sub`, search bar with `.set-input` + `.set-b.go`, embedded add server drawer, and scrollable matte obsidian server cards (`#0a0d12`, 14px radius, 52px favicon, discrete ping indicators, 40px action buttons).
 
 ## Mentorship Mode
 
