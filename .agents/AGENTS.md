@@ -177,8 +177,16 @@ When working on tasks for this repository, the agent MUST follow this strict seq
 
 ## Installed Skills & Engineering Tooling
 
-- **Mandatory Skill Review & Usage:** The agent MUST actively inspect and utilize the following specialized skills installed in `.agents/skills/` on EVERY new task, feature, or review:
-  - `ui-ux-pro-max`, `design-system`, `ui-styling`, `design`, `brand`, `banner-design`, `slides`: Design Lab & UI/UX engineering intelligence suite. Always consult when designing or refining UI layouts, colors, components, and animations.
-  - `senior-frontend`: Advanced React/TypeScript frontend development patterns, accessibility standards, and bundle optimization.
-  - `react-best-practices`: 57+ Vercel React and Next.js performance optimization rules (waterfall prevention, bundle size control, rendering and state performance).
-  - `prettier-validation`: Formatting and syntax validation for TypeScript and React code.
+- **ABSOLUTE MANDATORY SKILLS RULE (БЕЗ ИСКЛЮЧЕНИЙ):**
+  The agent MUST LITERALLY ALWAYS — on every single task, even when it thinks it is unnecessary or does not want to — actively inspect, load, and utilize the following skills:
+  1. **Codebase Exploration & Memory (`trail` / `graft`):**
+     - **NEVER** perform blind file searches using `find` or generic `grep`.
+     - **ALWAYS** start code location by querying `trail ask "<task>"` or `trail grep "<symbol>"` for instantaneous, exact `file:line` resolution from the indexed graph.
+     - Inspect APIs with `trail skeleton <file>` and verify inbound/outbound references with `trail callers <symbol>` before editing.
+     - Save critical architectural decisions, non-obvious fixes, and session learnings using `trail note` so future sessions immediately remember them.
+  2. **Frontend, UI/UX Engineering & Validation (from `.agents/skills/`):**
+     - `ui-ux-pro-max`, `design-system`, `ui-styling`: Strict design intelligence suite. Enforce matte obsidian/stone aesthetic, stepped notched pixel-art styling, and the absolute non-negotiable **NO NEON** rule (zero neon highlights, zero glowing text shadows).
+     - `react-best-practices`: 57+ Vercel React and Next.js performance optimization rules (prevent waterfalls, strict memoization with `useCallback`/`useMemo`, `useRef` for synchronous locks, mandatory `clearInterval`/event-listener cleanup on unmount to eliminate memory leaks, render count control).
+     - `senior-frontend`: Advanced React/TypeScript patterns, strict typing without `any`, robust error boundaries and edge-case handling.
+     - `prettier-validation`: Formatting, syntax validation, and code hygiene for all modified TypeScript and React code.
+     - `design`, `brand`, `banner-design`, `slides`: Design assets, icon designs, and presentations.

@@ -51,5 +51,18 @@
 - Check for an existing `AGENTS.md` before creating or editing it.
 - Avoid overwriting user changes in unrelated files.
 - Prefer small, repo-local edits that preserve the current architecture.
-- **Mandatory Skill Activation**: Before writing or reviewing frontend code, UI layouts, or optimizations, the agent MUST inspect and actively apply the installed skills in `.agents/skills/` (`ui-ux-pro-max`, `react-best-practices`, `senior-frontend`, `ui-styling`, `design-system`, `prettier-validation`).
+- **ABSOLUTE MANDATORY SKILLS RULE (БЕЗ ИСКЛЮЧЕНИЙ)**:
+  Агент ОБЯЗАН БУКВАЛЬНО ВСЕГДА — на любой задаче, даже когда кажется, что это не нужно, не обязательно или не хочется — активно открывать и применять следующие скилы:
+  1. **Навигация, поиск и память проекта (`trail` / `graft`)**:
+     - **СТРОГО ЗАПРЕЩЕНО** начинать поиск вслепую через обычный `find` или `grep`.
+     - **ВСЕГДА** начинать поиск с `trail ask "<запрос>"` или `trail grep` для мгновенного нахождения точных файлов и строк (`file:line`).
+     - Использовать `trail skeleton <file>` и `trail callers <symbol>` для изучения структуры до редактирования.
+     - Фиксировать ключевые архитектурные решения через `trail note`.
+  2. **Фронтенд, UI/UX и валидация кода (все 6 обязательных скилов из `.agents/skills/`)**:
+     - `ui-ux-pro-max`: строгий контроль UI/UX, контрастности, доступности, пиксель-арт эстетики и железное соблюдение правила **NO NEON** (никаких неоновых подсветок и размытий).
+     - `react-best-practices`: 57+ правил оптимизации Vercel React/Next (мемоизация `useCallback`/`useMemo`, `useRef` для синхронных флагов, обязательная очистка таймеров/листенеров `on unmount`, защита от лишних ре-рендеров).
+     - `senior-frontend`: архитектурные паттерны, строгий TypeScript без `any`, обработка граничных условий.
+     - `ui-styling`: системная стилизация, obsidian/stone палитры, адаптивные сетки.
+     - `design-system`: 3-слойные дизайн-токены (цвета, отступы, шрифты, радиусы), компонентные спецификации.
+     - `prettier-validation`: обязательная проверка чистоты форматирования, корректности и синтаксиса TypeScript.
 - **Mentorship Mode**: The user is learning to code. Explain how and why solutions work in clear Russian with helpful analogies, while keeping all source code comments strictly in English.
