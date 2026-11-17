@@ -972,13 +972,24 @@ export const App: React.FC = () => {
       const fullscreen = Boolean(settings?.fullscreen);
       const resolution = typeof settings?.resolution === "string" ? settings.resolution : undefined;
 
+      let cleanIp = ip.trim();
+      if (cleanIp.startsWith("https://")) cleanIp = cleanIp.slice(8);
+      else if (cleanIp.startsWith("http://")) cleanIp = cleanIp.slice(7);
+      else if (cleanIp.startsWith("//")) cleanIp = cleanIp.slice(2);
+      if (cleanIp.includes("/")) cleanIp = cleanIp.split("/")[0].trim();
+
+      // Ensure server entry exists in instance's servers.dat
+      try {
+        void ipc.addInstanceServer(inst.id, serverName || cleanIp, cleanIp).catch(() => {});
+      } catch {}
+
       setIsRunning(true);
       setActiveScreen("home");
-      pushLog(`[launcher/INFO] Прямое подключение к серверу "${serverName}" (${ip}) через сборку "${inst.name}" (${versionToLaunch}) [RAM: ${ramToUse}G, JVM: ${customJvmArgs}]...`, "INFO");
+      pushLog(`[launcher/INFO] Прямое подключение к серверу "${serverName}" (${cleanIp}) через сборку "${inst.name}" (${versionToLaunch}) [RAM: ${ramToUse}G, JVM: ${customJvmArgs}]...`, "INFO");
       try {
         await ipc.launchMinecraft({
           version: versionToLaunch,
-          server: ip,
+          server: cleanIp,
           username: activeAccount.name,
           ram: ramToUse,
           instanceId: inst.id,

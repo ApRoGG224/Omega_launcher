@@ -6,6 +6,8 @@ import {
   cleanMinecraftText,
   cleanServerVersion,
   renderMinecraftFormattedText,
+  sanitizeServerAddress,
+  parseServerHostPort,
 } from "./ServersScreen";
 import { LanguageProvider } from "../../context/LanguageContext";
 import type { InstanceData } from "../../types";
@@ -218,6 +220,43 @@ describe("ServersScreen Component", () => {
 
       const multiline = renderMinecraftFormattedText("Line 1\nLine 2");
       expect(Array.isArray(multiline)).toBe(true);
+    });
+
+    it("sanitizeServerAddress strips schemes, paths and whitespace", () => {
+      expect(
+        sanitizeServerAddress("https://katherine-seekers.tun.ply.gg:47403/")
+      ).toBe("katherine-seekers.tun.ply.gg:47403");
+      expect(sanitizeServerAddress("http://mc.hypixel.net/path")).toBe(
+        "mc.hypixel.net"
+      );
+      expect(sanitizeServerAddress("//play.example.com:25565")).toBe(
+        "play.example.com:25565"
+      );
+      expect(sanitizeServerAddress("   127.0.0.1:25565   ")).toBe(
+        "127.0.0.1:25565"
+      );
+      expect(sanitizeServerAddress("")).toBe("");
+    });
+
+    it("parseServerHostPort correctly extracts host and numeric port", () => {
+      expect(
+        parseServerHostPort("https://katherine-seekers.tun.ply.gg:47403/")
+      ).toEqual({
+        host: "katherine-seekers.tun.ply.gg",
+        port: 47403,
+      });
+      expect(parseServerHostPort("play.hypixel.net")).toEqual({
+        host: "play.hypixel.net",
+        port: 25565,
+      });
+      expect(parseServerHostPort("[2001:db8::1]:25565")).toEqual({
+        host: "2001:db8::1",
+        port: 25565,
+      });
+      expect(parseServerHostPort("")).toEqual({
+        host: "",
+        port: 25565,
+      });
     });
   });
 });

@@ -233,6 +233,51 @@ export function renderMinecraftFormattedText(text?: string | null): React.ReactN
 export const renderMinecraftMotd = renderMinecraftFormattedText;
 
 /**
+ * Sanitize raw server address string by stripping URL schemes, paths, and whitespace
+ */
+export function sanitizeServerAddress(input: string): string {
+  let cleaned = input.trim();
+  if (cleaned.startsWith("https://")) cleaned = cleaned.slice(8);
+  else if (cleaned.startsWith("http://")) cleaned = cleaned.slice(7);
+  else if (cleaned.startsWith("//")) cleaned = cleaned.slice(2);
+
+  if (cleaned.includes("/")) {
+    cleaned = cleaned.split("/")[0];
+  }
+  return cleaned.trim();
+}
+
+/**
+ * Parse a server host and port, supporting IPv6 bracket notation and defaulting port to 25565
+ */
+export function parseServerHostPort(input: string): { host: string; port: number } {
+  const clean = sanitizeServerAddress(input);
+  if (!clean) return { host: "", port: 25565 };
+
+  if (clean.startsWith("[")) {
+    const closeIdx = clean.indexOf("]");
+    if (closeIdx !== -1) {
+      const host = clean.slice(1, closeIdx);
+      const remainder = clean.slice(closeIdx + 1);
+      const port = remainder.startsWith(":") ? parseInt(remainder.slice(1), 10) || 25565 : 25565;
+      return { host, port };
+    }
+  }
+
+  const colonIdx = clean.lastIndexOf(":");
+  if (colonIdx !== -1) {
+    const host = clean.slice(0, colonIdx);
+    const portStr = clean.slice(colonIdx + 1);
+    const port = parseInt(portStr, 10);
+    if (!isNaN(port) && port > 0 && port <= 65535) {
+      return { host, port };
+    }
+  }
+
+  return { host: clean, port: 25565 };
+}
+
+/**
  * Authentic Minecraft 5-bar connection strength indicator
  */
 const MinecraftSignalBars: React.FC<{ online: boolean; pingMs: number }> = memo(
@@ -605,20 +650,9 @@ const DirectConnectModal: React.FC<DirectConnectModalProps> = ({
   if (!isOpen) return null;
 
   const handleTestPing = async () => {
-    if (!ip.trim()) return;
+    const { host, port } = parseServerHostPort(ip);
+    if (!host) return;
     setIsTesting(true);
-    let rawHost = ip.trim();
-    if (rawHost.startsWith("https://")) rawHost = rawHost.slice(8);
-    else if (rawHost.startsWith("http://")) rawHost = rawHost.slice(7);
-    if (rawHost.includes("/")) rawHost = rawHost.split("/")[0];
-
-    let host = rawHost;
-    let port = 25565;
-    if (rawHost.includes(":")) {
-      const parts = rawHost.split(":");
-      host = parts[0];
-      port = parseInt(parts[1], 10) || 25565;
-    }
 
     try {
       const res = await ipc.pingServer(host, port);
@@ -643,8 +677,9 @@ const DirectConnectModal: React.FC<DirectConnectModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!ip.trim()) return;
-    onConnect(ip.trim());
+    const cleanIp = sanitizeServerAddress(ip);
+    if (!cleanIp) return;
+    onConnect(cleanIp);
     onClose();
   };
 
@@ -819,20 +854,9 @@ const ServerModal: React.FC<ServerModalProps> = ({
   if (!isOpen) return null;
 
   const handleTest = async () => {
-    if (!ip.trim()) return;
+    const { host, port } = parseServerHostPort(ip);
+    if (!host) return;
     setIsTesting(true);
-    let rawHost = ip.trim();
-    if (rawHost.startsWith("https://")) rawHost = rawHost.slice(8);
-    else if (rawHost.startsWith("http://")) rawHost = rawHost.slice(7);
-    if (rawHost.includes("/")) rawHost = rawHost.split("/")[0];
-
-    let host = rawHost;
-    let port = 25565;
-    if (rawHost.includes(":")) {
-      const parts = rawHost.split(":");
-      host = parts[0];
-      port = parseInt(parts[1], 10) || 25565;
-    }
 
     try {
       const res = await ipc.pingServer(host, port);
@@ -844,7 +868,7 @@ const ServerModal: React.FC<ServerModalProps> = ({
         playersMax: res.playersMax,
       });
       if (!name.trim() && res.motd) {
-        setName(cleanMinecraftText(res.motd).split("\n")[0].slice(0, 30) || ip);
+        setName(cleanMinecraftText(res.motd).split("\n")[0].slice(0, 30) || host);
       }
     } catch {
       setTestResult({
@@ -859,8 +883,10 @@ const ServerModal: React.FC<ServerModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !ip.trim()) return;
-    onSave(name.trim(), ip.trim(), initialServer?.id);
+    const cleanName = name.trim();
+    const cleanIp = sanitizeServerAddress(ip);
+    if (!cleanName || !cleanIp) return;
+    onSave(cleanName, cleanIp, initialServer?.id);
     onClose();
   };
 
@@ -1102,17 +1128,14 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
   const pingServerEntry = useCallback(
     async (entry: ServerDisplayEntry, seqId: number) => {
       try {
-        let rawHost = entry.ip.trim();
-        if (rawHost.startsWith("https://")) rawHost = rawHost.slice(8);
-        else if (rawHost.startsWith("http://")) rawHost = rawHost.slice(7);
-        if (rawHost.includes("/")) rawHost = rawHost.split("/")[0];
-
-        let host = rawHost;
-        let port = 25565;
-        if (rawHost.includes(":")) {
-          const parts = rawHost.split(":");
-          host = parts[0];
-          port = parseInt(parts[1], 10) || 25565;
+        const { host, port } = parseServerHostPort(entry.ip);
+        if (!host) {
+          if (seqId === activeReqSeqRef.current) {
+            setServers((prev) =>
+              prev.map((s) => (s.id === entry.id ? { ...s, isQuerying: false, online: false } : s))
+            );
+          }
+          return;
         }
 
         const res = await ipc.pingServer(host, port);
@@ -1308,10 +1331,9 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
   }, []);
 
   const handleSaveServer = useCallback(
-    async (nameClean: string, ipClean: string, originalId?: string) => {
-      const parts = ipClean.split(":");
-      const host = parts[0];
-      const port = parts[1] ? parseInt(parts[1], 10) || 25565 : 25565;
+    async (nameClean: string, ipRaw: string, originalId?: string) => {
+      const ipClean = sanitizeServerAddress(ipRaw);
+      const { host, port } = parseServerHostPort(ipClean);
 
       if (originalId) {
         // Edit existing server
@@ -1389,9 +1411,7 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
         } catch {}
       }
 
-      const parts = server.ip.split(":");
-      const host = parts[0];
-      const port = parts[1] ? parseInt(parts[1], 10) || 25565 : 25565;
+      const { host, port } = parseServerHostPort(server.ip);
       void ipc.dbDeleteServer(host, port).catch(() => {});
 
       setServers((prev) => prev.filter((s) => s.id !== server.id));
@@ -1401,10 +1421,11 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
 
   const handlePlayOnServer = useCallback(
     (server: ServerDisplayEntry) => {
+      const cleanIp = sanitizeServerAddress(server.ip);
       setConnectingId(server.id);
       onDirectConnect(
         cleanMinecraftText(server.name),
-        server.ip,
+        cleanIp,
         activeInstanceId || undefined
       );
       setTimeout(() => {
@@ -1424,9 +1445,10 @@ export const ServersScreen: React.FC<ServersScreenProps> = ({
 
   const handleDirectConnectSubmit = useCallback(
     (targetIp: string) => {
+      const cleanIp = sanitizeServerAddress(targetIp);
       onDirectConnect(
-        targetIp,
-        targetIp,
+        cleanIp,
+        cleanIp,
         activeInstanceId || undefined
       );
     },

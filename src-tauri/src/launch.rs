@@ -67,6 +67,91 @@ fn expand_library_path(name: &str) -> String {
     path
 }
 
+/// Parse raw server address string (e.g. "https://play.example.com:25565/", "[::1]:25565", or "mc.hypixel.net")
+/// into clean host and port. Defaults port to 25565 if unspecified.
+pub(crate) fn parse_server_address(input: &str) -> Option<(String, u16)> {
+    let trimmed = input.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    let without_scheme = trimmed
+        .trim_start_matches("https://")
+        .trim_start_matches("http://")
+        .trim_start_matches("//");
+    let without_path = without_scheme.split('/').next().unwrap_or(without_scheme).trim();
+    if without_path.is_empty() {
+        return None;
+    }
+
+    // Bracketed IPv6: [2001:db8::1]:25565 or [2001:db8::1]
+    if without_path.starts_with('[') {
+        if let Some(close_bracket) = without_path.find(']') {
+            let host = &without_path[1..close_bracket];
+            let remainder = &without_path[close_bracket + 1..];
+            let port = if remainder.starts_with(':') {
+                remainder[1..].parse::<u16>().unwrap_or(25565)
+            } else {
+                25565
+            };
+            return Some((host.to_string(), port));
+        }
+    }
+
+    // Standard host or IPv4 with optional port
+    if let Some((host, port_str)) = without_path.rsplit_once(':') {
+        if let Ok(port) = port_str.trim().parse::<u16>() {
+            let clean_host = host.trim().to_string();
+            if !clean_host.is_empty() {
+                return Some((clean_host, port));
+            }
+        }
+    }
+
+    Some((without_path.to_string(), 25565))
+}
+
+/// Detect whether Minecraft version supports the Quick Play CLI argument (`--quickPlayMultiplayer`).
+/// Introduced by Mojang in Minecraft 1.20 (Snapshot 23w14a) replacing legacy `--server` and `--port`.
+pub(crate) fn is_quick_play_version(version_str: &str) -> bool {
+    let base = version_str.split('-').next().unwrap_or(version_str).trim();
+
+    // Snapshot check: "23w14a", "24w45a"
+    if let Some(w_pos) = base.find('w') {
+        if w_pos > 0 && w_pos + 1 < base.len() {
+            let year_str = &base[..w_pos];
+            let week_str = base[w_pos + 1..].trim_end_matches(|c: char| c.is_alphabetic());
+            if let (Ok(year), Ok(week)) = (year_str.parse::<u32>(), week_str.parse::<u32>()) {
+                if year > 23 {
+                    return true;
+                }
+                if year == 23 && week >= 14 {
+                    return true;
+                }
+                return false;
+            }
+        }
+    }
+
+    // Semantic release check: "1.20", "1.20.1", "1.21.4", "26.3"
+    let parts: Vec<&str> = base.split('.').collect();
+    if let Some(&first) = parts.get(0) {
+        if let Ok(major) = first.parse::<u32>() {
+            if major > 1 {
+                return true;
+            }
+            if major == 1 {
+                if let Some(&second) = parts.get(1) {
+                    if let Ok(minor) = second.parse::<u32>() {
+                        return minor >= 20;
+                    }
+                }
+            }
+        }
+    }
+
+    false
+}
+
 async fn collect_libraries(
     app: &AppHandle,
     client: &reqwest::Client,
@@ -897,21 +982,40 @@ pub async fn launch_minecraft(
         .arg(&config.main_class);
 
     let mut resolved_game: Vec<String> = config.game_args.iter().map(|a| arg_replace(a, &config)).collect();
-    let clean_server = server.trim().trim_start_matches("https://").trim_start_matches("http://");
-    if !clean_server.is_empty() {
-        let parts: Vec<&str> = clean_server.split(':').collect();
-        resolved_game.push("--server".to_string());
-        resolved_game.push(parts[0].to_string());
-        resolved_game.push("--port".to_string());
-        resolved_game.push(parts.get(1).map(|p| p.to_string()).unwrap_or_else(|| "25565".to_string()));
-    } else if let Some(ref auto_srv) = inst_cfg.as_ref().and_then(|c| c.autoconnect_server.as_ref()) {
-        let clean_auto = auto_srv.trim().trim_start_matches("https://").trim_start_matches("http://");
-        if !clean_auto.is_empty() {
-            let parts: Vec<&str> = clean_auto.split(':').collect();
-            resolved_game.push("--server".to_string());
-            resolved_game.push(parts[0].to_string());
-            resolved_game.push("--port".to_string());
-            resolved_game.push(parts.get(1).map(|p| p.to_string()).unwrap_or_else(|| "25565".to_string()));
+
+    let target_server = if !server.trim().is_empty() {
+        Some(server.as_str())
+    } else {
+        inst_cfg.as_ref().and_then(|c| c.autoconnect_server.as_deref())
+    };
+
+    if let Some(srv_str) = target_server {
+        if let Some((clean_host, port)) = parse_server_address(srv_str) {
+            let server_addr = if port == 25565 && !srv_str.contains(':') {
+                clean_host.clone()
+            } else {
+                format!("{clean_host}:{port}")
+            };
+
+            // Save to the instance's servers.dat so it's always accessible in multiplayer list
+            let _ = crate::servers::add_instance_server(
+                app.clone(),
+                instance_id.clone(),
+                clean_host.clone(),
+                server_addr.clone(),
+            );
+
+            if is_quick_play_version(&vanilla_version) {
+                emit_line(&app, &format!("[launcher/INFO] Direct connect via Quick Play: {server_addr}"));
+                resolved_game.push("--quickPlayMultiplayer".to_string());
+                resolved_game.push(server_addr);
+            } else {
+                emit_line(&app, &format!("[launcher/INFO] Direct connect via legacy arguments: {clean_host}:{port}"));
+                resolved_game.push("--server".to_string());
+                resolved_game.push(clean_host);
+                resolved_game.push("--port".to_string());
+                resolved_game.push(port.to_string());
+            }
         }
     }
 
@@ -1115,5 +1219,48 @@ mod tests {
         for arg in args.as_array().unwrap() {
             assert!(!rules_match(arg.get("rules")), "feature-gated rule must never match");
         }
+    }
+
+    #[test]
+    fn parse_server_address_handles_various_formats() {
+        assert_eq!(
+            parse_server_address("https://katherine-seekers.tun.ply.gg:47403/"),
+            Some(("katherine-seekers.tun.ply.gg".to_string(), 47403))
+        );
+        assert_eq!(
+            parse_server_address("http://mc.hypixel.net:25565"),
+            Some(("mc.hypixel.net".to_string(), 25565))
+        );
+        assert_eq!(
+            parse_server_address("play.example.com"),
+            Some(("play.example.com".to_string(), 25565))
+        );
+        assert_eq!(
+            parse_server_address("  127.0.0.1:25565  "),
+            Some(("127.0.0.1".to_string(), 25565))
+        );
+        assert_eq!(
+            parse_server_address("[::1]:25565"),
+            Some(("::1".to_string(), 25565))
+        );
+        assert_eq!(parse_server_address("   "), None);
+    }
+
+    #[test]
+    fn quick_play_version_detection() {
+        assert!(is_quick_play_version("1.20"));
+        assert!(is_quick_play_version("1.20.1"));
+        assert!(is_quick_play_version("1.20.1-fabric"));
+        assert!(is_quick_play_version("1.21.4"));
+        assert!(is_quick_play_version("26.3"));
+        assert!(is_quick_play_version("23w14a"));
+        assert!(is_quick_play_version("24w45a"));
+
+        assert!(!is_quick_play_version("1.19.4"));
+        assert!(!is_quick_play_version("1.19.4-forge"));
+        assert!(!is_quick_play_version("1.16.5"));
+        assert!(!is_quick_play_version("1.12.2"));
+        assert!(!is_quick_play_version("1.8.9"));
+        assert!(!is_quick_play_version("23w13a"));
     }
 }
