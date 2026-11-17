@@ -1,238 +1,286 @@
-import { NotchedCard } from "components.slint";
-
 export component TopBar inherits Rectangle {
-    in-out property <string> username: "Player";
+    in-out property <string> username: "Гость";
     in-out property <string> active-tab: "home";
-    in-out property <string> memory-badge: "32 MB";
-    
-    callback tab-selected(string);
-    callback profile-clicked();
+    in-out property <bool> is-dropdown-open: false;
+    in-out property <bool> is-muted: false;
 
-    height: 56px;
+    callback tab-selected(string);
+    callback toggle-profile-dropdown();
+    callback login-microsoft();
+    callback create-offline-account();
+    callback toggle-sound();
+
+    height: 52px;
     background: transparent;
 
-    NotchedCard {
-        width: 100%;
-        height: 100%;
-        card-background: #090c14;
-        card-border-color: #1e293b;
-        card-border-width: 2px;
+    HorizontalLayout {
+        alignment: center;
 
-        HorizontalLayout {
-            padding-left: 16px;
-            padding-right: 16px;
-            alignment: space-between;
+        // The Floating Top Dock
+        Rectangle {
+            height: 48px;
+            background: #0e121a;
+            border-width: 1px;
+            border-color: #262e40;
+            border-radius: 14px;
 
-            // Left: Player Profile Pill
             HorizontalLayout {
-                spacing: 12px;
-                alignment: start;
+                padding-left: 8px;
+                padding-right: 8px;
+                spacing: 6px;
+                alignment: center;
 
-                profile_pill := Rectangle {
-                    width: 150px;
-                    height: 38px;
-                    y: (parent.height - self.height) / 2;
-                    background: #111626;
+                // 1. Profile Pill
+                profile_btn := Rectangle {
+                    height: 36px;
+                    width: 130px;
+                    background: root.is-dropdown-open ? #1a2232 : #111622;
                     border-width: 1px;
-                    border-color: #1e293b;
-                    border-radius: 6px;
+                    border-color: root.is-dropdown-open ? #38bdf8 : #1e293b;
+                    border-radius: 10px;
 
                     TouchArea {
-                        clicked => { root.profile-clicked(); }
+                        clicked => { root.toggle-profile-dropdown(); }
                     }
 
                     HorizontalLayout {
                         padding-left: 10px;
-                        padding-right: 10px;
+                        padding-right: 6px;
                         spacing: 8px;
                         alignment: center;
 
-                        Rectangle {
-                            width: 10px;
-                            height: 10px;
-                            background: #10b981;
-                            border-radius: 5px;
-                        }
-
                         Text {
                             text: root.username;
-                            color: #ffffff;
-                            font-size: 14px;
+                            color: #f8fafc;
+                            font-size: 13px;
                             font-weight: 700;
                             vertical-alignment: center;
+                            horizontal-stretch: 1;
+                            overflow: elide;
+                        }
+
+                        // Avatar
+                        Rectangle {
+                            width: 26px;
+                            height: 26px;
+                            border-radius: 4px;
+                            background: #1e293b;
+
+                            Image {
+                                source: @image-url("../assets/skins/steve.png");
+                                width: 22px;
+                                height: 22px;
+                                image-fit: contain;
+                                image-rendering: pixelated;
+                            }
                         }
                     }
                 }
 
-                // RAM Badge
+                // Divider
                 Rectangle {
-                    width: 76px;
-                    height: 28px;
-                    y: (parent.height - self.height) / 2;
-                    background: #07080e;
-                    border-width: 1px;
-                    border-color: #10b981;
-                    border-radius: 4px;
-
-                    Text {
-                        text: "⚡ " + root.memory-badge;
-                        color: #10b981;
-                        font-size: 11px;
-                        font-weight: 700;
-                        horizontal-alignment: center;
-                        vertical-alignment: center;
-                    }
+                    width: 1px;
+                    height: 22px;
+                    background: #1e293b;
                 }
-            }
 
-            // Center: Screen Tabs
-            HorizontalLayout {
-                spacing: 8px;
-                alignment: center;
-
-                // Home
+                // 2. Play / Home Button
                 Rectangle {
-                    width: 90px;
+                    width: 36px;
                     height: 36px;
-                    y: (parent.height - self.height) / 2;
-                    background: root.active-tab == "home" ? #1d5dc7 : transparent;
-                    border-radius: 4px;
+                    background: root.active-tab == "home" ? #1d5dc7 : #111622;
+                    border-width: 1px;
+                    border-color: root.active-tab == "home" ? #3b82f6 : #1e293b;
+                    border-radius: 9px;
 
                     TouchArea {
                         clicked => { root.tab-selected("home"); }
                     }
 
-                    Text {
-                        text: "Главная";
-                        color: root.active-tab == "home" ? #ffffff : #94a3b8;
-                        font-size: 13px;
-                        font-weight: 600;
-                        horizontal-alignment: center;
-                        vertical-alignment: center;
+                    Image {
+                        source: @image-url("../assets/svg/home.svg");
+                        width: 18px;
+                        height: 18px;
+                        image-fit: contain;
                     }
                 }
 
-                // Modrinth / Catalog
+                // 3. Modrinth Catalog (Puzzle)
                 Rectangle {
-                    width: 90px;
+                    width: 36px;
                     height: 36px;
-                    y: (parent.height - self.height) / 2;
-                    background: root.active-tab == "catalog" ? #1d5dc7 : transparent;
-                    border-radius: 4px;
+                    background: root.active-tab == "modrinth" ? #1d5dc7 : #111622;
+                    border-width: 1px;
+                    border-color: root.active-tab == "modrinth" ? #3b82f6 : #1e293b;
+                    border-radius: 9px;
 
                     TouchArea {
-                        clicked => { root.tab-selected("catalog"); }
+                        clicked => { root.tab-selected("modrinth"); }
                     }
 
-                    Text {
-                        text: "Каталог";
-                        color: root.active-tab == "catalog" ? #ffffff : #94a3b8;
-                        font-size: 13px;
-                        font-weight: 600;
-                        horizontal-alignment: center;
-                        vertical-alignment: center;
+                    Image {
+                        source: @image-url("../assets/svg/puzzle.svg");
+                        width: 18px;
+                        height: 18px;
+                        image-fit: contain;
                     }
                 }
 
-                // Instances
+                // 4. Instances / Versions (Package)
                 Rectangle {
-                    width: 90px;
+                    width: 36px;
                     height: 36px;
-                    y: (parent.height - self.height) / 2;
-                    background: root.active-tab == "instances" ? #1d5dc7 : transparent;
-                    border-radius: 4px;
+                    background: root.active-tab == "instances" ? #1d5dc7 : #111622;
+                    border-width: 1px;
+                    border-color: root.active-tab == "instances" ? #3b82f6 : #1e293b;
+                    border-radius: 9px;
 
                     TouchArea {
                         clicked => { root.tab-selected("instances"); }
                     }
 
-                    Text {
-                        text: "Сборки";
-                        color: root.active-tab == "instances" ? #ffffff : #94a3b8;
-                        font-size: 13px;
-                        font-weight: 600;
-                        horizontal-alignment: center;
-                        vertical-alignment: center;
+                    Image {
+                        source: @image-url("../assets/svg/package.svg");
+                        width: 18px;
+                        height: 18px;
+                        image-fit: contain;
                     }
                 }
 
-                // Console
+                // 5. Servers (Server)
                 Rectangle {
-                    width: 90px;
+                    width: 36px;
                     height: 36px;
-                    y: (parent.height - self.height) / 2;
-                    background: root.active-tab == "console" ? #1d5dc7 : transparent;
-                    border-radius: 4px;
+                    background: root.active-tab == "servers" ? #1d5dc7 : #111622;
+                    border-width: 1px;
+                    border-color: root.active-tab == "servers" ? #3b82f6 : #1e293b;
+                    border-radius: 9px;
+
+                    TouchArea {
+                        clicked => { root.tab-selected("servers"); }
+                    }
+
+                    Image {
+                        source: @image-url("../assets/svg/server.svg");
+                        width: 18px;
+                        height: 18px;
+                        image-fit: contain;
+                    }
+                }
+
+                // 6. Omega Store (Shopping Bag)
+                Rectangle {
+                    width: 36px;
+                    height: 36px;
+                    background: root.active-tab == "store" ? #1d5dc7 : #111622;
+                    border-width: 1px;
+                    border-color: root.active-tab == "store" ? #3b82f6 : #1e293b;
+                    border-radius: 9px;
+
+                    TouchArea {
+                        clicked => { root.tab-selected("store"); }
+                    }
+
+                    Image {
+                        source: @image-url("../assets/svg/store.svg");
+                        width: 18px;
+                        height: 18px;
+                        image-fit: contain;
+                    }
+                }
+
+                // 7. Console (Terminal)
+                Rectangle {
+                    width: 36px;
+                    height: 36px;
+                    background: root.active-tab == "console" ? #1d5dc7 : #111622;
+                    border-width: 1px;
+                    border-color: root.active-tab == "console" ? #3b82f6 : #1e293b;
+                    border-radius: 9px;
 
                     TouchArea {
                         clicked => { root.tab-selected("console"); }
                     }
 
-                    Text {
-                        text: "Консоль";
-                        color: root.active-tab == "console" ? #ffffff : #94a3b8;
-                        font-size: 13px;
-                        font-weight: 600;
-                        horizontal-alignment: center;
-                        vertical-alignment: center;
+                    Image {
+                        source: @image-url("../assets/svg/terminal.svg");
+                        width: 18px;
+                        height: 18px;
+                        image-fit: contain;
                     }
                 }
 
-                // Settings
+                // 8. Friends (Users)
                 Rectangle {
-                    width: 96px;
+                    width: 36px;
                     height: 36px;
-                    y: (parent.height - self.height) / 2;
-                    background: root.active-tab == "settings" ? #1d5dc7 : transparent;
-                    border-radius: 4px;
+                    background: root.active-tab == "friends" ? #1d5dc7 : #111622;
+                    border-width: 1px;
+                    border-color: root.active-tab == "friends" ? #3b82f6 : #1e293b;
+                    border-radius: 9px;
+
+                    TouchArea {
+                        clicked => { root.tab-selected("friends"); }
+                    }
+
+                    Image {
+                        source: @image-url("../assets/svg/users.svg");
+                        width: 18px;
+                        height: 18px;
+                        image-fit: contain;
+                    }
+
+                    // Green online badge
+                    Rectangle {
+                        x: parent.width - 8px;
+                        y: 4px;
+                        width: 6px;
+                        height: 6px;
+                        background: #10b981;
+                        border-radius: 3px;
+                    }
+                }
+
+                // 9. Sound Mute
+                Rectangle {
+                    width: 36px;
+                    height: 36px;
+                    background: #111622;
+                    border-width: 1px;
+                    border-color: #1e293b;
+                    border-radius: 9px;
+
+                    TouchArea {
+                        clicked => { root.toggle-sound(); }
+                    }
+
+                    Image {
+                        source: @image-url("../assets/svg/volume.svg");
+                        width: 18px;
+                        height: 18px;
+                        image-fit: contain;
+                        opacity: root.is-muted ? 0.35 : 1.0;
+                    }
+                }
+
+                // 10. Settings (Gear)
+                Rectangle {
+                    width: 36px;
+                    height: 36px;
+                    background: root.active-tab == "settings" ? #1d5dc7 : #111622;
+                    border-width: 1px;
+                    border-color: root.active-tab == "settings" ? #3b82f6 : #1e293b;
+                    border-radius: 9px;
 
                     TouchArea {
                         clicked => { root.tab-selected("settings"); }
                     }
 
-                    Text {
-                        text: "Настройки";
-                        color: root.active-tab == "settings" ? #ffffff : #94a3b8;
-                        font-size: 13px;
-                        font-weight: 600;
-                        horizontal-alignment: center;
-                        vertical-alignment: center;
-                    }
-                }
-            }
-
-            // Right: Friends & Status
-            HorizontalLayout {
-                spacing: 8px;
-                alignment: end;
-
-                Rectangle {
-                    width: 110px;
-                    height: 36px;
-                    y: (parent.height - self.height) / 2;
-                    background: #111626;
-                    border-width: 1px;
-                    border-color: #1e293b;
-                    border-radius: 6px;
-
-                    HorizontalLayout {
-                        spacing: 6px;
-                        alignment: center;
-
-                        Rectangle {
-                            width: 8px;
-                            height: 8px;
-                            background: #10b981;
-                            border-radius: 4px;
-                        }
-
-                        Text {
-                            text: "Онлайн: 1";
-                            color: #94a3b8;
-                            font-size: 12px;
-                            font-weight: 600;
-                            vertical-alignment: center;
-                        }
+                    Image {
+                        source: @image-url("../assets/svg/settings.svg");
+                        width: 18px;
+                        height: 18px;
+                        image-fit: contain;
                     }
                 }
             }

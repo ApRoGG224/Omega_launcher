@@ -1,0 +1,1225 @@
+import { ScrollView } from "std-widgets.slint";
+import { NotchedCard, NotchedButton } from "components.slint";
+
+export struct InstanceItem {
+    id: string,
+    name: string,
+    mc-version: string,
+    loader: string,
+    play-time: string,
+    icon-name: string,
+}
+
+export struct ModItem {
+    id: string,
+    title: string,
+    author: string,
+    description: string,
+    downloads: string,
+    loader: string,
+}
+
+export struct CapeItem {
+    id: string,
+    name: string,
+    desc: string,
+    equipped: bool,
+}
+
+export struct ServerItem {
+    name: string,
+    host: string,
+    ping: string,
+    players: string,
+}
+
+export struct FriendItem {
+    name: string,
+    online: bool,
+    status-text: string,
+}
+
+export component HomeScreenView inherits Rectangle {
+    callback open-store();
+    callback open-friends();
+
+    HorizontalLayout {
+        spacing: 20px;
+        alignment: space-between;
+
+        // Left Dual Action Cards
+        VerticalLayout {
+            width: 290px;
+            spacing: 14px;
+            alignment: start;
+
+            // Store Card
+            store_card := Rectangle {
+                height: 104px;
+                background: #0e121a;
+                border-width: 1px;
+                border-color: #262e40;
+                border-radius: 12px;
+
+                TouchArea {
+                    clicked => { root.open-store(); }
+                }
+
+                HorizontalLayout {
+                    padding: 16px;
+                    spacing: 14px;
+                    alignment: start;
+
+                    Rectangle {
+                        width: 44px;
+                        height: 44px;
+                        background: #111622;
+                        border-width: 1px;
+                        border-color: #262e40;
+                        border-radius: 8px;
+                        y: (parent.height - self.height) / 2;
+
+                        Image {
+                            source: @image-url("../assets/svg/store.svg");
+                            width: 22px;
+                            height: 22px;
+                            image-fit: contain;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        spacing: 3px;
+
+                        Text {
+                            text: "Магазин Omega";
+                            color: #10b981;
+                            font-size: 16px;
+                            font-weight: 700;
+                        }
+
+                        Text {
+                            text: "Скины и официальные плащи";
+                            color: #94a3b8;
+                            font-size: 12px;
+                        }
+                    }
+                }
+            }
+
+            // Play With Friends Card
+            friends_card := Rectangle {
+                height: 104px;
+                background: #0e121a;
+                border-width: 1px;
+                border-color: #262e40;
+                border-radius: 12px;
+
+                TouchArea {
+                    clicked => { root.open-friends(); }
+                }
+
+                HorizontalLayout {
+                    padding: 16px;
+                    spacing: 14px;
+                    alignment: start;
+
+                    Rectangle {
+                        width: 44px;
+                        height: 44px;
+                        background: #111622;
+                        border-width: 1px;
+                        border-color: #262e40;
+                        border-radius: 8px;
+                        y: (parent.height - self.height) / 2;
+
+                        Image {
+                            source: @image-url("../assets/svg/users.svg");
+                            width: 22px;
+                            height: 22px;
+                            image-fit: contain;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        spacing: 3px;
+
+                        Text {
+                            text: "Играть с друзьями";
+                            color: #9f75ff;
+                            font-size: 16px;
+                            font-weight: 700;
+                        }
+
+                        Text {
+                            text: "Серверы и совместная игра";
+                            color: #94a3b8;
+                            font-size: 12px;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Center 3D Character Showcase Box
+        stage_card := Rectangle {
+            horizontal-stretch: 1;
+            height: 480px;
+            background: transparent;
+
+            VerticalLayout {
+                alignment: center;
+                spacing: 14px;
+
+                // 3D Model Render Preview
+                Rectangle {
+                    width: 150px;
+                    height: 240px;
+                    background: transparent;
+                    HorizontalLayout {
+                        alignment: center;
+                        Image {
+                            source: @image-url("../assets/skins/steve.png");
+                            width: 128px;
+                            height: 220px;
+                            image-fit: contain;
+                            image-rendering: pixelated;
+                        }
+                    }
+                }
+
+                // Platform shadow under feet
+                Rectangle {
+                    width: 140px;
+                    height: 12px;
+                    background: #000000;
+                    border-radius: 6px;
+                    opacity: 0.45;
+                }
+            }
+        }
+    }
+}
+
+export component InstancesScreenView inherits Rectangle {
+    in-out property <[InstanceItem]> instances;
+    in-out property <string> active-instance-id: "";
+
+    callback select-instance(string, string);
+    callback create-instance();
+    callback delete-instance(string);
+
+    background: #0e121a;
+    border-width: 1px;
+    border-color: #262e40;
+    border-radius: 14px;
+
+    VerticalLayout {
+        padding: 20px;
+        spacing: 14px;
+
+        // Header Row
+        HorizontalLayout {
+            alignment: space-between;
+
+            VerticalLayout {
+                spacing: 2px;
+                Text {
+                    text: "Версии и сборки Minecraft";
+                    color: #ffffff;
+                    font-size: 18px;
+                    font-weight: 800;
+                }
+                Text {
+                    text: "Управление локальными экземплярами и модами";
+                    color: #94a3b8;
+                    font-size: 13px;
+                }
+            }
+
+            Rectangle {
+                width: 150px;
+                height: 38px;
+                background: #1d5dc7;
+                border-radius: 8px;
+
+                TouchArea {
+                    clicked => { root.create-instance(); }
+                }
+
+                HorizontalLayout {
+                    alignment: center;
+                    spacing: 6px;
+                    Text {
+                        text: "+ Создать сборку";
+                        color: #ffffff;
+                        font-size: 13px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+
+        // Instances List
+        ScrollView {
+            VerticalLayout {
+                spacing: 8px;
+
+                for inst in root.instances: Rectangle {
+                    height: 68px;
+                    background: inst.id == root.active-instance-id ? #161f30 : #111622;
+                    border-width: 1px;
+                    border-color: inst.id == root.active-instance-id ? #3b82f6 : #1e293b;
+                    border-radius: 8px;
+
+                    HorizontalLayout {
+                        padding-left: 14px;
+                        padding-right: 14px;
+                        alignment: space-between;
+
+                        // Left: Icon + Info
+                        HorizontalLayout {
+                            spacing: 14px;
+                            alignment: start;
+
+                            Rectangle {
+                                width: 44px;
+                                height: 44px;
+                                background: #0e121a;
+                                border-width: 1px;
+                                border-color: #262e40;
+                                border-radius: 6px;
+                                y: (parent.height - self.height) / 2;
+
+                                Image {
+                                    source: @image-url("../assets/icons/diamond_sword.png");
+                                    width: 28px;
+                                    height: 28px;
+                                    image-fit: contain;
+                                    image-rendering: pixelated;
+                                }
+                            }
+
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 3px;
+
+                                Text {
+                                    text: inst.name;
+                                    color: #ffffff;
+                                    font-size: 15px;
+                                    font-weight: 700;
+                                }
+
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    Text {
+                                        text: "Версия: " + inst.mc-version;
+                                        color: #94a3b8;
+                                        font-size: 12px;
+                                    }
+                                    Text {
+                                        text: "• " + inst.loader;
+                                        color: #10b981;
+                                        font-size: 12px;
+                                        font-weight: 600;
+                                    }
+                                    Text {
+                                        text: "• " + inst.play-time;
+                                        color: #64748b;
+                                        font-size: 12px;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Right: Actions
+                        HorizontalLayout {
+                            spacing: 10px;
+                            alignment: end;
+
+                            // Select / Play button
+                            Rectangle {
+                                width: 100px;
+                                height: 36px;
+                                y: (parent.height - self.height) / 2;
+                                background: inst.id == root.active-instance-id ? #10b981 : #1d5dc7;
+                                border-radius: 6px;
+
+                                TouchArea {
+                                    clicked => { root.select-instance(inst.name, inst.mc-version); }
+                                }
+
+                                Text {
+                                    text: inst.id == root.active-instance-id ? "Активна ✓" : "Выбрать";
+                                    color: #ffffff;
+                                    font-size: 12px;
+                                    font-weight: 700;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component ModrinthScreenView inherits Rectangle {
+    in-out property <[ModItem]> mods;
+    in-out property <string> search-query: "";
+    in-out property <string> active-category: "mods";
+
+    callback search-changed(string);
+    callback install-mod(string);
+    callback switch-category(string);
+
+    background: #0e121a;
+    border-width: 1px;
+    border-color: #262e40;
+    border-radius: 14px;
+
+    VerticalLayout {
+        padding: 20px;
+        spacing: 14px;
+
+        // Top Toolbar
+        HorizontalLayout {
+            alignment: space-between;
+
+            VerticalLayout {
+                spacing: 2px;
+                Text {
+                    text: "Каталог Modrinth & CurseForge";
+                    color: #ffffff;
+                    font-size: 18px;
+                    font-weight: 800;
+                }
+                Text {
+                    text: "Прямая загрузка проверенных модов, модпаков и шейдеров";
+                    color: #94a3b8;
+                    font-size: 13px;
+                }
+            }
+
+            // Category Filter Pills
+            HorizontalLayout {
+                spacing: 6px;
+                alignment: end;
+
+                Rectangle {
+                    width: 76px;
+                    height: 34px;
+                    background: root.active-category == "mods" ? #1d5dc7 : #111622;
+                    border-radius: 6px;
+                    TouchArea { clicked => { root.switch-category("mods"); } }
+                    Text { text: "Моды"; color: #ffffff; font-size: 12px; font-weight: 600; horizontal-alignment: center; vertical-alignment: center; }
+                }
+
+                Rectangle {
+                    width: 86px;
+                    height: 34px;
+                    background: root.active-category == "shaders" ? #1d5dc7 : #111622;
+                    border-radius: 6px;
+                    TouchArea { clicked => { root.switch-category("shaders"); } }
+                    Text { text: "Шейдеры"; color: #ffffff; font-size: 12px; font-weight: 600; horizontal-alignment: center; vertical-alignment: center; }
+                }
+
+                Rectangle {
+                    width: 86px;
+                    height: 34px;
+                    background: root.active-category == "modpacks" ? #1d5dc7 : #111622;
+                    border-radius: 6px;
+                    TouchArea { clicked => { root.switch-category("modpacks"); } }
+                    Text { text: "Сборки"; color: #ffffff; font-size: 12px; font-weight: 600; horizontal-alignment: center; vertical-alignment: center; }
+                }
+            }
+        }
+
+        // Mods Grid / List
+        ScrollView {
+            VerticalLayout {
+                spacing: 10px;
+
+                for mod in root.mods: Rectangle {
+                    height: 76px;
+                    background: #111622;
+                    border-width: 1px;
+                    border-color: #1e293b;
+                    border-radius: 8px;
+
+                    HorizontalLayout {
+                        padding-left: 16px;
+                        padding-right: 16px;
+                        alignment: space-between;
+
+                        VerticalLayout {
+                            alignment: center;
+                            spacing: 4px;
+
+                            HorizontalLayout {
+                                spacing: 8px;
+                                Text {
+                                    text: mod.title;
+                                    color: #ffffff;
+                                    font-size: 15px;
+                                    font-weight: 700;
+                                }
+                                Text {
+                                    text: "от " + mod.author;
+                                    color: #64748b;
+                                    font-size: 12px;
+                                    vertical-alignment: center;
+                                }
+                                Rectangle {
+                                    height: 16px;
+                                    background: #1d5dc7;
+                                    border-radius: 3px;
+                                    HorizontalLayout {
+                                        padding-left: 5px;
+                                        padding-right: 5px;
+                                        Text { text: mod.loader; color: #ffffff; font-size: 10px; font-weight: 700; vertical-alignment: center; }
+                                    }
+                                }
+                            }
+
+                            Text {
+                                text: mod.description;
+                                color: #94a3b8;
+                                font-size: 12px;
+                            }
+                        }
+
+                        HorizontalLayout {
+                            spacing: 16px;
+                            alignment: end;
+
+                            VerticalLayout {
+                                alignment: center;
+                                Text {
+                                    text: "⬇ " + mod.downloads;
+                                    color: #10b981;
+                                    font-size: 12px;
+                                    font-weight: 700;
+                                }
+                            }
+
+                            Rectangle {
+                                width: 110px;
+                                height: 36px;
+                                y: (parent.height - self.height) / 2;
+                                background: #1d5dc7;
+                                border-radius: 6px;
+
+                                TouchArea {
+                                    clicked => { root.install-mod(mod.id); }
+                                }
+
+                                Text {
+                                    text: "Установить";
+                                    color: #ffffff;
+                                    font-size: 12px;
+                                    font-weight: 700;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component StoreScreenView inherits Rectangle {
+    in-out property <[CapeItem]> capes;
+    callback equip-cape(string);
+    callback search-skin(string);
+
+    background: #0e121a;
+    border-width: 1px;
+    border-color: #262e40;
+    border-radius: 14px;
+
+    VerticalLayout {
+        padding: 20px;
+        spacing: 16px;
+
+        VerticalLayout {
+            spacing: 2px;
+            Text {
+                text: "Магазин Omega (Скины и Официальные плащи)";
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: 800;
+            }
+            Text {
+                text: "Синхронизация официальных скинов Mojang и плащей Minecraft";
+                color: #94a3b8;
+                font-size: 13px;
+            }
+        }
+
+        ScrollView {
+            VerticalLayout {
+                spacing: 10px;
+
+                for cape in root.capes: Rectangle {
+                    height: 72px;
+                    background: #111622;
+                    border-width: 1px;
+                    border-color: #1e293b;
+                    border-radius: 8px;
+
+                    HorizontalLayout {
+                        padding-left: 16px;
+                        padding-right: 16px;
+                        alignment: space-between;
+
+                        HorizontalLayout {
+                            spacing: 14px;
+                            alignment: start;
+
+                            Rectangle {
+                                width: 34px;
+                                height: 46px;
+                                background: #0e121a;
+                                border-radius: 4px;
+                                y: (parent.height - self.height) / 2;
+
+                                Image {
+                                    source: @image-url("../assets/capes/migrator.png");
+                                    width: 30px;
+                                    height: 42px;
+                                    image-fit: contain;
+                                    image-rendering: pixelated;
+                                }
+                            }
+
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 2px;
+
+                                Text {
+                                    text: cape.name;
+                                    color: #ffffff;
+                                    font-size: 15px;
+                                    font-weight: 700;
+                                }
+                                Text {
+                                    text: cape.desc;
+                                    color: #94a3b8;
+                                    font-size: 12px;
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            width: 100px;
+                            height: 36px;
+                            y: (parent.height - self.height) / 2;
+                            background: cape.equipped ? #10b981 : #1d5dc7;
+                            border-radius: 6px;
+
+                            TouchArea {
+                                clicked => { root.equip-cape(cape.id); }
+                            }
+
+                            Text {
+                                text: cape.equipped ? "Надет ✓" : "Надеть";
+                                color: #ffffff;
+                                font-size: 12px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component AccountsScreenView inherits Rectangle {
+    in-out property <string> active-account-name: "Гость";
+    in-out property <string> account-type: "offline";
+
+    callback login-microsoft();
+    callback login-ely();
+    callback add-offline();
+
+    background: #0e121a;
+    border-width: 1px;
+    border-color: #262e40;
+    border-radius: 14px;
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 18px;
+
+        VerticalLayout {
+            spacing: 2px;
+            Text {
+                text: "Управление аккаунтами";
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: 800;
+            }
+            Text {
+                text: "Подключение Microsoft, Ely.by и оффлайн профилей";
+                color: #94a3b8;
+                font-size: 13px;
+            }
+        }
+
+        // Active Account Card
+        Rectangle {
+            height: 90px;
+            background: #111622;
+            border-width: 1px;
+            border-color: #3b82f6;
+            border-radius: 10px;
+
+            HorizontalLayout {
+                padding-left: 20px;
+                padding-right: 20px;
+                alignment: space-between;
+
+                HorizontalLayout {
+                    spacing: 16px;
+                    alignment: start;
+
+                    Rectangle {
+                        width: 52px;
+                        height: 52px;
+                        background: #1e293b;
+                        border-radius: 6px;
+                        y: (parent.height - self.height) / 2;
+
+                        Image {
+                            source: @image-url("../assets/skins/steve.png");
+                            width: 44px;
+                            height: 44px;
+                            image-fit: contain;
+                            image-rendering: pixelated;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        spacing: 4px;
+
+                        Text {
+                            text: root.active-account-name;
+                            color: #ffffff;
+                            font-size: 17px;
+                            font-weight: 800;
+                        }
+
+                        Text {
+                            text: "Тип: " + root.account-type + " • Активен";
+                            color: #10b981;
+                            font-size: 13px;
+                            font-weight: 600;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Auth Buttons Row
+        HorizontalLayout {
+            spacing: 14px;
+
+            // Microsoft OAuth Button
+            Rectangle {
+                height: 46px;
+                horizontal-stretch: 1;
+                background: #111622;
+                border-width: 1px;
+                border-color: #262e40;
+                border-radius: 8px;
+
+                TouchArea {
+                    clicked => { root.login-microsoft(); }
+                }
+
+                HorizontalLayout {
+                    alignment: center;
+                    spacing: 10px;
+
+                    Image {
+                        source: @image-url("../assets/svg/microsoft.svg");
+                        width: 18px;
+                        height: 18px;
+                    }
+
+                    Text {
+                        text: "Войти через Microsoft";
+                        color: #ffffff;
+                        font-size: 14px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+
+            // Ely.by Button
+            Rectangle {
+                height: 46px;
+                horizontal-stretch: 1;
+                background: #111622;
+                border-width: 1px;
+                border-color: #262e40;
+                border-radius: 8px;
+
+                TouchArea {
+                    clicked => { root.login-ely(); }
+                }
+
+                HorizontalLayout {
+                    alignment: center;
+                    spacing: 10px;
+
+                    Text {
+                        text: "Войти через Ely.by";
+                        color: #ffffff;
+                        font-size: 14px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component ServersScreenView inherits Rectangle {
+    in-out property <[ServerItem]> servers;
+    callback direct-connect(string);
+
+    background: #0e121a;
+    border-width: 1px;
+    border-color: #262e40;
+    border-radius: 14px;
+
+    VerticalLayout {
+        padding: 20px;
+        spacing: 14px;
+
+        VerticalLayout {
+            spacing: 2px;
+            Text {
+                text: "Серверы Minecraft";
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: 800;
+            }
+            Text {
+                text: "Быстрое подключение и статус серверов";
+                color: #94a3b8;
+                font-size: 13px;
+            }
+        }
+
+        ScrollView {
+            VerticalLayout {
+                spacing: 8px;
+
+                for srv in root.servers: Rectangle {
+                    height: 68px;
+                    background: #111622;
+                    border-width: 1px;
+                    border-color: #1e293b;
+                    border-radius: 8px;
+
+                    HorizontalLayout {
+                        padding-left: 16px;
+                        padding-right: 16px;
+                        alignment: space-between;
+
+                        VerticalLayout {
+                            alignment: center;
+                            spacing: 3px;
+
+                            Text {
+                                text: srv.name;
+                                color: #ffffff;
+                                font-size: 15px;
+                                font-weight: 700;
+                            }
+                            Text {
+                                text: srv.host;
+                                color: #94a3b8;
+                                font-size: 12px;
+                            }
+                        }
+
+                        HorizontalLayout {
+                            spacing: 14px;
+                            alignment: end;
+
+                            VerticalLayout {
+                                alignment: center;
+                                Text {
+                                    text: "📶 " + srv.ping;
+                                    color: #10b981;
+                                    font-size: 12px;
+                                    font-weight: 600;
+                                }
+                            }
+
+                            Rectangle {
+                                width: 120px;
+                                height: 36px;
+                                y: (parent.height - self.height) / 2;
+                                background: #1d5dc7;
+                                border-radius: 6px;
+
+                                TouchArea {
+                                    clicked => { root.direct-connect(srv.host); }
+                                }
+
+                                Text {
+                                    text: "Подключиться";
+                                    color: #ffffff;
+                                    font-size: 12px;
+                                    font-weight: 700;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component FriendsScreenView inherits Rectangle {
+    in-out property <[FriendItem]> friends;
+    callback add-friend();
+
+    background: #0e121a;
+    border-width: 1px;
+    border-color: #262e40;
+    border-radius: 14px;
+
+    VerticalLayout {
+        padding: 20px;
+        spacing: 14px;
+
+        VerticalLayout {
+            spacing: 2px;
+            Text {
+                text: "Друзья Omega";
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: 800;
+            }
+            Text {
+                text: "Список друзей и совместная игра";
+                color: #94a3b8;
+                font-size: 13px;
+            }
+        }
+
+        ScrollView {
+            VerticalLayout {
+                spacing: 8px;
+
+                for fr in root.friends: Rectangle {
+                    height: 60px;
+                    background: #111622;
+                    border-width: 1px;
+                    border-color: #1e293b;
+                    border-radius: 8px;
+
+                    HorizontalLayout {
+                        padding-left: 16px;
+                        padding-right: 16px;
+                        alignment: space-between;
+
+                        HorizontalLayout {
+                            spacing: 12px;
+                            alignment: start;
+
+                            Rectangle {
+                                width: 10px;
+                                height: 10px;
+                                background: fr.online ? #10b981 : #64748b;
+                                border-radius: 5px;
+                                y: (parent.height - self.height) / 2;
+                            }
+
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 2px;
+                                Text {
+                                    text: fr.name;
+                                    color: #ffffff;
+                                    font-size: 15px;
+                                    font-weight: 700;
+                                }
+                                Text {
+                                    text: fr.status-text;
+                                    color: fr.online ? #10b981 : #64748b;
+                                    font-size: 12px;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component ConsoleScreenView inherits Rectangle {
+    in-out property <string> log-content: "";
+    callback clear-logs();
+
+    background: #0e121a;
+    border-width: 1px;
+    border-color: #262e40;
+    border-radius: 14px;
+
+    VerticalLayout {
+        padding: 18px;
+        spacing: 12px;
+
+        HorizontalLayout {
+            alignment: space-between;
+
+            VerticalLayout {
+                spacing: 2px;
+                Text {
+                    text: "Консоль логов игры";
+                    color: #ffffff;
+                    font-size: 18px;
+                    font-weight: 800;
+                }
+                Text {
+                    text: "Прямой перехват stdout и stderr запущенного процесса";
+                    color: #10b981;
+                    font-size: 13px;
+                }
+            }
+
+            Rectangle {
+                width: 90px;
+                height: 34px;
+                background: #1e293b;
+                border-radius: 6px;
+
+                TouchArea {
+                    clicked => { root.clear-logs(); }
+                }
+
+                Text {
+                    text: "Очистить";
+                    color: #94a3b8;
+                    font-size: 12px;
+                    font-weight: 600;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+        }
+
+        Rectangle {
+            background: #05060a;
+            border-width: 1px;
+            border-color: #1e293b;
+            border-radius: 8px;
+
+            ScrollView {
+                VerticalLayout {
+                    padding: 12px;
+                    Text {
+                        text: root.log-content;
+                        color: #10b981;
+                        font-size: 12px;
+                        font-family: "JetBrains Mono, monospace";
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component SettingsScreenView inherits Rectangle {
+    in-out property <int> ram-mb: 4096;
+    in-out property <string> java-path: "/usr/bin/java (Java 21)";
+    in-out property <string> gc-type: "G1GC";
+
+    callback change-ram(int);
+    callback change-gc(string);
+
+    background: #0e121a;
+    border-width: 1px;
+    border-color: #262e40;
+    border-radius: 14px;
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 18px;
+        alignment: start;
+
+        VerticalLayout {
+            spacing: 2px;
+            Text {
+                text: "Настройки лаунчера и JVM";
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: 800;
+            }
+            Text {
+                text: "Параметры выделения памяти, сборщика мусора и Java рантайма";
+                color: #94a3b8;
+                font-size: 13px;
+            }
+        }
+
+        // RAM Allocation
+        VerticalLayout {
+            spacing: 10px;
+
+            HorizontalLayout {
+                spacing: 14px;
+                Text {
+                    text: "Выделение оперативной памяти:";
+                    color: #94a3b8;
+                    font-size: 14px;
+                    vertical-alignment: center;
+                }
+                Text {
+                    text: (root.ram-mb / 1024) + " ГБ (" + root.ram-mb + " МБ)";
+                    color: #10b981;
+                    font-size: 14px;
+                    font-weight: 700;
+                    vertical-alignment: center;
+                }
+            }
+
+            HorizontalLayout {
+                spacing: 10px;
+
+                Rectangle {
+                    width: 90px;
+                    height: 38px;
+                    background: root.ram-mb == 2048 ? #10b981 : #111622;
+                    border-radius: 6px;
+                    TouchArea { clicked => { root.change-ram(2048); } }
+                    Text { text: "2 ГБ"; color: root.ram-mb == 2048 ? #000000 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                }
+
+                Rectangle {
+                    width: 90px;
+                    height: 38px;
+                    background: root.ram-mb == 4096 ? #10b981 : #111622;
+                    border-radius: 6px;
+                    TouchArea { clicked => { root.change-ram(4096); } }
+                    Text { text: "4 ГБ"; color: root.ram-mb == 4096 ? #000000 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                }
+
+                Rectangle {
+                    width: 90px;
+                    height: 38px;
+                    background: root.ram-mb == 6144 ? #10b981 : #111622;
+                    border-radius: 6px;
+                    TouchArea { clicked => { root.change-ram(6144); } }
+                    Text { text: "6 ГБ"; color: root.ram-mb == 6144 ? #000000 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                }
+
+                Rectangle {
+                    width: 90px;
+                    height: 38px;
+                    background: root.ram-mb == 8192 ? #10b981 : #111622;
+                    border-radius: 6px;
+                    TouchArea { clicked => { root.change-ram(8192); } }
+                    Text { text: "8 ГБ"; color: root.ram-mb == 8192 ? #000000 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                }
+
+                Rectangle {
+                    width: 90px;
+                    height: 38px;
+                    background: root.ram-mb == 12288 ? #10b981 : #111622;
+                    border-radius: 6px;
+                    TouchArea { clicked => { root.change-ram(12288); } }
+                    Text { text: "12 ГБ"; color: root.ram-mb == 12288 ? #000000 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                }
+            }
+        }
+
+        // Java Path
+        VerticalLayout {
+            spacing: 8px;
+            Text {
+                text: "Java Runtime Path:";
+                color: #94a3b8;
+                font-size: 13px;
+            }
+            Rectangle {
+                height: 42px;
+                background: #111622;
+                border-width: 1px;
+                border-color: #1e293b;
+                border-radius: 6px;
+                HorizontalLayout {
+                    padding-left: 14px;
+                    Text {
+                        text: root.java-path;
+                        color: #ffffff;
+                        font-size: 13px;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+
+        // Garbage Collector
+        VerticalLayout {
+            spacing: 8px;
+            Text {
+                text: "Сборщик мусора JVM (GC):";
+                color: #94a3b8;
+                font-size: 13px;
+            }
+            HorizontalLayout {
+                spacing: 10px;
+                Rectangle {
+                    width: 100px;
+                    height: 36px;
+                    background: root.gc-type == "G1GC" ? #1d5dc7 : #111622;
+                    border-radius: 6px;
+                    TouchArea { clicked => { root.change-gc("G1GC"); } }
+                    Text { text: "G1GC"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                }
+                Rectangle {
+                    width: 100px;
+                    height: 36px;
+                    background: root.gc-type == "ZGC" ? #1d5dc7 : #111622;
+                    border-radius: 6px;
+                    TouchArea { clicked => { root.change-gc("ZGC"); } }
+                    Text { text: "ZGC"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                }
+                Rectangle {
+                    width: 120px;
+                    height: 36px;
+                    background: root.gc-type == "Shenandoah" ? #1d5dc7 : #111622;
+                    border-radius: 6px;
+                    TouchArea { clicked => { root.change-gc("Shenandoah"); } }
+                    Text { text: "Shenandoah"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                }
+            }
+        }
+    }
+}

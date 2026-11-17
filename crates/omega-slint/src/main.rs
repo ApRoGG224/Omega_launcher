@@ -17,20 +17,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(conn) = omega_core::db::init_db(&data_dir) {
         if let Ok(db_instances) = omega_core::db::load_instances(&conn) {
             if !db_instances.is_empty() {
-                let slint_models: Vec<InstanceModel> = db_instances
+                let slint_models: Vec<InstanceItem> = db_instances
                     .iter()
-                    .map(|inst| InstanceModel {
+                    .map(|inst| InstanceItem {
                         id: inst.id.clone().into(),
                         name: inst.name.clone().into(),
                         mc_version: inst.mc_version.clone().into(),
                         loader: inst.loader.clone().into(),
-                        play_time: format!("{} мин.", (inst.play_time_ms.unwrap_or(0) / 60000)).into(),
+                        play_time: format!("{} мин", (inst.play_time_ms.unwrap_or(0) / 60000)).into(),
+                        icon_name: inst.icon.clone().unwrap_or_else(|| "diamond_sword".to_string()).into(),
                     })
                     .collect();
 
                 let first = &db_instances[0];
+                ui.set_active_instance_id(first.id.clone().into());
                 ui.set_active_instance_name(first.name.clone().into());
                 ui.set_active_version(first.mc_version.clone().into());
+                ui.set_active_loader(first.loader.clone().into());
+                ui.set_active_playtime(format!("{} мин", (first.play_time_ms.unwrap_or(0) / 60000)).into());
                 ui.set_instances(ModelRc::new(VecModel::from(slint_models)));
             }
         }
@@ -47,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ui_handle = ui_weak.clone();
     ui.on_select_instance(move |name, version| {
         if let Some(ui) = ui_handle.upgrade() {
-            ui.set_active_instance_name(name);
+            ui.set_active_instance_name(name.clone());
             ui.set_active_version(version);
             ui.set_active_screen("home".into());
         }
@@ -58,7 +62,152 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ui.on_change_ram(move |ram| {
         if let Some(ui) = ui_handle.upgrade() {
             ui.set_ram_mb(ram);
+            let old = ui.get_log_content().to_string();
+            ui.set_log_content(format!("{old}\n[settings/INFO] RAM memory limit set to {ram} MB").into());
         }
+    });
+
+    // GC change callback
+    let ui_handle = ui_weak.clone();
+    ui.on_change_gc(move |gc| {
+        if let Some(ui) = ui_handle.upgrade() {
+            ui.set_gc_type(gc.clone());
+            let old = ui.get_log_content().to_string();
+            ui.set_log_content(format!("{old}\n[settings/INFO] Selected Garbage Collector: {gc}").into());
+        }
+    });
+
+    // Clear logs callback
+    let ui_handle = ui_weak.clone();
+    ui.on_clear_logs(move || {
+        if let Some(ui) = ui_handle.upgrade() {
+            ui.set_log_content("".into());
+        }
+    });
+
+    // Modrinth Install callback
+    let ui_handle = ui_weak.clone();
+    let data_dir_clone = data_dir.clone();
+    ui.on_install_mod(move |mod_id| {
+        let Some(ui) = ui_handle.upgrade() else { return };
+        let mod_id_str = mod_id.to_string();
+        let inst_id = ui.get_active_instance_id().to_string();
+        let mc_ver = ui.get_active_version().to_string();
+        let loader = ui.get_active_loader().to_string();
+
+        let old = ui.get_log_content().to_string();
+        ui.set_log_content(format!("{old}\n[modrinth/INFO] Starting download for mod '{mod_id_str}'...").into());
+
+        let ui_handle = ui_handle.clone();
+        let data_dir = data_dir_clone.clone();
+
+        tokio::spawn(async move {
+            let dest_dir = data_dir.join("instances").join(&inst_id).join("minecraft").join("mods");
+            let _ = std::fs::create_dir_all(&dest_dir);
+
+            let log_ui = ui_handle.clone();
+            let res = omega_core::modrinth::download_modrinth_version(
+                &mod_id_str,
+                &mc_ver,
+                &loader,
+                &dest_dir,
+                Some(&move |msg: &str| {
+                    let msg_str = msg.to_string();
+                    let log_ui = log_ui.clone();
+                    let _ = slint::invoke_from_event_loop(move || {
+                        if let Some(ui) = log_ui.upgrade() {
+                            let old = ui.get_log_content().to_string();
+                            ui.set_log_content(format!("{old}\n{msg_str}").into());
+                        }
+                    });
+                }),
+            )
+            .await;
+
+            let log_ui = ui_handle.clone();
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(ui) = log_ui.upgrade() {
+                    let old = ui.get_log_content().to_string();
+                    match res {
+                        Ok(filename) => {
+                            ui.set_log_content(format!("{old}\n[modrinth/INFO] Successfully installed '{filename}'!").into());
+                        }
+                        Err(e) => {
+                            ui.set_log_content(format!("{old}\n[modrinth/WARN] Installation failed: {e}").into());
+                        }
+                    }
+                }
+            });
+        });
+    });
+
+    // Microsoft OAuth Device Code Flow callback
+    let ui_handle = ui_weak.clone();
+    ui.on_login_microsoft(move || {
+        let Some(ui) = ui_handle.upgrade() else { return };
+        let old = ui.get_log_content().to_string();
+        ui.set_log_content(format!("{old}\n[auth/INFO] Initiating Microsoft OAuth Device Flow...").into());
+
+        let ui_handle = ui_handle.clone();
+        tokio::spawn(async move {
+            match omega_core::auth::initiate_device_code().await {
+                Ok(resp) => {
+                    let log_msg = format!(
+                        "[auth/INFO] Откройте {} в браузере и введите код: {}",
+                        resp.verification_uri, resp.user_code
+                    );
+                    let log_ui = ui_handle.clone();
+                    let _ = slint::invoke_from_event_loop(move || {
+                        if let Some(ui) = log_ui.upgrade() {
+                            let old = ui.get_log_content().to_string();
+                            ui.set_log_content(format!("{old}\n{log_msg}").into());
+                        }
+                    });
+
+                    // Poll in background
+                    let device_code = resp.device_code;
+                    let interval = std::time::Duration::from_secs(resp.interval.max(3));
+                    let timeout = std::time::Instant::now() + std::time::Duration::from_secs(resp.expires_in);
+
+                    while std::time::Instant::now() < timeout {
+                        tokio::time::sleep(interval).await;
+                        match omega_core::auth::poll_device_code(&device_code).await {
+                            Ok(Some((_access_token, _))) => {
+                                let log_ui = ui_handle.clone();
+                                let _ = slint::invoke_from_event_loop(move || {
+                                    if let Some(ui) = log_ui.upgrade() {
+                                        let old = ui.get_log_content().to_string();
+                                        ui.set_log_content(format!("{old}\n[auth/INFO] Успешная авторизация Microsoft! Токен получен.").into());
+                                        ui.set_player_name("MicrosoftPlayer".into());
+                                    }
+                                });
+                                break;
+                            }
+                            Ok(None) => {} // still pending
+                            Err(e) => {
+                                let log_ui = ui_handle.clone();
+                                let _ = slint::invoke_from_event_loop(move || {
+                                    if let Some(ui) = log_ui.upgrade() {
+                                        let old = ui.get_log_content().to_string();
+                                        ui.set_log_content(format!("{old}\n[auth/ERROR] {e}").into());
+                                    }
+                                });
+                                break;
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    let log_ui = ui_handle.clone();
+                    let _ = slint::invoke_from_event_loop(move || {
+                        if let Some(ui) = log_ui.upgrade() {
+                            let old = ui.get_log_content().to_string();
+                            ui.set_log_content(format!("{old}\n[auth/ERROR] Failed to initiate login: {e}").into());
+                        }
+                    });
+                }
+            }
+        });
     });
 
     // 2. Play / Stop Button callback & Game Launch Execution
@@ -90,7 +239,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(ui) = ui_handle.upgrade() {
                         ui.set_is_game_running(false);
-                        ui.set_active_status("Готово к запуску".into());
                     }
                 });
             });
@@ -99,15 +247,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Launch Game
         let inst_name = ui.get_active_instance_name().to_string();
+        let inst_id = ui.get_active_instance_id().to_string();
         let mc_ver = ui.get_active_version().to_string();
         let user = ui.get_player_name().to_string();
         let ram = ui.get_ram_mb() as u32;
+        let gc = ui.get_gc_type().to_string();
 
         ui.set_is_game_running(true);
-        ui.set_active_status("Запуск Minecraft...".into());
 
         let current_log = ui.get_log_content().to_string();
-        let new_log = format!("{current_log}\n[launcher/INFO] Starting {inst_name} ({mc_ver}) for user {user} with {ram} MB RAM...");
+        let new_log = format!("{current_log}\n[launcher/INFO] Starting {inst_name} ({mc_ver}) for user {user} with {ram} MB RAM (GC: {gc})...");
         ui.set_log_content(new_log.into());
 
         running_flag.store(true, Ordering::SeqCst);
@@ -120,10 +269,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tokio::spawn(async move {
             let opts = omega_core::launch::LaunchOptions {
                 version: mc_ver.clone(),
-                instance_id: inst_name.clone(),
+                instance_id: inst_id.clone(),
                 username: user.clone(),
                 ram_mb: ram,
-                custom_jvm_args: Some("-XX:+UseG1GC".into()),
+                custom_jvm_args: Some(format!("-XX:+Use{gc}")),
             };
 
             let log_ui = ui_handle.clone();
@@ -149,13 +298,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let log_ui = ui_handle.clone();
                     let _ = slint::invoke_from_event_loop(move || {
                         if let Some(ui) = log_ui.upgrade() {
-                            ui.set_active_status(format!("Игра запущена (PID: {pid})").into());
+                            let old = ui.get_log_content().to_string();
+                            ui.set_log_content(format!("{old}\n[launcher/INFO] Minecraft process running (PID: {pid})").into());
                         }
                     });
 
                     // Store child process handle
-                    let mut stdout = active_game.child.stdout.take();
-                    let mut stderr = active_game.child.stderr.take();
+                    let stdout = active_game.child.stdout.take();
+                    let stderr = active_game.child.stderr.take();
 
                     {
                         let mut guard = child_lock.lock().await;
@@ -163,7 +313,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
 
                     // Stream stdout in background
-                    if let Some(stdout) = stdout.take() {
+                    if let Some(stdout) = stdout {
                         let log_ui = ui_handle.clone();
                         tokio::task::spawn_blocking(move || {
                             use std::io::BufRead;
@@ -182,7 +332,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
 
                     // Stream stderr in background
-                    if let Some(stderr) = stderr.take() {
+                    if let Some(stderr) = stderr {
                         let log_ui = ui_handle.clone();
                         tokio::task::spawn_blocking(move || {
                             use std::io::BufRead;
@@ -232,7 +382,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let _ = slint::invoke_from_event_loop(move || {
                         if let Some(ui) = log_ui.upgrade() {
                             ui.set_is_game_running(false);
-                            ui.set_active_status("Готово к запуску".into());
+                            let old = ui.get_log_content().to_string();
+                            ui.set_log_content(format!("{old}\n[launcher/INFO] Minecraft process terminated.").into());
                         }
                     });
                 }
@@ -243,7 +394,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let _ = slint::invoke_from_event_loop(move || {
                         if let Some(ui) = log_ui.upgrade() {
                             ui.set_is_game_running(false);
-                            ui.set_active_status("Ошибка запуска".into());
                             let old = ui.get_log_content().to_string();
                             ui.set_log_content(format!("{old}\n{err_msg}").into());
                         }
