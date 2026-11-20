@@ -216,7 +216,7 @@ export component MainWindow inherits Window {
         }
     }
 
-    // Left Flank: Separate GitHub Icon (No border, transparent background, exactly matching user request)
+    // Left Flank: Separate GitHub Icon (No border, transparent background, exactly matching screenshot)
     GitHubButton {
         x: 24px;
         y: 19px;
@@ -227,7 +227,7 @@ export component MainWindow inherits Window {
 
     // Center Floating HUD Capsule (Compact dock in center, NOT stretched across the launcher)
     TopBar {
-        x: (parent.width - self.width) / 2;
+        x: (root.width - self.width) / 2;
         y: 14px;
         username: root.player-name;
         active-tab: root.active-screen;
@@ -245,9 +245,9 @@ export component MainWindow inherits Window {
         }
     }
 
-    // Right Flank: Separate Sound Button (No border, transparent background, exactly matching user request)
+    // Right Flank: Separate Sound Button (With frame, Dark Obsidian box 38x38 matching screenshot)
     SoundButton {
-        x: parent.width - 24px - self.width;
+        x: root.width - 24px - self.width;
         y: 19px;
         is-muted: root.is-sound-muted;
         clicked => {

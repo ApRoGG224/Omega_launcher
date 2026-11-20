@@ -79,14 +79,20 @@ export component GitHubButton inherits Rectangle {
     }
 }
 
-// Separate Right Flank: Sound Mute Button (No border, transparent background, as in user photo)
+// Separate Right Flank: Sound Mute Button (With frame, rounded box 38x38 matching screenshot)
 export component SoundButton inherits Rectangle {
     in-out property <bool> is-muted: false;
     callback clicked();
 
     width: 38px;
     height: 38px;
-    background: transparent;
+    background: mute_touch.pressed ? #22262e : (mute_touch.has-hover ? #1a2232 : rgba(13, 17, 26, 0.88));
+    border-width: 1px;
+    border-color: mute_touch.has-hover ? rgba(255, 255, 255, 0.20) : rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+
+    animate background { duration: 150ms; }
+    animate border-color { duration: 150ms; }
 
     mute_touch := TouchArea {
         clicked => { root.clicked(); }
@@ -96,8 +102,8 @@ export component SoundButton inherits Rectangle {
         x: (parent.width - self.width) / 2;
         y: (parent.height - self.height) / 2;
         source: @image-url("../assets/svg/volume.svg");
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
         image-fit: contain;
         opacity: root.is-muted ? 0.35 : (mute_touch.has-hover ? 1.0 : 0.80);
         animate opacity { duration: 150ms; }
