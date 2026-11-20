@@ -14,3 +14,4 @@ src-tauri/mc_pid.txt
 ms_auth.json
 build/
 *.db
+.trail/

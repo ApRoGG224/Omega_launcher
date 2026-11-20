@@ -213,3 +213,85 @@ pub fn save_accounts(conn: &Connection, accounts: &[DbAccount]) -> Result<(), St
     }
     Ok(())
 }
+
+pub fn add_account(conn: &Connection, acc: &DbAccount) -> Result<(), String> {
+    conn.execute(
+        "INSERT OR REPLACE INTO accounts (name, account_type) VALUES (?1, ?2)",
+        rusqlite::params![acc.name, acc.account_type],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub fn delete_account(conn: &Connection, name: &str) -> Result<(), String> {
+    conn.execute("DELETE FROM accounts WHERE name = ?1", [name])
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub fn create_instance(conn: &Connection, inst: &DbInstance) -> Result<(), String> {
+    conn.execute(
+        "INSERT OR REPLACE INTO instances (id, name, mc_version, loader, x, y, icon, group_name, play_time_ms, last_played_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+        rusqlite::params![
+            inst.id,
+            inst.name,
+            inst.mc_version,
+            inst.loader,
+            inst.x,
+            inst.y,
+            inst.icon,
+            inst.group_name,
+            inst.play_time_ms.unwrap_or(0),
+            inst.last_played_at
+        ],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub fn delete_instance(conn: &Connection, id: &str) -> Result<(), String> {
+    conn.execute("DELETE FROM instances WHERE id = ?1", [id])
+        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM installed_mods WHERE instance_id = ?1", [id])
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub fn load_servers(conn: &Connection) -> Result<Vec<DbServer>, String> {
+    let mut stmt = conn
+        .prepare("SELECT host, port, name, favicon FROM servers ORDER BY name")
+        .map_err(|e| e.to_string())?;
+    let rows = stmt
+        .query_map([], |row| {
+            Ok(DbServer {
+                host: row.get(0)?,
+                port: row.get(1)?,
+                name: row.get(2)?,
+                favicon: row.get(3)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+    let mut list = Vec::new();
+    for row in rows {
+        list.push(row.map_err(|e| e.to_string())?);
+    }
+    Ok(list)
+}
+
+pub fn add_server(conn: &Connection, srv: &DbServer) -> Result<(), String> {
+    conn.execute(
+        "INSERT OR REPLACE INTO servers (host, port, name, favicon) VALUES (?1, ?2, ?3, ?4)",
+        rusqlite::params![srv.host, srv.port, srv.name, srv.favicon],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub fn delete_server(conn: &Connection, host: &str, port: u16) -> Result<(), String> {
+    conn.execute(
+        "DELETE FROM servers WHERE host = ?1 AND port = ?2",
+        rusqlite::params![host, port],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}

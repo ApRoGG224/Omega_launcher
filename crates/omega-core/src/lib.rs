@@ -5,5 +5,6 @@ pub mod installer;
 pub mod java;
 pub mod launch;
 pub mod modrinth;
+pub mod network;
 pub mod util;
 pub mod validate;

@@ -1,5 +1,5 @@
 import { ScrollView } from "std-widgets.slint";
-import { NotchedCard, NotchedButton } from "components.slint";
+import { ObsidianCard, ObsidianButton, ObsidianChip, ObsidianRow } from "components.slint";
 
 export struct InstanceItem {
     id: string,
@@ -39,12 +39,28 @@ export struct FriendItem {
     status-text: string,
 }
 
+export struct AccountItem {
+    name: string,
+    account-type: string,
+    is-active: bool,
+}
+
+// Layer 4 Screen 0: Home Screen with 3D Character View
 export component HomeScreenView inherits Rectangle {
+    in-out property <image> character-preview;
     callback open-store();
     callback open-friends();
 
+    in-out property <float> screen-opacity: 1.0;
+    in-out property <length> screen-offset-y: 0px;
+    animate screen-opacity { duration: 200ms; easing: ease-out; }
+    animate screen-offset-y { duration: 200ms; easing: cubic-bezier(0.16, 1, 0.3, 1); }
+
+    opacity: root.screen-opacity;
+    y: root.screen-offset-y;
+
     HorizontalLayout {
-        spacing: 20px;
+        spacing: 24px;
         alignment: space-between;
 
         // Left Dual Action Cards
@@ -56,27 +72,30 @@ export component HomeScreenView inherits Rectangle {
             // Store Card
             store_card := Rectangle {
                 height: 104px;
-                background: #0e121a;
+                background: store_touch.pressed ? #1a1d24 : (store_touch.has-hover ? #141820 : #0d1117);
                 border-width: 1px;
-                border-color: #262e40;
-                border-radius: 12px;
+                border-color: store_touch.has-hover ? rgba(255, 255, 255, 0.16) : rgba(255, 255, 255, 0.08);
+                border-radius: 14px;
 
-                TouchArea {
+                animate background { duration: 150ms; }
+                animate border-color { duration: 150ms; }
+
+                store_touch := TouchArea {
                     clicked => { root.open-store(); }
                 }
 
                 HorizontalLayout {
-                    padding: 16px;
+                    padding: 18px;
                     spacing: 14px;
                     alignment: start;
 
                     Rectangle {
                         width: 44px;
                         height: 44px;
-                        background: #111622;
+                        background: #1a1d24;
                         border-width: 1px;
-                        border-color: #262e40;
-                        border-radius: 8px;
+                        border-color: rgba(255, 255, 255, 0.08);
+                        border-radius: 10px;
                         y: (parent.height - self.height) / 2;
 
                         Image {
@@ -89,7 +108,7 @@ export component HomeScreenView inherits Rectangle {
 
                     VerticalLayout {
                         alignment: center;
-                        spacing: 3px;
+                        spacing: 4px;
 
                         Text {
                             text: "Магазин Omega";
@@ -100,7 +119,7 @@ export component HomeScreenView inherits Rectangle {
 
                         Text {
                             text: "Скины и официальные плащи";
-                            color: #94a3b8;
+                            color: #8b919c;
                             font-size: 12px;
                         }
                     }
@@ -110,27 +129,30 @@ export component HomeScreenView inherits Rectangle {
             // Play With Friends Card
             friends_card := Rectangle {
                 height: 104px;
-                background: #0e121a;
+                background: fr_touch.pressed ? #1a1d24 : (fr_touch.has-hover ? #141820 : #0d1117);
                 border-width: 1px;
-                border-color: #262e40;
-                border-radius: 12px;
+                border-color: fr_touch.has-hover ? rgba(255, 255, 255, 0.16) : rgba(255, 255, 255, 0.08);
+                border-radius: 14px;
 
-                TouchArea {
+                animate background { duration: 150ms; }
+                animate border-color { duration: 150ms; }
+
+                fr_touch := TouchArea {
                     clicked => { root.open-friends(); }
                 }
 
                 HorizontalLayout {
-                    padding: 16px;
+                    padding: 18px;
                     spacing: 14px;
                     alignment: start;
 
                     Rectangle {
                         width: 44px;
                         height: 44px;
-                        background: #111622;
+                        background: #1a1d24;
                         border-width: 1px;
-                        border-color: #262e40;
-                        border-radius: 8px;
+                        border-color: rgba(255, 255, 255, 0.08);
+                        border-radius: 10px;
                         y: (parent.height - self.height) / 2;
 
                         Image {
@@ -143,18 +165,18 @@ export component HomeScreenView inherits Rectangle {
 
                     VerticalLayout {
                         alignment: center;
-                        spacing: 3px;
+                        spacing: 4px;
 
                         Text {
                             text: "Играть с друзьями";
-                            color: #9f75ff;
+                            color: #9b5cff;
                             font-size: 16px;
                             font-weight: 700;
                         }
 
                         Text {
                             text: "Серверы и совместная игра";
-                            color: #94a3b8;
+                            color: #8b919c;
                             font-size: 12px;
                         }
                     }
@@ -162,7 +184,7 @@ export component HomeScreenView inherits Rectangle {
             }
         }
 
-        // Center 3D Character Showcase Box
+        // Center: Interactive 3D Minecraft Character Stage
         stage_card := Rectangle {
             horizontal-stretch: 1;
             height: 480px;
@@ -170,81 +192,73 @@ export component HomeScreenView inherits Rectangle {
 
             VerticalLayout {
                 alignment: center;
-                spacing: 14px;
 
-                // 3D Model Render Preview
-                Rectangle {
-                    width: 150px;
-                    height: 240px;
-                    background: transparent;
-                    HorizontalLayout {
-                        alignment: center;
-                        Image {
-                            source: @image-url("../assets/skins/steve.png");
-                            width: 128px;
-                            height: 220px;
-                            image-fit: contain;
-                            image-rendering: pixelated;
-                        }
-                    }
-                }
-
-                // Platform shadow under feet
-                Rectangle {
-                    width: 140px;
-                    height: 12px;
-                    background: #000000;
-                    border-radius: 6px;
-                    opacity: 0.45;
+                Image {
+                    source: root.character-preview;
+                    width: 240px;
+                    height: 360px;
+                    image-fit: contain;
                 }
             }
         }
     }
 }
 
+// Layer 4 Screen 1: Instances Screen
 export component InstancesScreenView inherits Rectangle {
     in-out property <[InstanceItem]> instances;
     in-out property <string> active-instance-id: "";
 
-    callback select-instance(string, string);
+    callback select-instance(string, string, string, string, string);
     callback create-instance();
     callback delete-instance(string);
 
-    background: #0e121a;
+    in-out property <float> screen-opacity: 1.0;
+    in-out property <length> screen-offset-y: 0px;
+    animate screen-opacity { duration: 200ms; easing: ease-out; }
+    animate screen-offset-y { duration: 200ms; easing: cubic-bezier(0.16, 1, 0.3, 1); }
+
+    background: #0d1117;
     border-width: 1px;
-    border-color: #262e40;
+    border-color: rgba(255, 255, 255, 0.08);
     border-radius: 14px;
+    opacity: root.screen-opacity;
+    y: root.screen-offset-y;
 
     VerticalLayout {
-        padding: 20px;
-        spacing: 14px;
+        padding: 24px;
+        spacing: 16px;
 
         // Header Row
         HorizontalLayout {
             alignment: space-between;
 
             VerticalLayout {
-                spacing: 2px;
+                spacing: 3px;
                 Text {
                     text: "Версии и сборки Minecraft";
                     color: #ffffff;
-                    font-size: 18px;
+                    font-size: 19px;
                     font-weight: 800;
                 }
                 Text {
-                    text: "Управление локальными экземплярами и модами";
-                    color: #94a3b8;
+                    text: "Управление локальными экземплярами, версиями и модами";
+                    color: #8b919c;
                     font-size: 13px;
                 }
             }
 
             Rectangle {
-                width: 150px;
-                height: 38px;
-                background: #1d5dc7;
-                border-radius: 8px;
+                width: 156px;
+                height: 40px;
+                background: btn_touch.pressed ? #1e40af : (btn_touch.has-hover ? #2563eb : #1d5dc7);
+                border-radius: 11px;
+                border-width: 1px;
+                border-color: rgba(255, 255, 255, 0.12);
 
-                TouchArea {
+                animate background { duration: 150ms; }
+
+                btn_touch := TouchArea {
                     clicked => { root.create-instance(); }
                 }
 
@@ -265,18 +279,23 @@ export component InstancesScreenView inherits Rectangle {
         // Instances List
         ScrollView {
             VerticalLayout {
-                spacing: 8px;
+                spacing: 10px;
 
                 for inst in root.instances: Rectangle {
-                    height: 68px;
-                    background: inst.id == root.active-instance-id ? #161f30 : #111622;
+                    height: 70px;
+                    background: inst.id == root.active-instance-id ? #22262e : (row_touch.has-hover ? #22262e : #1a1d24);
                     border-width: 1px;
-                    border-color: inst.id == root.active-instance-id ? #3b82f6 : #1e293b;
-                    border-radius: 8px;
+                    border-color: inst.id == root.active-instance-id ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
+
+                    animate background { duration: 150ms; }
+                    animate border-color { duration: 150ms; }
+
+                    row_touch := TouchArea {}
 
                     HorizontalLayout {
-                        padding-left: 14px;
-                        padding-right: 14px;
+                        padding-left: 16px;
+                        padding-right: 16px;
                         alignment: space-between;
 
                         // Left: Icon + Info
@@ -287,10 +306,10 @@ export component InstancesScreenView inherits Rectangle {
                             Rectangle {
                                 width: 44px;
                                 height: 44px;
-                                background: #0e121a;
+                                background: #0d1117;
                                 border-width: 1px;
-                                border-color: #262e40;
-                                border-radius: 6px;
+                                border-color: rgba(255, 255, 255, 0.08);
+                                border-radius: 8px;
                                 y: (parent.height - self.height) / 2;
 
                                 Image {
@@ -304,7 +323,7 @@ export component InstancesScreenView inherits Rectangle {
 
                             VerticalLayout {
                                 alignment: center;
-                                spacing: 3px;
+                                spacing: 4px;
 
                                 Text {
                                     text: inst.name;
@@ -317,7 +336,7 @@ export component InstancesScreenView inherits Rectangle {
                                     spacing: 8px;
                                     Text {
                                         text: "Версия: " + inst.mc-version;
-                                        color: #94a3b8;
+                                        color: #e6e8ec;
                                         font-size: 12px;
                                     }
                                     Text {
@@ -328,7 +347,7 @@ export component InstancesScreenView inherits Rectangle {
                                     }
                                     Text {
                                         text: "• " + inst.play-time;
-                                        color: #64748b;
+                                        color: #8b919c;
                                         font-size: 12px;
                                     }
                                 }
@@ -340,16 +359,44 @@ export component InstancesScreenView inherits Rectangle {
                             spacing: 10px;
                             alignment: end;
 
-                            // Select / Play button
+                            // Delete button
                             Rectangle {
-                                width: 100px;
+                                width: 36px;
                                 height: 36px;
                                 y: (parent.height - self.height) / 2;
-                                background: inst.id == root.active-instance-id ? #10b981 : #1d5dc7;
-                                border-radius: 6px;
+                                background: del_touch.pressed ? #9c3735 : (del_touch.has-hover ? #c44e4b : #1a1d24);
+                                border-width: 1px;
+                                border-color: rgba(255, 255, 255, 0.08);
+                                border-radius: 9px;
 
-                                TouchArea {
-                                    clicked => { root.select-instance(inst.name, inst.mc-version); }
+                                del_touch := TouchArea {
+                                    clicked => { root.delete-instance(inst.id); }
+                                }
+
+                                Text {
+                                    text: "✕";
+                                    color: #8b919c;
+                                    font-size: 13px;
+                                    font-weight: 700;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+
+                            // Select / Play button
+                            Rectangle {
+                                width: 108px;
+                                height: 38px;
+                                y: (parent.height - self.height) / 2;
+                                background: inst.id == root.active-instance-id ? #10b981 : (sel_touch.has-hover ? #2563eb : #1d5dc7);
+                                border-radius: 9px;
+
+                                animate background { duration: 150ms; }
+
+                                sel_touch := TouchArea {
+                                    clicked => {
+                                        root.select-instance(inst.id, inst.name, inst.mc-version, inst.loader, inst.play-time);
+                                    }
                                 }
 
                                 Text {
@@ -369,73 +416,143 @@ export component InstancesScreenView inherits Rectangle {
     }
 }
 
+// Layer 4 Screen 2: Modrinth & CurseForge Catalog
 export component ModrinthScreenView inherits Rectangle {
     in-out property <[ModItem]> mods;
-    in-out property <string> search-query: "";
     in-out property <string> active-category: "mods";
 
-    callback search-changed(string);
+    callback search-query(string);
     callback install-mod(string);
     callback switch-category(string);
 
-    background: #0e121a;
+    in-out property <float> screen-opacity: 1.0;
+    in-out property <length> screen-offset-y: 0px;
+    animate screen-opacity { duration: 200ms; easing: ease-out; }
+    animate screen-offset-y { duration: 200ms; easing: cubic-bezier(0.16, 1, 0.3, 1); }
+
+    background: #0d1117;
     border-width: 1px;
-    border-color: #262e40;
+    border-color: rgba(255, 255, 255, 0.08);
     border-radius: 14px;
+    opacity: root.screen-opacity;
+    y: root.screen-offset-y;
 
     VerticalLayout {
-        padding: 20px;
-        spacing: 14px;
+        padding: 24px;
+        spacing: 16px;
 
         // Top Toolbar
         HorizontalLayout {
             alignment: space-between;
 
             VerticalLayout {
-                spacing: 2px;
+                spacing: 3px;
                 Text {
                     text: "Каталог Modrinth & CurseForge";
                     color: #ffffff;
-                    font-size: 18px;
+                    font-size: 19px;
                     font-weight: 800;
                 }
                 Text {
-                    text: "Прямая загрузка проверенных модов, модпаков и шейдеров";
-                    color: #94a3b8;
+                    text: "Прямая нативная загрузка проверенных модов, модпаков и шейдеров";
+                    color: #8b919c;
                     font-size: 13px;
                 }
             }
 
             // Category Filter Pills
             HorizontalLayout {
-                spacing: 6px;
+                spacing: 8px;
                 alignment: end;
 
                 Rectangle {
-                    width: 76px;
-                    height: 34px;
-                    background: root.active-category == "mods" ? #1d5dc7 : #111622;
-                    border-radius: 6px;
+                    width: 80px;
+                    height: 36px;
+                    background: root.active-category == "mods" ? #1d5dc7 : #1a1d24;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.active-category == "mods" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
                     TouchArea { clicked => { root.switch-category("mods"); } }
-                    Text { text: "Моды"; color: #ffffff; font-size: 12px; font-weight: 600; horizontal-alignment: center; vertical-alignment: center; }
+                    Text { text: "Моды"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
 
                 Rectangle {
-                    width: 86px;
-                    height: 34px;
-                    background: root.active-category == "shaders" ? #1d5dc7 : #111622;
-                    border-radius: 6px;
+                    width: 90px;
+                    height: 36px;
+                    background: root.active-category == "shaders" ? #1d5dc7 : #1a1d24;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.active-category == "shaders" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
                     TouchArea { clicked => { root.switch-category("shaders"); } }
-                    Text { text: "Шейдеры"; color: #ffffff; font-size: 12px; font-weight: 600; horizontal-alignment: center; vertical-alignment: center; }
+                    Text { text: "Шейдеры"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
 
                 Rectangle {
-                    width: 86px;
-                    height: 34px;
-                    background: root.active-category == "modpacks" ? #1d5dc7 : #111622;
-                    border-radius: 6px;
+                    width: 90px;
+                    height: 36px;
+                    background: root.active-category == "modpacks" ? #1d5dc7 : #1a1d24;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.active-category == "modpacks" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
                     TouchArea { clicked => { root.switch-category("modpacks"); } }
-                    Text { text: "Сборки"; color: #ffffff; font-size: 12px; font-weight: 600; horizontal-alignment: center; vertical-alignment: center; }
+                    Text { text: "Сборки"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                }
+            }
+        }
+
+        // Search Input Bar
+        HorizontalLayout {
+            spacing: 12px;
+
+            Rectangle {
+                height: 40px;
+                horizontal-stretch: 1;
+                background: #1a1d24;
+                border-width: 1px;
+                border-color: rgba(255, 255, 255, 0.08);
+                border-radius: 10px;
+
+                HorizontalLayout {
+                    padding-left: 14px;
+                    padding-right: 14px;
+                    spacing: 10px;
+
+                    Text {
+                        text: "🔍";
+                        color: #8b919c;
+                        font-size: 13px;
+                        vertical-alignment: center;
+                    }
+
+                    search_input := TextInput {
+                        text: "";
+                        font-size: 13px;
+                        color: #ffffff;
+                        vertical-alignment: center;
+                        accepted => { root.search-query(self.text); }
+                    }
+                }
+            }
+
+            Rectangle {
+                width: 90px;
+                height: 40px;
+                background: s_touch.pressed ? #1e40af : (s_touch.has-hover ? #2563eb : #1d5dc7);
+                border-radius: 10px;
+                border-width: 1px;
+                border-color: rgba(255, 255, 255, 0.12);
+
+                s_touch := TouchArea {
+                    clicked => { root.search-query(search_input.text); }
+                }
+
+                Text {
+                    text: "Найти";
+                    color: #ffffff;
+                    font-size: 13px;
+                    font-weight: 700;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
                 }
             }
         }
@@ -447,14 +564,18 @@ export component ModrinthScreenView inherits Rectangle {
 
                 for mod in root.mods: Rectangle {
                     height: 76px;
-                    background: #111622;
+                    background: mod_touch.has-hover ? #22262e : #1a1d24;
                     border-width: 1px;
-                    border-color: #1e293b;
-                    border-radius: 8px;
+                    border-color: rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
+
+                    animate background { duration: 150ms; }
+
+                    mod_touch := TouchArea {}
 
                     HorizontalLayout {
-                        padding-left: 16px;
-                        padding-right: 16px;
+                        padding-left: 18px;
+                        padding-right: 18px;
                         alignment: space-between;
 
                         VerticalLayout {
@@ -471,17 +592,17 @@ export component ModrinthScreenView inherits Rectangle {
                                 }
                                 Text {
                                     text: "от " + mod.author;
-                                    color: #64748b;
+                                    color: #8b919c;
                                     font-size: 12px;
                                     vertical-alignment: center;
                                 }
                                 Rectangle {
-                                    height: 16px;
+                                    height: 18px;
                                     background: #1d5dc7;
-                                    border-radius: 3px;
+                                    border-radius: 4px;
                                     HorizontalLayout {
-                                        padding-left: 5px;
-                                        padding-right: 5px;
+                                        padding-left: 6px;
+                                        padding-right: 6px;
                                         Text { text: mod.loader; color: #ffffff; font-size: 10px; font-weight: 700; vertical-alignment: center; }
                                     }
                                 }
@@ -489,7 +610,7 @@ export component ModrinthScreenView inherits Rectangle {
 
                             Text {
                                 text: mod.description;
-                                color: #94a3b8;
+                                color: #8b919c;
                                 font-size: 12px;
                             }
                         }
@@ -509,13 +630,13 @@ export component ModrinthScreenView inherits Rectangle {
                             }
 
                             Rectangle {
-                                width: 110px;
-                                height: 36px;
+                                width: 112px;
+                                height: 38px;
                                 y: (parent.height - self.height) / 2;
-                                background: #1d5dc7;
-                                border-radius: 6px;
+                                background: dl_touch.pressed ? #1e40af : (dl_touch.has-hover ? #2563eb : #1d5dc7);
+                                border-radius: 9px;
 
-                                TouchArea {
+                                dl_touch := TouchArea {
                                     clicked => { root.install-mod(mod.id); }
                                 }
 
@@ -536,60 +657,119 @@ export component ModrinthScreenView inherits Rectangle {
     }
 }
 
+// Layer 4 Screen 3: Store Screen (Skins & Capes)
 export component StoreScreenView inherits Rectangle {
     in-out property <[CapeItem]> capes;
     callback equip-cape(string);
-    callback search-skin(string);
+    callback switch-skin(string);
 
-    background: #0e121a;
+    in-out property <float> screen-opacity: 1.0;
+    in-out property <length> screen-offset-y: 0px;
+    animate screen-opacity { duration: 200ms; easing: ease-out; }
+    animate screen-offset-y { duration: 200ms; easing: cubic-bezier(0.16, 1, 0.3, 1); }
+
+    background: #0d1117;
     border-width: 1px;
-    border-color: #262e40;
+    border-color: rgba(255, 255, 255, 0.08);
     border-radius: 14px;
+    opacity: root.screen-opacity;
+    y: root.screen-offset-y;
 
     VerticalLayout {
-        padding: 20px;
-        spacing: 16px;
+        padding: 24px;
+        spacing: 18px;
 
         VerticalLayout {
-            spacing: 2px;
+            spacing: 3px;
             Text {
                 text: "Магазин Omega (Скины и Официальные плащи)";
                 color: #ffffff;
-                font-size: 18px;
+                font-size: 19px;
                 font-weight: 800;
             }
             Text {
                 text: "Синхронизация официальных скинов Mojang и плащей Minecraft";
-                color: #94a3b8;
+                color: #8b919c;
                 font-size: 13px;
             }
         }
 
+        // Skins Quick Switch Row
+        HorizontalLayout {
+            spacing: 12px;
+
+            Rectangle {
+                height: 44px;
+                horizontal-stretch: 1;
+                background: #1a1d24;
+                border-radius: 10px;
+                border-width: 1px;
+                border-color: rgba(255, 255, 255, 0.08);
+                TouchArea { clicked => { root.switch-skin("steve"); } }
+                HorizontalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    Text { text: "Скин Steve (Классика)"; color: #ffffff; font-size: 13px; font-weight: 700; vertical-alignment: center; }
+                }
+            }
+
+            Rectangle {
+                height: 44px;
+                horizontal-stretch: 1;
+                background: #1a1d24;
+                border-radius: 10px;
+                border-width: 1px;
+                border-color: rgba(255, 255, 255, 0.08);
+                TouchArea { clicked => { root.switch-skin("alex"); } }
+                HorizontalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    Text { text: "Скин Alex (Slim)"; color: #ffffff; font-size: 13px; font-weight: 700; vertical-alignment: center; }
+                }
+            }
+
+            Rectangle {
+                height: 44px;
+                horizontal-stretch: 1;
+                background: #1a1d24;
+                border-radius: 10px;
+                border-width: 1px;
+                border-color: rgba(255, 255, 255, 0.08);
+                TouchArea { clicked => { root.switch-skin("technoblade"); } }
+                HorizontalLayout {
+                    alignment: center;
+                    spacing: 8px;
+                    Text { text: "Скин Technoblade"; color: #ffffff; font-size: 13px; font-weight: 700; vertical-alignment: center; }
+                }
+            }
+        }
+
+        // Capes List
         ScrollView {
             VerticalLayout {
                 spacing: 10px;
 
                 for cape in root.capes: Rectangle {
                     height: 72px;
-                    background: #111622;
+                    background: #1a1d24;
                     border-width: 1px;
-                    border-color: #1e293b;
-                    border-radius: 8px;
+                    border-color: rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
 
                     HorizontalLayout {
-                        padding-left: 16px;
-                        padding-right: 16px;
+                        padding-left: 18px;
+                        padding-right: 18px;
                         alignment: space-between;
 
                         HorizontalLayout {
-                            spacing: 14px;
+                            spacing: 16px;
                             alignment: start;
 
                             Rectangle {
                                 width: 34px;
                                 height: 46px;
-                                background: #0e121a;
-                                border-radius: 4px;
+                                background: #0d1117;
+                                border-radius: 6px;
                                 y: (parent.height - self.height) / 2;
 
                                 Image {
@@ -603,7 +783,7 @@ export component StoreScreenView inherits Rectangle {
 
                             VerticalLayout {
                                 alignment: center;
-                                spacing: 2px;
+                                spacing: 3px;
 
                                 Text {
                                     text: cape.name;
@@ -613,18 +793,18 @@ export component StoreScreenView inherits Rectangle {
                                 }
                                 Text {
                                     text: cape.desc;
-                                    color: #94a3b8;
+                                    color: #8b919c;
                                     font-size: 12px;
                                 }
                             }
                         }
 
                         Rectangle {
-                            width: 100px;
-                            height: 36px;
+                            width: 108px;
+                            height: 38px;
                             y: (parent.height - self.height) / 2;
                             background: cape.equipped ? #10b981 : #1d5dc7;
-                            border-radius: 6px;
+                            border-radius: 9px;
 
                             TouchArea {
                                 clicked => { root.equip-cape(cape.id); }
@@ -646,45 +826,56 @@ export component StoreScreenView inherits Rectangle {
     }
 }
 
+// Layer 4 Screen 4: Accounts Screen
 export component AccountsScreenView inherits Rectangle {
     in-out property <string> active-account-name: "Гость";
     in-out property <string> account-type: "offline";
+    in-out property <[AccountItem]> accounts;
 
     callback login-microsoft();
     callback login-ely();
-    callback add-offline();
+    callback add-offline(string);
+    callback delete-account(string);
+    callback switch-account(string);
 
-    background: #0e121a;
+    in-out property <float> screen-opacity: 1.0;
+    in-out property <length> screen-offset-y: 0px;
+    animate screen-opacity { duration: 200ms; easing: ease-out; }
+    animate screen-offset-y { duration: 200ms; easing: cubic-bezier(0.16, 1, 0.3, 1); }
+
+    background: #0d1117;
     border-width: 1px;
-    border-color: #262e40;
+    border-color: rgba(255, 255, 255, 0.08);
     border-radius: 14px;
+    opacity: root.screen-opacity;
+    y: root.screen-offset-y;
 
     VerticalLayout {
         padding: 24px;
         spacing: 18px;
 
         VerticalLayout {
-            spacing: 2px;
+            spacing: 3px;
             Text {
                 text: "Управление аккаунтами";
                 color: #ffffff;
-                font-size: 18px;
+                font-size: 19px;
                 font-weight: 800;
             }
             Text {
-                text: "Подключение Microsoft, Ely.by и оффлайн профилей";
-                color: #94a3b8;
+                text: "Подключение Microsoft, Ely.by и локальных оффлайн-профилей";
+                color: #8b919c;
                 font-size: 13px;
             }
         }
 
         // Active Account Card
         Rectangle {
-            height: 90px;
-            background: #111622;
+            height: 84px;
+            background: #1a1d24;
             border-width: 1px;
-            border-color: #3b82f6;
-            border-radius: 10px;
+            border-color: rgba(255, 255, 255, 0.22);
+            border-radius: 12px;
 
             HorizontalLayout {
                 padding-left: 20px;
@@ -696,16 +887,16 @@ export component AccountsScreenView inherits Rectangle {
                     alignment: start;
 
                     Rectangle {
-                        width: 52px;
-                        height: 52px;
-                        background: #1e293b;
-                        border-radius: 6px;
+                        width: 48px;
+                        height: 48px;
+                        background: #0d1117;
+                        border-radius: 8px;
                         y: (parent.height - self.height) / 2;
 
                         Image {
                             source: @image-url("../assets/skins/steve.png");
-                            width: 44px;
-                            height: 44px;
+                            width: 40px;
+                            height: 40px;
                             image-fit: contain;
                             image-rendering: pixelated;
                         }
@@ -733,20 +924,79 @@ export component AccountsScreenView inherits Rectangle {
             }
         }
 
-        // Auth Buttons Row
+        // Add Offline Account Input
+        HorizontalLayout {
+            spacing: 12px;
+
+            Rectangle {
+                height: 42px;
+                horizontal-stretch: 1;
+                background: #1a1d24;
+                border-width: 1px;
+                border-color: rgba(255, 255, 255, 0.08);
+                border-radius: 10px;
+
+                HorizontalLayout {
+                    padding-left: 14px;
+                    padding-right: 14px;
+
+                    acc_input := TextInput {
+                        text: "";
+                        font-size: 13px;
+                        color: #ffffff;
+                        vertical-alignment: center;
+                        accepted => {
+                            if self.text != "" {
+                                root.add-offline(self.text);
+                                self.text = "";
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                width: 160px;
+                height: 42px;
+                background: add_touch.pressed ? #1e40af : (add_touch.has-hover ? #2563eb : #1d5dc7);
+                border-radius: 10px;
+                border-width: 1px;
+                border-color: rgba(255, 255, 255, 0.12);
+
+                add_touch := TouchArea {
+                    clicked => {
+                        if acc_input.text != "" {
+                            root.add-offline(acc_input.text);
+                            acc_input.text = "";
+                        }
+                    }
+                }
+
+                Text {
+                    text: "+ Добавить ник";
+                    color: #ffffff;
+                    font-size: 13px;
+                    font-weight: 700;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+        }
+
+        // Auth Providers Row
         HorizontalLayout {
             spacing: 14px;
 
             // Microsoft OAuth Button
             Rectangle {
-                height: 46px;
+                height: 44px;
                 horizontal-stretch: 1;
-                background: #111622;
+                background: ms_touch.has-hover ? #22262e : #1a1d24;
                 border-width: 1px;
-                border-color: #262e40;
-                border-radius: 8px;
+                border-color: rgba(255, 255, 255, 0.08);
+                border-radius: 11px;
 
-                TouchArea {
+                ms_touch := TouchArea {
                     clicked => { root.login-microsoft(); }
                 }
 
@@ -763,7 +1013,7 @@ export component AccountsScreenView inherits Rectangle {
                     Text {
                         text: "Войти через Microsoft";
                         color: #ffffff;
-                        font-size: 14px;
+                        font-size: 13px;
                         font-weight: 700;
                         vertical-alignment: center;
                     }
@@ -772,14 +1022,14 @@ export component AccountsScreenView inherits Rectangle {
 
             // Ely.by Button
             Rectangle {
-                height: 46px;
+                height: 44px;
                 horizontal-stretch: 1;
-                background: #111622;
+                background: ely_touch.has-hover ? #22262e : #1a1d24;
                 border-width: 1px;
-                border-color: #262e40;
-                border-radius: 8px;
+                border-color: rgba(255, 255, 255, 0.08);
+                border-radius: 11px;
 
-                TouchArea {
+                ely_touch := TouchArea {
                     clicked => { root.login-ely(); }
                 }
 
@@ -790,7 +1040,7 @@ export component AccountsScreenView inherits Rectangle {
                     Text {
                         text: "Войти через Ely.by";
                         color: #ffffff;
-                        font-size: 14px;
+                        font-size: 13px;
                         font-weight: 700;
                         vertical-alignment: center;
                     }
@@ -800,48 +1050,60 @@ export component AccountsScreenView inherits Rectangle {
     }
 }
 
+// Layer 4 Screen 5: Servers Screen (with live ping & quick play)
 export component ServersScreenView inherits Rectangle {
     in-out property <[ServerItem]> servers;
     callback direct-connect(string);
+    callback add-server(string, string);
+    callback delete-server(string);
 
-    background: #0e121a;
+    in-out property <float> screen-opacity: 1.0;
+    in-out property <length> screen-offset-y: 0px;
+    animate screen-opacity { duration: 200ms; easing: ease-out; }
+    animate screen-offset-y { duration: 200ms; easing: cubic-bezier(0.16, 1, 0.3, 1); }
+
+    background: #0d1117;
     border-width: 1px;
-    border-color: #262e40;
+    border-color: rgba(255, 255, 255, 0.08);
     border-radius: 14px;
+    opacity: root.screen-opacity;
+    y: root.screen-offset-y;
 
     VerticalLayout {
-        padding: 20px;
-        spacing: 14px;
+        padding: 24px;
+        spacing: 16px;
 
         VerticalLayout {
-            spacing: 2px;
+            spacing: 3px;
             Text {
                 text: "Серверы Minecraft";
                 color: #ffffff;
-                font-size: 18px;
+                font-size: 19px;
                 font-weight: 800;
             }
             Text {
-                text: "Быстрое подключение и статус серверов";
-                color: #94a3b8;
+                text: "Прямое подключение, статус онлайна и пинг в реальном времени";
+                color: #8b919c;
                 font-size: 13px;
             }
         }
 
         ScrollView {
             VerticalLayout {
-                spacing: 8px;
+                spacing: 10px;
 
                 for srv in root.servers: Rectangle {
-                    height: 68px;
-                    background: #111622;
+                    height: 70px;
+                    background: srv_touch.has-hover ? #22262e : #1a1d24;
                     border-width: 1px;
-                    border-color: #1e293b;
-                    border-radius: 8px;
+                    border-color: rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
+
+                    srv_touch := TouchArea {}
 
                     HorizontalLayout {
-                        padding-left: 16px;
-                        padding-right: 16px;
+                        padding-left: 18px;
+                        padding-right: 18px;
                         alignment: space-between;
 
                         VerticalLayout {
@@ -854,10 +1116,19 @@ export component ServersScreenView inherits Rectangle {
                                 font-size: 15px;
                                 font-weight: 700;
                             }
-                            Text {
-                                text: srv.host;
-                                color: #94a3b8;
-                                font-size: 12px;
+                            HorizontalLayout {
+                                spacing: 10px;
+                                Text {
+                                    text: srv.host;
+                                    color: #8b919c;
+                                    font-size: 12px;
+                                }
+                                Text {
+                                    text: "• Игроки: " + srv.players;
+                                    color: #10b981;
+                                    font-size: 12px;
+                                    font-weight: 600;
+                                }
                             }
                         }
 
@@ -870,19 +1141,19 @@ export component ServersScreenView inherits Rectangle {
                                 Text {
                                     text: "📶 " + srv.ping;
                                     color: #10b981;
-                                    font-size: 12px;
-                                    font-weight: 600;
+                                    font-size: 13px;
+                                    font-weight: 700;
                                 }
                             }
 
                             Rectangle {
-                                width: 120px;
-                                height: 36px;
+                                width: 126px;
+                                height: 38px;
                                 y: (parent.height - self.height) / 2;
-                                background: #1d5dc7;
-                                border-radius: 6px;
+                                background: play_touch.pressed ? #1e40af : (play_touch.has-hover ? #2563eb : #1d5dc7);
+                                border-radius: 9px;
 
-                                TouchArea {
+                                play_touch := TouchArea {
                                     clicked => { root.direct-connect(srv.host); }
                                 }
 
@@ -903,52 +1174,59 @@ export component ServersScreenView inherits Rectangle {
     }
 }
 
+// Layer 4 Screen 6: Friends Screen
 export component FriendsScreenView inherits Rectangle {
     in-out property <[FriendItem]> friends;
-    callback add-friend();
 
-    background: #0e121a;
+    in-out property <float> screen-opacity: 1.0;
+    in-out property <length> screen-offset-y: 0px;
+    animate screen-opacity { duration: 200ms; easing: ease-out; }
+    animate screen-offset-y { duration: 200ms; easing: cubic-bezier(0.16, 1, 0.3, 1); }
+
+    background: #0d1117;
     border-width: 1px;
-    border-color: #262e40;
+    border-color: rgba(255, 255, 255, 0.08);
     border-radius: 14px;
+    opacity: root.screen-opacity;
+    y: root.screen-offset-y;
 
     VerticalLayout {
-        padding: 20px;
-        spacing: 14px;
+        padding: 24px;
+        spacing: 16px;
 
         VerticalLayout {
-            spacing: 2px;
+            spacing: 3px;
             Text {
                 text: "Друзья Omega";
                 color: #ffffff;
-                font-size: 18px;
+                font-size: 19px;
                 font-weight: 800;
             }
             Text {
-                text: "Список друзей и совместная игра";
-                color: #94a3b8;
+                text: "Список друзей и совместная игра по сети";
+                color: #8b919c;
                 font-size: 13px;
             }
         }
 
         ScrollView {
             VerticalLayout {
-                spacing: 8px;
+                spacing: 10px;
 
                 for fr in root.friends: Rectangle {
-                    height: 60px;
-                    background: #111622;
+                    height: 64px;
+                    background: #1a1d24;
                     border-width: 1px;
-                    border-color: #1e293b;
-                    border-radius: 8px;
+                    border-color: rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
 
                     HorizontalLayout {
-                        padding-left: 16px;
-                        padding-right: 16px;
+                        padding-left: 18px;
+                        padding-right: 18px;
                         alignment: space-between;
 
                         HorizontalLayout {
-                            spacing: 12px;
+                            spacing: 14px;
                             alignment: start;
 
                             Rectangle {
@@ -961,7 +1239,7 @@ export component FriendsScreenView inherits Rectangle {
 
                             VerticalLayout {
                                 alignment: center;
-                                spacing: 2px;
+                                spacing: 3px;
                                 Text {
                                     text: fr.name;
                                     color: #ffffff;
@@ -970,7 +1248,7 @@ export component FriendsScreenView inherits Rectangle {
                                 }
                                 Text {
                                     text: fr.status-text;
-                                    color: fr.online ? #10b981 : #64748b;
+                                    color: fr.online ? #10b981 : #8b919c;
                                     font-size: 12px;
                                 }
                             }
@@ -982,42 +1260,52 @@ export component FriendsScreenView inherits Rectangle {
     }
 }
 
+// Layer 4 Screen 7: Console Screen (stdout / stderr stream)
 export component ConsoleScreenView inherits Rectangle {
     in-out property <string> log-content: "";
     callback clear-logs();
 
-    background: #0e121a;
+    in-out property <float> screen-opacity: 1.0;
+    in-out property <length> screen-offset-y: 0px;
+    animate screen-opacity { duration: 200ms; easing: ease-out; }
+    animate screen-offset-y { duration: 200ms; easing: cubic-bezier(0.16, 1, 0.3, 1); }
+
+    background: #0d1117;
     border-width: 1px;
-    border-color: #262e40;
+    border-color: rgba(255, 255, 255, 0.08);
     border-radius: 14px;
+    opacity: root.screen-opacity;
+    y: root.screen-offset-y;
 
     VerticalLayout {
-        padding: 18px;
-        spacing: 12px;
+        padding: 20px;
+        spacing: 14px;
 
         HorizontalLayout {
             alignment: space-between;
 
             VerticalLayout {
-                spacing: 2px;
+                spacing: 3px;
                 Text {
                     text: "Консоль логов игры";
                     color: #ffffff;
-                    font-size: 18px;
+                    font-size: 19px;
                     font-weight: 800;
                 }
                 Text {
-                    text: "Прямой перехват stdout и stderr запущенного процесса";
+                    text: "Прямой нативный перехват stdout и stderr запущенного процесса Minecraft";
                     color: #10b981;
                     font-size: 13px;
                 }
             }
 
             Rectangle {
-                width: 90px;
-                height: 34px;
-                background: #1e293b;
-                border-radius: 6px;
+                width: 100px;
+                height: 36px;
+                background: #1a1d24;
+                border-width: 1px;
+                border-color: rgba(255, 255, 255, 0.08);
+                border-radius: 9px;
 
                 TouchArea {
                     clicked => { root.clear-logs(); }
@@ -1025,7 +1313,7 @@ export component ConsoleScreenView inherits Rectangle {
 
                 Text {
                     text: "Очистить";
-                    color: #94a3b8;
+                    color: #8b919c;
                     font-size: 12px;
                     font-weight: 600;
                     horizontal-alignment: center;
@@ -1035,19 +1323,19 @@ export component ConsoleScreenView inherits Rectangle {
         }
 
         Rectangle {
-            background: #05060a;
+            background: #06080d;
             border-width: 1px;
-            border-color: #1e293b;
-            border-radius: 8px;
+            border-color: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
 
             ScrollView {
                 VerticalLayout {
-                    padding: 12px;
+                    padding: 14px;
                     Text {
                         text: root.log-content;
                         color: #10b981;
                         font-size: 12px;
-                        font-family: "JetBrains Mono, monospace";
+                        font-family: "monospace";
                     }
                 }
             }
@@ -1055,6 +1343,7 @@ export component ConsoleScreenView inherits Rectangle {
     }
 }
 
+// Layer 4 Screen 8: Settings Screen (RAM, GC, JRE)
 export component SettingsScreenView inherits Rectangle {
     in-out property <int> ram-mb: 4096;
     in-out property <string> java-path: "/usr/bin/java (Java 21)";
@@ -1063,27 +1352,34 @@ export component SettingsScreenView inherits Rectangle {
     callback change-ram(int);
     callback change-gc(string);
 
-    background: #0e121a;
+    in-out property <float> screen-opacity: 1.0;
+    in-out property <length> screen-offset-y: 0px;
+    animate screen-opacity { duration: 200ms; easing: ease-out; }
+    animate screen-offset-y { duration: 200ms; easing: cubic-bezier(0.16, 1, 0.3, 1); }
+
+    background: #0d1117;
     border-width: 1px;
-    border-color: #262e40;
+    border-color: rgba(255, 255, 255, 0.08);
     border-radius: 14px;
+    opacity: root.screen-opacity;
+    y: root.screen-offset-y;
 
     VerticalLayout {
         padding: 24px;
-        spacing: 18px;
+        spacing: 20px;
         alignment: start;
 
         VerticalLayout {
-            spacing: 2px;
+            spacing: 3px;
             Text {
                 text: "Настройки лаунчера и JVM";
                 color: #ffffff;
-                font-size: 18px;
+                font-size: 19px;
                 font-weight: 800;
             }
             Text {
                 text: "Параметры выделения памяти, сборщика мусора и Java рантайма";
-                color: #94a3b8;
+                color: #8b919c;
                 font-size: 13px;
             }
         }
@@ -1096,7 +1392,7 @@ export component SettingsScreenView inherits Rectangle {
                 spacing: 14px;
                 Text {
                     text: "Выделение оперативной памяти:";
-                    color: #94a3b8;
+                    color: #8b919c;
                     font-size: 14px;
                     vertical-alignment: center;
                 }
@@ -1114,47 +1410,57 @@ export component SettingsScreenView inherits Rectangle {
 
                 Rectangle {
                     width: 90px;
-                    height: 38px;
-                    background: root.ram-mb == 2048 ? #10b981 : #111622;
-                    border-radius: 6px;
+                    height: 40px;
+                    background: root.ram-mb == 2048 ? #10b981 : #1a1d24;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.ram-mb == 2048 ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
                     TouchArea { clicked => { root.change-ram(2048); } }
-                    Text { text: "2 ГБ"; color: root.ram-mb == 2048 ? #000000 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                    Text { text: "2 ГБ"; color: root.ram-mb == 2048 ? #0d1117 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
 
                 Rectangle {
                     width: 90px;
-                    height: 38px;
-                    background: root.ram-mb == 4096 ? #10b981 : #111622;
-                    border-radius: 6px;
+                    height: 40px;
+                    background: root.ram-mb == 4096 ? #10b981 : #1a1d24;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.ram-mb == 4096 ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
                     TouchArea { clicked => { root.change-ram(4096); } }
-                    Text { text: "4 ГБ"; color: root.ram-mb == 4096 ? #000000 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                    Text { text: "4 ГБ"; color: root.ram-mb == 4096 ? #0d1117 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
 
                 Rectangle {
                     width: 90px;
-                    height: 38px;
-                    background: root.ram-mb == 6144 ? #10b981 : #111622;
-                    border-radius: 6px;
+                    height: 40px;
+                    background: root.ram-mb == 6144 ? #10b981 : #1a1d24;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.ram-mb == 6144 ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
                     TouchArea { clicked => { root.change-ram(6144); } }
-                    Text { text: "6 ГБ"; color: root.ram-mb == 6144 ? #000000 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                    Text { text: "6 ГБ"; color: root.ram-mb == 6144 ? #0d1117 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
 
                 Rectangle {
                     width: 90px;
-                    height: 38px;
-                    background: root.ram-mb == 8192 ? #10b981 : #111622;
-                    border-radius: 6px;
+                    height: 40px;
+                    background: root.ram-mb == 8192 ? #10b981 : #1a1d24;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.ram-mb == 8192 ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
                     TouchArea { clicked => { root.change-ram(8192); } }
-                    Text { text: "8 ГБ"; color: root.ram-mb == 8192 ? #000000 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                    Text { text: "8 ГБ"; color: root.ram-mb == 8192 ? #0d1117 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
 
                 Rectangle {
                     width: 90px;
-                    height: 38px;
-                    background: root.ram-mb == 12288 ? #10b981 : #111622;
-                    border-radius: 6px;
+                    height: 40px;
+                    background: root.ram-mb == 12288 ? #10b981 : #1a1d24;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.ram-mb == 12288 ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
                     TouchArea { clicked => { root.change-ram(12288); } }
-                    Text { text: "12 ГБ"; color: root.ram-mb == 12288 ? #000000 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                    Text { text: "12 ГБ"; color: root.ram-mb == 12288 ? #0d1117 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
             }
         }
@@ -1164,17 +1470,17 @@ export component SettingsScreenView inherits Rectangle {
             spacing: 8px;
             Text {
                 text: "Java Runtime Path:";
-                color: #94a3b8;
+                color: #8b919c;
                 font-size: 13px;
             }
             Rectangle {
                 height: 42px;
-                background: #111622;
+                background: #1a1d24;
                 border-width: 1px;
-                border-color: #1e293b;
-                border-radius: 6px;
+                border-color: rgba(255, 255, 255, 0.08);
+                border-radius: 10px;
                 HorizontalLayout {
-                    padding-left: 14px;
+                    padding-left: 16px;
                     Text {
                         text: root.java-path;
                         color: #ffffff;
@@ -1185,37 +1491,43 @@ export component SettingsScreenView inherits Rectangle {
             }
         }
 
-        // Garbage Collector
+        // Garbage Collector Presets
         VerticalLayout {
             spacing: 8px;
             Text {
                 text: "Сборщик мусора JVM (GC):";
-                color: #94a3b8;
+                color: #8b919c;
                 font-size: 13px;
             }
             HorizontalLayout {
                 spacing: 10px;
                 Rectangle {
                     width: 100px;
-                    height: 36px;
-                    background: root.gc-type == "G1GC" ? #1d5dc7 : #111622;
-                    border-radius: 6px;
+                    height: 38px;
+                    background: root.gc-type == "G1GC" ? #1d5dc7 : #1a1d24;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.gc-type == "G1GC" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
                     TouchArea { clicked => { root.change-gc("G1GC"); } }
                     Text { text: "G1GC"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
                 Rectangle {
                     width: 100px;
-                    height: 36px;
-                    background: root.gc-type == "ZGC" ? #1d5dc7 : #111622;
-                    border-radius: 6px;
+                    height: 38px;
+                    background: root.gc-type == "ZGC" ? #1d5dc7 : #1a1d24;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.gc-type == "ZGC" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
                     TouchArea { clicked => { root.change-gc("ZGC"); } }
                     Text { text: "ZGC"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
                 Rectangle {
                     width: 120px;
-                    height: 36px;
-                    background: root.gc-type == "Shenandoah" ? #1d5dc7 : #111622;
-                    border-radius: 6px;
+                    height: 38px;
+                    background: root.gc-type == "Shenandoah" ? #1d5dc7 : #1a1d24;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.gc-type == "Shenandoah" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
                     TouchArea { clicked => { root.change-gc("Shenandoah"); } }
                     Text { text: "Shenandoah"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }

@@ -4690,6 +4690,7 @@ dependencies = [
 name = "omega-slint"
 version = "0.1.0"
 dependencies = [
+ "image",
  "omega-core",
  "serde",
  "serde_json",

@@ -1,6 +1,10 @@
+// Omega Launcher - Native Bottom Play Dock (Layer 3)
+// Geometry: border-radius: 14px, max-width: 580px, height: 64px
+// Play button: height: 48px, border-radius: 11px, #e6e8ec (play) / #b3423f (stop)
+
 export component PlayDock inherits Rectangle {
-    in-out property <string> instance-name: "Minecraft Rust (Beta)";
-    in-out property <string> version-tag: "1.20.1";
+    in-out property <string> instance-name: "test1";
+    in-out property <string> version-tag: "1.21.4";
     in-out property <string> loader-tag: "Fabric";
     in-out property <string> playtime-text: "0 мин";
     in-out property <bool> is-running: false;
@@ -19,9 +23,9 @@ export component PlayDock inherits Rectangle {
         dock_container := Rectangle {
             height: 64px;
             width: 580px;
-            background: #0e121a;
+            background: #0d1117;
             border-width: 1px;
-            border-color: #262e40;
+            border-color: rgba(255, 255, 255, 0.08);
             border-radius: 14px;
 
             HorizontalLayout {
@@ -34,15 +38,20 @@ export component PlayDock inherits Rectangle {
                     height: 50px;
                     width: 360px;
                     y: (parent.height - self.height) / 2;
-                    background: inst_touch.has-hover ? #161c28 : transparent;
+                    background: inst_touch.pressed ? #22262e : (inst_touch.has-hover ? #1a1d24 : transparent);
                     border-radius: 10px;
+                    border-width: 1px;
+                    border-color: inst_touch.has-hover ? rgba(255, 255, 255, 0.12) : transparent;
+
+                    animate background { duration: 150ms; }
+                    animate border-color { duration: 150ms; }
 
                     inst_touch := TouchArea {
                         clicked => { root.version-clicked(); }
                     }
 
                     HorizontalLayout {
-                        padding-left: 6px;
+                        padding-left: 8px;
                         spacing: 12px;
                         alignment: start;
 
@@ -51,9 +60,9 @@ export component PlayDock inherits Rectangle {
                             width: 44px;
                             height: 44px;
                             y: (parent.height - self.height) / 2;
-                            background: #111622;
+                            background: #1a1d24;
                             border-width: 1px;
-                            border-color: #262e40;
+                            border-color: rgba(255, 255, 255, 0.08);
                             border-radius: 8px;
 
                             Image {
@@ -72,7 +81,7 @@ export component PlayDock inherits Rectangle {
 
                             Text {
                                 text: root.instance-name;
-                                color: #f8fafc;
+                                color: #ffffff;
                                 font-size: 15px;
                                 font-weight: 700;
                             }
@@ -85,7 +94,7 @@ export component PlayDock inherits Rectangle {
                                 Rectangle {
                                     height: 18px;
                                     background: #1d5dc7;
-                                    border-radius: 4px;
+                                    border-radius: 6px;
                                     HorizontalLayout {
                                         padding-left: 6px;
                                         padding-right: 6px;
@@ -102,14 +111,14 @@ export component PlayDock inherits Rectangle {
                                 // Version Chip
                                 Rectangle {
                                     height: 18px;
-                                    background: #1e293b;
-                                    border-radius: 4px;
+                                    background: #1a1d24;
+                                    border-radius: 6px;
                                     HorizontalLayout {
                                         padding-left: 6px;
                                         padding-right: 6px;
                                         Text {
                                             text: root.version-tag;
-                                            color: #94a3b8;
+                                            color: #e6e8ec;
                                             font-size: 11px;
                                             font-weight: 600;
                                             vertical-alignment: center;
@@ -120,7 +129,7 @@ export component PlayDock inherits Rectangle {
                                 // Playtime
                                 Text {
                                     text: "• " + root.playtime-text;
-                                    color: #64748b;
+                                    color: #8b919c;
                                     font-size: 11px;
                                     vertical-alignment: center;
                                 }
@@ -136,8 +145,10 @@ export component PlayDock inherits Rectangle {
                     y: (parent.height - self.height) / 2;
                     background: root.is-running
                         ? (play_touch.pressed ? #9c3735 : (play_touch.has-hover ? #c44e4b : #b3423f))
-                        : (play_touch.pressed ? #8c5ff8 : (play_touch.has-hover ? #b494ff : #9f75ff));
-                    border-radius: 10px;
+                        : (play_touch.pressed ? #d5d8de : (play_touch.has-hover ? #f0f2f5 : #e6e8ec));
+                    border-radius: 11px;
+
+                    animate background { duration: 150ms; }
 
                     play_touch := TouchArea {
                         clicked => { root.play-clicked(); }
@@ -150,15 +161,15 @@ export component PlayDock inherits Rectangle {
                         // Play/Stop Icon
                         Text {
                             text: root.is-running ? "■" : "▶";
-                            color: root.is-running ? #ffffff : #000000;
-                            font-size: 16px;
+                            color: root.is-running ? #ffffff : #0d1117;
+                            font-size: 15px;
                             font-weight: 900;
                             vertical-alignment: center;
                         }
 
                         Text {
                             text: root.is-running ? "СТОП" : "ИГРАТЬ";
-                            color: root.is-running ? #ffffff : #000000;
+                            color: root.is-running ? #ffffff : #0d1117;
                             font-size: 15px;
                             font-weight: 800;
                             letter-spacing: 0.5px;

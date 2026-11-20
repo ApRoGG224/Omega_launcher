@@ -1,132 +1,99 @@
-export component NotchedCard inherits Rectangle {
-    in property <color> card-background: #090c14;
-    in property <color> card-border-color: #1e293b;
-    in property <length> card-border-width: 2px;
-    
-    // Outer border shape (3 stepped rectangles)
-    Rectangle {
-        x: 6px;
-        y: 0px;
-        width: parent.width - 12px;
-        height: parent.height;
-        background: root.card-border-color;
-    }
-    Rectangle {
-        x: 3px;
-        y: 3px;
-        width: parent.width - 6px;
-        height: parent.height - 6px;
-        background: root.card-border-color;
-    }
-    Rectangle {
-        x: 0px;
-        y: 6px;
-        width: parent.width;
-        height: parent.height - 12px;
-        background: root.card-border-color;
-    }
+// Omega Launcher - Native Dark Obsidian Design System Components
+// Strict compliance with PROMPT_NATIVE_MIGRATION.md:
+// - Cards & Panels: border-radius: 14px, border: 1px solid rgba(255, 255, 255, 0.08)
+// - Screen Buttons: height: 40px, border-radius: 11px, padding: 0 16px
+// - Top Navigation Dock: border-radius: 16px
+// - Badges & Chips: border-radius: 8px - 10px
+// - Row Items: background: #1a1d24 (Hover: #22262e)
 
-    // Inner background fill
-    Rectangle {
-        x: 6px;
-        y: root.card-border-width;
-        width: parent.width - 12px;
-        height: parent.height - 2 * root.card-border-width;
-        background: root.card-background;
-    }
-    Rectangle {
-        x: 3px;
-        y: 3px;
-        width: parent.width - 6px;
-        height: parent.height - 6px;
-        background: root.card-background;
-    }
-    Rectangle {
-        x: root.card-border-width;
-        y: 6px;
-        width: parent.width - 2 * root.card-border-width;
-        height: parent.height - 12px;
-        background: root.card-background;
-    }
+export component ObsidianCard inherits Rectangle {
+    in property <color> card-bg: #0d1117;
+    in property <color> card-border: rgba(255, 255, 255, 0.08);
+
+    background: root.card-bg;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: root.card-border;
 
     @children
 }
 
-export component NotchedButton inherits Rectangle {
+export component ObsidianButton inherits Rectangle {
     in property <string> text: "КНОПКА";
-    in property <color> btn-bg: #9f75ff;
-    in property <color> btn-hover-bg: #b494ff;
-    in property <color> btn-active-bg: #8c5ff8;
-    in property <color> btn-text-color: #000000;
-    in property <color> btn-border-color: #12131c;
-    in property <length> font-size: 14px;
-    in property <bool> is-running: false;
-    
+    in property <color> btn-bg: #1d5dc7;
+    in property <color> btn-hover-bg: #2563eb;
+    in property <color> btn-active-bg: #1e40af;
+    in property <color> btn-text-color: #ffffff;
+    in property <length> font-size: 13px;
+    in property <bool> is-active: false;
+
     callback clicked();
+
+    height: 40px;
+    border-radius: 11px;
+    background: touch.pressed ? root.btn-active-bg : (touch.has-hover ? root.btn-hover-bg : root.btn-bg);
+    border-width: 1px;
+    border-color: root.is-active ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+
+    animate background { duration: 150ms; easing: ease-out; }
 
     touch := TouchArea {
         clicked => { root.clicked(); }
     }
 
-    property <color> current-bg: touch.pressed ? root.btn-active-bg : (touch.has-hover ? root.btn-hover-bg : root.btn-bg);
-
-    // Border
-    Rectangle {
-        x: 4px;
-        y: 0px;
-        width: parent.width - 8px;
-        height: parent.height;
-        background: root.btn-border-color;
-    }
-    Rectangle {
-        x: 2px;
-        y: 2px;
-        width: parent.width - 4px;
-        height: parent.height - 4px;
-        background: root.btn-border-color;
-    }
-    Rectangle {
-        x: 0px;
-        y: 4px;
-        width: parent.width;
-        height: parent.height - 8px;
-        background: root.btn-border-color;
-    }
-
-    // Fill
-    Rectangle {
-        x: 4px;
-        y: 2px;
-        width: parent.width - 8px;
-        height: parent.height - 4px;
-        background: root.current-bg;
-    }
-    Rectangle {
-        x: 2px;
-        y: 2px;
-        width: parent.width - 4px;
-        height: parent.height - 4px;
-        background: root.current-bg;
-    }
-    Rectangle {
-        x: 2px;
-        y: 4px;
-        width: parent.width - 4px;
-        height: parent.height - 8px;
-        background: root.current-bg;
-    }
-
     HorizontalLayout {
+        padding-left: 16px;
+        padding-right: 16px;
         alignment: center;
-        spacing: 8px;
-        
+
         Text {
             text: root.text;
             color: root.btn-text-color;
             font-size: root.font-size;
-            font-weight: 800;
-            vertical-alignment: center;
+            font-weight: 700;
             horizontal-alignment: center;
+            vertical-alignment: center;
         }
     }
+}
+
+export component ObsidianChip inherits Rectangle {
+    in property <string> text: "CHIP";
+    in property <color> chip-bg: #1a1d24;
+    in property <color> text-color: #ffffff;
+    in property <length> chip-height: 22px;
+
+    height: root.chip-height;
+    border-radius: 8px;
+    background: root.chip-bg;
+
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        alignment: center;
+
+        Text {
+            text: root.text;
+            color: root.text-color;
+            font-size: 11px;
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+    }
+}
+
+export component ObsidianRow inherits Rectangle {
+    in property <bool> is-selected: false;
+
+    background: root.is-selected ? #22262e : (row_touch.has-hover ? #22262e : #1a1d24);
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: root.is-selected ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+
+    animate background { duration: 150ms; }
+    animate border-color { duration: 150ms; }
+
+    row_touch := TouchArea {}
+
+    @children
 }

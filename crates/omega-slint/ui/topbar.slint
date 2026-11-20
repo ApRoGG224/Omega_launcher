@@ -1,3 +1,8 @@
+// Omega Launcher - Native HUD Top Bar (Layer 2)
+// Strict compliance with PROMPT_NATIVE_MIGRATION.md:
+// - Top Navigation Dock: border-radius: 16px, background: #0d1117, border: 1px solid rgba(255, 255, 255, 0.08)
+// - Buttons: border-radius: 11px, background: #1a1d24 (Hover: #22262e, Active: #1d5dc7)
+
 export component TopBar inherits Rectangle {
     in-out property <string> username: "Гость";
     in-out property <string> active-tab: "home";
@@ -7,7 +12,7 @@ export component TopBar inherits Rectangle {
     callback tab-selected(string);
     callback toggle-profile-dropdown();
     callback login-microsoft();
-    callback create-offline-account();
+    callback login-ely();
     callback toggle-sound();
 
     height: 52px;
@@ -19,10 +24,10 @@ export component TopBar inherits Rectangle {
         // The Floating Top Dock
         Rectangle {
             height: 48px;
-            background: #0e121a;
+            background: #0d1117;
             border-width: 1px;
-            border-color: #262e40;
-            border-radius: 14px;
+            border-color: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
 
             HorizontalLayout {
                 padding-left: 8px;
@@ -34,12 +39,15 @@ export component TopBar inherits Rectangle {
                 profile_btn := Rectangle {
                     height: 36px;
                     width: 130px;
-                    background: root.is-dropdown-open ? #1a2232 : #111622;
+                    background: root.is-dropdown-open ? #22262e : (prof_touch.has-hover ? #22262e : #1a1d24);
                     border-width: 1px;
-                    border-color: root.is-dropdown-open ? #38bdf8 : #1e293b;
-                    border-radius: 10px;
+                    border-color: root.is-dropdown-open ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
 
-                    TouchArea {
+                    animate background { duration: 150ms; }
+                    animate border-color { duration: 150ms; }
+
+                    prof_touch := TouchArea {
                         clicked => { root.toggle-profile-dropdown(); }
                     }
 
@@ -51,7 +59,7 @@ export component TopBar inherits Rectangle {
 
                         Text {
                             text: root.username;
-                            color: #f8fafc;
+                            color: #ffffff;
                             font-size: 13px;
                             font-weight: 700;
                             vertical-alignment: center;
@@ -63,8 +71,8 @@ export component TopBar inherits Rectangle {
                         Rectangle {
                             width: 26px;
                             height: 26px;
-                            border-radius: 4px;
-                            background: #1e293b;
+                            border-radius: 6px;
+                            background: #0d1117;
 
                             Image {
                                 source: @image-url("../assets/skins/steve.png");
@@ -81,19 +89,21 @@ export component TopBar inherits Rectangle {
                 Rectangle {
                     width: 1px;
                     height: 22px;
-                    background: #1e293b;
+                    background: rgba(255, 255, 255, 0.08);
                 }
 
                 // 2. Play / Home Button
                 Rectangle {
-                    width: 36px;
+                    width: 38px;
                     height: 36px;
-                    background: root.active-tab == "home" ? #1d5dc7 : #111622;
+                    background: root.active-tab == "home" ? #1d5dc7 : (home_touch.has-hover ? #22262e : #1a1d24);
                     border-width: 1px;
-                    border-color: root.active-tab == "home" ? #3b82f6 : #1e293b;
-                    border-radius: 9px;
+                    border-color: root.active-tab == "home" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
 
-                    TouchArea {
+                    animate background { duration: 150ms; }
+
+                    home_touch := TouchArea {
                         clicked => { root.tab-selected("home"); }
                     }
 
@@ -107,14 +117,16 @@ export component TopBar inherits Rectangle {
 
                 // 3. Modrinth Catalog (Puzzle)
                 Rectangle {
-                    width: 36px;
+                    width: 38px;
                     height: 36px;
-                    background: root.active-tab == "modrinth" ? #1d5dc7 : #111622;
+                    background: root.active-tab == "modrinth" ? #1d5dc7 : (mod_touch.has-hover ? #22262e : #1a1d24);
                     border-width: 1px;
-                    border-color: root.active-tab == "modrinth" ? #3b82f6 : #1e293b;
-                    border-radius: 9px;
+                    border-color: root.active-tab == "modrinth" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
 
-                    TouchArea {
+                    animate background { duration: 150ms; }
+
+                    mod_touch := TouchArea {
                         clicked => { root.tab-selected("modrinth"); }
                     }
 
@@ -128,14 +140,16 @@ export component TopBar inherits Rectangle {
 
                 // 4. Instances / Versions (Package)
                 Rectangle {
-                    width: 36px;
+                    width: 38px;
                     height: 36px;
-                    background: root.active-tab == "instances" ? #1d5dc7 : #111622;
+                    background: root.active-tab == "instances" ? #1d5dc7 : (inst_touch.has-hover ? #22262e : #1a1d24);
                     border-width: 1px;
-                    border-color: root.active-tab == "instances" ? #3b82f6 : #1e293b;
-                    border-radius: 9px;
+                    border-color: root.active-tab == "instances" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
 
-                    TouchArea {
+                    animate background { duration: 150ms; }
+
+                    inst_touch := TouchArea {
                         clicked => { root.tab-selected("instances"); }
                     }
 
@@ -149,14 +163,16 @@ export component TopBar inherits Rectangle {
 
                 // 5. Servers (Server)
                 Rectangle {
-                    width: 36px;
+                    width: 38px;
                     height: 36px;
-                    background: root.active-tab == "servers" ? #1d5dc7 : #111622;
+                    background: root.active-tab == "servers" ? #1d5dc7 : (srv_touch.has-hover ? #22262e : #1a1d24);
                     border-width: 1px;
-                    border-color: root.active-tab == "servers" ? #3b82f6 : #1e293b;
-                    border-radius: 9px;
+                    border-color: root.active-tab == "servers" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
 
-                    TouchArea {
+                    animate background { duration: 150ms; }
+
+                    srv_touch := TouchArea {
                         clicked => { root.tab-selected("servers"); }
                     }
 
@@ -170,14 +186,16 @@ export component TopBar inherits Rectangle {
 
                 // 6. Omega Store (Shopping Bag)
                 Rectangle {
-                    width: 36px;
+                    width: 38px;
                     height: 36px;
-                    background: root.active-tab == "store" ? #1d5dc7 : #111622;
+                    background: root.active-tab == "store" ? #1d5dc7 : (store_touch.has-hover ? #22262e : #1a1d24);
                     border-width: 1px;
-                    border-color: root.active-tab == "store" ? #3b82f6 : #1e293b;
-                    border-radius: 9px;
+                    border-color: root.active-tab == "store" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
 
-                    TouchArea {
+                    animate background { duration: 150ms; }
+
+                    store_touch := TouchArea {
                         clicked => { root.tab-selected("store"); }
                     }
 
@@ -191,14 +209,16 @@ export component TopBar inherits Rectangle {
 
                 // 7. Console (Terminal)
                 Rectangle {
-                    width: 36px;
+                    width: 38px;
                     height: 36px;
-                    background: root.active-tab == "console" ? #1d5dc7 : #111622;
+                    background: root.active-tab == "console" ? #1d5dc7 : (con_touch.has-hover ? #22262e : #1a1d24);
                     border-width: 1px;
-                    border-color: root.active-tab == "console" ? #3b82f6 : #1e293b;
-                    border-radius: 9px;
+                    border-color: root.active-tab == "console" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
 
-                    TouchArea {
+                    animate background { duration: 150ms; }
+
+                    con_touch := TouchArea {
                         clicked => { root.tab-selected("console"); }
                     }
 
@@ -212,14 +232,16 @@ export component TopBar inherits Rectangle {
 
                 // 8. Friends (Users)
                 Rectangle {
-                    width: 36px;
+                    width: 38px;
                     height: 36px;
-                    background: root.active-tab == "friends" ? #1d5dc7 : #111622;
+                    background: root.active-tab == "friends" ? #1d5dc7 : (fr_touch.has-hover ? #22262e : #1a1d24);
                     border-width: 1px;
-                    border-color: root.active-tab == "friends" ? #3b82f6 : #1e293b;
-                    border-radius: 9px;
+                    border-color: root.active-tab == "friends" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
 
-                    TouchArea {
+                    animate background { duration: 150ms; }
+
+                    fr_touch := TouchArea {
                         clicked => { root.tab-selected("friends"); }
                     }
 
@@ -243,14 +265,16 @@ export component TopBar inherits Rectangle {
 
                 // 9. Sound Mute
                 Rectangle {
-                    width: 36px;
+                    width: 38px;
                     height: 36px;
-                    background: #111622;
+                    background: mute_touch.has-hover ? #22262e : #1a1d24;
                     border-width: 1px;
-                    border-color: #1e293b;
-                    border-radius: 9px;
+                    border-color: rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
 
-                    TouchArea {
+                    animate background { duration: 150ms; }
+
+                    mute_touch := TouchArea {
                         clicked => { root.toggle-sound(); }
                     }
 
@@ -265,14 +289,16 @@ export component TopBar inherits Rectangle {
 
                 // 10. Settings (Gear)
                 Rectangle {
-                    width: 36px;
+                    width: 38px;
                     height: 36px;
-                    background: root.active-tab == "settings" ? #1d5dc7 : #111622;
+                    background: root.active-tab == "settings" ? #1d5dc7 : (set_touch.has-hover ? #22262e : #1a1d24);
                     border-width: 1px;
-                    border-color: root.active-tab == "settings" ? #3b82f6 : #1e293b;
-                    border-radius: 9px;
+                    border-color: root.active-tab == "settings" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
 
-                    TouchArea {
+                    animate background { duration: 150ms; }
+
+                    set_touch := TouchArea {
                         clicked => { root.tab-selected("settings"); }
                     }
 

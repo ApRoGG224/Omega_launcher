@@ -1,3 +1,10 @@
+// Omega Launcher - Native Master Window (5 Layers Architecture)
+// Layer 0: Atmosphere Layer (Landscape + Obsidian Deep Gradient)
+// Layer 1: Stage 3D Character Layer (Dynamic 3D Minecraft Character)
+// Layer 2: HUD Layer (TopBar)
+// Layer 3: Dock Layer (PlayDock)
+// Layer 4: Screens Layer (Store, Instances, Modrinth, Accounts, Servers, Friends, Console, Settings)
+
 import { TopBar } from "topbar.slint";
 import { PlayDock } from "dock.slint";
 import {
@@ -6,6 +13,7 @@ import {
     CapeItem,
     ServerItem,
     FriendItem,
+    AccountItem,
     HomeScreenView,
     InstancesScreenView,
     ModrinthScreenView,
@@ -18,14 +26,16 @@ import {
 } from "screens.slint";
 
 export component MainWindow inherits Window {
-    title: "Omega Launcher";
+    title: "Omega Launcher (Native Rust + Slint)";
     min-width: 1040px;
     min-height: 680px;
-    preferred-width: 1120px;
-    preferred-height: 720px;
-    background: #07080e;
+    preferred-width: 1140px;
+    preferred-height: 730px;
+    background: #06080d;
 
+    in-out property <image> character-preview;
     in-out property <string> player-name: "Гость";
+    in-out property <string> account-type: "offline";
     in-out property <string> active-screen: "home";
     in-out property <string> active-instance-id: "inst_1";
     in-out property <string> active-instance-name: "test1";
@@ -40,59 +50,58 @@ export component MainWindow inherits Window {
     in-out property <string> gc-type: "G1GC";
     in-out property <string> java-path: "/usr/bin/java (Java 21)";
 
-    in-out property <[InstanceItem]> instances: [
-        { id: "inst_1", name: "test1", mc-version: "1.21.4", loader: "Fabric", play-time: "0 мин", icon-name: "diamond_sword" },
-        { id: "inst_2", name: "Survival 1.20", mc-version: "1.20.1", loader: "Forge", play-time: "140 мин", icon-name: "diamond_pickaxe" },
-        { id: "inst_3", name: "Omega PvP Pack", mc-version: "1.21.4", loader: "NeoForge", play-time: "35 мин", icon-name: "netherite_sword" },
-        { id: "inst_rust", name: "Minecraft Rust (Beta)", mc-version: "26.3", loader: "Rust", play-time: "0 мин", icon-name: "obsidian" }
-    ];
-
-    in-out property <[ModItem]> catalog-mods: [
-        { id: "sodium", title: "Sodium", author: "jellysquid3", description: "Современный движок рендеринга, кардинально повышающий FPS.", downloads: "28.4M", loader: "Fabric" },
-        { id: "iris", title: "Iris Shaders", author: "coderbot", description: "Шейдеры нового поколения с полной поддержкой Sodium.", downloads: "19.2M", loader: "Fabric" },
-        { id: "lithium", title: "Lithium", author: "jellysquid3", description: "Оптимизация серверного тикрейта, физики мобов и генерации чанков.", downloads: "16.8M", loader: "Fabric" },
-        { id: "fabric-api", title: "Fabric API", author: "modmuss50", description: "Базовая библиотека хуков и совместимости для модов Fabric.", downloads: "45.1M", loader: "Fabric" },
-        { id: "jei", title: "Just Enough Items (JEI)", author: "mezz", description: "Просмотр рецептов крафта, плавки и предметов Minecraft.", downloads: "250.2M", loader: "Forge" }
-    ];
-
+    in-out property <[InstanceItem]> instances: [];
+    in-out property <[ModItem]> catalog-mods: [];
     in-out property <[CapeItem]> capes: [
         { id: "migrator", name: "Migrator Cape", desc: "Официальный плащ за миграцию с Mojang на Microsoft", equipped: true },
         { id: "anniversary", name: "15th Anniversary", desc: "Юбилейный плащ в честь 15-летия Minecraft", equipped: false },
         { id: "vanilla", name: "Vanilla Cape", desc: "Эксклюзивный плащ для владельцев Java и Bedrock", equipped: false },
         { id: "cherry", name: "Cherry Blossom", desc: "Праздничный плащ цветущей вишни", equipped: false }
     ];
-
-    in-out property <[ServerItem]> servers: [
-        { name: "Omega Network Lobby", host: "play.omegamc.net:25565", ping: "18 ms", players: "142/500" },
-        { name: "Hypixel Network", host: "mc.hypixel.net", ping: "42 ms", players: "45120/100000" },
-        { name: "Local Survival Server", host: "127.0.0.1:25565", ping: "1 ms", players: "2/20" }
-    ];
-
+    in-out property <[ServerItem]> servers: [];
     in-out property <[FriendItem]> friends: [
         { name: "Alex_Gamer", online: true, status-text: "Играет на Omega Network" },
         { name: "Notch", online: false, status-text: "Был 2 часа назад" },
-        { name: "Techno", online: false, status-text: "Не в сети" }
+        { name: "Technoblade", online: false, status-text: "Легенда серверов" }
     ];
+    in-out property <[AccountItem]> accounts: [];
 
     callback play-clicked();
-    callback select-instance(string, string);
+    callback select-instance(string, string, string, string, string);
+    callback create-instance();
+    callback delete-instance(string);
     callback change-ram(int);
     callback change-gc(string);
     callback install-mod(string);
+    callback search-query(string);
+    callback switch-category(string);
     callback equip-cape(string);
+    callback switch-skin(string);
     callback login-microsoft();
     callback login-ely();
-    callback create-offline-account();
+    callback add-offline(string);
+    callback delete-account(string);
+    callback switch-account(string);
     callback clear-logs();
     callback direct-connect(string);
+    callback add-server(string, string);
+    callback delete-server(string);
 
-    // Atmosphere Background (Landscape + Obsidian Gradient)
+    // Layer 0: Atmosphere Background
     Image {
         width: 100%;
         height: 100%;
         source: @image-url("../assets/backgrounds/landscape_shader_mountains.png");
         image-fit: cover;
-        opacity: 0.22;
+        opacity: 0.18;
+    }
+
+    // Vignette Matte Overlay
+    Rectangle {
+        width: 100%;
+        height: 100%;
+        background: #06080d;
+        opacity: 0.40;
     }
 
     // Main Viewport Layout
@@ -103,7 +112,7 @@ export component MainWindow inherits Window {
         padding-bottom: 16px;
         spacing: 12px;
 
-        // Top Navigation Bar (Layer 2)
+        // Top Navigation Bar (Layer 2: HUD)
         TopBar {
             username: root.player-name;
             active-tab: root.active-screen;
@@ -114,18 +123,25 @@ export component MainWindow inherits Window {
                 root.active-screen = tab;
             }
             toggle-profile-dropdown() => {
-                root.is-profile-open = !root.is-profile-open;
+                root.active-screen = "accounts";
             }
             toggle-sound() => {
                 root.is-sound-muted = !root.is-sound-muted;
             }
+            login-microsoft => {
+                root.login-microsoft();
+            }
+            login-ely => {
+                root.login-ely();
+            }
         }
 
-        // Center Screen Layer (Layer 4)
+        // Center Content (Layer 4: Screens)
         Rectangle {
             vertical-stretch: 1;
 
             if root.active-screen == "home": HomeScreenView {
+                character-preview: root.character-preview;
                 open-store => { root.active-screen = "store"; }
                 open-friends => { root.active-screen = "servers"; }
             }
@@ -133,30 +149,46 @@ export component MainWindow inherits Window {
             if root.active-screen == "instances": InstancesScreenView {
                 instances: root.instances;
                 active-instance-id: root.active-instance-id;
-                select-instance(name, ver) => {
-                    root.select-instance(name, ver);
+                select-instance(id, name, ver, loader, pt) => {
+                    root.select-instance(id, name, ver, loader, pt);
+                }
+                create-instance => {
+                    root.create-instance();
+                }
+                delete-instance(id) => {
+                    root.delete-instance(id);
                 }
             }
 
             if root.active-screen == "modrinth": ModrinthScreenView {
                 mods: root.catalog-mods;
                 install-mod(id) => { root.install-mod(id); }
+                search-query(q) => { root.search-query(q); }
+                switch-category(cat) => { root.switch-category(cat); }
             }
 
             if root.active-screen == "store": StoreScreenView {
                 capes: root.capes;
                 equip-cape(id) => { root.equip-cape(id); }
+                switch-skin(skin) => { root.switch-skin(skin); }
             }
 
             if root.active-screen == "accounts": AccountsScreenView {
                 active-account-name: root.player-name;
+                account-type: root.account-type;
+                accounts: root.accounts;
                 login-microsoft => { root.login-microsoft(); }
                 login-ely => { root.login-ely(); }
+                add-offline(name) => { root.add-offline(name); }
+                delete-account(name) => { root.delete-account(name); }
+                switch-account(name) => { root.switch-account(name); }
             }
 
             if root.active-screen == "servers": ServersScreenView {
                 servers: root.servers;
                 direct-connect(host) => { root.direct-connect(host); }
+                add-server(name, host) => { root.add-server(name, host); }
+                delete-server(host) => { root.delete-server(host); }
             }
 
             if root.active-screen == "friends": FriendsScreenView {
@@ -177,7 +209,7 @@ export component MainWindow inherits Window {
             }
         }
 
-        // Bottom Launch Dock (Layer 3)
+        // Bottom Launch Dock (Layer 3: Dock)
         PlayDock {
             instance-name: root.active-instance-name;
             version-tag: root.active-version;
