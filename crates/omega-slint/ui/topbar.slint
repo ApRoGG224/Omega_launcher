@@ -67,8 +67,8 @@ export component GitHubButton inherits Rectangle {
         width: 22px;
         height: 22px;
         image-fit: contain;
-        opacity: gh_touch.has-hover ? 1.0 : 0.80;
-        animate opacity { duration: 150ms; }
+        colorize: gh_touch.has-hover ? #ffffff : #94a3b8;
+        animate colorize { duration: 150ms; }
     }
 
     HudTooltip {
@@ -105,8 +105,8 @@ export component SoundButton inherits Rectangle {
         width: 18px;
         height: 18px;
         image-fit: contain;
-        opacity: root.is-muted ? 0.35 : (mute_touch.has-hover ? 1.0 : 0.80);
-        animate opacity { duration: 150ms; }
+        colorize: root.is-muted ? #ef4444 : (mute_touch.has-hover ? #ffffff : #94a3b8);
+        animate colorize { duration: 150ms; }
     }
 
     HudTooltip {
@@ -165,13 +165,14 @@ export component TopBar inherits Rectangle {
                 spacing: 8px;
                 alignment: center;
 
-                // Down Chevron ⌄
-                Text {
-                    text: "⌄";
-                    color: prof_touch.has-hover ? #ffffff : #94a3b8;
-                    font-size: 13px;
-                    font-weight: 700;
-                    vertical-alignment: center;
+                // Down Chevron
+                Image {
+                    source: @image-url("../assets/svg/chevron_down.svg");
+                    width: 14px;
+                    height: 14px;
+                    image-fit: contain;
+                    colorize: prof_touch.has-hover ? #ffffff : #94a3b8;
+                    animate colorize { duration: 150ms; }
                 }
 
                 // Username
@@ -220,13 +221,13 @@ export component TopBar inherits Rectangle {
             y: (parent.height - self.height) / 2;
         }
 
-        // 2. Play / Home Button (Solid White Triangle ▶)
+        // 2. Play / Home Button
         Rectangle {
             width: 38px;
             height: 38px;
-            background: root.active-tab == "home" ? #1e2634 : (home_touch.has-hover ? #1a2232 : #111622);
+            background: root.active-tab == "home" ? #1e2634 : (home_touch.has-hover ? #273245 : #111622);
             border-width: 1px;
-            border-color: root.active-tab == "home" ? rgba(255, 255, 255, 0.26) : (home_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
+            border-color: root.active-tab == "home" ? rgba(255, 255, 255, 0.20) : (home_touch.has-hover ? rgba(255, 255, 255, 0.28) : rgba(255, 255, 255, 0.08));
             border-radius: 10px;
 
             animate background { duration: 150ms; }
@@ -236,13 +237,14 @@ export component TopBar inherits Rectangle {
                 clicked => { root.tab-selected("home"); }
             }
 
-            Text {
-                text: "▶";
-                color: #ffffff;
-                font-size: 14px;
-                font-weight: 700;
-                horizontal-alignment: center;
-                vertical-alignment: center;
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                source: @image-url("../assets/svg/play.svg");
+                width: 18px;
+                height: 18px;
+                image-fit: contain;
+                colorize: #ffffff;
             }
 
             HudTooltip {
@@ -276,8 +278,8 @@ export component TopBar inherits Rectangle {
                 width: 18px;
                 height: 18px;
                 image-fit: contain;
-                opacity: root.active-tab == "settings" ? 1.0 : (set_touch.has-hover ? 1.0 : 0.75);
-                animate opacity { duration: 150ms; }
+                colorize: root.active-tab == "settings" ? #ffffff : (set_touch.has-hover ? #ffffff : #94a3b8);
+                animate colorize { duration: 150ms; }
             }
 
             HudTooltip {
@@ -311,8 +313,8 @@ export component TopBar inherits Rectangle {
                 width: 18px;
                 height: 18px;
                 image-fit: contain;
-                opacity: root.active-tab == "modrinth" ? 1.0 : (mod_touch.has-hover ? 1.0 : 0.75);
-                animate opacity { duration: 150ms; }
+                colorize: root.active-tab == "modrinth" ? #ffffff : (mod_touch.has-hover ? #ffffff : #94a3b8);
+                animate colorize { duration: 150ms; }
             }
 
             HudTooltip {
@@ -346,8 +348,8 @@ export component TopBar inherits Rectangle {
                 width: 18px;
                 height: 18px;
                 image-fit: contain;
-                opacity: root.active-tab == "instances" ? 1.0 : (inst_touch.has-hover ? 1.0 : 0.75);
-                animate opacity { duration: 150ms; }
+                colorize: root.active-tab == "instances" ? #ffffff : (inst_touch.has-hover ? #ffffff : #94a3b8);
+                animate colorize { duration: 150ms; }
             }
 
             HudTooltip {
@@ -381,8 +383,8 @@ export component TopBar inherits Rectangle {
                 width: 18px;
                 height: 18px;
                 image-fit: contain;
-                opacity: root.active-tab == "servers" ? 1.0 : (srv_touch.has-hover ? 1.0 : 0.75);
-                animate opacity { duration: 150ms; }
+                colorize: root.active-tab == "servers" ? #ffffff : (srv_touch.has-hover ? #ffffff : #94a3b8);
+                animate colorize { duration: 150ms; }
             }
 
             HudTooltip {
@@ -416,8 +418,8 @@ export component TopBar inherits Rectangle {
                 width: 18px;
                 height: 18px;
                 image-fit: contain;
-                opacity: root.active-tab == "store" ? 1.0 : (store_touch.has-hover ? 1.0 : 0.75);
-                animate opacity { duration: 150ms; }
+                colorize: root.active-tab == "store" ? #ffffff : (store_touch.has-hover ? #ffffff : #94a3b8);
+                animate colorize { duration: 150ms; }
             }
 
             HudTooltip {
@@ -444,14 +446,15 @@ export component TopBar inherits Rectangle {
                 clicked => { root.tab-selected("console"); }
             }
 
-            Text {
-                text: ">_";
-                color: root.active-tab == "console" ? #ffffff : (con_touch.has-hover ? #ffffff : #94a3b8);
-                font-size: 13px;
-                font-weight: 700;
-                horizontal-alignment: center;
-                vertical-alignment: center;
-                animate color { duration: 150ms; }
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                source: @image-url("../assets/svg/terminal.svg");
+                width: 18px;
+                height: 18px;
+                image-fit: contain;
+                colorize: root.active-tab == "console" ? #ffffff : (con_touch.has-hover ? #ffffff : #94a3b8);
+                animate colorize { duration: 150ms; }
             }
 
             HudTooltip {
@@ -478,7 +481,7 @@ export component TopBar inherits Rectangle {
             y: (parent.height - self.height) / 2;
             background: root.active-shortcut == "obsidian" ? #2b1c40 : (sc1_touch.has-hover ? #251838 : #1b1228);
             border-width: root.active-shortcut == "obsidian" ? 1.5px : 1px;
-            border-color: root.active-shortcut == "obsidian" ? #c084fc : (sc1_touch.has-hover ? #c084fc : rgba(168, 85, 247, 0.50));
+            border-color: root.active-shortcut == "obsidian" ? #a855f7 : (sc1_touch.has-hover ? #c084fc : rgba(168, 85, 247, 0.40));
             border-radius: 8px;
 
             animate background { duration: 150ms; }
@@ -495,8 +498,8 @@ export component TopBar inherits Rectangle {
                 x: (parent.width - self.width) / 2;
                 y: (parent.height - self.height) / 2;
                 source: @image-url("../assets/icons/minecraft/obsidian.png");
-                width: 20px;
-                height: 20px;
+                width: 22px;
+                height: 22px;
                 image-fit: contain;
                 image-rendering: pixelated;
             }
@@ -514,9 +517,9 @@ export component TopBar inherits Rectangle {
             width: 34px;
             height: 34px;
             y: (parent.height - self.height) / 2;
-            background: root.active-shortcut == "diamond_sword" ? #14353c : (sc2_touch.has-hover ? #17373d : #10272b);
+            background: root.active-shortcut == "diamond_sword" ? #10272b : (sc2_touch.has-hover ? #17373d : #0c2024);
             border-width: root.active-shortcut == "diamond_sword" ? 1.5px : 1px;
-            border-color: root.active-shortcut == "diamond_sword" ? #32dbcb : (sc2_touch.has-hover ? #67e8f9 : rgba(50, 219, 203, 0.50));
+            border-color: root.active-shortcut == "diamond_sword" ? #32dbcb : (sc2_touch.has-hover ? #67e8f9 : rgba(50, 219, 203, 0.40));
             border-radius: 8px;
 
             animate background { duration: 150ms; }
@@ -533,8 +536,8 @@ export component TopBar inherits Rectangle {
                 x: (parent.width - self.width) / 2;
                 y: (parent.height - self.height) / 2;
                 source: @image-url("../assets/icons/minecraft/diamond_sword.png");
-                width: 20px;
-                height: 20px;
+                width: 22px;
+                height: 22px;
                 image-fit: contain;
                 image-rendering: pixelated;
             }
@@ -554,7 +557,7 @@ export component TopBar inherits Rectangle {
             y: (parent.height - self.height) / 2;
             background: root.active-shortcut == "end_crystal" ? #32183c : (sc3_touch.has-hover ? #32183c : #24102c);
             border-width: root.active-shortcut == "end_crystal" ? 1.5px : 1px;
-            border-color: root.active-shortcut == "end_crystal" ? #e9d5ff : (sc3_touch.has-hover ? #e9d5ff : rgba(192, 132, 252, 0.50));
+            border-color: root.active-shortcut == "end_crystal" ? #c084fc : (sc3_touch.has-hover ? #e9d5ff : rgba(192, 132, 252, 0.45));
             border-radius: 8px;
 
             animate background { duration: 150ms; }
@@ -571,8 +574,8 @@ export component TopBar inherits Rectangle {
                 x: (parent.width - self.width) / 2;
                 y: (parent.height - self.height) / 2;
                 source: @image-url("../assets/icons/minecraft/end_crystal.png");
-                width: 20px;
-                height: 20px;
+                width: 22px;
+                height: 22px;
                 image-fit: contain;
                 image-rendering: pixelated;
             }
@@ -609,8 +612,8 @@ export component TopBar inherits Rectangle {
                 x: (parent.width - self.width) / 2;
                 y: (parent.height - self.height) / 2;
                 source: @image-url("../assets/icons/minecraft/netherite_sword.png");
-                width: 20px;
-                height: 20px;
+                width: 22px;
+                height: 22px;
                 image-fit: contain;
                 image-rendering: pixelated;
             }
@@ -654,8 +657,8 @@ export component TopBar inherits Rectangle {
                 width: 18px;
                 height: 18px;
                 image-fit: contain;
-                opacity: root.active-tab == "friends" ? 1.0 : (fr_touch.has-hover ? 1.0 : 0.75);
-                animate opacity { duration: 150ms; }
+                colorize: root.active-tab == "friends" ? #ffffff : (fr_touch.has-hover ? #ffffff : #94a3b8);
+                animate colorize { duration: 150ms; }
             }
 
             // Red Badge with count "2"
@@ -703,14 +706,15 @@ export component TopBar inherits Rectangle {
                 clicked => { root.tab-selected("settings"); }
             }
 
-            Text {
-                text: ">";
-                color: chev_touch.has-hover ? #ffffff : #64748b;
-                font-size: 15px;
-                font-weight: 700;
-                horizontal-alignment: center;
-                vertical-alignment: center;
-                animate color { duration: 150ms; }
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                source: @image-url("../assets/svg/chevron_right.svg");
+                width: 16px;
+                height: 16px;
+                image-fit: contain;
+                colorize: chev_touch.has-hover ? #ffffff : #64748b;
+                animate colorize { duration: 150ms; }
             }
 
             HudTooltip {
