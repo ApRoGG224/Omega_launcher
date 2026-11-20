@@ -163,7 +163,11 @@ When working on tasks for this repository, the agent MUST follow this strict seq
 ## Installed Skills & Engineering Tooling
 
 - **Mandatory Skill Review & Usage:** The agent MUST actively inspect and utilize the following specialized skills installed in `.agents/skills/` on EVERY new task, feature, or review:
+  - `slint-native`: Core engineering guidelines, threading models (Tokio async bridge), wgpu/software pixel buffer integration, and 60 FPS performance patterns for Native Slint.
   - `ui-ux-pro-max`, `design-system`, `ui-styling`, `design`, `brand`, `banner-design`, `slides`: Design Lab & UI/UX engineering intelligence suite. Always consult when designing or refining UI layouts, colors, components, and animations.
+  - `unslop`: UI design heuristics to ensure clean, authentic, human-designed interfaces with zero AI slop, no tacky neon, and balanced spacing/typography.
+  - `trail` & `graft`: Codebase exploration, graph indexing, symbol navigation, and persistent architectural memory.
+  - `ub-mode`: Reduced engineering principles (First Make it Work, Then Make it Right, Follow Practice).
   - `senior-frontend`: Advanced React/TypeScript frontend development patterns, accessibility standards, and bundle optimization.
   - `react-best-practices`: 57+ Vercel React and Next.js performance optimization rules (waterfall prevention, bundle size control, rendering and state performance).
   - `prettier-validation`: Formatting and syntax validation for TypeScript and React code.

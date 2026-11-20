@@ -51,5 +51,5 @@
 - Check for an existing `AGENTS.md` before creating or editing it.
 - Avoid overwriting user changes in unrelated files.
 - Prefer small, repo-local edits that preserve the current architecture.
-- **Mandatory Skill Activation**: Before writing or reviewing frontend code, UI layouts, or optimizations, the agent MUST inspect and actively apply the installed skills in `.agents/skills/` (`ui-ux-pro-max`, `react-best-practices`, `senior-frontend`, `ui-styling`, `design-system`, `prettier-validation`).
+- **Mandatory Skill Activation**: Before writing or reviewing frontend code, UI layouts, Slint templates, or optimizations, the agent MUST inspect and actively apply the installed skills in `.agents/skills/` (`slint-native`, `ui-ux-pro-max`, `react-best-practices`, `senior-frontend`, `ui-styling`, `design-system`, `unslop`, `trail`, `graft`, `ub-mode`, `prettier-validation`).
 - **Mentorship Mode**: The user is learning to code. Explain how and why solutions work in clear Russian with helpful analogies, while keeping all source code comments strictly in English.
