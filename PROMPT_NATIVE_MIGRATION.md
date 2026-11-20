@@ -1,21 +1,22 @@
 # MASTER PROMPT: Complete 1-to-1 Migration of Omega Launcher to Native Rust + Slint
 
-> **Role & Context**: You are an Elite Systems Architect and Graphics Engineer specializing in **Rust, Slint UI, wgpu, and Minecraft Launcher Internals**. Your task is to execute the complete, uncompromising, 1-to-1 migration of **Omega Launcher** from its current hybrid stack (React 19 + TypeScript + Tauri v2 + WebKitGTK) into a **100% Native, Single-Binary Application using Rust + Slint UI + wgpu** on the `native-slint` branch.
+> **Role & Context**: You are an Elite Systems Architect and UI Engineer specializing in **Rust, Slint UI, wgpu, and Minecraft Launcher Internals**. Your task is to execute the complete, uncompromising, 1-to-1 migration of **Omega Launcher** from its current hybrid stack (React 19 + TypeScript + Tauri v2 + WebKitGTK) into a **100% Native, Single-Binary Application using Rust + Slint UI + wgpu** on the `native-slint` branch.
 >
-> The result must look, feel, animate, and behave **identically** to the original launcher, while cutting RAM consumption down from ~190 MB to **25–35 MB**, eliminating webview dependencies, and achieving sub-50ms instant cold boot.
+> The result must look, feel, animate, and behave **identically** to the real production launcher UI on `master`: a sleek, premium, dark obsidian & graphite interface with rounded corners, smooth transitions, and instant responsiveness, cutting RAM consumption down from ~190 MB to **25–35 MB** and launching in under 50ms.
 
 ---
 
-## 1. Core Architecture & Mental Model
+## 1. Core Architecture & System Bridge
 
 ### The Dual-Layer Separation
 ```
 +-------------------------------------------------------------------------+
 |                        SLINT UI LAYER (crates/omega-slint)              |
-|  - .slint Declarative UI: Notched Pixel Plates, Sliders, Dropdowns     |
-|  - Custom wgpu/FemtoVG Software Renderer for 3D Character & Capes       |
-|  - Strict No-Neon Design Language, Smooth Transitions, Tooltips         |
-|  - Reactive Properties & Callbacks                                      |
+|  - Modern Dark Obsidian & Graphite Design System                        |
+|  - border-radius: 11px (buttons), 14px (cards/dock), 8px (badges)       |
+|  - Smooth transitions (cubic-bezier, ease-out hover/fade animations)    |
+|  - Custom 3D Character Stage & Skin/Cape Viewer (wgpu / Slint Buffer)   |
+|  - Reactive Properties & Direct Callbacks (No IPC bridge overhead)      |
 +------------------------------------+------------------------------------+
                                      | slint::Weak<MainWindow> / tokio::sync::mpsc
                                      v
@@ -26,7 +27,7 @@
 |  - db.rs: SQLite local storage (instances, accounts, servers, settings)  |
 |  - auth.rs: Microsoft OAuth2 Device/Webview flow & Ely.by session sync  |
 |  - modrinth.rs & curseforge.rs: Unified catalog search & mod downloader |
-|  - ping.rs: Server list MOTD pinging and player counts                 |
+|  - ping.rs: Server list MOTD pinging, color codes, player counts        |
 +-------------------------------------------------------------------------+
 ```
 
@@ -37,49 +38,55 @@
 
 ---
 
-## 2. Design System: 1-to-1 Pixel-Art Reproduction
+## 2. Actual Design System: 1-to-1 Visual Reproduction
 
-You must strictly preserve the authentic Minecraft UI aesthetics established in the React frontend:
+The launcher uses a modern, sleek **Dark Obsidian & Graphite** aesthetic standardized across all screens:
 
-### 1. The Notched Pixel-Plate Geometry
-- **Rule:** Every card, button, modal, and dock element must follow the authentic 6px notched border formula (stepped 90° corners, 6-slice SVG equivalent, zero rounded curves).
-- **In Slint:** Implement reusable notched containers (`PixelCard`, `PixelButton`, `PixelBadge`) using nested `Rectangle` compositions or custom Slint `Path` polygons with 6px stepped insets.
-- **Strict No-Neon Directive:** NEVER use neon glows, bright radial seams, or oversaturated text-shadows. Stick to matte obsidian, deep charcoal, bedrock, stone, and authentic Minecraft palette accents:
-  - Background Base: `#07080e` (Obsidian abyss)
-  - Card Surface: `#0d111a` / `#111626`
-  - Border Stroke: `#2a324b` (Subtle dark steel)
-  - Royal Blue (Dock / Version selector): `#1d5dc7`
-  - Pastel Lilac / Violet (Play Action): `#9f75ff` (Hover: `#b28eff`, Active: `#8c62ec`)
-  - Emerald Green (Success / Installed / Online): `#10b981`
-  - Ruby Red (Delete / Stop Game / Offline): `#ef4444`
-  - Text Primary: `#ffffff`, Text Muted: `#8b949e`, Text Subtle: `#4b5563`
+### 1. Color Palette & Geometry
+- **Backgrounds:**
+  - Base Deep Abyss: `#06080d`
+  - Canvas / Overlay: `#090c11` (with `backdrop-filter: blur(14px)`)
+  - Surface Plates / Cards: `#0d1117`
+  - Row / Card Background: `#1a1d24` (Hover: `#22262e`)
+- **Borders & Strokes:**
+  - Subtle Border: `rgba(255, 255, 255, 0.08)`
+  - Medium Border: `rgba(255, 255, 255, 0.12)`
+  - Active/Hover Border: `rgba(255, 255, 255, 0.22)`
+- **Accents:**
+  - Play / Primary Action: `#e6e8ec` (Dark text `#0d1117`) or pastel violet `#9b5cff`
+  - Stop / Danger: `#b3423f` (Hover: `#c44e4b`, Active: `#9c3735`)
+  - Status Online / Emerald: `#10b981`
+- **Border Radii & Metrics:**
+  - Base Screen Buttons: `height: 40px`, `border-radius: 11px`, `padding: 0 16px`
+  - Cards & Panels: `border-radius: 14px`, `border: 1px solid rgba(255, 255, 255, 0.08)`
+  - Badges & Small Tags: `border-radius: 6px` - `8px`
+  - Bottom Dock: `max-width: 560px`, `border-radius: 14px`, `box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75)`
 
-### 2. Animations & Micro-Interactions
-- **Button Press & Hover States:**
-  - Fast, responsive easing: `in-out property <float> hover-opacity; animate hover-opacity { duration: 120ms; easing: ease-out; }`
-  - Active press transform feedback: subtle 1-2px vertical notch shift or color darkening (`#8c62ec` on lilac play button).
-- **Stepped Pixel Loaders:**
-  - Replace all generic round spinners with discrete 8-step pixel art cubes using Slint timers (`Timer` ticking every 80ms cycling through 8 discrete frame offsets or rotation steps).
-- **Floating Tooltips:**
-  - Reproduce the `.dock-tooltip` with triangular pointer ("Сменить версию") appearing on hover with a 150ms fade-in above the active dock selector.
+### 2. Animations & Transitions
+- **Screen Fade-in Transition:**
+  ```slint
+  in-out property <float> screen-opacity: 1.0;
+  in-out property <length> screen-offset-y: 0px;
+  animate screen-opacity { duration: 200ms; easing: ease-out; }
+  animate screen-offset-y { duration: 200ms; easing: cubic-bezier(0.16, 1, 0.3, 1); }
+  ```
+- **Button Hover & Press Feedback:**
+  - Smooth background & border transition: `animate background { duration: 150ms; }`
+  - Scale press effect: slight scale(0.98) or opacity dip to 0.92 on active press.
+- **Dock Tooltip:**
+  - Smooth floating tooltip (`.dock-tooltip`) above the version selector with triangular pointer, appearing on hover with 150ms fade-in.
 
 ---
 
 ## 3. 3D Character Stage & Skin Viewer (wgpu / Slint Buffer)
-
-In the React version, the home screen features an interactive 3D character with articulated limbs, roaming physics, and mouse look. In Native Slint:
 
 1. **Voxel Mesh Definition:**
    - 6 rectangular cuboids (Head: 8x8x8, Torso: 8x12x4, Left Arm: 4x12x4, Right Arm: 4x12x4, Left Leg: 4x12x4, Right Leg: 4x12x4).
    - Support both standard (4px arm) and slim/Alex (3px arm) models.
 2. **Skin Texture UV Mapping:**
    - Unpack official 64x64 PNG textures with nearest-neighbor (`FilterMode::Nearest`) filtering.
-   - Handle second layer (jacket, hat, sleeves, pants) with 0.5px dilation.
-3. **Rendering Pipeline:**
-   - Implement either:
-     - A lightweight software/FemtoVG ray-rasterizer writing directly into a `slint::SharedPixelBuffer<slint::Rgba8Pixel>`.
-     - Or an offscreen `wgpu` render-target pipe blitted to Slint via `slint::Image::from_rgba8`.
-4. **Motion & Interaction:**
+   - Second layer (jacket, hat, sleeves, pants) with 0.5px dilation.
+3. **Motion & Interaction:**
    - Idle breathing sway (sinusoidal rotation on arms and legs at 0.5 Hz).
    - Mouse hover head tracking: map cursor X/Y coordinates relative to window center into neck yaw (-35°..+35°) and pitch (-25°..+25°).
    - Dynamic ground contact shadow plane fading with jump height.
@@ -90,8 +97,8 @@ In the React version, the home screen features an interactive 3D character with 
 
 ### Screen 0: Top HUD & Navigation Bar
 - **Friends Online Pill:** Red/green badge with online count (`В сети: 3`).
-- **Profile Popover:** Click avatar to open notched obsidian popover with account switch, Ely.by badge, and logout.
-- **Navigation Buttons:** Mute audio toggle, Messages/News, Lime-green Bug Report / Shield button with cyan `+50` badge, Settings gear button.
+- **Profile Popover:** Click avatar to open graphite popover (`border-radius: 12px`) with account switcher, Ely.by badge, and logout.
+- **Navigation Buttons:** Mute audio toggle, Messages/News, Bug Report / Shield button with cyan `+50` badge, Settings gear button.
 
 ### Screen 1: Home Screen (`HomeScreenView`)
 - 3D Character Stage occupying center/left.
@@ -101,14 +108,13 @@ In the React version, the home screen features an interactive 3D character with 
 - Bottom Dock:
   - 3D Grass Block isometric icon (`32x32`).
   - Active version & loader info ("test1", "1.21.4 Fabric", "Готово к запуску").
-  - Big Play Button: states `ИГРАТЬ` (lilac) -> `ЗАПУСК...` -> `В ИГРЕ / ОСТАНОВИТЬ` (ruby red).
+  - Big Play Button: states `ИГРАТЬ` -> `ЗАПУСК...` -> `В ИГРЕ / ОСТАНОВИТЬ`.
 
 ### Screen 2: Instances Screen (`InstancesScreenView`)
 - Top category filter tabs: `⭐ Популярные`, `Все релизы (103)`, `Снапшоты (759)`, `Beta & Alpha (61)`.
-- Search input with real-time filtering.
+- Search input with real-time filtering and graphite input box.
 - Authentic 16x16 Minecraft pixel-art icons (Diamond Sword, Diamond Pickaxe, Obsidian, End Crystal, Totem, etc.).
-- Modal / Panel to create new instance: version selector, loader picker (Fabric, Forge, NeoForge, Vanilla), RAM allocator slider.
-- Action buttons: "Играть", "Настройки сборки", "Открыть папку", "Удалить".
+- Instance cards with graphite background (`#1a1d24`), 11px border-radius, version tag, playtime, and launch/edit buttons.
 
 ### Screen 3: Modrinth & CurseForge Catalog (`ModrinthScreenView`)
 - Dual-dock header: left categories (Modpacks, Mods, Shaders, Resource Packs), right source toggle (Modrinth / CurseForge).
