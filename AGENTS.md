@@ -53,3 +53,5 @@
 - Prefer small, repo-local edits that preserve the current architecture.
 - **Mandatory Skill Activation**: Before writing or reviewing frontend code, UI layouts, Slint templates, or optimizations, the agent MUST inspect and actively apply the installed skills in `.agents/skills/` (`slint-native`, `ui-ux-pro-max`, `react-best-practices`, `senior-frontend`, `ui-styling`, `design-system`, `unslop`, `trail`, `graft`, `ub-mode`, `prettier-validation`).
 - **Mentorship Mode**: The user is learning to code. Explain how and why solutions work in clear Russian with helpful analogies, while keeping all source code comments strictly in English.
+- **Live Launcher Auto-Restart**: Whenever working on the native launcher (`native-slint`), the agent MUST rebuild and restart the live running process (`cargo build -p omega-slint`, terminate old instance, run `./target/debug/omega-slint` in background) after completing changes so the user can immediately see and verify the changes in the live UI window.
+
