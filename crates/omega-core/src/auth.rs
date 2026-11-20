@@ -91,6 +91,93 @@ pub async fn poll_device_code(device_code: &str) -> Result<Option<(String, Strin
     Ok(Some((access_token, refresh_token)))
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MinecraftProfile {
+    pub name: String,
+    pub uuid: String,
+    pub access_token: String,
+}
+
+pub async fn complete_minecraft_auth(microsoft_token: &str) -> Result<MinecraftProfile, String> {
+    let client = auth_client()?;
+
+    // 1. Authenticate with Xbox Live (XBL)
+    let xbl_res = client
+        .post("https://user.auth.xboxlive.com/user/authenticate")
+        .header(ACCEPT, "application/json")
+        .json(&serde_json::json!({
+            "Properties": {
+                "AuthMethod": "RPS",
+                "SiteName": "user.auth.xboxlive.com",
+                "RpsTicket": format!("d={microsoft_token}")
+            },
+            "RelyingParty": "http://auth.xboxlive.com",
+            "TokenType": "JWT"
+        }))
+        .send()
+        .await
+        .map_err(|e| format!("XBL auth failed: {e}"))?;
+
+    let xbl_json: Value = xbl_res.json().await.map_err(|e| format!("Invalid XBL JSON: {e}"))?;
+    let xbl_token = xbl_json.get("Token").and_then(|v| v.as_str()).ok_or("No XBL token")?;
+
+    // 2. Authorize with XSTS
+    let xsts_res = client
+        .post("https://xsts.auth.xboxlive.com/xsts/authorize")
+        .header(ACCEPT, "application/json")
+        .header("x-xbl-contract-version", "1")
+        .json(&serde_json::json!({
+            "Properties": {
+                "SandboxId": "RETAIL",
+                "UserTokens": [xbl_token]
+            },
+            "RelyingParty": "rp://api.minecraftservices.com/",
+            "TokenType": "JWT"
+        }))
+        .send()
+        .await
+        .map_err(|e| format!("XSTS auth failed: {e}"))?;
+
+    let xsts_json: Value = xsts_res.json().await.map_err(|e| format!("Invalid XSTS JSON: {e}"))?;
+    let xsts_token = xsts_json.get("Token").and_then(|v| v.as_str()).ok_or("No XSTS token")?;
+    let uhs = xsts_json
+        .pointer("/DisplayClaims/xui/0/uhs")
+        .and_then(|v| v.as_str())
+        .ok_or("No user hash (uhs)")?;
+
+    // 3. Login to Minecraft with Xbox
+    let identity_token = format!("XBL3.0 x={uhs};{xsts_token}");
+    let mc_res = client
+        .post("https://api.minecraftservices.com/authentication/login_with_xbox")
+        .header(ACCEPT, "application/json")
+        .json(&serde_json::json!({ "identityToken": identity_token }))
+        .send()
+        .await
+        .map_err(|e| format!("Minecraft login failed: {e}"))?;
+
+    let mc_json: Value = mc_res.json().await.map_err(|e| format!("Invalid Minecraft login JSON: {e}"))?;
+    let access_token = mc_json.get("access_token").and_then(|v| v.as_str()).ok_or("No Minecraft access token")?.to_string();
+
+    // 4. Fetch Minecraft Profile
+    let prof_res = client
+        .get("https://api.minecraftservices.com/minecraft/profile")
+        .header(ACCEPT, "application/json")
+        .bearer_auth(&access_token)
+        .send()
+        .await
+        .map_err(|e| format!("Minecraft profile fetch failed: {e}"))?;
+
+    let prof_json: Value = prof_res.json().await.map_err(|e| format!("Invalid profile JSON: {e}"))?;
+    let name = prof_json.get("name").and_then(|v| v.as_str()).ok_or("No Minecraft username associated with this account")?.to_string();
+    let uuid = prof_json.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
+
+    Ok(MinecraftProfile {
+        name,
+        uuid,
+        access_token,
+    })
+}
+
 pub async fn fetch_ely_skin(username: &str, dest_path: &Path) -> Result<bool, String> {
     let client = reqwest::Client::new();
     let url = format!("http://skinsystem.ely.by/skins/{username}.png");

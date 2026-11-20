@@ -449,12 +449,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     // Direct Connect to Multiplayer Server callback
+    let pending_direct_connect = Arc::new(Mutex::new(None::<String>));
+    let pending_conn_ref = pending_direct_connect.clone();
     let ui_handle = ui_weak.clone();
     ui.on_direct_connect(move |host| {
         let Some(ui) = ui_handle.upgrade() else { return };
         let host_str = host.to_string();
         let old = ui.get_log_content().to_string();
         ui.set_log_content(format!("{old}\n[launcher/INFO] Direct connect requested to {host_str}...").into());
+        let pending = pending_conn_ref.clone();
+        let h_str = host_str.clone();
+        tokio::spawn(async move {
+            *pending.lock().await = Some(h_str);
+        });
         // Triggers game launch with quickPlayMultiplayer
         ui.invoke_play_clicked();
     });
@@ -576,25 +583,50 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     while std::time::Instant::now() < timeout {
                         tokio::time::sleep(interval).await;
                         match omega_core::auth::poll_device_code(&device_code).await {
-                            Ok(Some((_access_token, _))) => {
-                                let log_ui = ui_handle.clone();
-                                let data_dir = data_dir.clone();
-                                let _ = slint::invoke_from_event_loop(move || {
-                                    if let Some(ui) = log_ui.upgrade() {
-                                        let old = ui.get_log_content().to_string();
-                                        ui.set_log_content(format!("{old}\n[auth/INFO] Успешная авторизация Microsoft!").into());
-                                        ui.set_player_name("MicrosoftPlayer".into());
-                                        ui.set_account_type("microsoft".into());
+                            Ok(Some((ms_token, refresh_token))) => {
+                                match omega_core::auth::complete_minecraft_auth(&ms_token).await {
+                                    Ok(mc_prof) => {
+                                        let log_ui = ui_handle.clone();
+                                        let data_dir = data_dir.clone();
+                                        let player_name = mc_prof.name.clone();
+                                        let player_uuid = mc_prof.uuid.clone();
+                                        let player_token = mc_prof.access_token.clone();
 
-                                        if let Ok(conn) = omega_core::db::init_db(&data_dir) {
-                                            let acc = omega_core::db::DbAccount {
-                                                name: "MicrosoftPlayer".to_string(),
-                                                account_type: "microsoft".to_string(),
-                                            };
-                                            let _ = omega_core::db::add_account(&conn, &acc);
-                                        }
+                                        let auth_json = serde_json::json!({
+                                            "name": player_name,
+                                            "uuid": player_uuid,
+                                            "access_token": player_token,
+                                            "refresh_token": refresh_token,
+                                        });
+                                        let _ = omega_core::auth::write_cached_auth(&data_dir, &auth_json);
+
+                                        let _ = slint::invoke_from_event_loop(move || {
+                                            if let Some(ui) = log_ui.upgrade() {
+                                                let old = ui.get_log_content().to_string();
+                                                ui.set_log_content(format!("{old}\n[auth/INFO] Успешная авторизация Microsoft: {player_name}").into());
+                                                ui.set_player_name(player_name.clone().into());
+                                                ui.set_account_type("microsoft".into());
+
+                                                if let Ok(conn) = omega_core::db::init_db(&data_dir) {
+                                                    let acc = omega_core::db::DbAccount {
+                                                        name: player_name.clone(),
+                                                        account_type: "microsoft".to_string(),
+                                                    };
+                                                    let _ = omega_core::db::add_account(&conn, &acc);
+                                                }
+                                            }
+                                        });
                                     }
-                                });
+                                    Err(err) => {
+                                        let log_ui = ui_handle.clone();
+                                        let _ = slint::invoke_from_event_loop(move || {
+                                            if let Some(ui) = log_ui.upgrade() {
+                                                let old = ui.get_log_content().to_string();
+                                                ui.set_log_content(format!("{old}\n[auth/ERROR] Minecraft login failed: {err}").into());
+                                            }
+                                        });
+                                    }
+                                }
                                 break;
                             }
                             Ok(None) => {} // still pending
@@ -632,6 +664,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let child_lock = active_child.clone();
     let running_flag = is_running_flag.clone();
     let data_dir_clone = data_dir.clone();
+    let pending_conn_play = pending_direct_connect.clone();
 
     ui.on_play_clicked(move || {
         let Some(ui) = ui_handle.upgrade() else { return };
@@ -679,14 +712,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let child_lock = child_lock.clone();
         let running_flag = running_flag.clone();
         let data_dir = data_dir_clone.clone();
+        let pending_conn = pending_conn_play.clone();
 
         tokio::spawn(async move {
+            let quick_play = pending_conn.lock().await.take();
             let opts = omega_core::launch::LaunchOptions {
                 version: mc_ver.clone(),
                 instance_id: inst_id.clone(),
                 username: user.clone(),
                 ram_mb: ram,
                 custom_jvm_args: Some(format!("-XX:+Use{gc}")),
+                quick_play_server: quick_play,
             };
 
             let log_ui = ui_handle.clone();

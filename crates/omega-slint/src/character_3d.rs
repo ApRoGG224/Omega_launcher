@@ -129,17 +129,25 @@ impl Character3D {
         let yaw = 0.0f32;
         let pitch = 0.02f32;
 
-        // Subtle breathing animation (0.5 Hz)
-        let breath = (time_secs * 2.2).sin();
-        let head_rot_x = breath * 0.015;
-        let head_rot_y = (time_secs * 0.6).sin() * 0.02;
+        // Authentic Minecraft walk cycle kinematics
+        let walk_speed = 3.2f32;
+        let walk_phase = time_secs * walk_speed;
+        let leg_swing = walk_phase.sin() * 0.48; // ~28 degrees stride
+        let r_leg_rot_x = leg_swing;
+        let l_leg_rot_x = -leg_swing;
 
+        // Arms swing opposite to legs
         let arm_w = if self.is_alex { 3.0 } else { 4.0 };
+        let r_arm_rot_x = -leg_swing * 0.70;
+        let l_arm_rot_x = leg_swing * 0.70;
 
-        let r_arm_rot_x = breath * 0.02;
-        let l_arm_rot_x = -breath * 0.02;
+        // Subtle torso bounce / bobbing during walk stride
+        let bounce = (walk_phase * 2.0).cos().abs() * 0.35;
+        let torso_y_off = bounce;
 
-        let torso_y_off = breath * 0.25;
+        // Gentle head sway
+        let head_rot_x = (time_secs * 1.5).sin() * 0.02;
+        let head_rot_y = (time_secs * 0.8).sin() * 0.025;
 
         let mut quads = Vec::with_capacity(72);
 
@@ -185,21 +193,21 @@ impl Character3D {
         );
 
         // 5. Right Leg: 4x12x4
-        let r_leg_pivot = Vec3::new(-2.0, 12.0, 0.0);
+        let r_leg_pivot = Vec3::new(-2.0, 12.0 + torso_y_off, 0.0);
         add_cuboid(
             &mut quads,
             r_leg_pivot,
-            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(r_leg_rot_x, 0.0, 0.0),
             -2.0, 2.0, -12.0, 0.0, -2.0, 2.0,
             0.0, 16.0, 4.0, 12.0, 4.0,
         );
 
         // 6. Left Leg: 4x12x4
-        let l_leg_pivot = Vec3::new(2.0, 12.0, 0.0);
+        let l_leg_pivot = Vec3::new(2.0, 12.0 + torso_y_off, 0.0);
         add_cuboid(
             &mut quads,
             l_leg_pivot,
-            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(l_leg_rot_x, 0.0, 0.0),
             -2.0, 2.0, -12.0, 0.0, -2.0, 2.0,
             16.0, 48.0, 4.0, 12.0, 4.0,
         );
@@ -245,7 +253,7 @@ impl Character3D {
         add_cuboid(
             &mut quads,
             r_leg_pivot,
-            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(r_leg_rot_x, 0.0, 0.0),
             -2.25, 2.25, -12.25, 0.25, -2.25, 2.25,
             0.0, 32.0, 4.0, 12.0, 4.0,
         );
@@ -254,7 +262,7 @@ impl Character3D {
         add_cuboid(
             &mut quads,
             l_leg_pivot,
-            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(l_leg_rot_x, 0.0, 0.0),
             -2.25, 2.25, -12.25, 0.25, -2.25, 2.25,
             0.0, 48.0, 4.0, 12.0, 4.0,
         );
