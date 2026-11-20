@@ -89,6 +89,7 @@ export component MainWindow inherits Window {
     callback refresh-servers();
     callback add-server(string, string);
     callback delete-server(string);
+    callback select-shortcut(string);
     callback open-github();
 
     // Layer 0: Atmosphere Background (Bright & Sunny as in target Photo 1)
@@ -128,6 +129,9 @@ export component MainWindow inherits Window {
             }
             toggle-profile-dropdown() => {
                 root.active-screen = "accounts";
+            }
+            select-shortcut(sc) => {
+                root.select-shortcut(sc);
             }
             toggle-sound() => {
                 root.is-sound-muted = !root.is-sound-muted;

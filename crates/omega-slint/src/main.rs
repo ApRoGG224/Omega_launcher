@@ -285,6 +285,57 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
+    // Shortcut selection callback (TopBar quick shortcuts)
+    let ui_handle = ui_weak.clone();
+    let data_dir_sc = data_dir.clone();
+    ui.on_select_shortcut(move |shortcut| {
+        let Some(_ui) = ui_handle.upgrade() else { return };
+        let sc_name = shortcut.to_string();
+        let ui_weak = ui_handle.clone();
+        let data_dir = data_dir_sc.clone();
+
+        tokio::spawn(async move {
+            if let Ok(conn) = omega_core::db::init_db(&data_dir) {
+                if let Ok(instances) = omega_core::db::load_instances(&conn) {
+                    if let Some(target) = instances.iter().find(|i| i.icon.as_deref() == Some(&sc_name) || i.name.to_lowercase().contains(&sc_name)) {
+                        let id = target.id.clone();
+                        let name = target.name.clone();
+                        let ver = target.mc_version.clone();
+                        let loader = target.loader.clone();
+                        let playtime = format!("{} мин", (target.play_time_ms.unwrap_or(0) / 60000));
+                        let _ = slint::invoke_from_event_loop(move || {
+                            if let Some(ui) = ui_weak.upgrade() {
+                                ui.set_active_instance_id(id.into());
+                                ui.set_active_instance_name(name.into());
+                                ui.set_active_version(ver.into());
+                                ui.set_active_loader(loader.into());
+                                ui.set_active_playtime(playtime.into());
+                                ui.set_active_screen("home".into());
+                            }
+                        });
+                    } else if !instances.is_empty() {
+                        let target = &instances[0];
+                        let id = target.id.clone();
+                        let name = target.name.clone();
+                        let ver = target.mc_version.clone();
+                        let loader = target.loader.clone();
+                        let playtime = format!("{} мин", (target.play_time_ms.unwrap_or(0) / 60000));
+                        let _ = slint::invoke_from_event_loop(move || {
+                            if let Some(ui) = ui_weak.upgrade() {
+                                ui.set_active_instance_id(id.into());
+                                ui.set_active_instance_name(name.into());
+                                ui.set_active_version(ver.into());
+                                ui.set_active_loader(loader.into());
+                                ui.set_active_playtime(playtime.into());
+                                ui.set_active_screen("home".into());
+                            }
+                        });
+                    }
+                }
+            }
+        });
+    });
+
     // Create Instance callback (from dialog with version manifest & loader & RAM)
     let ui_handle = ui_weak.clone();
     let data_dir_clone = data_dir.clone();
