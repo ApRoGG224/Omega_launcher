@@ -38,6 +38,7 @@ export component ObsidianButton inherits Rectangle {
     animate background { duration: 150ms; easing: ease-out; }
 
     touch := TouchArea {
+        mouse-cursor: pointer;
         clicked => { root.clicked(); }
     }
 
@@ -93,7 +94,9 @@ export component ObsidianRow inherits Rectangle {
     animate background { duration: 150ms; }
     animate border-color { duration: 150ms; }
 
-    row_touch := TouchArea {}
+    row_touch := TouchArea {
+        mouse-cursor: pointer;
+    }
 
     @children
 }

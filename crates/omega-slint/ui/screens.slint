@@ -140,6 +140,7 @@ export component InstancesScreenView inherits Rectangle {
                 animate background { duration: 150ms; }
 
                 btn_touch := TouchArea {
+                    mouse-cursor: pointer;
                     clicked => { root.show-create-modal = true; }
                 }
 
@@ -172,7 +173,7 @@ export component InstancesScreenView inherits Rectangle {
                     animate background { duration: 150ms; }
                     animate border-color { duration: 150ms; }
 
-                    row_touch := TouchArea {}
+                    row_touch := TouchArea { mouse-cursor: pointer; }
 
                     HorizontalLayout {
                         padding-left: 16px;
@@ -251,6 +252,7 @@ export component InstancesScreenView inherits Rectangle {
                                 border-radius: 9px;
 
                                 del_touch := TouchArea {
+                                    mouse-cursor: pointer;
                                     clicked => { root.delete-instance(inst.id); }
                                 }
 
@@ -275,6 +277,7 @@ export component InstancesScreenView inherits Rectangle {
                                 animate background { duration: 150ms; }
 
                                 sel_touch := TouchArea {
+                                    mouse-cursor: pointer;
                                     clicked => {
                                         root.select-instance(inst.id, inst.name, inst.mc-version, inst.loader, inst.play-time);
                                     }
@@ -335,6 +338,7 @@ export component InstancesScreenView inherits Rectangle {
                         background: close_touch.has-hover ? #22262e : #1a1d24;
                         border-radius: 8px;
                         close_touch := TouchArea {
+                            mouse-cursor: pointer;
                             clicked => { root.show-create-modal = false; }
                         }
                         Text {
@@ -388,7 +392,7 @@ export component InstancesScreenView inherits Rectangle {
                             border-radius: 8px;
                             border-width: 1px;
                             border-color: root.new-inst-version == v ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                            TouchArea { clicked => { root.new-inst-version = v; } }
+                            TouchArea { mouse-cursor: pointer; clicked => { root.new-inst-version = v; } }
                             HorizontalLayout {
                                 padding-left: 7px;
                                 padding-right: 7px;
@@ -422,7 +426,7 @@ export component InstancesScreenView inherits Rectangle {
                             border-radius: 9px;
                             border-width: 1px;
                             border-color: root.new-inst-loader == ldr ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                            TouchArea { clicked => { root.new-inst-loader = ldr; } }
+                            TouchArea { mouse-cursor: pointer; clicked => { root.new-inst-loader = ldr; } }
                             Text {
                                 text: ldr;
                                 color: #ffffff;
@@ -450,7 +454,7 @@ export component InstancesScreenView inherits Rectangle {
                             horizontal-stretch: 1;
                             background: root.new-inst-ram == 2048 ? #10b981 : #1a1d24;
                             border-radius: 8px;
-                            TouchArea { clicked => { root.new-inst-ram = 2048; } }
+                            TouchArea { mouse-cursor: pointer; clicked => { root.new-inst-ram = 2048; } }
                             Text { text: "2 ГБ"; color: root.new-inst-ram == 2048 ? #0d1117 : #ffffff; font-size: 11px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                         }
                         Rectangle {
@@ -458,7 +462,7 @@ export component InstancesScreenView inherits Rectangle {
                             horizontal-stretch: 1;
                             background: root.new-inst-ram == 4096 ? #10b981 : #1a1d24;
                             border-radius: 8px;
-                            TouchArea { clicked => { root.new-inst-ram = 4096; } }
+                            TouchArea { mouse-cursor: pointer; clicked => { root.new-inst-ram = 4096; } }
                             Text { text: "4 ГБ"; color: root.new-inst-ram == 4096 ? #0d1117 : #ffffff; font-size: 11px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                         }
                         Rectangle {
@@ -466,7 +470,7 @@ export component InstancesScreenView inherits Rectangle {
                             horizontal-stretch: 1;
                             background: root.new-inst-ram == 6144 ? #10b981 : #1a1d24;
                             border-radius: 8px;
-                            TouchArea { clicked => { root.new-inst-ram = 6144; } }
+                            TouchArea { mouse-cursor: pointer; clicked => { root.new-inst-ram = 6144; } }
                             Text { text: "6 ГБ"; color: root.new-inst-ram == 6144 ? #0d1117 : #ffffff; font-size: 11px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                         }
                         Rectangle {
@@ -474,7 +478,7 @@ export component InstancesScreenView inherits Rectangle {
                             horizontal-stretch: 1;
                             background: root.new-inst-ram == 8192 ? #10b981 : #1a1d24;
                             border-radius: 8px;
-                            TouchArea { clicked => { root.new-inst-ram = 8192; } }
+                            TouchArea { mouse-cursor: pointer; clicked => { root.new-inst-ram = 8192; } }
                             Text { text: "8 ГБ"; color: root.new-inst-ram == 8192 ? #0d1117 : #ffffff; font-size: 11px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                         }
                     }
@@ -493,6 +497,7 @@ export component InstancesScreenView inherits Rectangle {
                         border-width: 1px;
                         border-color: rgba(255, 255, 255, 0.08);
                         cancel_touch := TouchArea {
+                            mouse-cursor: pointer;
                             clicked => { root.show-create-modal = false; }
                         }
                         Text { text: "Отмена"; color: #8b919c; font-size: 13px; font-weight: 600; horizontal-alignment: center; vertical-alignment: center; }
@@ -506,6 +511,7 @@ export component InstancesScreenView inherits Rectangle {
                         border-width: 1px;
                         border-color: rgba(255, 255, 255, 0.12);
                         submit_touch := TouchArea {
+                            mouse-cursor: pointer;
                             clicked => {
                                 root.submit-create-instance(
                                     root.new-inst-name,
@@ -580,7 +586,7 @@ export component ModrinthScreenView inherits Rectangle {
                     border-radius: 9px;
                     border-width: 1px;
                     border-color: root.active-category == "mods" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    TouchArea { clicked => { root.switch-category("mods"); } }
+                    TouchArea { mouse-cursor: pointer; clicked => { root.switch-category("mods"); } }
                     Text { text: "Моды"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
 
@@ -591,7 +597,7 @@ export component ModrinthScreenView inherits Rectangle {
                     border-radius: 9px;
                     border-width: 1px;
                     border-color: root.active-category == "shaders" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    TouchArea { clicked => { root.switch-category("shaders"); } }
+                    TouchArea { mouse-cursor: pointer; clicked => { root.switch-category("shaders"); } }
                     Text { text: "Шейдеры"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
 
@@ -602,7 +608,7 @@ export component ModrinthScreenView inherits Rectangle {
                     border-radius: 9px;
                     border-width: 1px;
                     border-color: root.active-category == "textures" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    TouchArea { clicked => { root.switch-category("textures"); } }
+                    TouchArea { mouse-cursor: pointer; clicked => { root.switch-category("textures"); } }
                     Text { text: "Текстуры"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
 
@@ -613,7 +619,7 @@ export component ModrinthScreenView inherits Rectangle {
                     border-radius: 9px;
                     border-width: 1px;
                     border-color: root.active-category == "modpacks" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    TouchArea { clicked => { root.switch-category("modpacks"); } }
+                    TouchArea { mouse-cursor: pointer; clicked => { root.switch-category("modpacks"); } }
                     Text { text: "Сборки"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
             }
@@ -663,6 +669,7 @@ export component ModrinthScreenView inherits Rectangle {
                 border-color: rgba(255, 255, 255, 0.12);
 
                 s_touch := TouchArea {
+                    mouse-cursor: pointer;
                     clicked => { root.search-query(search_input.text); }
                 }
 
@@ -691,7 +698,7 @@ export component ModrinthScreenView inherits Rectangle {
 
                     animate background { duration: 150ms; }
 
-                    mod_touch := TouchArea {}
+                    mod_touch := TouchArea { mouse-cursor: pointer; }
 
                     HorizontalLayout {
                         padding-left: 18px;
@@ -757,6 +764,7 @@ export component ModrinthScreenView inherits Rectangle {
                                 border-radius: 9px;
 
                                 dl_touch := TouchArea {
+                                    mouse-cursor: pointer;
                                     clicked => { root.install-mod(mod.id); }
                                 }
 
@@ -825,7 +833,7 @@ export component StoreScreenView inherits Rectangle {
                 border-radius: 10px;
                 border-width: 1px;
                 border-color: rgba(255, 255, 255, 0.08);
-                TouchArea { clicked => { root.switch-skin("steve"); } }
+                TouchArea { mouse-cursor: pointer; clicked => { root.switch-skin("steve"); } }
                 HorizontalLayout {
                     alignment: center;
                     spacing: 8px;
@@ -840,7 +848,7 @@ export component StoreScreenView inherits Rectangle {
                 border-radius: 10px;
                 border-width: 1px;
                 border-color: rgba(255, 255, 255, 0.08);
-                TouchArea { clicked => { root.switch-skin("alex"); } }
+                TouchArea { mouse-cursor: pointer; clicked => { root.switch-skin("alex"); } }
                 HorizontalLayout {
                     alignment: center;
                     spacing: 8px;
@@ -855,7 +863,7 @@ export component StoreScreenView inherits Rectangle {
                 border-radius: 10px;
                 border-width: 1px;
                 border-color: rgba(255, 255, 255, 0.08);
-                TouchArea { clicked => { root.switch-skin("technoblade"); } }
+                TouchArea { mouse-cursor: pointer; clicked => { root.switch-skin("technoblade"); } }
                 HorizontalLayout {
                     alignment: center;
                     spacing: 8px;
@@ -927,6 +935,7 @@ export component StoreScreenView inherits Rectangle {
                             border-radius: 9px;
 
                             TouchArea {
+                                mouse-cursor: pointer;
                                 clicked => { root.equip-cape(cape.id); }
                             }
 
@@ -1084,6 +1093,7 @@ export component AccountsScreenView inherits Rectangle {
                 border-color: rgba(255, 255, 255, 0.12);
 
                 add_touch := TouchArea {
+                    mouse-cursor: pointer;
                     clicked => {
                         if acc_input.text != "" {
                             root.add-offline(acc_input.text);
@@ -1117,6 +1127,7 @@ export component AccountsScreenView inherits Rectangle {
                 border-radius: 11px;
 
                 ms_touch := TouchArea {
+                    mouse-cursor: pointer;
                     clicked => { root.login-microsoft(); }
                 }
 
@@ -1150,6 +1161,7 @@ export component AccountsScreenView inherits Rectangle {
                 border-radius: 11px;
 
                 ely_touch := TouchArea {
+                    mouse-cursor: pointer;
                     clicked => { root.login-ely(); }
                 }
 
@@ -1222,6 +1234,7 @@ export component ServersScreenView inherits Rectangle {
                 border-color: rgba(255, 255, 255, 0.12);
 
                 ref_touch := TouchArea {
+                    mouse-cursor: pointer;
                     clicked => { root.refresh-servers(); }
                 }
 
@@ -1250,7 +1263,7 @@ export component ServersScreenView inherits Rectangle {
                     border-color: rgba(255, 255, 255, 0.08);
                     border-radius: 11px;
 
-                    srv_touch := TouchArea {}
+                    srv_touch := TouchArea { mouse-cursor: pointer; }
 
                     HorizontalLayout {
                         padding-left: 18px;
@@ -1311,6 +1324,7 @@ export component ServersScreenView inherits Rectangle {
                                 border-radius: 9px;
 
                                 play_touch := TouchArea {
+                                    mouse-cursor: pointer;
                                     clicked => { root.direct-connect(srv.host); }
                                 }
 
@@ -1465,6 +1479,7 @@ export component ConsoleScreenView inherits Rectangle {
                 border-radius: 9px;
 
                 TouchArea {
+                    mouse-cursor: pointer;
                     clicked => { root.clear-logs(); }
                 }
 
@@ -1572,7 +1587,7 @@ export component SettingsScreenView inherits Rectangle {
                     border-radius: 9px;
                     border-width: 1px;
                     border-color: root.ram-mb == 2048 ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    TouchArea { clicked => { root.change-ram(2048); } }
+                    TouchArea { mouse-cursor: pointer; clicked => { root.change-ram(2048); } }
                     Text { text: "2 ГБ"; color: root.ram-mb == 2048 ? #0d1117 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
 
@@ -1583,7 +1598,7 @@ export component SettingsScreenView inherits Rectangle {
                     border-radius: 9px;
                     border-width: 1px;
                     border-color: root.ram-mb == 4096 ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    TouchArea { clicked => { root.change-ram(4096); } }
+                    TouchArea { mouse-cursor: pointer; clicked => { root.change-ram(4096); } }
                     Text { text: "4 ГБ"; color: root.ram-mb == 4096 ? #0d1117 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
 
@@ -1594,7 +1609,7 @@ export component SettingsScreenView inherits Rectangle {
                     border-radius: 9px;
                     border-width: 1px;
                     border-color: root.ram-mb == 6144 ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    TouchArea { clicked => { root.change-ram(6144); } }
+                    TouchArea { mouse-cursor: pointer; clicked => { root.change-ram(6144); } }
                     Text { text: "6 ГБ"; color: root.ram-mb == 6144 ? #0d1117 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
 
@@ -1605,7 +1620,7 @@ export component SettingsScreenView inherits Rectangle {
                     border-radius: 9px;
                     border-width: 1px;
                     border-color: root.ram-mb == 8192 ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    TouchArea { clicked => { root.change-ram(8192); } }
+                    TouchArea { mouse-cursor: pointer; clicked => { root.change-ram(8192); } }
                     Text { text: "8 ГБ"; color: root.ram-mb == 8192 ? #0d1117 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
 
@@ -1616,7 +1631,7 @@ export component SettingsScreenView inherits Rectangle {
                     border-radius: 9px;
                     border-width: 1px;
                     border-color: root.ram-mb == 12288 ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    TouchArea { clicked => { root.change-ram(12288); } }
+                    TouchArea { mouse-cursor: pointer; clicked => { root.change-ram(12288); } }
                     Text { text: "12 ГБ"; color: root.ram-mb == 12288 ? #0d1117 : #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
             }
@@ -1665,7 +1680,7 @@ export component SettingsScreenView inherits Rectangle {
                     border-radius: 9px;
                     border-width: 1px;
                     border-color: root.gc-type == "G1GC" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    TouchArea { clicked => { root.change-gc("G1GC"); } }
+                    TouchArea { mouse-cursor: pointer; clicked => { root.change-gc("G1GC"); } }
                     Text { text: "G1GC"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
                 Rectangle {
@@ -1675,7 +1690,7 @@ export component SettingsScreenView inherits Rectangle {
                     border-radius: 9px;
                     border-width: 1px;
                     border-color: root.gc-type == "ZGC" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    TouchArea { clicked => { root.change-gc("ZGC"); } }
+                    TouchArea { mouse-cursor: pointer; clicked => { root.change-gc("ZGC"); } }
                     Text { text: "ZGC"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
                 Rectangle {
@@ -1685,7 +1700,7 @@ export component SettingsScreenView inherits Rectangle {
                     border-radius: 9px;
                     border-width: 1px;
                     border-color: root.gc-type == "Shenandoah" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    TouchArea { clicked => { root.change-gc("Shenandoah"); } }
+                    TouchArea { mouse-cursor: pointer; clicked => { root.change-gc("Shenandoah"); } }
                     Text { text: "Shenandoah"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
                 }
             }

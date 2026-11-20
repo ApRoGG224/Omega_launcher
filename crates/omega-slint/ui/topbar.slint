@@ -57,6 +57,7 @@ export component GitHubButton inherits Rectangle {
     background: transparent;
 
     gh_touch := TouchArea {
+          mouse-cursor: pointer;
         clicked => { root.clicked(); }
     }
 
@@ -95,6 +96,7 @@ export component SoundButton inherits Rectangle {
     animate border-color { duration: 150ms; }
 
     mute_touch := TouchArea {
+          mouse-cursor: pointer;
         clicked => { root.clicked(); }
     }
 
@@ -156,6 +158,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             prof_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => { root.toggle-profile-dropdown(); }
             }
 
@@ -244,6 +247,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             home_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => { root.tab-selected("home"); }
             }
 
@@ -278,6 +282,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             set_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => { root.tab-selected("settings"); }
             }
 
@@ -313,6 +318,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             mod_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => { root.tab-selected("modrinth"); }
             }
 
@@ -348,6 +354,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             inst_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => { root.tab-selected("instances"); }
             }
 
@@ -383,6 +390,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             srv_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => { root.tab-selected("servers"); }
             }
 
@@ -418,6 +426,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             store_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => { root.tab-selected("store"); }
             }
 
@@ -453,6 +462,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             con_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => { root.tab-selected("console"); }
             }
 
@@ -498,6 +508,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             sc1_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => {
                     root.active-shortcut = "obsidian";
                     root.select-shortcut("obsidian");
@@ -536,6 +547,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             sc2_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => {
                     root.active-shortcut = "diamond_sword";
                     root.select-shortcut("diamond_sword");
@@ -574,6 +586,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             sc3_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => {
                     root.active-shortcut = "end_crystal";
                     root.select-shortcut("end_crystal");
@@ -612,6 +625,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             sc4_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => {
                     root.active-shortcut = "netherite_sword";
                     root.select-shortcut("netherite_sword");
@@ -657,6 +671,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             fr_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => { root.tab-selected("friends"); }
             }
 
@@ -713,6 +728,7 @@ export component TopBar inherits Rectangle {
             animate border-color { duration: 150ms; }
 
             chev_touch := TouchArea {
+                  mouse-cursor: pointer;
                 clicked => { root.tab-selected("settings"); }
             }
 

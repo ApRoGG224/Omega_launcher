@@ -24,10 +24,10 @@ export component PlayDock inherits Rectangle {
     HorizontalLayout {
         alignment: center;
 
-        // Floating Dock Card (652px x 88px matching reference screenshot exactly)
+        // Floating Dock Card (600px x 88px matching reference screenshot exactly)
         dock_container := Rectangle {
             height: 88px;
-            width: 652px;
+            width: 600px;
             background: #0e1118;
             border-width: 1px;
             border-color: rgba(255, 255, 255, 0.08);
@@ -52,6 +52,7 @@ export component PlayDock inherits Rectangle {
                     animate border-color { duration: 150ms; }
 
                     inst_touch := TouchArea {
+                        mouse-cursor: pointer;
                         clicked => { root.version-clicked(); }
                     }
 
@@ -153,66 +154,96 @@ export component PlayDock inherits Rectangle {
                     }
                 }
 
-                // Right: Big Play / Launching / Stop Button (width 315px, height 64px)
-                play_btn := Rectangle {
+                // Right: Play / Launching / Stop Button (width 184px, height 64px)
+                Rectangle {
+                    width: 184px;
                     height: 64px;
-                    width: 315px;
                     y: (parent.height - self.height) / 2;
-                    background: root.launch-state == "running"
-                        ? (play_touch.pressed ? #9c3735 : (play_touch.has-hover ? #c44e4b : #b3423f))
-                        : (root.launch-state == "launching"
-                            ? (play_touch.pressed ? #1e40af : (play_touch.has-hover ? #2563eb : #1d5dc7))
-                            : (play_touch.pressed ? #b8bdc8 : (play_touch.has-hover ? #d6dae2 : #c9ced8)));
-                    border-width: 1px;
-                    border-color: root.launch-state == "running"
-                        ? #b3423f
-                        : (root.launch-state == "launching" ? #1d5dc7 : #c9ced8);
-                    border-radius: 14px;
 
-                    animate background { duration: 150ms; }
-                    animate border-color { duration: 150ms; }
-
-                    play_touch := TouchArea {
-                        clicked => { root.play-clicked(); }
+                    // Subtle ambient aura/halo around button
+                    Rectangle {
+                        x: -2px;
+                        y: -2px;
+                        width: parent.width + 4px;
+                        height: parent.height + 4px;
+                        border-radius: 16px;
+                        background: root.launch-state == "running"
+                            ? (play_touch.has-hover ? rgba(239, 68, 68, 0.35) : rgba(239, 68, 68, 0.15))
+                            : (root.launch-state == "launching"
+                                ? (play_touch.has-hover ? rgba(59, 130, 246, 0.40) : rgba(59, 130, 246, 0.18))
+                                : (play_touch.has-hover ? rgba(255, 255, 255, 0.35) : rgba(255, 255, 255, 0.12)));
+                        animate background { duration: 150ms; }
                     }
 
-                    HorizontalLayout {
-                        alignment: center;
-                        spacing: 12px;
-                        padding-left: 28px;
-                        padding-right: 28px;
+                    play_btn := Rectangle {
+                        width: 100%;
+                        height: 100%;
+                        background: root.launch-state == "running"
+                            ? (play_touch.pressed ? #9c3735 : (play_touch.has-hover ? #c44e4b : #b3423f))
+                            : (root.launch-state == "launching"
+                                ? (play_touch.pressed ? #1e40af : (play_touch.has-hover ? #2563eb : #1d5dc7))
+                                : (play_touch.pressed ? #b8bdc8 : (play_touch.has-hover ? #ffffff : #d5dce6)));
+                        border-width: 1.5px;
+                        border-color: root.launch-state == "running"
+                            ? (play_touch.has-hover ? #ef4444 : rgba(239, 68, 68, 0.6))
+                            : (root.launch-state == "launching"
+                                ? (play_touch.has-hover ? #60a5fa : rgba(59, 130, 246, 0.6))
+                                : (play_touch.has-hover ? #ffffff : rgba(255, 255, 255, 0.55)));
+                        border-radius: 14px;
 
-                        // Play/Stop/Wait Icon
-                        if root.launch-state == "idle": Image {
-                            source: @image-url("../assets/svg/play.svg");
-                            width: 20px;
-                            height: 20px;
-                            image-fit: contain;
-                            colorize: #0e1118;
+                        animate background { duration: 150ms; }
+                        animate border-color { duration: 150ms; }
+
+                        play_touch := TouchArea {
+                            mouse-cursor: pointer;
+                            clicked => { root.play-clicked(); }
                         }
 
-                        if root.launch-state == "running": Text {
-                            text: "■";
-                            color: #ffffff;
-                            font-size: 18px;
-                            font-weight: 900;
-                            vertical-alignment: center;
-                        }
+                        HorizontalLayout {
+                            alignment: center;
+                            spacing: 12px;
 
-                        if root.launch-state == "launching": Text {
-                            text: "⏳";
-                            color: #ffffff;
-                            font-size: 18px;
-                            vertical-alignment: center;
-                        }
+                            // Icon vertically centered
+                            VerticalLayout {
+                                alignment: center;
+                                width: 18px;
 
-                        Text {
-                            text: root.launch-state == "running" ? "СТОП" : (root.launch-state == "launching" ? "ЗАПУСК..." : "ИГРАТЬ");
-                            color: root.launch-state == "idle" ? #0e1118 : #ffffff;
-                            font-size: 18px;
-                            font-weight: 800;
-                            letter-spacing: 0.8px;
-                            vertical-alignment: center;
+                                if root.launch-state == "idle": Image {
+                                    source: @image-url("../assets/svg/play.svg");
+                                    width: 18px;
+                                    height: 18px;
+                                    image-fit: contain;
+                                    colorize: #0e1118;
+                                }
+
+                                if root.launch-state == "running": Text {
+                                    text: "■";
+                                    color: #ffffff;
+                                    font-size: 18px;
+                                    font-weight: 900;
+                                    horizontal-alignment: center;
+                                }
+
+                                if root.launch-state == "launching": Text {
+                                    text: "⏳";
+                                    color: #ffffff;
+                                    font-size: 16px;
+                                    horizontal-alignment: center;
+                                }
+                            }
+
+                            // Text vertically centered
+                            VerticalLayout {
+                                alignment: center;
+
+                                Text {
+                                    text: root.launch-state == "running" ? "СТОП" : (root.launch-state == "launching" ? "ЗАПУСК..." : "ИГРАТЬ");
+                                    color: root.launch-state == "idle" ? #0e1118 : #ffffff;
+                                    font-size: 18px;
+                                    font-weight: 800;
+                                    letter-spacing: 0.8px;
+                                }
+                            }
                         }
                     }
                 }
