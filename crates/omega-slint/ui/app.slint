@@ -216,17 +216,8 @@ export component MainWindow inherits Window {
         }
     }
 
-    // Left Flank: Separate GitHub Icon (No border, transparent background, exactly matching screenshot)
-    GitHubButton {
-        x: 24px;
-        y: 19px;
-        clicked => {
-            root.open-github();
-        }
-    }
-
     // Center Floating HUD Capsule (Compact dock in center, NOT stretched across the launcher)
-    TopBar {
+    top_bar := TopBar {
         x: (root.width - self.width) / 2;
         y: 14px;
         username: root.player-name;
@@ -242,6 +233,15 @@ export component MainWindow inherits Window {
         }
         select-shortcut(sc) => {
             root.select-shortcut(sc);
+        }
+    }
+
+    // Left Flank: Separate GitHub Icon (No border, transparent background, exactly matching screenshot)
+    GitHubButton {
+        x: 24px;
+        y: 19px;
+        clicked => {
+            root.open-github();
         }
     }
 

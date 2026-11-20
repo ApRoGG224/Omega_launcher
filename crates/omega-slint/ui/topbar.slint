@@ -128,13 +128,14 @@ export component TopBar inherits Rectangle {
     callback toggle-profile-dropdown();
     callback select-shortcut(string);
 
+    width: top_layout.preferred-width;
     height: 48px;
     background: #0e121a;
     border-width: 1px;
     border-color: rgba(255, 255, 255, 0.08);
     border-radius: 16px;
 
-    HorizontalLayout {
+    top_layout := HorizontalLayout {
         padding-left: 8px;
         padding-right: 8px;
         padding-top: 5px;
@@ -144,6 +145,7 @@ export component TopBar inherits Rectangle {
 
         // 1. Profile Pill: [⌄  Username  [Avatar]]
         profile_btn := Rectangle {
+            width: prof_layout.preferred-width;
             height: 38px;
             background: prof_touch.pressed ? #22262e : (prof_touch.has-hover ? #1a2232 : #111622);
             border-width: 1px;
@@ -157,7 +159,7 @@ export component TopBar inherits Rectangle {
                 clicked => { root.toggle-profile-dropdown(); }
             }
 
-            HorizontalLayout {
+            prof_layout := HorizontalLayout {
                 padding-left: 12px;
                 padding-right: 6px;
                 spacing: 8px;
