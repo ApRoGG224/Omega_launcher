@@ -1,0 +1,154 @@
+# MASTER PROMPT: Complete 1-to-1 Migration of Omega Launcher to Native Rust + Slint
+
+> **Role & Context**: You are an Elite Systems Architect and Graphics Engineer specializing in **Rust, Slint UI, wgpu, and Minecraft Launcher Internals**. Your task is to execute the complete, uncompromising, 1-to-1 migration of **Omega Launcher** from its current hybrid stack (React 19 + TypeScript + Tauri v2 + WebKitGTK) into a **100% Native, Single-Binary Application using Rust + Slint UI + wgpu** on the `native-slint` branch.
+>
+> The result must look, feel, animate, and behave **identically** to the original launcher, while cutting RAM consumption down from ~190 MB to **25–35 MB**, eliminating webview dependencies, and achieving sub-50ms instant cold boot.
+
+---
+
+## 1. Core Architecture & Mental Model
+
+### The Dual-Layer Separation
+```
++-------------------------------------------------------------------------+
+|                        SLINT UI LAYER (crates/omega-slint)              |
+|  - .slint Declarative UI: Notched Pixel Plates, Sliders, Dropdowns     |
+|  - Custom wgpu/FemtoVG Software Renderer for 3D Character & Capes       |
+|  - Strict No-Neon Design Language, Smooth Transitions, Tooltips         |
+|  - Reactive Properties & Callbacks                                      |
++------------------------------------+------------------------------------+
+                                     | slint::Weak<MainWindow> / tokio::sync::mpsc
+                                     v
++-------------------------------------------------------------------------+
+|                      RUST CORE ENGINE (crates/omega-core)               |
+|  - launch.rs: JVM argument injector, GC profiles, Process management    |
+|  - java.rs: JRE 8/17/21/25 auto-detection & Mojang JRE downloader       |
+|  - db.rs: SQLite local storage (instances, accounts, servers, settings)  |
+|  - auth.rs: Microsoft OAuth2 Device/Webview flow & Ely.by session sync  |
+|  - modrinth.rs & curseforge.rs: Unified catalog search & mod downloader |
+|  - ping.rs: Server list MOTD pinging and player counts                 |
++-------------------------------------------------------------------------+
+```
+
+### Threading & Concurrency Rule
+- The **UI thread** runs the Slint event loop (`ui.run()`).
+- All asynchronous I/O (network requests, game launching, disk scanning, database queries, hashing) **MUST** run on the `tokio` multi-threaded runtime.
+- Background tasks communicate with the UI exclusively through thread-safe `slint::invoke_from_event_loop` or `ui.as_weak()`. **Never block the Slint thread.**
+
+---
+
+## 2. Design System: 1-to-1 Pixel-Art Reproduction
+
+You must strictly preserve the authentic Minecraft UI aesthetics established in the React frontend:
+
+### 1. The Notched Pixel-Plate Geometry
+- **Rule:** Every card, button, modal, and dock element must follow the authentic 6px notched border formula (stepped 90° corners, 6-slice SVG equivalent, zero rounded curves).
+- **In Slint:** Implement reusable notched containers (`PixelCard`, `PixelButton`, `PixelBadge`) using nested `Rectangle` compositions or custom Slint `Path` polygons with 6px stepped insets.
+- **Strict No-Neon Directive:** NEVER use neon glows, bright radial seams, or oversaturated text-shadows. Stick to matte obsidian, deep charcoal, bedrock, stone, and authentic Minecraft palette accents:
+  - Background Base: `#07080e` (Obsidian abyss)
+  - Card Surface: `#0d111a` / `#111626`
+  - Border Stroke: `#2a324b` (Subtle dark steel)
+  - Royal Blue (Dock / Version selector): `#1d5dc7`
+  - Pastel Lilac / Violet (Play Action): `#9f75ff` (Hover: `#b28eff`, Active: `#8c62ec`)
+  - Emerald Green (Success / Installed / Online): `#10b981`
+  - Ruby Red (Delete / Stop Game / Offline): `#ef4444`
+  - Text Primary: `#ffffff`, Text Muted: `#8b949e`, Text Subtle: `#4b5563`
+
+### 2. Animations & Micro-Interactions
+- **Button Press & Hover States:**
+  - Fast, responsive easing: `in-out property <float> hover-opacity; animate hover-opacity { duration: 120ms; easing: ease-out; }`
+  - Active press transform feedback: subtle 1-2px vertical notch shift or color darkening (`#8c62ec` on lilac play button).
+- **Stepped Pixel Loaders:**
+  - Replace all generic round spinners with discrete 8-step pixel art cubes using Slint timers (`Timer` ticking every 80ms cycling through 8 discrete frame offsets or rotation steps).
+- **Floating Tooltips:**
+  - Reproduce the `.dock-tooltip` with triangular pointer ("Сменить версию") appearing on hover with a 150ms fade-in above the active dock selector.
+
+---
+
+## 3. 3D Character Stage & Skin Viewer (wgpu / Slint Buffer)
+
+In the React version, the home screen features an interactive 3D character with articulated limbs, roaming physics, and mouse look. In Native Slint:
+
+1. **Voxel Mesh Definition:**
+   - 6 rectangular cuboids (Head: 8x8x8, Torso: 8x12x4, Left Arm: 4x12x4, Right Arm: 4x12x4, Left Leg: 4x12x4, Right Leg: 4x12x4).
+   - Support both standard (4px arm) and slim/Alex (3px arm) models.
+2. **Skin Texture UV Mapping:**
+   - Unpack official 64x64 PNG textures with nearest-neighbor (`FilterMode::Nearest`) filtering.
+   - Handle second layer (jacket, hat, sleeves, pants) with 0.5px dilation.
+3. **Rendering Pipeline:**
+   - Implement either:
+     - A lightweight software/FemtoVG ray-rasterizer writing directly into a `slint::SharedPixelBuffer<slint::Rgba8Pixel>`.
+     - Or an offscreen `wgpu` render-target pipe blitted to Slint via `slint::Image::from_rgba8`.
+4. **Motion & Interaction:**
+   - Idle breathing sway (sinusoidal rotation on arms and legs at 0.5 Hz).
+   - Mouse hover head tracking: map cursor X/Y coordinates relative to window center into neck yaw (-35°..+35°) and pitch (-25°..+25°).
+   - Dynamic ground contact shadow plane fading with jump height.
+
+---
+
+## 4. Complete Screen Implementations (The 8 Screens)
+
+### Screen 0: Top HUD & Navigation Bar
+- **Friends Online Pill:** Red/green badge with online count (`В сети: 3`).
+- **Profile Popover:** Click avatar to open notched obsidian popover with account switch, Ely.by badge, and logout.
+- **Navigation Buttons:** Mute audio toggle, Messages/News, Lime-green Bug Report / Shield button with cyan `+50` badge, Settings gear button.
+
+### Screen 1: Home Screen (`HomeScreenView`)
+- 3D Character Stage occupying center/left.
+- Left action cards:
+  - "Магазин Omega" -> switches to Store screen.
+  - "Играть с друзьями" -> opens Servers/Friends screen.
+- Bottom Dock:
+  - 3D Grass Block isometric icon (`32x32`).
+  - Active version & loader info ("test1", "1.21.4 Fabric", "Готово к запуску").
+  - Big Play Button: states `ИГРАТЬ` (lilac) -> `ЗАПУСК...` -> `В ИГРЕ / ОСТАНОВИТЬ` (ruby red).
+
+### Screen 2: Instances Screen (`InstancesScreenView`)
+- Top category filter tabs: `⭐ Популярные`, `Все релизы (103)`, `Снапшоты (759)`, `Beta & Alpha (61)`.
+- Search input with real-time filtering.
+- Authentic 16x16 Minecraft pixel-art icons (Diamond Sword, Diamond Pickaxe, Obsidian, End Crystal, Totem, etc.).
+- Modal / Panel to create new instance: version selector, loader picker (Fabric, Forge, NeoForge, Vanilla), RAM allocator slider.
+- Action buttons: "Играть", "Настройки сборки", "Открыть папку", "Удалить".
+
+### Screen 3: Modrinth & CurseForge Catalog (`ModrinthScreenView`)
+- Dual-dock header: left categories (Modpacks, Mods, Shaders, Resource Packs), right source toggle (Modrinth / CurseForge).
+- Real-time debounced search input (300ms) with request cancellation.
+- Uniform 142px card layout: ambient blurred backdrop, loader stack (Fabric, Forge, Quilt), download count, author, install button.
+- Virtualized or paginated list powered by Tokio background fetching.
+
+### Screen 4: Store & Capes Showcase (`StoreScreenView`)
+- Top tabs: "Скины", "Официальные плащи", "Косметика (Корона)".
+- **Skins:** Online search catalog (54,000+ skins via Rust scraper), recent skins history with relative time badges ("только что", "5 мин назад"), single-click equip.
+- **Capes:** Official Microsoft capes fetcher via Mojang API (`GET /minecraft/profile`), real-time equip (`PUT /minecraft/profile/capes/active`), offline guard card when logged in without Microsoft.
+- **Cosmetics:** Monarch Crown 3D showcase card, static wardrobe character preview.
+
+### Screen 5: Accounts Screen (`AccountsScreenView`)
+- Account list with active checkmark, avatar head, type badge (Microsoft / Ely.by / Offline).
+- "Войти через Microsoft" (OAuth2 device flow / browser callback).
+- "Войти через Ely.by" (auth popup / token exchange).
+- "Добавить оффлайн-аккаунт" (username input, auto skin cache).
+
+### Screen 6: Servers Screen (`ServersScreenView`)
+- Server cards with live ping indicator, ping latency in ms, player count (`142/500`), server icon, and MOTD with Minecraft color codes formatting.
+- "Быстрое подключение", "Добавить сервер", "Пинг всех серверов".
+
+### Screen 7: Console & Live Logs Screen (`ConsoleScreenView`)
+- Live scrolling log terminal connected to stdout/stderr of the launched game process.
+- Filter chips: `ВСЕ`, `INFO`, `WARN`, `ERROR`, `AUTH`.
+- Actions: "Копировать логи", "Очистить", "Экспорт в файл".
+
+### Screen 8: Settings Screen (`SettingsScreenView`)
+- **Java Configuration:** Auto-detected JRE list via `omega_core::java::find_system_java`, custom path browser, version verification.
+- **Memory & Performance:** RAM allocation slider (1 GB to 32 GB) with MB readout.
+- **Garbage Collector Presets:** Toggle buttons for `G1GC`, `ZGC`, `Shenandoah`, and raw `custom_jvm_args` text editor.
+- **Game Behavior:** Resolution width/height, auto-close launcher on start, Discord Rich Presence toggle.
+
+---
+
+## 5. Execution Directives for the Agent
+
+When executing this port:
+1. **Never mock the backend:** Bind UI callbacks directly to the robust Rust functions in `omega-core` (`launch_game`, `load_instances`, `save_instance`, `ping_server`, `login_microsoft`).
+2. **Compile-Check Frequently:** Run `cargo check -p omega-slint` after editing `.slint` files to catch layout or type errors early.
+3. **Preserve State Persistence:** Ensure all settings, instances, accounts, and server lists persist to SQLite via `omega-core::db`.
+4. **Clean Git Hygiene:** Keep commits scoped with conventional prefixes (`feat(slint):`, `fix(slint):`).
