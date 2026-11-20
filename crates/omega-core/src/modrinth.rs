@@ -111,3 +111,6 @@ pub async fn download_modrinth_version(
     download_file(&client, download_url, &dest, on_log).await?;
     Ok(filename.to_string())
 }
+
+pub use search_modrinth as search_mods;
+

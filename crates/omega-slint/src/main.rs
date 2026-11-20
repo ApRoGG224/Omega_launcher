@@ -1,7 +1,7 @@
 mod character_3d;
 
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Arc, Mutex as StdMutex, RwLock};
 use std::time::Instant;
 use image::RgbaImage;
 use slint::{ComponentHandle, Model, ModelRc, VecModel};
@@ -178,41 +178,74 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     host: format!("{}:{}", s.host, s.port).into(),
                     ping: "Опрос...".into(),
                     players: "0/0".into(),
+                    motd: "".into(),
                 })
                 .collect();
             ui.set_servers(ModelRc::new(VecModel::from(srv_items)));
-
-            // Spawn background task to ping servers
-            let ping_ui = ui_weak.clone();
-            tokio::spawn(async move {
-                for s in db_servers {
-                    let host = s.host.clone();
-                    let port = s.port;
-                    if let Ok(info) = omega_core::network::ping_server(host.clone(), Some(port)).await {
-                        let ping_ui = ping_ui.clone();
-                        let _ = slint::invoke_from_event_loop(move || {
-                            if let Some(ui) = ping_ui.upgrade() {
-                                let mut updated: Vec<ServerItem> = Vec::new();
-                                for srv in ui.get_servers().iter() {
-                                    if srv.host.to_string().starts_with(&host) {
-                                        updated.push(ServerItem {
-                                            name: srv.name,
-                                            host: srv.host,
-                                            ping: format!("{} ms", info.latency_ms).into(),
-                                            players: format!("{}/{}", info.players_online, info.players_max).into(),
-                                        });
-                                    } else {
-                                        updated.push(srv);
-                                    }
-                                }
-                                ui.set_servers(ModelRc::new(VecModel::from(updated)));
-                            }
-                        });
-                    }
-                }
-            });
         }
     }
+
+    // Helper: Async Server Ping Monitor
+    let ping_all_servers = {
+        let ui_weak = ui_weak.clone();
+        let data_dir = data_dir.clone();
+        Arc::new(move || {
+            let ui_weak = ui_weak.clone();
+            let data_dir = data_dir.clone();
+            tokio::spawn(async move {
+                let servers = if let Ok(conn) = omega_core::db::init_db(&data_dir) {
+                    omega_core::db::load_servers(&conn).unwrap_or_default()
+                } else {
+                    Vec::new()
+                };
+                for s in servers {
+                    let host = s.host.clone();
+                    let port = s.port;
+                    let ping_res = omega_core::network::ping_server(host.clone(), Some(port)).await;
+                    let ping_ui = ui_weak.clone();
+
+                    let _ = slint::invoke_from_event_loop(move || {
+                        if let Some(ui) = ping_ui.upgrade() {
+                            let mut updated: Vec<ServerItem> = Vec::new();
+                            for srv in ui.get_servers().iter() {
+                                let srv_host = srv.host.to_string();
+                                let target_prefix = format!("{}:{}", host, port);
+                                if srv_host == target_prefix || srv_host.starts_with(&host) {
+                                    match &ping_res {
+                                        Ok(info) if info.online => {
+                                            let parsed_motd = omega_core::network::parse_minecraft_motd(&info.motd);
+                                            updated.push(ServerItem {
+                                                name: if info.name.is_empty() { srv.name } else { info.name.clone().into() },
+                                                host: srv.host,
+                                                ping: format!("{} ms", info.latency_ms).into(),
+                                                players: format!("{}/{}", info.players_online, info.players_max).into(),
+                                                motd: parsed_motd.into(),
+                                            });
+                                        }
+                                        _ => {
+                                            updated.push(ServerItem {
+                                                name: srv.name,
+                                                host: srv.host,
+                                                ping: "Оффлайн".into(),
+                                                players: "-/-".into(),
+                                                motd: "Сервер недоступен".into(),
+                                            });
+                                        }
+                                    }
+                                } else {
+                                    updated.push(srv);
+                                }
+                            }
+                            ui.set_servers(ModelRc::new(VecModel::from(updated)));
+                        }
+                    });
+                }
+            });
+        })
+    };
+
+    // Initial Server Ping on Startup
+    ping_all_servers();
 
     // Initial Modrinth Catalog Search in Background
     let cat_ui = ui_weak.clone();
@@ -252,19 +285,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    // Create Instance callback
+    // Create Instance callback (from dialog with version manifest & loader & RAM)
     let ui_handle = ui_weak.clone();
     let data_dir_clone = data_dir.clone();
-    ui.on_create_instance(move || {
+    ui.on_submit_create_instance(move |name, version, loader, ram| {
         let Some(ui) = ui_handle.upgrade() else { return };
+        let name_str = name.trim().to_string();
+        let ver_str = version.trim().to_string();
+        let ldr_str = loader.trim().to_string();
+        let ram_val = ram as i32;
+
         let new_id = format!("inst_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis());
-        let new_name = format!("Сборка {}", &new_id[new_id.len() - 4..]);
+        let inst_name = if name_str.is_empty() { format!("Сборка {}", &new_id[new_id.len().saturating_sub(4)..]) } else { name_str };
 
         let inst = omega_core::db::DbInstance {
             id: new_id.clone(),
-            name: new_name.clone(),
-            mc_version: "1.21.4".to_string(),
-            loader: "Fabric".to_string(),
+            name: inst_name.clone(),
+            mc_version: ver_str.clone(),
+            loader: ldr_str.clone(),
             x: 0.0,
             y: 0.0,
             icon: Some("diamond_sword".to_string()),
@@ -273,8 +311,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             last_played_at: None,
         };
 
+        let inst_mods_dir = data_dir_clone.join("instances").join(&new_id).join("minecraft").join("mods");
+        let _ = std::fs::create_dir_all(&inst_mods_dir);
+
         if let Ok(conn) = omega_core::db::init_db(&data_dir_clone) {
-            let _ = omega_core::db::create_instance(&conn, &inst);
+            let _ = omega_core::db::save_instance(&conn, &inst);
             if let Ok(list) = omega_core::db::load_instances(&conn) {
                 let slint_models: Vec<InstanceItem> = list
                     .iter()
@@ -291,9 +332,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
+        ui.set_active_instance_id(new_id.clone().into());
+        ui.set_active_instance_name(inst_name.clone().into());
+        ui.set_active_version(ver_str.clone().into());
+        ui.set_active_loader(ldr_str.clone().into());
+        ui.set_active_playtime("0 мин".into());
+        ui.set_ram_mb(ram_val);
+
         let old = ui.get_log_content().to_string();
-        ui.set_log_content(format!("{old}\n[launcher/INFO] Created new instance '{new_name}' (1.21.4 Fabric)").into());
+        ui.set_log_content(format!("{old}\n[launcher/INFO] Сборка '{inst_name}' ({ver_str} {ldr_str}, {ram_val} МБ) успешно сохранена в SQLite!").into());
     });
+
+    ui.on_create_instance(move || {});
 
     // Delete Instance callback
     let ui_handle = ui_weak.clone();
@@ -407,13 +457,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    // Modrinth Search Query callback
+    // Modrinth State & Search Debounce
+    let search_debounce_seq = Arc::new(AtomicU64::new(0));
+    let active_category = Arc::new(RwLock::new("mods".to_string()));
+    let pending_direct_connect = Arc::new(StdMutex::new(None::<String>));
+
+    // Modrinth Search Query callback with 300ms Debounce
     let ui_handle = ui_weak.clone();
+    let seq_token = search_debounce_seq.clone();
+    let cat_ref = active_category.clone();
     ui.on_search_query(move |query| {
         let q_str = query.to_string();
+        let seq = seq_token.fetch_add(1, Ordering::SeqCst) + 1;
+        let seq_check = seq_token.clone();
         let ui_handle = ui_handle.clone();
+        let cat_ref = cat_ref.clone();
+
         tokio::spawn(async move {
-            if let Ok(hits) = omega_core::modrinth::search_modrinth(&q_str, "mod", Some("fabric"), 15, 0).await {
+            tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+            if seq_check.load(Ordering::SeqCst) != seq {
+                return;
+            }
+
+            let cat_str = cat_ref.read().unwrap().clone();
+            let project_type = match cat_str.as_str() {
+                "shaders" => "shader",
+                "textures" => "resourcepack",
+                "modpacks" => "modpack",
+                _ => "mod",
+            };
+            let loader = if project_type == "mod" { Some("fabric") } else { None };
+
+            if let Ok(hits) = omega_core::modrinth::search_mods(&q_str, project_type, loader, 20, 0).await {
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(ui) = ui_handle.upgrade() {
                         let items: Vec<ModItem> = hits
@@ -424,7 +499,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 author: h.author.clone().into(),
                                 description: h.description.clone().into(),
                                 downloads: format!("{:.1}M", (h.downloads as f64) / 1_000_000.0).into(),
-                                loader: "Fabric".into(),
+                                loader: if project_type == "mod" { "Fabric".into() } else { "Any".into() },
                             })
                             .collect();
                         ui.set_catalog_mods(ModelRc::new(VecModel::from(items)));
@@ -436,15 +511,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Modrinth Switch Category callback
     let ui_handle = ui_weak.clone();
+    let cat_ref = active_category.clone();
     ui.on_switch_category(move |category| {
-        let cat_str = match category.to_string().as_str() {
+        let cat_str = category.to_string();
+        *cat_ref.write().unwrap() = cat_str.clone();
+
+        let project_type = match cat_str.as_str() {
             "shaders" => "shader",
+            "textures" => "resourcepack",
             "modpacks" => "modpack",
             _ => "mod",
         };
+        let loader = if project_type == "mod" { Some("fabric") } else { None };
         let ui_handle = ui_handle.clone();
+
         tokio::spawn(async move {
-            if let Ok(hits) = omega_core::modrinth::search_modrinth("", cat_str, None, 15, 0).await {
+            if let Ok(hits) = omega_core::modrinth::search_mods("", project_type, loader, 20, 0).await {
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(ui) = ui_handle.upgrade() {
                         let items: Vec<ModItem> = hits
@@ -455,7 +537,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 author: h.author.clone().into(),
                                 description: h.description.clone().into(),
                                 downloads: format!("{:.1}M", (h.downloads as f64) / 1_000_000.0).into(),
-                                loader: "Any".into(),
+                                loader: if project_type == "mod" { "Fabric".into() } else { "Any".into() },
                             })
                             .collect();
                         ui.set_catalog_mods(ModelRc::new(VecModel::from(items)));
@@ -465,22 +547,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
     });
 
-    // Direct Connect to Multiplayer Server callback
-    let pending_direct_connect = Arc::new(Mutex::new(None::<String>));
+    // Direct Connect to Multiplayer Server callback (Synchronous mutex write prevents race conditions)
     let pending_conn_ref = pending_direct_connect.clone();
     let ui_handle = ui_weak.clone();
     ui.on_direct_connect(move |host| {
         let Some(ui) = ui_handle.upgrade() else { return };
         let host_str = host.to_string();
         let old = ui.get_log_content().to_string();
-        ui.set_log_content(format!("{old}\n[launcher/INFO] Direct connect requested to {host_str}...").into());
-        let pending = pending_conn_ref.clone();
-        let h_str = host_str.clone();
-        tokio::spawn(async move {
-            *pending.lock().await = Some(h_str);
-        });
+        ui.set_log_content(format!("{old}\n[launcher/INFO] Прямое подключение к серверу {host_str}...").into());
+        *pending_conn_ref.lock().unwrap() = Some(host_str);
         // Triggers game launch with quickPlayMultiplayer
         ui.invoke_play_clicked();
+    });
+
+    // Refresh Servers Ping callback
+    let ping_fn = ping_all_servers.clone();
+    ui.on_refresh_servers(move || {
+        ping_fn();
     });
 
     // RAM change callback
@@ -556,10 +639,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let old = ui.get_log_content().to_string();
                     match res {
                         Ok(filename) => {
-                            ui.set_log_content(format!("{old}\n[modrinth/INFO] Successfully installed '{filename}'!").into());
+                            // Record installed mod in SQLite
+                            if let Ok(conn) = omega_core::db::init_db(&data_dir) {
+                                let rec = omega_core::db::DbModRecord {
+                                    instance_id: inst_id.clone(),
+                                    mod_id: mod_id_str.clone(),
+                                    version: Some(mc_ver.clone()),
+                                    filename: filename.clone(),
+                                };
+                                let _ = omega_core::db::record_installed_mod(&conn, &rec);
+                            }
+                            ui.set_log_content(format!("{old}\n[modrinth/INFO] Мод '{filename}' успешно установлен в сборку {inst_id}!").into());
                         }
                         Err(e) => {
-                            ui.set_log_content(format!("{old}\n[modrinth/WARN] Installation failed: {e}").into());
+                            ui.set_log_content(format!("{old}\n[modrinth/WARN] Ошибка установки мода: {e}").into());
                         }
                     }
                 }
@@ -673,22 +766,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
     });
 
-    // Play / Stop Button callback & Game Launch Execution
+    // Play / Stop / Launching Button callback & Game Launch Execution
     let active_child = Arc::new(Mutex::new(None::<std::process::Child>));
     let is_running_flag = Arc::new(AtomicBool::new(false));
+    let is_launching_flag = Arc::new(AtomicBool::new(false));
+    let cancel_launch_token = Arc::new(AtomicBool::new(false));
 
     let ui_handle = ui_weak.clone();
     let child_lock = active_child.clone();
     let running_flag = is_running_flag.clone();
+    let launching_flag = is_launching_flag.clone();
+    let cancel_token = cancel_launch_token.clone();
     let data_dir_clone = data_dir.clone();
     let pending_conn_play = pending_direct_connect.clone();
 
     ui.on_play_clicked(move || {
         let Some(ui) = ui_handle.upgrade() else { return };
         let is_running = running_flag.load(Ordering::SeqCst);
+        let is_launching = launching_flag.load(Ordering::SeqCst);
 
         if is_running {
-            // Stop / Kill the game
+            // Stop / Kill the game process
             println!("[launcher/INFO] Stop requested, terminating Minecraft process...");
             let child_lock = child_lock.clone();
             let ui_handle = ui_handle.clone();
@@ -702,53 +800,78 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 running_flag.store(false, Ordering::SeqCst);
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(ui) = ui_handle.upgrade() {
+                        ui.set_launch_state("idle".into());
                         ui.set_is_game_running(false);
+                        let old = ui.get_log_content().to_string();
+                        ui.set_log_content(format!("{old}\n[launcher/INFO] Процесс Minecraft остановлен пользователем.").into());
                     }
                 });
             });
             return;
         }
 
-        // Launch Game
+        if is_launching {
+            // Cancel launch pipeline if requested during preparation/download
+            println!("[launcher/INFO] Launch cancellation requested...");
+            cancel_token.store(true, Ordering::SeqCst);
+            launching_flag.store(false, Ordering::SeqCst);
+            ui.set_launch_state("idle".into());
+            ui.set_is_game_running(false);
+            let old = ui.get_log_content().to_string();
+            ui.set_log_content(format!("{old}\n[launcher/INFO] Запуск игры отменён пользователем.").into());
+            return;
+        }
+
+        // 1. Prepare Launch Parameters
         let inst_name = ui.get_active_instance_name().to_string();
         let inst_id = ui.get_active_instance_id().to_string();
         let mc_ver = ui.get_active_version().to_string();
+        let loader = ui.get_active_loader().to_string();
         let user = ui.get_player_name().to_string();
         let ram = ui.get_ram_mb() as u32;
         let gc = ui.get_gc_type().to_string();
 
-        ui.set_is_game_running(true);
+        // Switch button state: ИГРАТЬ -> ЗАПУСК...
+        ui.set_launch_state("launching".into());
+        ui.set_is_game_running(false);
+
+        // Check required Java runtime
+        let req_java = omega_core::java::required_java_version(&mc_ver);
+        let sys_java_opt = omega_core::java::find_system_java(req_java);
 
         let current_log = ui.get_log_content().to_string();
-        let new_log = format!("{current_log}\n[launcher/INFO] Starting {inst_name} ({mc_ver}) for user {user} with {ram} MB RAM (GC: {gc})...");
+        let java_log = match &sys_java_opt {
+            Some(path) => format!("[launcher/INFO] Java Runtime (v{req_java}+) обнаружена: {path}"),
+            None => format!("[launcher/WARN] Системная Java {req_java}+ не найдена. Проверяем авто-загрузку Mojang JRE..."),
+        };
+        let new_log = format!("{current_log}\n[launcher/INFO] Запуск сборки {inst_name} ({mc_ver} {loader}) для игрока {user} [RAM: {ram} MB, GC: {gc}]...\n{java_log}");
         ui.set_log_content(new_log.into());
 
-        running_flag.store(true, Ordering::SeqCst);
+        launching_flag.store(true, Ordering::SeqCst);
+        cancel_token.store(false, Ordering::SeqCst);
 
         let ui_handle = ui_handle.clone();
         let child_lock = child_lock.clone();
         let running_flag = running_flag.clone();
+        let launching_flag = launching_flag.clone();
+        let cancel_token = cancel_token.clone();
         let data_dir = data_dir_clone.clone();
         let pending_conn = pending_conn_play.clone();
 
         tokio::spawn(async move {
-            let quick_play = pending_conn.lock().await.take();
-            let opts = omega_core::launch::LaunchOptions {
-                version: mc_ver.clone(),
-                instance_id: inst_id.clone(),
-                username: user.clone(),
-                ram_mb: ram,
-                custom_jvm_args: Some(format!("-XX:+Use{gc}")),
-                quick_play_server: quick_play,
-            };
+            let client = reqwest::Client::new();
+            let vanilla_ver = mc_ver.split('-').next().unwrap_or(&mc_ver).to_string();
+            let loader_lower = loader.to_lowercase();
 
-            let log_ui = ui_handle.clone();
-            let result = omega_core::launch::launch_game(
+            // 2. Download missing vanilla files and libraries via installer
+            let log_ui_inst = ui_handle.clone();
+            let res_vanilla = omega_core::installer::ensure_vanilla(
+                &client,
+                &vanilla_ver,
                 &data_dir,
-                opts,
                 Some(&move |msg: &str| {
                     let msg_str = msg.to_string();
-                    let log_ui = log_ui.clone();
+                    let log_ui = log_ui_inst.clone();
                     let _ = slint::invoke_from_event_loop(move || {
                         if let Some(ui) = log_ui.upgrade() {
                             let old = ui.get_log_content().to_string();
@@ -759,14 +882,104 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
             .await;
 
-            match result {
-                Ok(mut active_game) => {
-                    let pid = active_game.pid;
+            if let Err(e) = res_vanilla {
+                launching_flag.store(false, Ordering::SeqCst);
+                let log_ui = ui_handle.clone();
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(ui) = log_ui.upgrade() {
+                        ui.set_launch_state("idle".into());
+                        ui.set_is_game_running(false);
+                        let old = ui.get_log_content().to_string();
+                        ui.set_log_content(format!("{old}\n[installer/ERROR] Ошибка подготовки Vanilla файлов: {e}").into());
+                    }
+                });
+                return;
+            }
+
+            // 3. If Fabric, ensure Fabric loader profile
+            if loader_lower == "fabric" {
+                let log_ui_fab = ui_handle.clone();
+                let res_fab = omega_core::installer::install_fabric(
+                    &client,
+                    &vanilla_ver,
+                    &data_dir,
+                    Some(&move |msg: &str| {
+                        let msg_str = msg.to_string();
+                        let log_ui = log_ui_fab.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            if let Some(ui) = log_ui.upgrade() {
+                                let old = ui.get_log_content().to_string();
+                                ui.set_log_content(format!("{old}\n{msg_str}").into());
+                            }
+                        });
+                    }),
+                )
+                .await;
+
+                if let Err(e) = res_fab {
+                    launching_flag.store(false, Ordering::SeqCst);
                     let log_ui = ui_handle.clone();
                     let _ = slint::invoke_from_event_loop(move || {
                         if let Some(ui) = log_ui.upgrade() {
+                            ui.set_launch_state("idle".into());
+                            ui.set_is_game_running(false);
                             let old = ui.get_log_content().to_string();
-                            ui.set_log_content(format!("{old}\n[launcher/INFO] Minecraft process running (PID: {pid})").into());
+                            ui.set_log_content(format!("{old}\n[installer/ERROR] Ошибка установки Fabric: {e}").into());
+                        }
+                    });
+                    return;
+                }
+            }
+
+            if cancel_token.load(Ordering::SeqCst) {
+                launching_flag.store(false, Ordering::SeqCst);
+                return;
+            }
+
+            // 4. Resolve Direct Connect (Quick Play)
+            let quick_play = pending_conn.lock().unwrap().take();
+            let opts = omega_core::launch::LaunchOptions {
+                version: mc_ver.clone(),
+                instance_id: inst_id.clone(),
+                username: user.clone(),
+                ram_mb: ram,
+                custom_jvm_args: Some(format!("-XX:+Use{gc}")),
+                quick_play_server: quick_play,
+            };
+
+            // 5. Launch Game Process
+            let log_ui_launch = ui_handle.clone();
+            let result = omega_core::launch::launch_game(
+                &data_dir,
+                opts,
+                Some(&move |msg: &str| {
+                    let msg_str = msg.to_string();
+                    let log_ui = log_ui_launch.clone();
+                    let _ = slint::invoke_from_event_loop(move || {
+                        if let Some(ui) = log_ui.upgrade() {
+                            let old = ui.get_log_content().to_string();
+                            ui.set_log_content(format!("{old}\n{msg_str}").into());
+                        }
+                    });
+                }),
+            )
+            .await;
+
+            launching_flag.store(false, Ordering::SeqCst);
+
+            match result {
+                Ok(mut active_game) => {
+                    let pid = active_game.pid;
+                    running_flag.store(true, Ordering::SeqCst);
+
+                    // Switch button state: ЗАПУСК... -> СТОП
+                    let log_ui = ui_handle.clone();
+                    let _ = slint::invoke_from_event_loop(move || {
+                        if let Some(ui) = log_ui.upgrade() {
+                            ui.set_launch_state("running".into());
+                            ui.set_is_game_running(true);
+                            let old = ui.get_log_content().to_string();
+                            ui.set_log_content(format!("{old}\n[launcher/INFO] Minecraft успешно запущен (PID: {pid})!").into());
                         }
                     });
 
@@ -779,7 +992,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         *guard = Some(active_game.child);
                     }
 
-                    // Stream stdout in background
+                    // Stream stdout in real-time
                     if let Some(stdout) = stdout {
                         let log_ui = ui_handle.clone();
                         tokio::task::spawn_blocking(move || {
@@ -798,7 +1011,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         });
                     }
 
-                    // Stream stderr in background
+                    // Stream stderr in real-time
                     if let Some(stderr) = stderr {
                         let log_ui = ui_handle.clone();
                         tokio::task::spawn_blocking(move || {
@@ -817,7 +1030,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         });
                     }
 
-                    // Monitor game process until exit
+                    // Monitor process until exit
                     let child_lock = child_lock.clone();
                     tokio::task::spawn_blocking(move || {
                         loop {
@@ -844,25 +1057,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .await
                     .ok();
 
+                    // Switch button state: СТОП -> ИГРАТЬ
                     running_flag.store(false, Ordering::SeqCst);
                     let log_ui = ui_handle.clone();
                     let _ = slint::invoke_from_event_loop(move || {
                         if let Some(ui) = log_ui.upgrade() {
+                            ui.set_launch_state("idle".into());
                             ui.set_is_game_running(false);
                             let old = ui.get_log_content().to_string();
-                            ui.set_log_content(format!("{old}\n[launcher/INFO] Minecraft process terminated.").into());
+                            ui.set_log_content(format!("{old}\n[launcher/INFO] Процесс Minecraft завершён.").into());
                         }
                     });
                 }
                 Err(err) => {
                     running_flag.store(false, Ordering::SeqCst);
-                    let err_msg = format!("[launcher/ERROR] Launch failed: {err}");
                     let log_ui = ui_handle.clone();
                     let _ = slint::invoke_from_event_loop(move || {
                         if let Some(ui) = log_ui.upgrade() {
+                            ui.set_launch_state("idle".into());
                             ui.set_is_game_running(false);
                             let old = ui.get_log_content().to_string();
-                            ui.set_log_content(format!("{old}\n{err_msg}").into());
+                            ui.set_log_content(format!("{old}\n[launcher/ERROR] Ошибка запуска: {err}").into());
                         }
                     });
                 }

@@ -249,6 +249,19 @@ pub fn create_instance(conn: &Connection, inst: &DbInstance) -> Result<(), Strin
     Ok(())
 }
 
+pub fn save_instance(conn: &Connection, inst: &DbInstance) -> Result<(), String> {
+    create_instance(conn, inst)
+}
+
+pub fn record_installed_mod(conn: &Connection, rec: &DbModRecord) -> Result<(), String> {
+    conn.execute(
+        "INSERT OR REPLACE INTO installed_mods (instance_id, mod_id, version, filename) VALUES (?1, ?2, ?3, ?4)",
+        rusqlite::params![rec.instance_id, rec.mod_id, rec.version, rec.filename],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 pub fn delete_instance(conn: &Connection, id: &str) -> Result<(), String> {
     conn.execute("DELETE FROM instances WHERE id = ?1", [id])
         .map_err(|e| e.to_string())?;

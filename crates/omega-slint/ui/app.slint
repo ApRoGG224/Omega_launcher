@@ -43,6 +43,7 @@ export component MainWindow inherits Window {
     in-out property <string> active-loader: "Fabric";
     in-out property <string> active-playtime: "0 мин";
     in-out property <bool> is-game-running: false;
+    in-out property <string> launch-state: "idle"; // "idle" | "launching" | "running"
     in-out property <bool> is-sound-muted: false;
     in-out property <bool> is-profile-open: false;
     in-out property <string> log-content: "[launcher/INFO] Omega Launcher Native Slint Engine initialized.\n[launcher/INFO] SQLite database loaded from omega.db.\n[launcher/INFO] Ready to launch.";
@@ -69,6 +70,7 @@ export component MainWindow inherits Window {
     callback play-clicked();
     callback select-instance(string, string, string, string, string);
     callback create-instance();
+    callback submit-create-instance(string, string, string, int);
     callback delete-instance(string);
     callback change-ram(int);
     callback change-gc(string);
@@ -84,6 +86,7 @@ export component MainWindow inherits Window {
     callback switch-account(string);
     callback clear-logs();
     callback direct-connect(string);
+    callback refresh-servers();
     callback add-server(string, string);
     callback delete-server(string);
     callback open-github();
@@ -121,6 +124,7 @@ export component MainWindow inherits Window {
 
             tab-selected(tab) => {
                 root.active-screen = tab;
+                if tab == "servers" { root.refresh-servers(); }
             }
             toggle-profile-dropdown() => {
                 root.active-screen = "accounts";
@@ -158,6 +162,9 @@ export component MainWindow inherits Window {
                 create-instance => {
                     root.create-instance();
                 }
+                submit-create-instance(name, ver, loader, ram) => {
+                    root.submit-create-instance(name, ver, loader, ram);
+                }
                 delete-instance(id) => {
                     root.delete-instance(id);
                 }
@@ -190,6 +197,7 @@ export component MainWindow inherits Window {
             if root.active-screen == "servers": ServersScreenView {
                 servers: root.servers;
                 direct-connect(host) => { root.direct-connect(host); }
+                refresh-servers => { root.refresh-servers(); }
                 add-server(name, host) => { root.add-server(name, host); }
                 delete-server(host) => { root.delete-server(host); }
             }
@@ -219,6 +227,7 @@ export component MainWindow inherits Window {
             loader-tag: root.active-loader;
             playtime-text: root.active-playtime;
             is-running: root.is-game-running;
+            launch-state: root.launch-state;
 
             play-clicked => {
                 root.play-clicked();

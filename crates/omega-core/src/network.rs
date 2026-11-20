@@ -226,3 +226,26 @@ pub async fn ping_server(host: String, port: Option<u16>) -> Result<ServerPingIn
         }),
     }
 }
+
+pub fn parse_minecraft_motd(raw: &str) -> String {
+    let mut clean = String::new();
+    let mut chars = raw.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch == '§' || ch == '\u{00a7}' {
+            chars.next();
+        } else if ch == '\r' {
+            continue;
+        } else if ch == '\n' {
+            clean.push(' ');
+        } else {
+            clean.push(ch);
+        }
+    }
+    let trimmed = clean.split_whitespace().collect::<Vec<_>>().join(" ");
+    if trimmed.is_empty() {
+        "Minecraft Server".to_string()
+    } else {
+        trimmed
+    }
+}
+

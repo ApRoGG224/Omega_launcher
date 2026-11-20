@@ -4692,6 +4692,7 @@ version = "0.1.0"
 dependencies = [
  "image",
  "omega-core",
+ "reqwest",
  "serde",
  "serde_json",
  "slint",

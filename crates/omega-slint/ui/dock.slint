@@ -8,6 +8,7 @@ export component PlayDock inherits Rectangle {
     in-out property <string> loader-tag: "Fabric";
     in-out property <string> playtime-text: "0 мин";
     in-out property <bool> is-running: false;
+    in-out property <string> launch-state: "idle"; // "idle" | "launching" | "running"
     in-out property <image> instance-icon: @image-url("../assets/icons/minecraft/netherite_sword.png");
 
     callback play-clicked();
@@ -141,14 +142,16 @@ export component PlayDock inherits Rectangle {
                     }
                 }
 
-                // Right: Big Play / Stop Button
+                // Right: Big Play / Launching / Stop Button
                 play_btn := Rectangle {
                     height: 48px;
                     width: 160px;
                     y: (parent.height - self.height) / 2;
-                    background: root.is-running
+                    background: root.launch-state == "running"
                         ? (play_touch.pressed ? #9c3735 : (play_touch.has-hover ? #c44e4b : #b3423f))
-                        : (play_touch.pressed ? #d5d8de : (play_touch.has-hover ? #f0f2f5 : #e6e8ec));
+                        : (root.launch-state == "launching"
+                            ? (play_touch.pressed ? #1e40af : (play_touch.has-hover ? #2563eb : #1d5dc7))
+                            : (play_touch.pressed ? #d5d8de : (play_touch.has-hover ? #f0f2f5 : #e6e8ec)));
                     border-radius: 11px;
 
                     animate background { duration: 150ms; }
@@ -161,18 +164,18 @@ export component PlayDock inherits Rectangle {
                         alignment: center;
                         spacing: 8px;
 
-                        // Play/Stop Icon
+                        // Play/Stop/Wait Icon
                         Text {
-                            text: root.is-running ? "■" : "▶";
-                            color: root.is-running ? #ffffff : #0d1117;
+                            text: root.launch-state == "running" ? "■" : (root.launch-state == "launching" ? "⏳" : "▶");
+                            color: root.launch-state == "idle" ? #0d1117 : #ffffff;
                             font-size: 15px;
                             font-weight: 900;
                             vertical-alignment: center;
                         }
 
                         Text {
-                            text: root.is-running ? "СТОП" : "ИГРАТЬ";
-                            color: root.is-running ? #ffffff : #0d1117;
+                            text: root.launch-state == "running" ? "СТОП" : (root.launch-state == "launching" ? "ЗАПУСК..." : "ИГРАТЬ");
+                            color: root.launch-state == "idle" ? #0d1117 : #ffffff;
                             font-size: 15px;
                             font-weight: 800;
                             letter-spacing: 0.5px;

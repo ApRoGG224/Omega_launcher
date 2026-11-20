@@ -31,6 +31,7 @@ export struct ServerItem {
     host: string,
     ping: string,
     players: string,
+    motd: string,
 }
 
 export struct FriendItem {
@@ -82,10 +83,16 @@ export component HomeScreenView inherits Rectangle {
 export component InstancesScreenView inherits Rectangle {
     in-out property <[InstanceItem]> instances;
     in-out property <string> active-instance-id: "";
+    in-out property <bool> show-create-modal: false;
+    in-out property <string> new-inst-name: "Моя сборка 1.21";
+    in-out property <string> new-inst-version: "1.21.4";
+    in-out property <string> new-inst-loader: "Fabric";
+    in-out property <int> new-inst-ram: 4096;
 
     callback select-instance(string, string, string, string, string);
     callback create-instance();
     callback delete-instance(string);
+    callback submit-create-instance(string, string, string, int);
 
     in-out property <float> screen-opacity: 1.0;
     in-out property <length> screen-offset-y: 0px;
@@ -133,7 +140,7 @@ export component InstancesScreenView inherits Rectangle {
                 animate background { duration: 150ms; }
 
                 btn_touch := TouchArea {
-                    clicked => { root.create-instance(); }
+                    clicked => { root.show-create-modal = true; }
                 }
 
                 HorizontalLayout {
@@ -288,6 +295,233 @@ export component InstancesScreenView inherits Rectangle {
             }
         }
     }
+
+    // Modal Dialog: Create New Instance
+    if root.show-create-modal: Rectangle {
+        width: 100%;
+        height: 100%;
+        background: rgba(6, 9, 15, 0.90);
+        border-radius: 14px;
+
+        modal_blocker := TouchArea {}
+
+        Rectangle {
+            width: 500px;
+            height: 440px;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            background: #0d1117;
+            border-width: 1px;
+            border-color: rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+
+            VerticalLayout {
+                padding: 22px;
+                spacing: 14px;
+
+                // Title row
+                HorizontalLayout {
+                    alignment: space-between;
+                    Text {
+                        text: "Создание новой сборки";
+                        color: #ffffff;
+                        font-size: 18px;
+                        font-weight: 800;
+                        vertical-alignment: center;
+                    }
+                    Rectangle {
+                        width: 32px;
+                        height: 32px;
+                        background: close_touch.has-hover ? #22262e : #1a1d24;
+                        border-radius: 8px;
+                        close_touch := TouchArea {
+                            clicked => { root.show-create-modal = false; }
+                        }
+                        Text {
+                            text: "✕";
+                            color: #8b919c;
+                            font-size: 13px;
+                            font-weight: 700;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+
+                // Name Input
+                VerticalLayout {
+                    spacing: 5px;
+                    Text { text: "Название сборки:"; color: #8b919c; font-size: 12px; font-weight: 600; }
+                    Rectangle {
+                        height: 38px;
+                        background: #1a1d24;
+                        border-radius: 9px;
+                        border-width: 1px;
+                        border-color: rgba(255, 255, 255, 0.08);
+                        HorizontalLayout {
+                            padding-left: 12px;
+                            padding-right: 12px;
+                            new_name_input := TextInput {
+                                text: root.new-inst-name;
+                                color: #ffffff;
+                                font-size: 13px;
+                                vertical-alignment: center;
+                                edited => { root.new-inst-name = self.text; }
+                            }
+                        }
+                    }
+                }
+
+                // Version Choice
+                VerticalLayout {
+                    spacing: 5px;
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Text { text: "Версия Minecraft:"; color: #8b919c; font-size: 12px; font-weight: 600; vertical-alignment: center; }
+                        Text { text: root.new-inst-version; color: #10b981; font-size: 12px; font-weight: 700; vertical-alignment: center; }
+                    }
+                    HorizontalLayout {
+                        spacing: 6px;
+                        for v in ["1.21.4", "1.21.1", "1.20.4", "1.20.1", "1.19.4", "1.16.5", "1.12.2", "1.8.9"]: Rectangle {
+                            height: 30px;
+                            background: root.new-inst-version == v ? #1d5dc7 : #1a1d24;
+                            border-radius: 8px;
+                            border-width: 1px;
+                            border-color: root.new-inst-version == v ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                            TouchArea { clicked => { root.new-inst-version = v; } }
+                            HorizontalLayout {
+                                padding-left: 7px;
+                                padding-right: 7px;
+                                Text {
+                                    text: v;
+                                    color: #ffffff;
+                                    font-size: 11px;
+                                    font-weight: 600;
+                                    vertical-alignment: center;
+                                    horizontal-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Modloader Choice
+                VerticalLayout {
+                    spacing: 5px;
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Text { text: "Загрузчик модов:"; color: #8b919c; font-size: 12px; font-weight: 600; vertical-alignment: center; }
+                        Text { text: root.new-inst-loader; color: #10b981; font-size: 12px; font-weight: 700; vertical-alignment: center; }
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        for ldr in ["Fabric", "Forge", "NeoForge", "Vanilla"]: Rectangle {
+                            height: 34px;
+                            horizontal-stretch: 1;
+                            background: root.new-inst-loader == ldr ? #1d5dc7 : #1a1d24;
+                            border-radius: 9px;
+                            border-width: 1px;
+                            border-color: root.new-inst-loader == ldr ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                            TouchArea { clicked => { root.new-inst-loader = ldr; } }
+                            Text {
+                                text: ldr;
+                                color: #ffffff;
+                                font-size: 12px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+                }
+
+                // RAM Allocation
+                VerticalLayout {
+                    spacing: 5px;
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Text { text: "Выделение памяти (ОЗУ):"; color: #8b919c; font-size: 12px; font-weight: 600; vertical-alignment: center; }
+                        Text { text: (root.new-inst-ram / 1024) + " ГБ (" + root.new-inst-ram + " МБ)"; color: #10b981; font-size: 12px; font-weight: 700; vertical-alignment: center; }
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Rectangle {
+                            height: 32px;
+                            horizontal-stretch: 1;
+                            background: root.new-inst-ram == 2048 ? #10b981 : #1a1d24;
+                            border-radius: 8px;
+                            TouchArea { clicked => { root.new-inst-ram = 2048; } }
+                            Text { text: "2 ГБ"; color: root.new-inst-ram == 2048 ? #0d1117 : #ffffff; font-size: 11px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                        }
+                        Rectangle {
+                            height: 32px;
+                            horizontal-stretch: 1;
+                            background: root.new-inst-ram == 4096 ? #10b981 : #1a1d24;
+                            border-radius: 8px;
+                            TouchArea { clicked => { root.new-inst-ram = 4096; } }
+                            Text { text: "4 ГБ"; color: root.new-inst-ram == 4096 ? #0d1117 : #ffffff; font-size: 11px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                        }
+                        Rectangle {
+                            height: 32px;
+                            horizontal-stretch: 1;
+                            background: root.new-inst-ram == 6144 ? #10b981 : #1a1d24;
+                            border-radius: 8px;
+                            TouchArea { clicked => { root.new-inst-ram = 6144; } }
+                            Text { text: "6 ГБ"; color: root.new-inst-ram == 6144 ? #0d1117 : #ffffff; font-size: 11px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                        }
+                        Rectangle {
+                            height: 32px;
+                            horizontal-stretch: 1;
+                            background: root.new-inst-ram == 8192 ? #10b981 : #1a1d24;
+                            border-radius: 8px;
+                            TouchArea { clicked => { root.new-inst-ram = 8192; } }
+                            Text { text: "8 ГБ"; color: root.new-inst-ram == 8192 ? #0d1117 : #ffffff; font-size: 11px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                        }
+                    }
+                }
+
+                // Action buttons
+                HorizontalLayout {
+                    spacing: 12px;
+                    alignment: end;
+
+                    Rectangle {
+                        width: 110px;
+                        height: 38px;
+                        background: cancel_touch.has-hover ? #22262e : #1a1d24;
+                        border-radius: 11px;
+                        border-width: 1px;
+                        border-color: rgba(255, 255, 255, 0.08);
+                        cancel_touch := TouchArea {
+                            clicked => { root.show-create-modal = false; }
+                        }
+                        Text { text: "Отмена"; color: #8b919c; font-size: 13px; font-weight: 600; horizontal-alignment: center; vertical-alignment: center; }
+                    }
+
+                    Rectangle {
+                        width: 160px;
+                        height: 38px;
+                        background: submit_touch.pressed ? #1e40af : (submit_touch.has-hover ? #2563eb : #1d5dc7);
+                        border-radius: 11px;
+                        border-width: 1px;
+                        border-color: rgba(255, 255, 255, 0.12);
+                        submit_touch := TouchArea {
+                            clicked => {
+                                root.submit-create-instance(
+                                    root.new-inst-name,
+                                    root.new-inst-version,
+                                    root.new-inst-loader,
+                                    root.new-inst-ram
+                                );
+                                root.show-create-modal = false;
+                            }
+                        }
+                        Text { text: "Создать сборку"; color: #ffffff; font-size: 13px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                    }
+                }
+            }
+        }
+    }
 }
 
 // Layer 4 Screen 2: Modrinth & CurseForge Catalog
@@ -364,6 +598,17 @@ export component ModrinthScreenView inherits Rectangle {
                 Rectangle {
                     width: 90px;
                     height: 36px;
+                    background: root.active-category == "textures" ? #1d5dc7 : #1a1d24;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.active-category == "textures" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    TouchArea { clicked => { root.switch-category("textures"); } }
+                    Text { text: "Текстуры"; color: #ffffff; font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+                }
+
+                Rectangle {
+                    width: 90px;
+                    height: 36px;
                     background: root.active-category == "modpacks" ? #1d5dc7 : #1a1d24;
                     border-radius: 9px;
                     border-width: 1px;
@@ -403,6 +648,7 @@ export component ModrinthScreenView inherits Rectangle {
                         font-size: 13px;
                         color: #ffffff;
                         vertical-alignment: center;
+                        edited => { root.search-query(self.text); }
                         accepted => { root.search-query(self.text); }
                     }
                 }
@@ -928,6 +1174,7 @@ export component AccountsScreenView inherits Rectangle {
 export component ServersScreenView inherits Rectangle {
     in-out property <[ServerItem]> servers;
     callback direct-connect(string);
+    callback refresh-servers();
     callback add-server(string, string);
     callback delete-server(string);
 
@@ -947,18 +1194,48 @@ export component ServersScreenView inherits Rectangle {
         padding: 24px;
         spacing: 16px;
 
-        VerticalLayout {
-            spacing: 3px;
-            Text {
-                text: "Серверы Minecraft";
-                color: #ffffff;
-                font-size: 19px;
-                font-weight: 800;
+        // Header Row
+        HorizontalLayout {
+            alignment: space-between;
+
+            VerticalLayout {
+                spacing: 3px;
+                Text {
+                    text: "Серверы Minecraft";
+                    color: #ffffff;
+                    font-size: 19px;
+                    font-weight: 800;
+                }
+                Text {
+                    text: "Прямое подключение, статус онлайна и пинг в реальном времени";
+                    color: #8b919c;
+                    font-size: 13px;
+                }
             }
-            Text {
-                text: "Прямое подключение, статус онлайна и пинг в реальном времени";
-                color: #8b919c;
-                font-size: 13px;
+
+            Rectangle {
+                width: 120px;
+                height: 38px;
+                background: ref_touch.pressed ? #1a1d24 : (ref_touch.has-hover ? #22262e : #1a1d24);
+                border-radius: 11px;
+                border-width: 1px;
+                border-color: rgba(255, 255, 255, 0.12);
+
+                ref_touch := TouchArea {
+                    clicked => { root.refresh-servers(); }
+                }
+
+                HorizontalLayout {
+                    alignment: center;
+                    spacing: 6px;
+                    Text {
+                        text: "⟳ Обновить";
+                        color: #ffffff;
+                        font-size: 12px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                }
             }
         }
 
@@ -967,7 +1244,7 @@ export component ServersScreenView inherits Rectangle {
                 spacing: 10px;
 
                 for srv in root.servers: Rectangle {
-                    height: 70px;
+                    height: 80px;
                     background: srv_touch.has-hover ? #22262e : #1a1d24;
                     border-width: 1px;
                     border-color: rgba(255, 255, 255, 0.08);
@@ -982,13 +1259,19 @@ export component ServersScreenView inherits Rectangle {
 
                         VerticalLayout {
                             alignment: center;
-                            spacing: 3px;
+                            spacing: 4px;
 
                             Text {
                                 text: srv.name;
                                 color: #ffffff;
                                 font-size: 15px;
                                 font-weight: 700;
+                            }
+                            if srv.motd != "": Text {
+                                text: srv.motd;
+                                color: #8b919c;
+                                font-size: 11px;
+                                overflow: elide;
                             }
                             HorizontalLayout {
                                 spacing: 10px;
