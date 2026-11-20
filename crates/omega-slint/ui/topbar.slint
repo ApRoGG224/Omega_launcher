@@ -1,12 +1,13 @@
 // Omega Launcher - Native HUD Top Bar (Layer 2)
 // 1-to-1 Pixel-Accurate Replication of Production Top Dock
-// - Floating HUD Dock: Height 48px, Radius 16px, Background #0e121a, Border rgba(255,255,255,0.08)
-// - Profile Pill: [⌄  Username  [Avatar]] (38px, Radius 10px, Avatar 28x28px)
+// - Center Floating HUD Dock: Height 48px, Radius 16px, Background #0e121a, Border rgba(255,255,255,0.08)
+// - Profile Pill: [⌄  Username  [Avatar]] (38px, Radius 10px, Avatar 28x28px centered)
 // - 7 Nav Buttons: Play (▶), Settings (⚙), Modrinth (🧩), Instances (📦), Servers (🗄️), Store (🛍️), Console (>_)
 // - 4 Shortcuts: Obsidian, Diamond Sword, End Crystal, Netherite Sword (34x34px, Radius 8px)
 // - Friends Button: Users icon with red badge "2" (38x38px)
 // - Chevron Button: Right arrow ">" (38x38px)
-// - Tooltips on hover for every button matching video exactly
+// - Separate Flanks: GitHubButton & SoundButton (without frames, pure icons matching user request)
+// - Tooltips on hover for every button
 
 export component HudTooltip inherits Rectangle {
     in property <string> text;
@@ -47,665 +48,669 @@ export component HudTooltip inherits Rectangle {
     }
 }
 
+// Separate Left Flank: GitHub Icon (No border, transparent background, pure icon as in user photo)
+export component GitHubButton inherits Rectangle {
+    callback clicked();
+
+    width: 38px;
+    height: 38px;
+    background: transparent;
+
+    gh_touch := TouchArea {
+        clicked => { root.clicked(); }
+    }
+
+    Image {
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        source: @image-url("../assets/svg/github.svg");
+        width: 22px;
+        height: 22px;
+        image-fit: contain;
+        opacity: gh_touch.has-hover ? 1.0 : 0.80;
+        animate opacity { duration: 150ms; }
+    }
+
+    HudTooltip {
+        x: parent.width / 2;
+        y: parent.height + 9px;
+        text: "GitHub";
+        is-shown: gh_touch.has-hover;
+    }
+}
+
+// Separate Right Flank: Sound Mute Button (No border, transparent background, as in user photo)
+export component SoundButton inherits Rectangle {
+    in-out property <bool> is-muted: false;
+    callback clicked();
+
+    width: 38px;
+    height: 38px;
+    background: transparent;
+
+    mute_touch := TouchArea {
+        clicked => { root.clicked(); }
+    }
+
+    Image {
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        source: @image-url("../assets/svg/volume.svg");
+        width: 20px;
+        height: 20px;
+        image-fit: contain;
+        opacity: root.is-muted ? 0.35 : (mute_touch.has-hover ? 1.0 : 0.80);
+        animate opacity { duration: 150ms; }
+    }
+
+    HudTooltip {
+        x: parent.width / 2;
+        y: parent.height + 9px;
+        text: root.is-muted ? "Включить звук" : "Отключить звук";
+        is-shown: mute_touch.has-hover;
+    }
+}
+
+// Center Floating HUD Top Dock (Compact Capsule - NOT full width)
 export component TopBar inherits Rectangle {
     in-out property <string> username: "ApRoGG";
     in-out property <string> active-tab: "home";
     in-out property <string> active-shortcut: "diamond_sword";
     in-out property <bool> is-dropdown-open: false;
-    in-out property <bool> is-muted: false;
 
     callback tab-selected(string);
     callback toggle-profile-dropdown();
     callback select-shortcut(string);
-    callback login-microsoft();
-    callback login-ely();
-    callback toggle-sound();
-    callback open-github();
 
     height: 48px;
-    background: transparent;
+    background: #0e121a;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
 
-    // Left Flank: GitHub Icon (Transparent & Subtle, matching video)
-    Rectangle {
-        x: 0px;
-        y: (parent.height - self.height) / 2;
-        width: 38px;
-        height: 38px;
-        background: gh_touch.pressed ? rgba(255, 255, 255, 0.12) : (gh_touch.has-hover ? rgba(255, 255, 255, 0.08) : transparent);
-        border-width: 1px;
-        border-color: gh_touch.has-hover ? rgba(255, 255, 255, 0.15) : transparent;
-        border-radius: 10px;
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+        spacing: 5px;
+        alignment: center;
 
-        animate background { duration: 150ms; }
-        animate border-color { duration: 150ms; }
+        // 1. Profile Pill: [⌄  Username  [Avatar]]
+        profile_btn := Rectangle {
+            height: 38px;
+            background: prof_touch.pressed ? #22262e : (prof_touch.has-hover ? #1a2232 : #111622);
+            border-width: 1px;
+            border-color: root.is-dropdown-open ? rgba(255, 255, 255, 0.26) : (prof_touch.has-hover ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.10));
+            border-radius: 10px;
 
-        gh_touch := TouchArea {
-            clicked => { root.open-github(); }
-        }
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
 
-        Image {
-            source: @image-url("../assets/svg/github.svg");
-            width: 22px;
-            height: 22px;
-            image-fit: contain;
-            opacity: gh_touch.has-hover ? 1.0 : 0.85;
-            animate opacity { duration: 150ms; }
-        }
-
-        HudTooltip {
-            x: parent.width / 2;
-            y: parent.height + 9px;
-            text: "GitHub";
-            is-shown: gh_touch.has-hover;
-        }
-    }
-
-    // Center: Floating HUD Top Dock (1-to-1 match with Video)
-    Rectangle {
-        x: (parent.width - self.width) / 2;
-        y: (parent.height - self.height) / 2;
-        height: 48px;
-        background: #0e121a;
-        border-width: 1px;
-        border-color: rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-
-        HorizontalLayout {
-            padding-left: 8px;
-            padding-right: 8px;
-            padding-top: 5px;
-            padding-bottom: 5px;
-            spacing: 5px;
-            alignment: center;
-
-            // 1. Profile Pill: [⌄  Username  [Avatar]]
-            profile_btn := Rectangle {
-                height: 38px;
-                background: prof_touch.pressed ? #22262e : (prof_touch.has-hover ? #1a2232 : #111622);
-                border-width: 1px;
-                border-color: root.is-dropdown-open ? rgba(255, 255, 255, 0.26) : (prof_touch.has-hover ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.10));
-                border-radius: 10px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                prof_touch := TouchArea {
-                    clicked => { root.toggle-profile-dropdown(); }
-                }
-
-                HorizontalLayout {
-                    padding-left: 12px;
-                    padding-right: 5px;
-                    spacing: 8px;
-                    alignment: center;
-
-                    // Down Chevron ⌄
-                    Text {
-                        text: "⌄";
-                        color: prof_touch.has-hover ? #ffffff : #94a3b8;
-                        font-size: 13px;
-                        font-weight: 700;
-                        vertical-alignment: center;
-                    }
-
-                    // Username
-                    Text {
-                        text: root.username;
-                        color: #f8fafc;
-                        font-size: 13px;
-                        font-weight: 700;
-                        vertical-alignment: center;
-                    }
-
-                    // Crisp Square Avatar Frame (28x28) matching Video
-                    Rectangle {
-                        width: 28px;
-                        height: 28px;
-                        background: #080d17;
-                        border-width: 1px;
-                        border-color: rgba(255, 255, 255, 0.16);
-
-                        Image {
-                            source: @image-url("../assets/skins/aprogg_face.png");
-                            width: 24px;
-                            height: 24px;
-                            image-fit: contain;
-                            image-rendering: pixelated;
-                        }
-                    }
-                }
-
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "Аккаунты";
-                    is-shown: prof_touch.has-hover && !root.is-dropdown-open;
-                }
+            prof_touch := TouchArea {
+                clicked => { root.toggle-profile-dropdown(); }
             }
 
-            // Divider 1 (mini divider)
-            Rectangle {
-                width: 1px;
-                height: 16px;
-                background: rgba(255, 255, 255, 0.08);
-                y: (parent.height - self.height) / 2;
-            }
+            HorizontalLayout {
+                padding-left: 12px;
+                padding-right: 6px;
+                spacing: 8px;
+                alignment: center;
 
-            // 2. Play / Home Button (Solid White Triangle ▶)
-            Rectangle {
-                width: 38px;
-                height: 38px;
-                background: root.active-tab == "home" ? #1e2634 : (home_touch.has-hover ? #1a2232 : #111622);
-                border-width: 1px;
-                border-color: root.active-tab == "home" ? rgba(255, 255, 255, 0.26) : (home_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
-                border-radius: 10px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                home_touch := TouchArea {
-                    clicked => { root.tab-selected("home"); }
-                }
-
+                // Down Chevron ⌄
                 Text {
-                    text: "▶";
-                    color: #ffffff;
-                    font-size: 14px;
-                    font-weight: 700;
-                    horizontal-alignment: center;
-                    vertical-alignment: center;
-                }
-
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "ИГРАТЬ";
-                    is-shown: home_touch.has-hover;
-                }
-            }
-
-            // 3. Settings (Gear ⚙)
-            Rectangle {
-                width: 38px;
-                height: 38px;
-                background: root.active-tab == "settings" ? #252f42 : (set_touch.has-hover ? #1a2232 : #111622);
-                border-width: 1px;
-                border-color: root.active-tab == "settings" ? rgba(255, 255, 255, 0.26) : (set_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
-                border-radius: 10px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                set_touch := TouchArea {
-                    clicked => { root.tab-selected("settings"); }
-                }
-
-                Image {
-                    source: @image-url("../assets/svg/settings.svg");
-                    width: 18px;
-                    height: 18px;
-                    image-fit: contain;
-                    opacity: root.active-tab == "settings" ? 1.0 : (set_touch.has-hover ? 1.0 : 0.75);
-                    animate opacity { duration: 150ms; }
-                }
-
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "Настройки";
-                    is-shown: set_touch.has-hover;
-                }
-            }
-
-            // 4. Modrinth Catalog (Puzzle 🧩)
-            Rectangle {
-                width: 38px;
-                height: 38px;
-                background: root.active-tab == "modrinth" ? #252f42 : (mod_touch.has-hover ? #1a2232 : #111622);
-                border-width: 1px;
-                border-color: root.active-tab == "modrinth" ? rgba(255, 255, 255, 0.26) : (mod_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
-                border-radius: 10px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                mod_touch := TouchArea {
-                    clicked => { root.tab-selected("modrinth"); }
-                }
-
-                Image {
-                    source: @image-url("../assets/svg/puzzle.svg");
-                    width: 18px;
-                    height: 18px;
-                    image-fit: contain;
-                    opacity: root.active-tab == "modrinth" ? 1.0 : (mod_touch.has-hover ? 1.0 : 0.75);
-                    animate opacity { duration: 150ms; }
-                }
-
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "Каталог";
-                    is-shown: mod_touch.has-hover;
-                }
-            }
-
-            // 5. Instances / Versions (Package 📦)
-            Rectangle {
-                width: 38px;
-                height: 38px;
-                background: root.active-tab == "instances" ? #252f42 : (inst_touch.has-hover ? #1a2232 : #111622);
-                border-width: 1px;
-                border-color: root.active-tab == "instances" ? rgba(255, 255, 255, 0.26) : (inst_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
-                border-radius: 10px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                inst_touch := TouchArea {
-                    clicked => { root.tab-selected("instances"); }
-                }
-
-                Image {
-                    source: @image-url("../assets/svg/package.svg");
-                    width: 18px;
-                    height: 18px;
-                    image-fit: contain;
-                    opacity: root.active-tab == "instances" ? 1.0 : (inst_touch.has-hover ? 1.0 : 0.75);
-                    animate opacity { duration: 150ms; }
-                }
-
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "Сборки";
-                    is-shown: inst_touch.has-hover;
-                }
-            }
-
-            // 6. Servers (Server 🗄️)
-            Rectangle {
-                width: 38px;
-                height: 38px;
-                background: root.active-tab == "servers" ? #252f42 : (srv_touch.has-hover ? #1a2232 : #111622);
-                border-width: 1px;
-                border-color: root.active-tab == "servers" ? rgba(255, 255, 255, 0.26) : (srv_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
-                border-radius: 10px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                srv_touch := TouchArea {
-                    clicked => { root.tab-selected("servers"); }
-                }
-
-                Image {
-                    source: @image-url("../assets/svg/server.svg");
-                    width: 18px;
-                    height: 18px;
-                    image-fit: contain;
-                    opacity: root.active-tab == "servers" ? 1.0 : (srv_touch.has-hover ? 1.0 : 0.75);
-                    animate opacity { duration: 150ms; }
-                }
-
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "Сервера";
-                    is-shown: srv_touch.has-hover;
-                }
-            }
-
-            // 7. Omega Store (Shopping Bag 🛍️)
-            Rectangle {
-                width: 38px;
-                height: 38px;
-                background: root.active-tab == "store" ? #252f42 : (store_touch.has-hover ? #1a2232 : #111622);
-                border-width: 1px;
-                border-color: root.active-tab == "store" ? rgba(255, 255, 255, 0.26) : (store_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
-                border-radius: 10px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                store_touch := TouchArea {
-                    clicked => { root.tab-selected("store"); }
-                }
-
-                Image {
-                    source: @image-url("../assets/svg/store.svg");
-                    width: 18px;
-                    height: 18px;
-                    image-fit: contain;
-                    opacity: root.active-tab == "store" ? 1.0 : (store_touch.has-hover ? 1.0 : 0.75);
-                    animate opacity { duration: 150ms; }
-                }
-
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "Магазин Omega";
-                    is-shown: store_touch.has-hover;
-                }
-            }
-
-            // 8. Console (Terminal >_)
-            Rectangle {
-                width: 38px;
-                height: 38px;
-                background: root.active-tab == "console" ? #252f42 : (con_touch.has-hover ? #1a2232 : #111622);
-                border-width: 1px;
-                border-color: root.active-tab == "console" ? rgba(255, 255, 255, 0.26) : (con_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
-                border-radius: 10px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                con_touch := TouchArea {
-                    clicked => { root.tab-selected("console"); }
-                }
-
-                Text {
-                    text: ">_";
-                    color: root.active-tab == "console" ? #ffffff : (con_touch.has-hover ? #ffffff : #94a3b8);
+                    text: "⌄";
+                    color: prof_touch.has-hover ? #ffffff : #94a3b8;
                     font-size: 13px;
                     font-weight: 700;
-                    horizontal-alignment: center;
                     vertical-alignment: center;
-                    animate color { duration: 150ms; }
                 }
 
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "Консоль";
-                    is-shown: con_touch.has-hover;
-                }
-            }
-
-            // Divider 2 (Divider before shortcuts)
-            Rectangle {
-                width: 1px;
-                height: 22px;
-                background: rgba(255, 255, 255, 0.10);
-                y: (parent.height - self.height) / 2;
-            }
-
-            // 9. 4 Shortcut Badges (Video: Obsidian, Diamond Sword, End Crystal, Netherite Sword)
-            // Shortcut 1: Obsidian (Purple)
-            Rectangle {
-                width: 34px;
-                height: 34px;
-                y: (parent.height - self.height) / 2;
-                background: root.active-shortcut == "obsidian" ? #2b1c40 : (sc1_touch.has-hover ? #251838 : #1b1228);
-                border-width: root.active-shortcut == "obsidian" ? 1.5px : 1px;
-                border-color: root.active-shortcut == "obsidian" ? #c084fc : (sc1_touch.has-hover ? #c084fc : rgba(168, 85, 247, 0.50));
-                border-radius: 8px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                sc1_touch := TouchArea {
-                    clicked => {
-                        root.active-shortcut = "obsidian";
-                        root.select-shortcut("obsidian");
-                    }
+                // Username
+                Text {
+                    text: root.username;
+                    color: #f8fafc;
+                    font-size: 13px;
+                    font-weight: 700;
+                    vertical-alignment: center;
                 }
 
-                Image {
-                    source: @image-url("../assets/icons/minecraft/obsidian.png");
-                    width: 20px;
-                    height: 20px;
-                    image-fit: contain;
-                    image-rendering: pixelated;
-                }
-
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "Minecraft Rust (Beta)";
-                    is-shown: sc1_touch.has-hover;
-                }
-            }
-
-            // Shortcut 2: Diamond Sword (Cyan / Emerald - ACTIVE in Video)
-            Rectangle {
-                width: 34px;
-                height: 34px;
-                y: (parent.height - self.height) / 2;
-                background: root.active-shortcut == "diamond_sword" ? #14353c : (sc2_touch.has-hover ? #17373d : #10272b);
-                border-width: root.active-shortcut == "diamond_sword" ? 1.5px : 1px;
-                border-color: root.active-shortcut == "diamond_sword" ? #32dbcb : (sc2_touch.has-hover ? #67e8f9 : rgba(50, 219, 203, 0.50));
-                border-radius: 8px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                sc2_touch := TouchArea {
-                    clicked => {
-                        root.active-shortcut = "diamond_sword";
-                        root.select-shortcut("diamond_sword");
-                    }
-                }
-
-                Image {
-                    source: @image-url("../assets/icons/minecraft/diamond_sword.png");
-                    width: 20px;
-                    height: 20px;
-                    image-fit: contain;
-                    image-rendering: pixelated;
-                }
-
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "Omega PvP Pack";
-                    is-shown: sc2_touch.has-hover;
-                }
-            }
-
-            // Shortcut 3: End Crystal (Crystal Lavender / Gold)
-            Rectangle {
-                width: 34px;
-                height: 34px;
-                y: (parent.height - self.height) / 2;
-                background: root.active-shortcut == "end_crystal" ? #32183c : (sc3_touch.has-hover ? #32183c : #24102c);
-                border-width: root.active-shortcut == "end_crystal" ? 1.5px : 1px;
-                border-color: root.active-shortcut == "end_crystal" ? #e9d5ff : (sc3_touch.has-hover ? #e9d5ff : rgba(192, 132, 252, 0.50));
-                border-radius: 8px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                sc3_touch := TouchArea {
-                    clicked => {
-                        root.active-shortcut = "end_crystal";
-                        root.select-shortcut("end_crystal");
-                    }
-                }
-
-                Image {
-                    source: @image-url("../assets/icons/minecraft/end_crystal.png");
-                    width: 20px;
-                    height: 20px;
-                    image-fit: contain;
-                    image-rendering: pixelated;
-                }
-
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "test1";
-                    is-shown: sc3_touch.has-hover;
-                }
-            }
-
-            // Shortcut 4: Netherite Sword (Crimson / Ruby)
-            Rectangle {
-                width: 34px;
-                height: 34px;
-                y: (parent.height - self.height) / 2;
-                background: root.active-shortcut == "netherite_sword" ? #301820 : (sc4_touch.has-hover ? #301820 : #201216);
-                border-width: root.active-shortcut == "netherite_sword" ? 1.5px : 1px;
-                border-color: root.active-shortcut == "netherite_sword" ? #fda4af : (sc4_touch.has-hover ? #fda4af : rgba(244, 63, 94, 0.45));
-                border-radius: 8px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                sc4_touch := TouchArea {
-                    clicked => {
-                        root.active-shortcut = "netherite_sword";
-                        root.select-shortcut("netherite_sword");
-                    }
-                }
-
-                Image {
-                    source: @image-url("../assets/icons/minecraft/netherite_sword.png");
-                    width: 20px;
-                    height: 20px;
-                    image-fit: contain;
-                    image-rendering: pixelated;
-                }
-
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "Survival 1.20";
-                    is-shown: sc4_touch.has-hover;
-                }
-            }
-
-            // Divider 3 (Divider before friends)
-            Rectangle {
-                width: 1px;
-                height: 22px;
-                background: rgba(255, 255, 255, 0.10);
-                y: (parent.height - self.height) / 2;
-            }
-
-            // 10. Friends (Users) with Red Notification Badge "2"
-            Rectangle {
-                width: 38px;
-                height: 38px;
-                background: root.active-tab == "friends" ? #252f42 : (fr_touch.has-hover ? #1a2232 : #111622);
-                border-width: 1px;
-                border-color: root.active-tab == "friends" ? rgba(255, 255, 255, 0.26) : (fr_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
-                border-radius: 10px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                fr_touch := TouchArea {
-                    clicked => { root.tab-selected("friends"); }
-                }
-
-                Image {
-                    source: @image-url("../assets/svg/users.svg");
-                    width: 18px;
-                    height: 18px;
-                    image-fit: contain;
-                    opacity: root.active-tab == "friends" ? 1.0 : (fr_touch.has-hover ? 1.0 : 0.75);
-                    animate opacity { duration: 150ms; }
-                }
-
-                // Red Badge with count "2" matching Video
+                // Crisp Square Avatar Frame (28x28) vertically centered in the 38px button
                 Rectangle {
-                    x: parent.width - 13px;
-                    y: 2px;
-                    width: 14px;
-                    height: 14px;
-                    background: #ef4444;
+                    width: 28px;
+                    height: 28px;
+                    y: (parent.height - self.height) / 2;
+                    background: #080d17;
                     border-width: 1px;
-                    border-color: #7f1d1d;
-                    border-radius: 7px;
+                    border-color: rgba(255, 255, 255, 0.16);
 
-                    Text {
-                        text: "2";
-                        color: #ffffff;
-                        font-size: 8.5px;
-                        font-weight: 800;
-                        horizontal-alignment: center;
-                        vertical-alignment: center;
+                    Image {
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                        source: @image-url("../assets/skins/aprogg_face.png");
+                        width: 26px;
+                        height: 26px;
+                        image-fit: contain;
+                        image-rendering: pixelated;
                     }
-                }
-
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "Друзья";
-                    is-shown: fr_touch.has-hover;
                 }
             }
 
-            // 11. Right Chevron Button (38x38 matching Video)
-            Rectangle {
-                width: 38px;
-                height: 38px;
-                background: chev_touch.pressed ? #22262e : (chev_touch.has-hover ? #1a2232 : #111622);
-                border-width: 1px;
-                border-color: chev_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08);
-                border-radius: 10px;
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "Аккаунты";
+                is-shown: prof_touch.has-hover && !root.is-dropdown-open;
+            }
+        }
 
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
+        // Divider 1 (mini divider)
+        Rectangle {
+            width: 1px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.08);
+            y: (parent.height - self.height) / 2;
+        }
 
-                chev_touch := TouchArea {
-                    clicked => { root.tab-selected("settings"); }
+        // 2. Play / Home Button (Solid White Triangle ▶)
+        Rectangle {
+            width: 38px;
+            height: 38px;
+            background: root.active-tab == "home" ? #1e2634 : (home_touch.has-hover ? #1a2232 : #111622);
+            border-width: 1px;
+            border-color: root.active-tab == "home" ? rgba(255, 255, 255, 0.26) : (home_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
+            border-radius: 10px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            home_touch := TouchArea {
+                clicked => { root.tab-selected("home"); }
+            }
+
+            Text {
+                text: "▶";
+                color: #ffffff;
+                font-size: 14px;
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "ИГРАТЬ";
+                is-shown: home_touch.has-hover;
+            }
+        }
+
+        // 3. Settings (Gear ⚙)
+        Rectangle {
+            width: 38px;
+            height: 38px;
+            background: root.active-tab == "settings" ? #252f42 : (set_touch.has-hover ? #1a2232 : #111622);
+            border-width: 1px;
+            border-color: root.active-tab == "settings" ? rgba(255, 255, 255, 0.26) : (set_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
+            border-radius: 10px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            set_touch := TouchArea {
+                clicked => { root.tab-selected("settings"); }
+            }
+
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                source: @image-url("../assets/svg/settings.svg");
+                width: 18px;
+                height: 18px;
+                image-fit: contain;
+                opacity: root.active-tab == "settings" ? 1.0 : (set_touch.has-hover ? 1.0 : 0.75);
+                animate opacity { duration: 150ms; }
+            }
+
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "Настройки";
+                is-shown: set_touch.has-hover;
+            }
+        }
+
+        // 4. Modrinth Catalog (Puzzle 🧩)
+        Rectangle {
+            width: 38px;
+            height: 38px;
+            background: root.active-tab == "modrinth" ? #252f42 : (mod_touch.has-hover ? #1a2232 : #111622);
+            border-width: 1px;
+            border-color: root.active-tab == "modrinth" ? rgba(255, 255, 255, 0.26) : (mod_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
+            border-radius: 10px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            mod_touch := TouchArea {
+                clicked => { root.tab-selected("modrinth"); }
+            }
+
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                source: @image-url("../assets/svg/puzzle.svg");
+                width: 18px;
+                height: 18px;
+                image-fit: contain;
+                opacity: root.active-tab == "modrinth" ? 1.0 : (mod_touch.has-hover ? 1.0 : 0.75);
+                animate opacity { duration: 150ms; }
+            }
+
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "Каталог";
+                is-shown: mod_touch.has-hover;
+            }
+        }
+
+        // 5. Instances / Versions (Package 📦)
+        Rectangle {
+            width: 38px;
+            height: 38px;
+            background: root.active-tab == "instances" ? #252f42 : (inst_touch.has-hover ? #1a2232 : #111622);
+            border-width: 1px;
+            border-color: root.active-tab == "instances" ? rgba(255, 255, 255, 0.26) : (inst_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
+            border-radius: 10px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            inst_touch := TouchArea {
+                clicked => { root.tab-selected("instances"); }
+            }
+
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                source: @image-url("../assets/svg/package.svg");
+                width: 18px;
+                height: 18px;
+                image-fit: contain;
+                opacity: root.active-tab == "instances" ? 1.0 : (inst_touch.has-hover ? 1.0 : 0.75);
+                animate opacity { duration: 150ms; }
+            }
+
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "Сборки";
+                is-shown: inst_touch.has-hover;
+            }
+        }
+
+        // 6. Servers (Server 🗄️)
+        Rectangle {
+            width: 38px;
+            height: 38px;
+            background: root.active-tab == "servers" ? #252f42 : (srv_touch.has-hover ? #1a2232 : #111622);
+            border-width: 1px;
+            border-color: root.active-tab == "servers" ? rgba(255, 255, 255, 0.26) : (srv_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
+            border-radius: 10px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            srv_touch := TouchArea {
+                clicked => { root.tab-selected("servers"); }
+            }
+
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                source: @image-url("../assets/svg/server.svg");
+                width: 18px;
+                height: 18px;
+                image-fit: contain;
+                opacity: root.active-tab == "servers" ? 1.0 : (srv_touch.has-hover ? 1.0 : 0.75);
+                animate opacity { duration: 150ms; }
+            }
+
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "Сервера";
+                is-shown: srv_touch.has-hover;
+            }
+        }
+
+        // 7. Omega Store (Shopping Bag 🛍️)
+        Rectangle {
+            width: 38px;
+            height: 38px;
+            background: root.active-tab == "store" ? #252f42 : (store_touch.has-hover ? #1a2232 : #111622);
+            border-width: 1px;
+            border-color: root.active-tab == "store" ? rgba(255, 255, 255, 0.26) : (store_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
+            border-radius: 10px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            store_touch := TouchArea {
+                clicked => { root.tab-selected("store"); }
+            }
+
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                source: @image-url("../assets/svg/store.svg");
+                width: 18px;
+                height: 18px;
+                image-fit: contain;
+                opacity: root.active-tab == "store" ? 1.0 : (store_touch.has-hover ? 1.0 : 0.75);
+                animate opacity { duration: 150ms; }
+            }
+
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "Магазин Omega";
+                is-shown: store_touch.has-hover;
+            }
+        }
+
+        // 8. Console (Terminal >_)
+        Rectangle {
+            width: 38px;
+            height: 38px;
+            background: root.active-tab == "console" ? #252f42 : (con_touch.has-hover ? #1a2232 : #111622);
+            border-width: 1px;
+            border-color: root.active-tab == "console" ? rgba(255, 255, 255, 0.26) : (con_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
+            border-radius: 10px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            con_touch := TouchArea {
+                clicked => { root.tab-selected("console"); }
+            }
+
+            Text {
+                text: ">_";
+                color: root.active-tab == "console" ? #ffffff : (con_touch.has-hover ? #ffffff : #94a3b8);
+                font-size: 13px;
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                animate color { duration: 150ms; }
+            }
+
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "Консоль";
+                is-shown: con_touch.has-hover;
+            }
+        }
+
+        // Divider 2 (Divider before shortcuts)
+        Rectangle {
+            width: 1px;
+            height: 22px;
+            background: rgba(255, 255, 255, 0.10);
+            y: (parent.height - self.height) / 2;
+        }
+
+        // 9. 4 Shortcut Badges
+        // Shortcut 1: Obsidian (Purple)
+        Rectangle {
+            width: 34px;
+            height: 34px;
+            y: (parent.height - self.height) / 2;
+            background: root.active-shortcut == "obsidian" ? #2b1c40 : (sc1_touch.has-hover ? #251838 : #1b1228);
+            border-width: root.active-shortcut == "obsidian" ? 1.5px : 1px;
+            border-color: root.active-shortcut == "obsidian" ? #c084fc : (sc1_touch.has-hover ? #c084fc : rgba(168, 85, 247, 0.50));
+            border-radius: 8px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            sc1_touch := TouchArea {
+                clicked => {
+                    root.active-shortcut = "obsidian";
+                    root.select-shortcut("obsidian");
                 }
+            }
+
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                source: @image-url("../assets/icons/minecraft/obsidian.png");
+                width: 20px;
+                height: 20px;
+                image-fit: contain;
+                image-rendering: pixelated;
+            }
+
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "Minecraft Rust (Beta)";
+                is-shown: sc1_touch.has-hover;
+            }
+        }
+
+        // Shortcut 2: Diamond Sword (Cyan / Emerald - ACTIVE in Video)
+        Rectangle {
+            width: 34px;
+            height: 34px;
+            y: (parent.height - self.height) / 2;
+            background: root.active-shortcut == "diamond_sword" ? #14353c : (sc2_touch.has-hover ? #17373d : #10272b);
+            border-width: root.active-shortcut == "diamond_sword" ? 1.5px : 1px;
+            border-color: root.active-shortcut == "diamond_sword" ? #32dbcb : (sc2_touch.has-hover ? #67e8f9 : rgba(50, 219, 203, 0.50));
+            border-radius: 8px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            sc2_touch := TouchArea {
+                clicked => {
+                    root.active-shortcut = "diamond_sword";
+                    root.select-shortcut("diamond_sword");
+                }
+            }
+
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                source: @image-url("../assets/icons/minecraft/diamond_sword.png");
+                width: 20px;
+                height: 20px;
+                image-fit: contain;
+                image-rendering: pixelated;
+            }
+
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "Omega PvP Pack";
+                is-shown: sc2_touch.has-hover;
+            }
+        }
+
+        // Shortcut 3: End Crystal (Crystal Lavender / Gold)
+        Rectangle {
+            width: 34px;
+            height: 34px;
+            y: (parent.height - self.height) / 2;
+            background: root.active-shortcut == "end_crystal" ? #32183c : (sc3_touch.has-hover ? #32183c : #24102c);
+            border-width: root.active-shortcut == "end_crystal" ? 1.5px : 1px;
+            border-color: root.active-shortcut == "end_crystal" ? #e9d5ff : (sc3_touch.has-hover ? #e9d5ff : rgba(192, 132, 252, 0.50));
+            border-radius: 8px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            sc3_touch := TouchArea {
+                clicked => {
+                    root.active-shortcut = "end_crystal";
+                    root.select-shortcut("end_crystal");
+                }
+            }
+
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                source: @image-url("../assets/icons/minecraft/end_crystal.png");
+                width: 20px;
+                height: 20px;
+                image-fit: contain;
+                image-rendering: pixelated;
+            }
+
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "test1";
+                is-shown: sc3_touch.has-hover;
+            }
+        }
+
+        // Shortcut 4: Netherite Sword (Crimson / Ruby)
+        Rectangle {
+            width: 34px;
+            height: 34px;
+            y: (parent.height - self.height) / 2;
+            background: root.active-shortcut == "netherite_sword" ? #301820 : (sc4_touch.has-hover ? #301820 : #201216);
+            border-width: root.active-shortcut == "netherite_sword" ? 1.5px : 1px;
+            border-color: root.active-shortcut == "netherite_sword" ? #fda4af : (sc4_touch.has-hover ? #fda4af : rgba(244, 63, 94, 0.45));
+            border-radius: 8px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            sc4_touch := TouchArea {
+                clicked => {
+                    root.active-shortcut = "netherite_sword";
+                    root.select-shortcut("netherite_sword");
+                }
+            }
+
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                source: @image-url("../assets/icons/minecraft/netherite_sword.png");
+                width: 20px;
+                height: 20px;
+                image-fit: contain;
+                image-rendering: pixelated;
+            }
+
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "Survival 1.20";
+                is-shown: sc4_touch.has-hover;
+            }
+        }
+
+        // Divider 3 (Divider before friends)
+        Rectangle {
+            width: 1px;
+            height: 22px;
+            background: rgba(255, 255, 255, 0.10);
+            y: (parent.height - self.height) / 2;
+        }
+
+        // 10. Friends (Users) with Red Notification Badge "2"
+        Rectangle {
+            width: 38px;
+            height: 38px;
+            background: root.active-tab == "friends" ? #252f42 : (fr_touch.has-hover ? #1a2232 : #111622);
+            border-width: 1px;
+            border-color: root.active-tab == "friends" ? rgba(255, 255, 255, 0.26) : (fr_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08));
+            border-radius: 10px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            fr_touch := TouchArea {
+                clicked => { root.tab-selected("friends"); }
+            }
+
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                source: @image-url("../assets/svg/users.svg");
+                width: 18px;
+                height: 18px;
+                image-fit: contain;
+                opacity: root.active-tab == "friends" ? 1.0 : (fr_touch.has-hover ? 1.0 : 0.75);
+                animate opacity { duration: 150ms; }
+            }
+
+            // Red Badge with count "2"
+            Rectangle {
+                x: parent.width - 13px;
+                y: 2px;
+                width: 14px;
+                height: 14px;
+                background: #ef4444;
+                border-width: 1px;
+                border-color: #7f1d1d;
+                border-radius: 7px;
 
                 Text {
-                    text: ">";
-                    color: chev_touch.has-hover ? #ffffff : #64748b;
-                    font-size: 15px;
-                    font-weight: 700;
+                    text: "2";
+                    color: #ffffff;
+                    font-size: 8.5px;
+                    font-weight: 800;
                     horizontal-alignment: center;
                     vertical-alignment: center;
-                    animate color { duration: 150ms; }
-                }
-
-                HudTooltip {
-                    x: parent.width / 2;
-                    y: parent.height + 9px;
-                    text: "Настройки";
-                    is-shown: chev_touch.has-hover;
                 }
             }
-        }
-    }
 
-    // Right Flank: Audio Mute Button (matching Video)
-    Rectangle {
-        x: parent.width - self.width;
-        y: (parent.height - self.height) / 2;
-        width: 38px;
-        height: 38px;
-        background: mute_touch.pressed ? #22262e : (mute_touch.has-hover ? rgba(20, 27, 40, 0.94) : rgba(13, 17, 26, 0.88));
-        border-width: 1px;
-        border-color: mute_touch.has-hover ? rgba(255, 255, 255, 0.20) : rgba(255, 255, 255, 0.08);
-        border-radius: 10px;
-
-        animate background { duration: 150ms; }
-        animate border-color { duration: 150ms; }
-
-        mute_touch := TouchArea {
-            clicked => { root.toggle-sound(); }
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "Друзья";
+                is-shown: fr_touch.has-hover;
+            }
         }
 
-        Image {
-            source: @image-url("../assets/svg/volume.svg");
-            width: 18px;
-            height: 18px;
-            image-fit: contain;
-            opacity: root.is-muted ? 0.35 : (mute_touch.has-hover ? 1.0 : 0.75);
-            animate opacity { duration: 150ms; }
-        }
+        // 11. Right Chevron Button (38x38 matching Video)
+        Rectangle {
+            width: 38px;
+            height: 38px;
+            background: chev_touch.pressed ? #22262e : (chev_touch.has-hover ? #1a2232 : #111622);
+            border-width: 1px;
+            border-color: chev_touch.has-hover ? rgba(255, 255, 255, 0.18) : rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
 
-        HudTooltip {
-            x: parent.width / 2;
-            y: parent.height + 9px;
-            text: root.is-muted ? "Включить звук" : "Отключить звук";
-            is-shown: mute_touch.has-hover;
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            chev_touch := TouchArea {
+                clicked => { root.tab-selected("settings"); }
+            }
+
+            Text {
+                text: ">";
+                color: chev_touch.has-hover ? #ffffff : #64748b;
+                font-size: 15px;
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                animate color { duration: 150ms; }
+            }
+
+            HudTooltip {
+                x: parent.width / 2;
+                y: parent.height + 9px;
+                text: "Настройки";
+                is-shown: chev_touch.has-hover;
+            }
         }
     }
 }

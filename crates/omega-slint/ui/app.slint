@@ -5,7 +5,7 @@
 // Layer 3: Dock Layer (PlayDock)
 // Layer 4: Screens Layer (Store, Instances, Modrinth, Accounts, Servers, Friends, Console, Settings)
 
-import { TopBar } from "topbar.slint";
+import { TopBar, GitHubButton, SoundButton } from "topbar.slint";
 import { PlayDock } from "dock.slint";
 import {
     InstanceItem,
@@ -216,14 +216,21 @@ export component MainWindow inherits Window {
         }
     }
 
-    // Top Navigation Bar (Layer 2: HUD) - Layered on top so tooltips are never clipped by screen views
+    // Left Flank: Separate GitHub Icon (No border, transparent background, exactly matching user request)
+    GitHubButton {
+        x: 24px;
+        y: 19px;
+        clicked => {
+            root.open-github();
+        }
+    }
+
+    // Center Floating HUD Capsule (Compact dock in center, NOT stretched across the launcher)
     TopBar {
-        x: 20px;
+        x: (parent.width - self.width) / 2;
         y: 14px;
-        width: parent.width - 40px;
         username: root.player-name;
         active-tab: root.active-screen;
-        is-muted: root.is-sound-muted;
         is-dropdown-open: root.is-profile-open;
 
         tab-selected(tab) => {
@@ -236,17 +243,15 @@ export component MainWindow inherits Window {
         select-shortcut(sc) => {
             root.select-shortcut(sc);
         }
-        toggle-sound() => {
+    }
+
+    // Right Flank: Separate Sound Button (No border, transparent background, exactly matching user request)
+    SoundButton {
+        x: parent.width - 24px - self.width;
+        y: 19px;
+        is-muted: root.is-sound-muted;
+        clicked => {
             root.is-sound-muted = !root.is-sound-muted;
-        }
-        login-microsoft => {
-            root.login-microsoft();
-        }
-        login-ely => {
-            root.login-ely();
-        }
-        open-github => {
-            root.open-github();
         }
     }
 }
