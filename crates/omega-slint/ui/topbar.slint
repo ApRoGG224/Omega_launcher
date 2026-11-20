@@ -165,14 +165,19 @@ export component TopBar inherits Rectangle {
                 spacing: 8px;
                 alignment: center;
 
-                // Down Chevron
-                Image {
-                    source: @image-url("../assets/svg/chevron_down.svg");
+                // Down Chevron (vertically centered in 38px button)
+                VerticalLayout {
+                    alignment: center;
                     width: 14px;
-                    height: 14px;
-                    image-fit: contain;
-                    colorize: prof_touch.has-hover ? #ffffff : #94a3b8;
-                    animate colorize { duration: 150ms; }
+
+                    Image {
+                        width: 14px;
+                        height: 14px;
+                        source: @image-url("../assets/svg/chevron_down.svg");
+                        image-fit: contain;
+                        colorize: prof_touch.has-hover ? #ffffff : #94a3b8;
+                        animate colorize { duration: 150ms; }
+                    }
                 }
 
                 // Username
@@ -185,22 +190,27 @@ export component TopBar inherits Rectangle {
                 }
 
                 // Crisp Square Avatar Frame (28x28) vertically centered in the 38px button
-                Rectangle {
+                VerticalLayout {
+                    alignment: center;
                     width: 28px;
-                    height: 28px;
-                    y: (parent.height - self.height) / 2;
-                    background: #080d17;
-                    border-width: 1px;
-                    border-color: rgba(255, 255, 255, 0.16);
 
-                    Image {
-                        x: (parent.width - self.width) / 2;
-                        y: (parent.height - self.height) / 2;
-                        source: @image-url("../assets/skins/aprogg_face.png");
-                        width: 26px;
-                        height: 26px;
-                        image-fit: contain;
-                        image-rendering: pixelated;
+                    Rectangle {
+                        width: 28px;
+                        height: 28px;
+                        background: #080d17;
+                        border-width: 1px;
+                        border-color: rgba(255, 255, 255, 0.16);
+                        border-radius: 4px;
+
+                        Image {
+                            x: (parent.width - self.width) / 2;
+                            y: (parent.height - self.height) / 2;
+                            source: @image-url("../assets/skins/aprogg_face.png");
+                            width: 26px;
+                            height: 26px;
+                            image-fit: contain;
+                            image-rendering: pixelated;
+                        }
                     }
                 }
             }
