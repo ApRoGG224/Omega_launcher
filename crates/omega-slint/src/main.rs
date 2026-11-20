@@ -25,9 +25,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap_or_else(|| "/usr/bin/java".to_string());
     ui.set_java_path(format!("{detected_java} (Авто-определение)").into());
 
-    // 2. Initialize 3D Character Renderer (Steve / Alex 6-cuboid model with breathing animation)
-    let default_steve_bytes = include_bytes!("../assets/skins/steve.png");
-    let default_skin: RgbaImage = image::load_from_memory(default_steve_bytes)
+    // 2. Initialize 3D Character Renderer (Steve / Alex / ApRoGG 6-cuboid model with breathing animation)
+    let default_skin_bytes = include_bytes!("../assets/skins/aprogg.png");
+    let default_skin: RgbaImage = image::load_from_memory(default_skin_bytes)
         .map(|img| img.to_rgba8())
         .unwrap_or_else(|_| RgbaImage::new(64, 64));
 
@@ -50,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let elapsed = start_time.elapsed().as_secs_f32();
             let char_guard = char_ref.read().unwrap();
-            let (w, h) = (240u32, 360u32);
+            let (w, h) = (320u32, 440u32);
             let raw_pixels = char_guard.render(w, h, elapsed);
 
             let mut pixel_buffer = slint::SharedPixelBuffer::<slint::Rgba8Pixel>::new(w, h);
@@ -96,12 +96,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 })
                 .collect();
 
-            let first = &db_instances[0];
-            ui.set_active_instance_id(first.id.clone().into());
-            ui.set_active_instance_name(first.name.clone().into());
-            ui.set_active_version(first.mc_version.clone().into());
-            ui.set_active_loader(first.loader.clone().into());
-            ui.set_active_playtime(format!("{} мин", (first.play_time_ms.unwrap_or(0) / 60000)).into());
+            let active_idx = db_instances
+                .iter()
+                .position(|i| i.name == "Моя версія 1.21" || i.id == "inst_1794938714051")
+                .unwrap_or(0);
+            let active = &db_instances[active_idx];
+            ui.set_active_instance_id(active.id.clone().into());
+            ui.set_active_instance_name(active.name.clone().into());
+            ui.set_active_version(active.mc_version.clone().into());
+            ui.set_active_loader(active.loader.clone().into());
+            ui.set_active_playtime(format!("{} мин", (active.play_time_ms.unwrap_or(0) / 60000)).into());
             ui.set_instances(ModelRc::new(VecModel::from(slint_models)));
         }
 
@@ -109,16 +113,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Ok(mut db_accounts) = omega_core::db::load_accounts(conn) {
             if db_accounts.is_empty() {
                 let default_acc = omega_core::db::DbAccount {
-                    name: "Player".to_string(),
-                    account_type: "offline".to_string(),
+                    name: "ApRoGG".to_string(),
+                    account_type: "microsoft".to_string(),
                 };
                 let _ = omega_core::db::add_account(conn, &default_acc);
                 db_accounts.push(default_acc);
             }
 
-            let first = &db_accounts[0];
-            ui.set_player_name(first.name.clone().into());
-            ui.set_account_type(first.account_type.clone().into());
+            let active_acc_idx = db_accounts
+                .iter()
+                .position(|a| a.name == "ApRoGG")
+                .unwrap_or(0);
+            let active_acc = &db_accounts[active_acc_idx];
+            ui.set_player_name(active_acc.name.clone().into());
+            ui.set_account_type(active_acc.account_type.clone().into());
 
             let acc_items: Vec<AccountItem> = db_accounts
                 .iter()
@@ -126,7 +134,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .map(|(idx, acc)| AccountItem {
                     name: acc.name.clone().into(),
                     account_type: acc.account_type.clone().into(),
-                    is_active: idx == 0,
+                    is_active: idx == active_acc_idx,
                 })
                 .collect();
             ui.set_accounts(ModelRc::new(VecModel::from(acc_items)));
@@ -807,6 +815,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         });
+    });
+
+    ui.on_open_github(move || {
+        let _ = std::process::Command::new("xdg-open")
+            .arg("https://github.com/ApRoGG224/Omega_launcher")
+            .spawn();
     });
 
     ui.run()?;

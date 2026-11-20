@@ -45,7 +45,7 @@ export struct AccountItem {
     is-active: bool,
 }
 
-// Layer 4 Screen 0: Home Screen with 3D Character View
+// Layer 4 Screen 0: Home Screen with 3D Character View (Center Stage)
 export component HomeScreenView inherits Rectangle {
     in-out property <image> character-preview;
     callback open-store();
@@ -59,146 +59,20 @@ export component HomeScreenView inherits Rectangle {
     opacity: root.screen-opacity;
     y: root.screen-offset-y;
 
-    HorizontalLayout {
-        spacing: 24px;
-        alignment: space-between;
+    VerticalLayout {
+        alignment: end;
+        padding-bottom: 6px;
 
-        // Left Dual Action Cards
-        VerticalLayout {
-            width: 290px;
-            spacing: 14px;
-            alignment: start;
+        HorizontalLayout {
+            alignment: center;
 
-            // Store Card
-            store_card := Rectangle {
-                height: 104px;
-                background: store_touch.pressed ? #1a1d24 : (store_touch.has-hover ? #141820 : #0d1117);
-                border-width: 1px;
-                border-color: store_touch.has-hover ? rgba(255, 255, 255, 0.16) : rgba(255, 255, 255, 0.08);
-                border-radius: 14px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                store_touch := TouchArea {
-                    clicked => { root.open-store(); }
-                }
-
-                HorizontalLayout {
-                    padding: 18px;
-                    spacing: 14px;
-                    alignment: start;
-
-                    Rectangle {
-                        width: 44px;
-                        height: 44px;
-                        background: #1a1d24;
-                        border-width: 1px;
-                        border-color: rgba(255, 255, 255, 0.08);
-                        border-radius: 10px;
-                        y: (parent.height - self.height) / 2;
-
-                        Image {
-                            source: @image-url("../assets/svg/store.svg");
-                            width: 22px;
-                            height: 22px;
-                            image-fit: contain;
-                        }
-                    }
-
-                    VerticalLayout {
-                        alignment: center;
-                        spacing: 4px;
-
-                        Text {
-                            text: "Магазин Omega";
-                            color: #10b981;
-                            font-size: 16px;
-                            font-weight: 700;
-                        }
-
-                        Text {
-                            text: "Скины и официальные плащи";
-                            color: #8b919c;
-                            font-size: 12px;
-                        }
-                    }
-                }
-            }
-
-            // Play With Friends Card
-            friends_card := Rectangle {
-                height: 104px;
-                background: fr_touch.pressed ? #1a1d24 : (fr_touch.has-hover ? #141820 : #0d1117);
-                border-width: 1px;
-                border-color: fr_touch.has-hover ? rgba(255, 255, 255, 0.16) : rgba(255, 255, 255, 0.08);
-                border-radius: 14px;
-
-                animate background { duration: 150ms; }
-                animate border-color { duration: 150ms; }
-
-                fr_touch := TouchArea {
-                    clicked => { root.open-friends(); }
-                }
-
-                HorizontalLayout {
-                    padding: 18px;
-                    spacing: 14px;
-                    alignment: start;
-
-                    Rectangle {
-                        width: 44px;
-                        height: 44px;
-                        background: #1a1d24;
-                        border-width: 1px;
-                        border-color: rgba(255, 255, 255, 0.08);
-                        border-radius: 10px;
-                        y: (parent.height - self.height) / 2;
-
-                        Image {
-                            source: @image-url("../assets/svg/users.svg");
-                            width: 22px;
-                            height: 22px;
-                            image-fit: contain;
-                        }
-                    }
-
-                    VerticalLayout {
-                        alignment: center;
-                        spacing: 4px;
-
-                        Text {
-                            text: "Играть с друзьями";
-                            color: #9b5cff;
-                            font-size: 16px;
-                            font-weight: 700;
-                        }
-
-                        Text {
-                            text: "Серверы и совместная игра";
-                            color: #8b919c;
-                            font-size: 12px;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Center: Interactive 3D Minecraft Character Stage
-        stage_card := Rectangle {
-            horizontal-stretch: 1;
-            height: 480px;
-            background: transparent;
-
-            VerticalLayout {
-                alignment: center;
-
-                Image {
-                    source: root.character-preview;
-                    width: 240px;
-                    height: 360px;
-                    image-fit: contain;
-                }
+            Image {
+                source: root.character-preview;
+                width: 320px;
+                height: 440px;
+                image-fit: contain;
+                horizontal-alignment: center;
+                vertical-alignment: bottom;
             }
         }
     }

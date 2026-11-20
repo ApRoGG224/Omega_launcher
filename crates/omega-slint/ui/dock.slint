@@ -8,7 +8,7 @@ export component PlayDock inherits Rectangle {
     in-out property <string> loader-tag: "Fabric";
     in-out property <string> playtime-text: "0 мин";
     in-out property <bool> is-running: false;
-    in-out property <image> instance-icon: @image-url("../assets/icons/diamond_sword.png");
+    in-out property <image> instance-icon: @image-url("../assets/icons/minecraft/netherite_sword.png");
 
     callback play-clicked();
     callback version-clicked();
@@ -93,7 +93,9 @@ export component PlayDock inherits Rectangle {
                                 // Loader Chip
                                 Rectangle {
                                     height: 18px;
-                                    background: #1d5dc7;
+                                    background: #1a1d24;
+                                    border-width: 1px;
+                                    border-color: rgba(255, 255, 255, 0.08);
                                     border-radius: 6px;
                                     HorizontalLayout {
                                         padding-left: 6px;

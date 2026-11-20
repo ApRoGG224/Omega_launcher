@@ -95,11 +95,17 @@ impl Character3D {
         let mut pixels = vec![0u8; (width * height * 4) as usize];
         let mut z_buffer = vec![f32::NEG_INFINITY; (width * height) as usize];
 
+        // Screen transform
+        let scale = 7.6f32;
+        let center_x = (width as f32) * 0.5;
+        let feet_y = (height as f32) * 0.86;
+        let center_y = feet_y;
+
         // Draw soft contact shadow on floor under character
-        let floor_center_x = (width as f32) * 0.5;
-        let floor_center_y = (height as f32) * 0.88;
-        let shadow_rx = 48.0f32;
-        let shadow_ry = 14.0f32;
+        let floor_center_x = center_x;
+        let floor_center_y = feet_y + 4.0;
+        let shadow_rx = 46.0f32;
+        let shadow_ry = 12.0f32;
 
         for sy in (floor_center_y - shadow_ry) as i32..=(floor_center_y + shadow_ry) as i32 {
             for sx in (floor_center_x - shadow_rx) as i32..=(floor_center_x + shadow_rx) as i32 {
@@ -119,29 +125,25 @@ impl Character3D {
             }
         }
 
-        // Camera / View angles
-        let yaw = -0.36; // ~-21 degrees, classic 3/4 turn
-        let pitch = 0.16; // ~9 degrees, looking slightly down
+        // Camera / View angles: Direct front-facing towards camera like in target photo
+        let yaw = 0.0f32;
+        let pitch = 0.02f32;
 
         // Subtle breathing animation (0.5 Hz)
         let breath = (time_secs * 2.2).sin();
-        let breath_cos = (time_secs * 2.2).cos();
-
-        let head_rot_x = breath * 0.025;
-        let head_rot_y = (time_secs * 0.8).sin() * 0.05;
+        let head_rot_x = breath * 0.015;
+        let head_rot_y = (time_secs * 0.6).sin() * 0.02;
 
         let arm_w = if self.is_alex { 3.0 } else { 4.0 };
 
-        let r_arm_rot_x = breath * 0.035;
-        let r_arm_rot_z = -0.06 - breath_cos * 0.025;
+        let r_arm_rot_x = breath * 0.02;
+        let l_arm_rot_x = -breath * 0.02;
 
-        let l_arm_rot_x = -breath * 0.035;
-        let l_arm_rot_z = 0.06 + breath_cos * 0.025;
+        let torso_y_off = breath * 0.25;
 
-        let torso_y_off = breath * 0.35;
+        let mut quads = Vec::with_capacity(72);
 
-        let mut quads = Vec::with_capacity(36);
-
+        // ==================== LAYER 1: BASE BODY ====================
         // 1. Torso: 8x12x4, Waist at (0, 12, 0)
         let torso_pivot = Vec3::new(0.0, 12.0 + torso_y_off, 0.0);
         add_cuboid(
@@ -167,7 +169,7 @@ impl Character3D {
         add_cuboid(
             &mut quads,
             r_arm_pivot,
-            Vec3::new(r_arm_rot_x, 0.0, r_arm_rot_z),
+            Vec3::new(r_arm_rot_x, 0.0, -0.02),
             -arm_w * 0.5, arm_w * 0.5, -10.0, 2.0, -2.0, 2.0,
             40.0, 16.0, arm_w, 12.0, 4.0,
         );
@@ -177,7 +179,7 @@ impl Character3D {
         add_cuboid(
             &mut quads,
             l_arm_pivot,
-            Vec3::new(l_arm_rot_x, 0.0, l_arm_rot_z),
+            Vec3::new(l_arm_rot_x, 0.0, 0.02),
             -arm_w * 0.5, arm_w * 0.5, -10.0, 2.0, -2.0, 2.0,
             32.0, 48.0, arm_w, 12.0, 4.0,
         );
@@ -202,13 +204,63 @@ impl Character3D {
             16.0, 48.0, 4.0, 12.0, 4.0,
         );
 
-        // Light direction (top-right-front)
-        let light_dir = Vec3::new(0.35, 0.85, 0.40).normalize();
+        // ==================== LAYER 2: OUTER 3D LAYER ====================
+        // 7. Head Hat / Hair / Ears: 8x8x8 expanded by 0.35
+        add_cuboid(
+            &mut quads,
+            head_pivot,
+            Vec3::new(head_rot_x, head_rot_y, 0.0),
+            -4.35, 4.35, -0.35, 8.35, -4.35, 4.35,
+            32.0, 0.0, 8.0, 8.0, 8.0,
+        );
 
-        // Screen transform
-        let scale = 7.4f32;
-        let center_x = (width as f32) * 0.5;
-        let center_y = (height as f32) * 0.62;
+        // 8. Torso Jacket: 8x12x4 expanded by 0.25
+        add_cuboid(
+            &mut quads,
+            torso_pivot,
+            Vec3::new(0.0, 0.0, 0.0),
+            -4.25, 4.25, -0.25, 12.25, -2.25, 2.25,
+            16.0, 32.0, 8.0, 12.0, 4.0,
+        );
+
+        // 9. Right Arm Sleeve: expanded by 0.25
+        add_cuboid(
+            &mut quads,
+            r_arm_pivot,
+            Vec3::new(r_arm_rot_x, 0.0, -0.02),
+            -arm_w * 0.5 - 0.25, arm_w * 0.5 + 0.25, -10.25, 2.25, -2.25, 2.25,
+            40.0, 32.0, arm_w, 12.0, 4.0,
+        );
+
+        // 10. Left Arm Sleeve: expanded by 0.25
+        add_cuboid(
+            &mut quads,
+            l_arm_pivot,
+            Vec3::new(l_arm_rot_x, 0.0, 0.02),
+            -arm_w * 0.5 - 0.25, arm_w * 0.5 + 0.25, -10.25, 2.25, -2.25, 2.25,
+            48.0, 48.0, arm_w, 12.0, 4.0,
+        );
+
+        // 11. Right Leg Pant: expanded by 0.25
+        add_cuboid(
+            &mut quads,
+            r_leg_pivot,
+            Vec3::new(0.0, 0.0, 0.0),
+            -2.25, 2.25, -12.25, 0.25, -2.25, 2.25,
+            0.0, 32.0, 4.0, 12.0, 4.0,
+        );
+
+        // 12. Left Leg Pant: expanded by 0.25
+        add_cuboid(
+            &mut quads,
+            l_leg_pivot,
+            Vec3::new(0.0, 0.0, 0.0),
+            -2.25, 2.25, -12.25, 0.25, -2.25, 2.25,
+            0.0, 48.0, 4.0, 12.0, 4.0,
+        );
+
+        // Light direction (front-top-right)
+        let light_dir = Vec3::new(0.25, 0.85, 0.45).normalize();
 
         for quad in quads {
             // Apply camera pitch and yaw
@@ -217,19 +269,21 @@ impl Character3D {
             let v2 = transform_view(quad.v2.pos, yaw, pitch);
             let v3 = transform_view(quad.v3.pos, yaw, pitch);
 
-            // Compute face normal in view space
-            let edge1 = Vec3::new(v1.x - v0.x, v1.y - v0.y, v1.z - v0.z);
-            let edge2 = Vec3::new(v2.x - v0.x, v2.y - v0.y, v2.z - v0.z);
-            let normal = edge1.cross(edge2).normalize();
+            // Outward face normal in view space
+            // e1 = TR - TL (along +X), e2 = BL - TL (along -Y)
+            // e2 x e1 produces +Z (outward normal pointing towards camera)
+            let e1 = Vec3::new(v1.x - v0.x, v1.y - v0.y, v1.z - v0.z);
+            let e2 = Vec3::new(v3.x - v0.x, v3.y - v0.y, v3.z - v0.z);
+            let normal = e2.cross(e1).normalize();
 
-            // Backface culling: if normal points away from viewer (Z < 0), cull
+            // Backface culling: cull faces pointing away from the camera
             if normal.z <= 0.0 {
                 continue;
             }
 
-            // Authentic Minecraft shading
+            // Authentic Minecraft soft diffuse shading
             let diff = (normal.dot(light_dir)).max(0.0);
-            let shade = (0.68 + diff * 0.32).clamp(0.60, 1.0);
+            let shade = (0.75 + diff * 0.25).clamp(0.68, 1.0);
 
             let sv0 = ScreenVertex {
                 x: center_x + v0.x * scale,
@@ -279,79 +333,77 @@ fn add_cuboid(
     w: f32, h: f32, d: f32,
 ) {
     // 8 local corners
+    // 0: ---, 1: +--, 2: ++-, 3: -+-, 4: --+, 5: +-+, 6: +++, 7: -++
     let corners = [
-        Vec3::new(x0, y0, z0), // 0: ---
-        Vec3::new(x1, y0, z0), // 1: +--
-        Vec3::new(x1, y1, z0), // 2: ++-
-        Vec3::new(x0, y1, z0), // 3: -+-
-        Vec3::new(x0, y0, z1), // 4: --+
-        Vec3::new(x1, y0, z1), // 5: +-+
-        Vec3::new(x1, y1, z1), // 6: +++
-        Vec3::new(x0, y1, z1), // 7: -++
+        Vec3::new(x0, y0, z0),
+        Vec3::new(x1, y0, z0),
+        Vec3::new(x1, y1, z0),
+        Vec3::new(x0, y1, z0),
+        Vec3::new(x0, y0, z1),
+        Vec3::new(x1, y0, z1),
+        Vec3::new(x1, y1, z1),
+        Vec3::new(x0, y1, z1),
     ];
 
-    let mut transformed = [Vec3::new(0.0, 0.0, 0.0); 8];
+    let mut tr = [Vec3::new(0.0, 0.0, 0.0); 8];
     for (i, c) in corners.iter().enumerate() {
         let r = rotate_xyz(*c, rot.x, rot.y, rot.z);
-        transformed[i] = Vec3::new(r.x + pivot.x, r.y + pivot.y, r.z + pivot.z);
+        tr[i] = Vec3::new(r.x + pivot.x, r.y + pivot.y, r.z + pivot.z);
     }
 
-    // Standard Minecraft Skin Box UV Mapping:
-    // Front Face (Z+): (u_origin + d, v_origin + d) to (u_origin + d + w, v_origin + d + h)
+    // Standard Minecraft Skin UV layout with TL, TR, BR, BL vertices:
+    // Front Face (Z+): TL=7, TR=6, BR=5, BL=4
     quads.push(Quad::new(
-        transformed[7], transformed[6], transformed[5], transformed[4],
+        tr[7], tr[6], tr[5], tr[4],
         (u_origin + d) / 64.0, (v_origin + d) / 64.0,
         (u_origin + d + w) / 64.0, (v_origin + d + h) / 64.0,
     ));
 
-    // Back Face (Z-):
+    // Back Face (Z-): TL=2, TR=3, BR=0, BL=1
     quads.push(Quad::new(
-        transformed[2], transformed[3], transformed[0], transformed[1],
+        tr[2], tr[3], tr[0], tr[1],
         (u_origin + d + w + d) / 64.0, (v_origin + d) / 64.0,
         (u_origin + d + w + d + w) / 64.0, (v_origin + d + h) / 64.0,
     ));
 
-    // Right Face (X-):
+    // Right Face (-X): TL=3, TR=7, BR=4, BL=0
     quads.push(Quad::new(
-        transformed[3], transformed[7], transformed[4], transformed[0],
+        tr[3], tr[7], tr[4], tr[0],
         u_origin / 64.0, (v_origin + d) / 64.0,
         (u_origin + d) / 64.0, (v_origin + d + h) / 64.0,
     ));
 
-    // Left Face (X+):
+    // Left Face (+X): TL=6, TR=2, BR=1, BL=5
     quads.push(Quad::new(
-        transformed[6], transformed[2], transformed[1], transformed[5],
+        tr[6], tr[2], tr[1], tr[5],
         (u_origin + d + w) / 64.0, (v_origin + d) / 64.0,
         (u_origin + d + w + d) / 64.0, (v_origin + d + h) / 64.0,
     ));
 
-    // Top Face (Y+):
+    // Top Face (+Y): TL=3, TR=2, BR=6, BL=7
     quads.push(Quad::new(
-        transformed[3], transformed[2], transformed[6], transformed[7],
+        tr[3], tr[2], tr[6], tr[7],
         (u_origin + d) / 64.0, v_origin / 64.0,
         (u_origin + d + w) / 64.0, (v_origin + d) / 64.0,
     ));
 
-    // Bottom Face (Y-):
+    // Bottom Face (-Y): TL=4, TR=5, BR=1, BL=0
     quads.push(Quad::new(
-        transformed[4], transformed[5], transformed[1], transformed[0],
+        tr[4], tr[5], tr[1], tr[0],
         (u_origin + d + w) / 64.0, v_origin / 64.0,
         (u_origin + d + w + w) / 64.0, (v_origin + d) / 64.0,
     ));
 }
 
 fn rotate_xyz(v: Vec3, rx: f32, ry: f32, rz: f32) -> Vec3 {
-    // Rotation around X
     let y1 = v.y * rx.cos() - v.z * rx.sin();
     let z1 = v.y * rx.sin() + v.z * rx.cos();
     let x1 = v.x;
 
-    // Rotation around Y
     let x2 = x1 * ry.cos() + z1 * ry.sin();
     let z2 = -x1 * ry.sin() + z1 * ry.cos();
     let y2 = y1;
 
-    // Rotation around Z
     let x3 = x2 * rz.cos() - y2 * rz.sin();
     let y3 = x2 * rz.sin() + y2 * rz.cos();
     let z3 = z2;
@@ -360,12 +412,10 @@ fn rotate_xyz(v: Vec3, rx: f32, ry: f32, rz: f32) -> Vec3 {
 }
 
 fn transform_view(v: Vec3, yaw: f32, pitch: f32) -> Vec3 {
-    // Yaw (Y axis)
     let x1 = v.x * yaw.cos() + v.z * yaw.sin();
     let z1 = -v.x * yaw.sin() + v.z * yaw.cos();
     let y1 = v.y;
 
-    // Pitch (X axis)
     let y2 = y1 * pitch.cos() - z1 * pitch.sin();
     let z2 = y1 * pitch.sin() + z1 * pitch.cos();
     let x2 = x1;

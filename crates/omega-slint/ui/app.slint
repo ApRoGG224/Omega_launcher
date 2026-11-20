@@ -86,22 +86,22 @@ export component MainWindow inherits Window {
     callback direct-connect(string);
     callback add-server(string, string);
     callback delete-server(string);
+    callback open-github();
 
-    // Layer 0: Atmosphere Background
+    // Layer 0: Atmosphere Background (Bright & Sunny as in target Photo 1)
     Image {
         width: 100%;
         height: 100%;
         source: @image-url("../assets/backgrounds/landscape_shader_mountains.png");
         image-fit: cover;
-        opacity: 0.18;
+        opacity: 0.95;
     }
 
-    // Vignette Matte Overlay
-    Rectangle {
+    // Subtle dark scrim when in menu tabs (Instances, Settings, etc.)
+    if root.active-screen != "home": Rectangle {
         width: 100%;
         height: 100%;
-        background: #06080d;
-        opacity: 0.40;
+        background: rgba(9, 12, 17, 0.80);
     }
 
     // Main Viewport Layout
@@ -133,6 +133,9 @@ export component MainWindow inherits Window {
             }
             login-ely => {
                 root.login-ely();
+            }
+            open-github => {
+                root.open-github();
             }
         }
 

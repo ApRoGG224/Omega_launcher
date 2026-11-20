@@ -1,10 +1,11 @@
 // Omega Launcher - Native HUD Top Bar (Layer 2)
-// Strict compliance with PROMPT_NATIVE_MIGRATION.md:
-// - Top Navigation Dock: border-radius: 16px, background: #0d1117, border: 1px solid rgba(255, 255, 255, 0.08)
-// - Buttons: border-radius: 11px, background: #1a1d24 (Hover: #22262e, Active: #1d5dc7)
+// Strict compliance with target design (Photo 1) & PROMPT_NATIVE_MIGRATION.md:
+// - Left: GitHub button
+// - Center: Floating Top Navigation Dock (Profile + Navigation + Cosmetics + Friends badge 2)
+// - Right: Volume Mute button
 
 export component TopBar inherits Rectangle {
-    in-out property <string> username: "Гость";
+    in-out property <string> username: "ApRoGG";
     in-out property <string> active-tab: "home";
     in-out property <bool> is-dropdown-open: false;
     in-out property <bool> is-muted: false;
@@ -14,30 +15,57 @@ export component TopBar inherits Rectangle {
     callback login-microsoft();
     callback login-ely();
     callback toggle-sound();
+    callback open-github();
 
-    height: 52px;
+    height: 48px;
     background: transparent;
 
     HorizontalLayout {
-        alignment: center;
+        alignment: space-between;
 
-        // The Floating Top Dock
+        // Far Left: GitHub Button
         Rectangle {
-            height: 48px;
+            width: 38px;
+            height: 38px;
+            y: (parent.height - self.height) / 2;
+            background: gh_touch.pressed ? #22262e : (gh_touch.has-hover ? #1a1d24 : rgba(13, 17, 23, 0.70));
+            border-width: 1px;
+            border-color: gh_touch.has-hover ? rgba(255, 255, 255, 0.20) : rgba(255, 255, 255, 0.08);
+            border-radius: 11px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            gh_touch := TouchArea {
+                clicked => { root.open-github(); }
+            }
+
+            Image {
+                source: @image-url("../assets/svg/github.svg");
+                width: 20px;
+                height: 20px;
+                image-fit: contain;
+            }
+        }
+
+        // Center: Floating HUD Top Dock
+        Rectangle {
+            height: 44px;
+            y: (parent.height - self.height) / 2;
             background: #0d1117;
             border-width: 1px;
             border-color: rgba(255, 255, 255, 0.08);
             border-radius: 16px;
 
             HorizontalLayout {
-                padding-left: 8px;
-                padding-right: 8px;
-                spacing: 6px;
+                padding-left: 6px;
+                padding-right: 6px;
+                spacing: 5px;
                 alignment: center;
 
-                // 1. Profile Pill
+                // 1. Profile Pill: [⌄  Username  [Avatar]]
                 profile_btn := Rectangle {
-                    height: 36px;
+                    height: 34px;
                     width: 130px;
                     background: root.is-dropdown-open ? #22262e : (prof_touch.has-hover ? #22262e : #1a1d24);
                     border-width: 1px;
@@ -52,10 +80,18 @@ export component TopBar inherits Rectangle {
                     }
 
                     HorizontalLayout {
-                        padding-left: 10px;
+                        padding-left: 8px;
                         padding-right: 6px;
-                        spacing: 8px;
+                        spacing: 6px;
                         alignment: center;
+
+                        Text {
+                            text: "⌄";
+                            color: #8b919c;
+                            font-size: 14px;
+                            font-weight: 700;
+                            vertical-alignment: center;
+                        }
 
                         Text {
                             text: root.username;
@@ -67,15 +103,15 @@ export component TopBar inherits Rectangle {
                             overflow: elide;
                         }
 
-                        // Avatar
+                        // Pixel Avatar of ApRoGG
                         Rectangle {
-                            width: 26px;
-                            height: 26px;
-                            border-radius: 6px;
+                            width: 22px;
+                            height: 22px;
+                            border-radius: 4px;
                             background: #0d1117;
 
                             Image {
-                                source: @image-url("../assets/skins/steve.png");
+                                source: @image-url("../assets/skins/aprogg_face.png");
                                 width: 22px;
                                 height: 22px;
                                 image-fit: contain;
@@ -88,14 +124,15 @@ export component TopBar inherits Rectangle {
                 // Divider
                 Rectangle {
                     width: 1px;
-                    height: 22px;
+                    height: 20px;
                     background: rgba(255, 255, 255, 0.08);
+                    y: (parent.height - self.height) / 2;
                 }
 
-                // 2. Play / Home Button
+                // 2. Play / Home Button (Triangle ▶)
                 Rectangle {
-                    width: 38px;
-                    height: 36px;
+                    width: 36px;
+                    height: 34px;
                     background: root.active-tab == "home" ? #1d5dc7 : (home_touch.has-hover ? #22262e : #1a1d24);
                     border-width: 1px;
                     border-color: root.active-tab == "home" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
@@ -107,190 +144,20 @@ export component TopBar inherits Rectangle {
                         clicked => { root.tab-selected("home"); }
                     }
 
-                    Image {
-                        source: @image-url("../assets/svg/home.svg");
-                        width: 18px;
-                        height: 18px;
-                        image-fit: contain;
+                    Text {
+                        text: "▶";
+                        color: #ffffff;
+                        font-size: 13px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
                     }
                 }
 
-                // 3. Modrinth Catalog (Puzzle)
+                // 3. Settings (Gear)
                 Rectangle {
-                    width: 38px;
-                    height: 36px;
-                    background: root.active-tab == "modrinth" ? #1d5dc7 : (mod_touch.has-hover ? #22262e : #1a1d24);
-                    border-width: 1px;
-                    border-color: root.active-tab == "modrinth" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    border-radius: 11px;
-
-                    animate background { duration: 150ms; }
-
-                    mod_touch := TouchArea {
-                        clicked => { root.tab-selected("modrinth"); }
-                    }
-
-                    Image {
-                        source: @image-url("../assets/svg/puzzle.svg");
-                        width: 18px;
-                        height: 18px;
-                        image-fit: contain;
-                    }
-                }
-
-                // 4. Instances / Versions (Package)
-                Rectangle {
-                    width: 38px;
-                    height: 36px;
-                    background: root.active-tab == "instances" ? #1d5dc7 : (inst_touch.has-hover ? #22262e : #1a1d24);
-                    border-width: 1px;
-                    border-color: root.active-tab == "instances" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    border-radius: 11px;
-
-                    animate background { duration: 150ms; }
-
-                    inst_touch := TouchArea {
-                        clicked => { root.tab-selected("instances"); }
-                    }
-
-                    Image {
-                        source: @image-url("../assets/svg/package.svg");
-                        width: 18px;
-                        height: 18px;
-                        image-fit: contain;
-                    }
-                }
-
-                // 5. Servers (Server)
-                Rectangle {
-                    width: 38px;
-                    height: 36px;
-                    background: root.active-tab == "servers" ? #1d5dc7 : (srv_touch.has-hover ? #22262e : #1a1d24);
-                    border-width: 1px;
-                    border-color: root.active-tab == "servers" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    border-radius: 11px;
-
-                    animate background { duration: 150ms; }
-
-                    srv_touch := TouchArea {
-                        clicked => { root.tab-selected("servers"); }
-                    }
-
-                    Image {
-                        source: @image-url("../assets/svg/server.svg");
-                        width: 18px;
-                        height: 18px;
-                        image-fit: contain;
-                    }
-                }
-
-                // 6. Omega Store (Shopping Bag)
-                Rectangle {
-                    width: 38px;
-                    height: 36px;
-                    background: root.active-tab == "store" ? #1d5dc7 : (store_touch.has-hover ? #22262e : #1a1d24);
-                    border-width: 1px;
-                    border-color: root.active-tab == "store" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    border-radius: 11px;
-
-                    animate background { duration: 150ms; }
-
-                    store_touch := TouchArea {
-                        clicked => { root.tab-selected("store"); }
-                    }
-
-                    Image {
-                        source: @image-url("../assets/svg/store.svg");
-                        width: 18px;
-                        height: 18px;
-                        image-fit: contain;
-                    }
-                }
-
-                // 7. Console (Terminal)
-                Rectangle {
-                    width: 38px;
-                    height: 36px;
-                    background: root.active-tab == "console" ? #1d5dc7 : (con_touch.has-hover ? #22262e : #1a1d24);
-                    border-width: 1px;
-                    border-color: root.active-tab == "console" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    border-radius: 11px;
-
-                    animate background { duration: 150ms; }
-
-                    con_touch := TouchArea {
-                        clicked => { root.tab-selected("console"); }
-                    }
-
-                    Image {
-                        source: @image-url("../assets/svg/terminal.svg");
-                        width: 18px;
-                        height: 18px;
-                        image-fit: contain;
-                    }
-                }
-
-                // 8. Friends (Users)
-                Rectangle {
-                    width: 38px;
-                    height: 36px;
-                    background: root.active-tab == "friends" ? #1d5dc7 : (fr_touch.has-hover ? #22262e : #1a1d24);
-                    border-width: 1px;
-                    border-color: root.active-tab == "friends" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
-                    border-radius: 11px;
-
-                    animate background { duration: 150ms; }
-
-                    fr_touch := TouchArea {
-                        clicked => { root.tab-selected("friends"); }
-                    }
-
-                    Image {
-                        source: @image-url("../assets/svg/users.svg");
-                        width: 18px;
-                        height: 18px;
-                        image-fit: contain;
-                    }
-
-                    // Green online badge
-                    Rectangle {
-                        x: parent.width - 8px;
-                        y: 4px;
-                        width: 6px;
-                        height: 6px;
-                        background: #10b981;
-                        border-radius: 3px;
-                    }
-                }
-
-                // 9. Sound Mute
-                Rectangle {
-                    width: 38px;
-                    height: 36px;
-                    background: mute_touch.has-hover ? #22262e : #1a1d24;
-                    border-width: 1px;
-                    border-color: rgba(255, 255, 255, 0.08);
-                    border-radius: 11px;
-
-                    animate background { duration: 150ms; }
-
-                    mute_touch := TouchArea {
-                        clicked => { root.toggle-sound(); }
-                    }
-
-                    Image {
-                        source: @image-url("../assets/svg/volume.svg");
-                        width: 18px;
-                        height: 18px;
-                        image-fit: contain;
-                        opacity: root.is-muted ? 0.35 : 1.0;
-                    }
-                }
-
-                // 10. Settings (Gear)
-                Rectangle {
-                    width: 38px;
-                    height: 36px;
+                    width: 36px;
+                    height: 34px;
                     background: root.active-tab == "settings" ? #1d5dc7 : (set_touch.has-hover ? #22262e : #1a1d24);
                     border-width: 1px;
                     border-color: root.active-tab == "settings" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
@@ -304,11 +171,306 @@ export component TopBar inherits Rectangle {
 
                     Image {
                         source: @image-url("../assets/svg/settings.svg");
-                        width: 18px;
-                        height: 18px;
+                        width: 17px;
+                        height: 17px;
                         image-fit: contain;
                     }
                 }
+
+                // 4. Modrinth Catalog (Puzzle)
+                Rectangle {
+                    width: 36px;
+                    height: 34px;
+                    background: root.active-tab == "modrinth" ? #1d5dc7 : (mod_touch.has-hover ? #22262e : #1a1d24);
+                    border-width: 1px;
+                    border-color: root.active-tab == "modrinth" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
+
+                    animate background { duration: 150ms; }
+
+                    mod_touch := TouchArea {
+                        clicked => { root.tab-selected("modrinth"); }
+                    }
+
+                    Image {
+                        source: @image-url("../assets/svg/puzzle.svg");
+                        width: 17px;
+                        height: 17px;
+                        image-fit: contain;
+                    }
+                }
+
+                // 5. Instances / Versions (Package / Cube)
+                Rectangle {
+                    width: 36px;
+                    height: 34px;
+                    background: root.active-tab == "instances" ? #1d5dc7 : (inst_touch.has-hover ? #22262e : #1a1d24);
+                    border-width: 1px;
+                    border-color: root.active-tab == "instances" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
+
+                    animate background { duration: 150ms; }
+
+                    inst_touch := TouchArea {
+                        clicked => { root.tab-selected("instances"); }
+                    }
+
+                    Image {
+                        source: @image-url("../assets/svg/package.svg");
+                        width: 17px;
+                        height: 17px;
+                        image-fit: contain;
+                    }
+                }
+
+                // 6. Servers (Server)
+                Rectangle {
+                    width: 36px;
+                    height: 34px;
+                    background: root.active-tab == "servers" ? #1d5dc7 : (srv_touch.has-hover ? #22262e : #1a1d24);
+                    border-width: 1px;
+                    border-color: root.active-tab == "servers" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
+
+                    animate background { duration: 150ms; }
+
+                    srv_touch := TouchArea {
+                        clicked => { root.tab-selected("servers"); }
+                    }
+
+                    Image {
+                        source: @image-url("../assets/svg/server.svg");
+                        width: 17px;
+                        height: 17px;
+                        image-fit: contain;
+                    }
+                }
+
+                // 7. Omega Store (Shopping Bag)
+                Rectangle {
+                    width: 36px;
+                    height: 34px;
+                    background: root.active-tab == "store" ? #1d5dc7 : (store_touch.has-hover ? #22262e : #1a1d24);
+                    border-width: 1px;
+                    border-color: root.active-tab == "store" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
+
+                    animate background { duration: 150ms; }
+
+                    store_touch := TouchArea {
+                        clicked => { root.tab-selected("store"); }
+                    }
+
+                    Image {
+                        source: @image-url("../assets/svg/store.svg");
+                        width: 17px;
+                        height: 17px;
+                        image-fit: contain;
+                    }
+                }
+
+                // 8. Console (Terminal `>_`)
+                Rectangle {
+                    width: 36px;
+                    height: 34px;
+                    background: root.active-tab == "console" ? #1d5dc7 : (con_touch.has-hover ? #22262e : #1a1d24);
+                    border-width: 1px;
+                    border-color: root.active-tab == "console" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
+
+                    animate background { duration: 150ms; }
+
+                    con_touch := TouchArea {
+                        clicked => { root.tab-selected("console"); }
+                    }
+
+                    Text {
+                        text: ">_";
+                        color: #ffffff;
+                        font-size: 13px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+
+                // Divider before cosmetics
+                Rectangle {
+                    width: 1px;
+                    height: 20px;
+                    background: rgba(255, 255, 255, 0.08);
+                    y: (parent.height - self.height) / 2;
+                }
+
+                // 9. Cosmetic slots (4 authentic Minecraft items from Photo 1)
+                Rectangle {
+                    width: 28px;
+                    height: 28px;
+                    y: (parent.height - self.height) / 2;
+                    background: #141720;
+                    border-width: 1px;
+                    border-color: rgba(255, 255, 255, 0.06);
+                    border-radius: 7px;
+
+                    Image {
+                        source: @image-url("../assets/icons/minecraft/obsidian.png");
+                        width: 18px;
+                        height: 18px;
+                        image-fit: contain;
+                        image-rendering: pixelated;
+                    }
+                }
+
+                Rectangle {
+                    width: 28px;
+                    height: 28px;
+                    y: (parent.height - self.height) / 2;
+                    background: #141720;
+                    border-width: 1px;
+                    border-color: rgba(255, 255, 255, 0.06);
+                    border-radius: 7px;
+
+                    Image {
+                        source: @image-url("../assets/icons/minecraft/diamond_sword.png");
+                        width: 18px;
+                        height: 18px;
+                        image-fit: contain;
+                        image-rendering: pixelated;
+                    }
+                }
+
+                Rectangle {
+                    width: 28px;
+                    height: 28px;
+                    y: (parent.height - self.height) / 2;
+                    background: #141720;
+                    border-width: 1px;
+                    border-color: rgba(255, 255, 255, 0.06);
+                    border-radius: 7px;
+
+                    Image {
+                        source: @image-url("../assets/icons/minecraft/totem_of_undying.png");
+                        width: 18px;
+                        height: 18px;
+                        image-fit: contain;
+                        image-rendering: pixelated;
+                    }
+                }
+
+                Rectangle {
+                    width: 28px;
+                    height: 28px;
+                    y: (parent.height - self.height) / 2;
+                    background: #141720;
+                    border-width: 1px;
+                    border-color: rgba(255, 255, 255, 0.06);
+                    border-radius: 7px;
+
+                    Image {
+                        source: @image-url("../assets/icons/minecraft/netherite_sword.png");
+                        width: 18px;
+                        height: 18px;
+                        image-fit: contain;
+                        image-rendering: pixelated;
+                    }
+                }
+
+                // Divider before Friends
+                Rectangle {
+                    width: 1px;
+                    height: 20px;
+                    background: rgba(255, 255, 255, 0.08);
+                    y: (parent.height - self.height) / 2;
+                }
+
+                // 10. Friends (Users) with Red Badge "2"
+                Rectangle {
+                    width: 36px;
+                    height: 34px;
+                    background: root.active-tab == "friends" ? #1d5dc7 : (fr_touch.has-hover ? #22262e : #1a1d24);
+                    border-width: 1px;
+                    border-color: root.active-tab == "friends" ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.08);
+                    border-radius: 11px;
+
+                    animate background { duration: 150ms; }
+
+                    fr_touch := TouchArea {
+                        clicked => { root.tab-selected("friends"); }
+                    }
+
+                    Image {
+                        source: @image-url("../assets/svg/users.svg");
+                        width: 17px;
+                        height: 17px;
+                        image-fit: contain;
+                    }
+
+                    // Red Badge with count "2" from Photo 1
+                    Rectangle {
+                        x: parent.width - 11px;
+                        y: 1px;
+                        width: 14px;
+                        height: 14px;
+                        background: #ef4444;
+                        border-radius: 7px;
+
+                        Text {
+                            text: "2";
+                            color: #ffffff;
+                            font-size: 9px;
+                            font-weight: 700;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+
+                // 11. Right Collapse / Next Arrow `>`
+                Rectangle {
+                    width: 24px;
+                    height: 34px;
+                    background: arr_touch.has-hover ? #22262e : transparent;
+                    border-radius: 7px;
+
+                    arr_touch := TouchArea {
+                        clicked => { root.tab-selected("accounts"); }
+                    }
+
+                    Text {
+                        text: ">";
+                        color: #8b919c;
+                        font-size: 13px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+
+        // Far Right: Audio Mute Button
+        Rectangle {
+            width: 38px;
+            height: 38px;
+            y: (parent.height - self.height) / 2;
+            background: mute_touch.pressed ? #22262e : (mute_touch.has-hover ? #1a1d24 : rgba(13, 17, 23, 0.70));
+            border-width: 1px;
+            border-color: mute_touch.has-hover ? rgba(255, 255, 255, 0.20) : rgba(255, 255, 255, 0.08);
+            border-radius: 11px;
+
+            animate background { duration: 150ms; }
+            animate border-color { duration: 150ms; }
+
+            mute_touch := TouchArea {
+                clicked => { root.toggle-sound(); }
+            }
+
+            Image {
+                source: @image-url("../assets/svg/volume.svg");
+                width: 20px;
+                height: 20px;
+                image-fit: contain;
+                opacity: root.is-muted ? 0.35 : 1.0;
             }
         }
     }
