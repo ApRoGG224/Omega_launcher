@@ -33,32 +33,49 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let character_model = Arc::new(std::sync::RwLock::new(character_3d::Character3D::new(default_skin, false)));
 
-    // Start 3D Character Animation Frame Loop (40 FPS)
+    // Start 3D Character Animation Frame Loop (33 FPS, off-main-thread async rendering)
     let char_ui = ui_weak.clone();
     let char_ref = character_model.clone();
     let start_time = Instant::now();
 
-    let render_timer = slint::Timer::default();
-    render_timer.start(
-        slint::TimerMode::Repeated,
-        std::time::Duration::from_millis(25), // 40 FPS
-        move || {
-            let Some(ui) = char_ui.upgrade() else { return };
-            if ui.get_active_screen() != "home" {
-                return;
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(std::time::Duration::from_millis(30));
+        loop {
+            interval.tick().await;
+            let is_home = match char_ui.upgrade() {
+                Some(ui) => ui.get_active_screen() == "home",
+                None => break,
+            };
+            if !is_home {
+                continue;
             }
 
             let elapsed = start_time.elapsed().as_secs_f32();
-            let char_guard = char_ref.read().unwrap();
+            let char_ref_clone = char_ref.clone();
             let (w, h) = (320u32, 440u32);
-            let raw_pixels = char_guard.render(w, h, elapsed);
 
-            let mut pixel_buffer = slint::SharedPixelBuffer::<slint::Rgba8Pixel>::new(w, h);
-            pixel_buffer.make_mut_bytes().copy_from_slice(&raw_pixels);
-            let image = slint::Image::from_rgba8(pixel_buffer);
-            ui.set_character_preview(image);
-        },
-    );
+            let raw_pixels = tokio::task::spawn_blocking(move || {
+                let char_guard = char_ref_clone.read().unwrap();
+                char_guard.render(w, h, elapsed)
+            })
+            .await
+            .unwrap_or_default();
+
+            if raw_pixels.is_empty() {
+                continue;
+            }
+
+            let char_ui_clone = char_ui.clone();
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(ui) = char_ui_clone.upgrade() {
+                    let mut pixel_buffer = slint::SharedPixelBuffer::<slint::Rgba8Pixel>::new(w, h);
+                    pixel_buffer.make_mut_bytes().copy_from_slice(&raw_pixels);
+                    let image = slint::Image::from_rgba8(pixel_buffer);
+                    ui.set_character_preview(image);
+                }
+            });
+        }
+    });
 
     // 3. Initialize SQLite Database & Load Data
     let db_conn = omega_core::db::init_db(&data_dir).ok();
@@ -859,6 +876,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .spawn();
     });
 
+    ui.show()?;
     ui.run()?;
     Ok(())
 }

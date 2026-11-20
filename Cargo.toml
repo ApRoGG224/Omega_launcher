@@ -5,3 +5,9 @@ members = [
     "src-tauri",
 ]
 resolver = "2"
+
+[profile.dev.package.omega-slint]
+opt-level = 3
+
+[profile.dev.package.image]
+opt-level = 3
