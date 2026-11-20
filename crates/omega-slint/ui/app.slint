@@ -116,35 +116,9 @@ export component MainWindow inherits Window {
         padding-bottom: 16px;
         spacing: 12px;
 
-        // Top Navigation Bar (Layer 2: HUD)
-        TopBar {
-            username: root.player-name;
-            active-tab: root.active-screen;
-            is-muted: root.is-sound-muted;
-            is-dropdown-open: root.is-profile-open;
-
-            tab-selected(tab) => {
-                root.active-screen = tab;
-                if tab == "servers" { root.refresh-servers(); }
-            }
-            toggle-profile-dropdown() => {
-                root.active-screen = "accounts";
-            }
-            select-shortcut(sc) => {
-                root.select-shortcut(sc);
-            }
-            toggle-sound() => {
-                root.is-sound-muted = !root.is-sound-muted;
-            }
-            login-microsoft => {
-                root.login-microsoft();
-            }
-            login-ely => {
-                root.login-ely();
-            }
-            open-github => {
-                root.open-github();
-            }
+        // Top Navigation Bar Spacer (reserves 48px in layout)
+        Rectangle {
+            height: 48px;
         }
 
         // Center Content (Layer 4: Screens)
@@ -239,6 +213,40 @@ export component MainWindow inherits Window {
             version-clicked => {
                 root.active-screen = "instances";
             }
+        }
+    }
+
+    // Top Navigation Bar (Layer 2: HUD) - Layered on top so tooltips are never clipped by screen views
+    TopBar {
+        x: 20px;
+        y: 14px;
+        width: parent.width - 40px;
+        username: root.player-name;
+        active-tab: root.active-screen;
+        is-muted: root.is-sound-muted;
+        is-dropdown-open: root.is-profile-open;
+
+        tab-selected(tab) => {
+            root.active-screen = tab;
+            if tab == "servers" { root.refresh-servers(); }
+        }
+        toggle-profile-dropdown() => {
+            root.active-screen = "accounts";
+        }
+        select-shortcut(sc) => {
+            root.select-shortcut(sc);
+        }
+        toggle-sound() => {
+            root.is-sound-muted = !root.is-sound-muted;
+        }
+        login-microsoft => {
+            root.login-microsoft();
+        }
+        login-ely => {
+            root.login-ely();
+        }
+        open-github => {
+            root.open-github();
         }
     }
 }
